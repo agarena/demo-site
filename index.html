@@ -59,30 +59,104 @@
     .stat .label { font-size: 13px; color: var(--muted); }
     .note { margin-top: 24px; font-size: 13px; color: var(--muted); border-top: 1px dashed #e3e8ef; padding-top: 16px; }
     code { background: #f0f3f8; padding: 2px 6px; border-radius: 6px; font-size: 13px; }
+    .fb { margin-top: 24px; border-top: 1px dashed #e3e8ef; padding-top: 20px; }
+    .fb h2 { font-size: 16px; margin-bottom: 10px; }
+    .fb label { display:block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+    .fb input, .fb textarea { width: 100%; border:1px solid #dde3ec; border-radius:10px; padding:10px 12px; font-size:14px; font-family:inherit; }
+    .fb textarea { min-height: 90px; resize: vertical; }
+    .fb button { margin-top: 12px; background: var(--accent); color:#fff; border:0; border-radius:10px; padding:10px 20px; font-size:14px; cursor:pointer; }
+    .fb .ok { color:#1d9e75; font-size:13px; margin-left:10px; }
+    .hp { display:none; }
+    .cta { margin-top: 24px; border-top: 1px dashed #e3e8ef; padding-top: 20px; }
+    .cta h2 { font-size: 16px; margin-bottom: 6px; }
+    .cta p.sub { margin-bottom: 12px; }
+    .cta button { background: #1d9e75; color:#fff; border:0; border-radius:10px; padding:12px 22px; font-size:15px; cursor:pointer; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>👋 这是一个示例站点 <span style="font-size:14px;color:#3b6cf6;">v2 · 已更新</span></h1>
-      <p class="sub">用来演示静态网页托管 + 访客统计。随便改点东西，重新发布看链接变不变。</p>
+      <h1>👋 这是一个示例站点 <span style="font-size:14px;color:#3b6cf6;">v3 · 自托管统计</span></h1>
+      <p class="sub">纯静态托管 + 自托管访客统计（Cloudflare Worker + D1）。逐 IP 数据归你，后台密码保护。</p>
 
-      <span class="badge"><span class="dot"></span> 实时访客计数（第三方免登录 SVG 徽章）</span>
-
-      <div class="stats" style="grid-template-columns: 1fr;">
-        <div class="stat" style="display:flex;flex-direction:column;align-items:flex-start;gap:8px;">
-          <img src="https://hits.sh/agarena.github.io/demo-site.svg?view=today-total&label=访问统计" alt="访问统计" style="height:28px;">
-          <div class="label">今日访问 / 累计访问（刷新即更新）</div>
-        </div>
-      </div>
+      <span class="badge"><span class="dot"></span> 统计已接入：数据进你自己的 D1 数据库</span>
 
       <p class="note">
-        访客统计说明：本页是纯静态站点，没有后端服务器。计数由
-        <code>hits.sh</code> 通过 SVG 图片请求实现（免注册、无 Cookie、无 IP 追踪）。
-        每次页面被打开，图片加载一次，计数 +1。若要更完整的分析
-        （来源、地域、停留时长），可嵌入 Umami / Plausible / Google Analytics 等第三方分析服务。
+        这一版不再用第三方计数器，而是把每次访问（IP、时间、地域、停留时长、来源）
+        写进你自己的 Cloudflare D1 数据库——数据完全归你，可自由分析。
+        下方留言也只进你的后台，不公开。后台地址：<code>/admin?key=你的密码</code>。
       </p>
+
+      <div class="fb">
+        <h2>留言 / 反馈（仅你可见）</h2>
+        <form id="fbForm">
+          <label>昵称（可留空）</label>
+          <input name="name" placeholder="匿名" />
+          <label>想说的</label>
+          <textarea name="message" placeholder="写点什么…"></textarea>
+          <input class="hp" name="hp" tabindex="-1" autocomplete="off" />
+          <button type="submit">提交</button><span class="ok" id="fbOk"></span>
+        </form>
+      </div>
+
+      <div class="cta">
+        <h2>这个站点不错？</h2>
+        <p class="sub">点一下，你的点击会被记录下来（仅后台可见），帮我判断哪里值得多做。</p>
+        <button id="ctaBtn">👍 这个站点不错</button><span class="ok" id="ctaOk"></span>
+      </div>
     </div>
   </div>
+
+  <script>
+    // 把下面换成你部署后的 Worker 地址
+    const WORKER = "https://demo-analytics.agarena.workers.dev";
+    const PATH = location.pathname;
+    const start = Date.now();
+
+    // 进入即记录一次访问（地理/UA/来源由 Worker 补全城市级）
+    fetch(WORKER + "/api/visit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: PATH })
+    }).catch(() => {});
+
+    // 离开页面时回写停留时长
+    function reportDwell() {
+      const dwell = Date.now() - start;
+      fetch(WORKER + "/api/dwell", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dwell }),
+        keepalive: true
+      }).catch(() => {});
+    }
+    window.addEventListener("pagehide", reportDwell);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") reportDwell();
+    });
+
+    // 按钮点击记录（事件类型 btn_click，仅后台可见）
+    document.getElementById("ctaBtn").addEventListener("click", async () => {
+      const r = await fetch(WORKER + "/api/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "btn_click", detail: "cta_like", path: PATH })
+      }).catch(() => null);
+      if (r && r.ok) document.getElementById("ctaOk").textContent = "收到，谢谢你点击！";
+    });
+
+    // 留言提交
+    document.getElementById("fbForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const r = await fetch(WORKER + "/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: f.name.value, message: f.message.value })
+      }).catch(() => null);
+      if (r && r.ok) { document.getElementById("fbOk").textContent = "已收到，谢谢！"; f.reset(); }
+      else { document.getElementById("fbOk").textContent = "提交失败，稍后再试"; }
+    });
+  </script>
 </body>
 </html>
