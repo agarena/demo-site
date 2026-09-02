@@ -67,40 +67,22 @@
       <h1>👋 这是一个示例站点 <span style="font-size:14px;color:#3b6cf6;">v2 · 已更新</span></h1>
       <p class="sub">用来演示静态网页托管 + 访客统计。随便改点东西，重新发布看链接变不变。</p>
 
-      <span class="badge"><span class="dot"></span> 实时访客计数（第三方免登录 API）</span>
+      <span class="badge"><span class="dot"></span> 实时访客计数（第三方免登录 SVG 徽章）</span>
 
-      <div class="stats">
-        <div class="stat">
-          <div class="num" id="hits">…</div>
-          <div class="label">累计访问次数</div>
-        </div>
-        <div class="stat">
-          <div class="num" id="today">…</div>
-          <div class="label">今日访问（演示占位）</div>
+      <div class="stats" style="grid-template-columns: 1fr;">
+        <div class="stat" style="display:flex;flex-direction:column;align-items:flex-start;gap:8px;">
+          <img src="https://hits.sh/agarena.github.io/demo-site.svg?view=today-total&label=访问统计" alt="访问统计" style="height:28px;">
+          <div class="label">今日访问 / 累计访问（刷新即更新）</div>
         </div>
       </div>
 
       <p class="note">
-        访客统计说明：本页是纯静态站点，没有后端服务器。计数来自公开 API
-        <code>countapi.xyz</code>（免注册），浏览器直接调用。若要更完整的分析
+        访客统计说明：本页是纯静态站点，没有后端服务器。计数由
+        <code>hits.sh</code> 通过 SVG 图片请求实现（免注册、无 Cookie、无 IP 追踪）。
+        每次页面被打开，图片加载一次，计数 +1。若要更完整的分析
         （来源、地域、停留时长），可嵌入 Umami / Plausible / Google Analytics 等第三方分析服务。
       </p>
     </div>
   </div>
-
-  <script>
-    // 用免费免登录的 countapi.xyz 实现访问计数
-    const NAMESPACE = "workbuddy-demo";
-    const KEY = "page-main";
-    fetch("https://api.countapi.xyz/hit/" + NAMESPACE + "/" + KEY)
-      .then(r => r.json())
-      .then(d => {
-        document.getElementById("hits").textContent = d.value;
-        document.getElementById("today").textContent = "—";
-      })
-      .catch(() => {
-        document.getElementById("hits").textContent = "统计不可用";
-      });
-  </script>
 </body>
 </html>
