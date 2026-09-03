@@ -5,10 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="canvas:aspect-ratio" content="16:9" />
 <title>舒狐 shufy — AI Tools / Studio White</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="preload" href="./fonts/instrument-sans-latin-variable.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="./fonts/inter-latin-variable.woff2" as="font" type="font/woff2" crossorigin />
 <style>
+  /* 本地字体（SIL OFL 许可），取代 Google Fonts 外链：大陆访客可正常加载，无跨墙请求 */
+  @font-face{font-family:"Instrument Sans";font-style:normal;font-weight:400 700;font-display:swap;src:url("./fonts/instrument-sans-latin-variable.woff2") format("woff2")}
+  @font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url("./fonts/inter-latin-variable.woff2") format("woff2")}
   :root{
     --seed-bg:#F6F7F9; --seed-fg:#0E0F13; --seed-primary:#0071E3;
     --seed-accent:#E8552D; --seed-surface:#FFFFFF; --seed-radius:22px;
@@ -464,9 +466,10 @@
   $("lnk-open").addEventListener("click",()=>{const t=T[hero]; track('outbound_click','tool',t.slug||t.k,{url:t.url});});
 
   /* ---------- 埋点上报(有后端时自动启用) ---------- */
-  const API_BASE=(window.API_BASE||'').replace(/\/$/,'');
+  const API_BASE=(window.API_BASE||'https://demo-analytics.agarena.workers.dev').replace(/\/$/,'');
   let API_ON=false;
-  const ANON='u-'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);   // 生产可持久化到 localStorage
+  let ANON=null; try{ANON=localStorage.getItem('shufy_anon');}catch(e){}
+  if(!ANON){ANON='u-'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); try{localStorage.setItem('shufy_anon',ANON);}catch(e){}}
   const SID=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2);
   const FP=[navigator.userAgent,screen.width,screen.height,navigator.language].join('|');
   const Q=[];
@@ -474,6 +477,12 @@
   function track(type,targetType,targetId,extra){if(!API_ON)return; Q.push(Object.assign({type,targetType,targetId,path:location.pathname,ts:new Date().toISOString()},extra||{})); if(Q.length>=12)flush();}
   function flush(){if(!API_ON||!Q.length)return; const body={anonId:ANON,fingerprint:FP,sessionId:SID,context:ctx(),events:Q.splice(0)};
     try{const j=JSON.stringify(body); if(navigator.sendBeacon)navigator.sendBeacon(API_BASE+'/api/collect',new Blob([j],{type:'application/json'})); else fetch(API_BASE+'/api/collect',{method:'POST',headers:{'Content-Type':'application/json'},body:j,keepalive:true});}catch(e){}}
+  /* ---------- 停留时长：页面隐藏/关闭时上报一次 ---------- */
+  const DWELL_T0=Date.now(); let dwellSent=false;
+  function reportDwell(){if(dwellSent||!API_ON)return; dwellSent=true;
+    track('dwell',null,null,{meta:{dwell:Date.now()-DWELL_T0}}); flush();}
+  addEventListener('pagehide',reportDwell);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')reportDwell();});
   addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flush();});
   let maxScroll=0; addEventListener('scroll',()=>{const p=Math.min(100,Math.round((scrollY+innerHeight)/document.body.scrollHeight*100)); if(p>maxScroll+25){maxScroll=p; track('scroll_depth',null,null,{meta:{pct:p}});}},{passive:true});
   document.addEventListener('click',e=>{const n=e.target.closest('.nlinks a,.tk-all,.btn-k,.hire'); if(n)track('nav_click',null,(n.textContent||'').trim().slice(0,30));});
@@ -492,7 +501,7 @@
       }
     }catch(e){/* 预览/无后端:保留示例数据 */}
     try{const feed=await g('/api/feed'); if(Array.isArray(feed)&&feed.length){FEED.length=0; feed.forEach(f=>FEED.push([ZH[f.type]||'更新',f.text,CODE[f.type]||'up'])); renderTicker();}}catch(e){}
-    try{const site=await g('/api/site'); if(site&&site.brand_name){const wm=document.querySelector('.wm'); if(wm&&wm.lastChild)wm.lastChild.textContent=site.brand_name;} if(site&&site.contact_email){const bk=document.querySelector('.btn-k'); if(bk){bk.textContent=site.contact_email;bk.href='mailto:'+site.contact_email;}}}catch(e){}
+    try{const site=await g('/api/site'); if(site&&site.brand_name){const wm=document.querySelector('.wm'); if(wm&&wm.lastChild)wm.lastChild.textContent=site.brand_name;} if(site&&site.contact_email){const fm=document.querySelector('.foot-mail'); if(fm){fm.textContent=site.contact_email; fm.href='mailto:'+site.contact_email;}}}catch(e){}
     track('page_view'); flush();
   }
   /* ---------- 网页作品(示例占位,后续可替换为真实项目 / 后端 /api/web) ---------- */
