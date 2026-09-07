@@ -222,6 +222,9 @@
     background:radial-gradient(130% 120% at 50% 0%,var(--tint),transparent 72%),var(--surface)}
   .wshot svg{position:absolute;inset:0;width:100%;height:100%;display:block;
     transition:transform calc(.5s*var(--motion-mult)) cubic-bezier(.2,.7,.2,1)}
+  .wshot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;
+    transition:transform calc(.5s*var(--motion-mult)) cubic-bezier(.2,.7,.2,1)}
+  .wcard:hover .wshot img{transform:translateY(-6px) scale(1.02)}
   .wcard:hover .wshot svg{transform:translateY(-6px) scale(1.02)}
   .wbadge{position:absolute;top:12px;left:12px;z-index:2;font-family:var(--display);font-weight:600;font-size:11px;
     letter-spacing:.05em;text-transform:uppercase;color:var(--fg);background:color-mix(in srgb,var(--surface) 84%,transparent);
@@ -506,12 +509,12 @@
   }
   /* ---------- 网页作品(示例占位,后续可替换为真实项目 / 后端 /api/web) ---------- */
   let W=[
-    {k:"saas",tag:"SaaS 官网",name:"Nimbus",desc:"面向 B 端的 AI 协作 SaaS 官网,含定价、客户案例与在线演示区。",tags:["Landing","响应式","CMS"],url:"#"},
-    {k:"dash",tag:"数据看板",name:"Pulse Analytics",desc:"实时业务数据看板,支持多维筛选、点击下钻与一键导出。",tags:["Dashboard","图表","暗色"],url:"#"},
-    {k:"shop",tag:"电商前台",name:"Orbit Store",desc:"品牌电商前台:商品列表、购物车与极简三步结账流程。",tags:["电商","结账","SEO"],url:"#"},
-    {k:"admin",tag:"管理后台",name:"Ledger Admin",desc:"记账类后台系统,细粒度权限、审批流与批量操作。",tags:["后台","权限","表格"],url:"#"},
-    {k:"event",tag:"活动页",name:"Bloom Campaign",desc:"品牌快闪活动落地页,滚动叙事动效 + 预约转化组件。",tags:["微站","动效","表单"],url:"#"},
-    {k:"docs",tag:"文档站",name:"Atlas Docs",desc:"开发者文档站,全文搜索、版本切换与可运行代码示例。",tags:["Docs","搜索","MDX"],url:"#"}
+    {k:"saas",tag:"SaaS 官网",name:"Nimbus",desc:"面向 B 端的 AI 协作 SaaS 官网,含定价、客户案例与在线演示区。",tags:["Landing","响应式","CMS"],url:"./works/nimbus/",img:"./works/covers/nimbus.png"},
+    {k:"dash",tag:"数据看板",name:"Pulse Analytics",desc:"实时业务数据看板,支持多维筛选、点击下钻与一键导出。",tags:["Dashboard","图表","暗色"],url:"./works/pulse/",img:"./works/covers/pulse.png"},
+    {k:"shop",tag:"电商前台",name:"Orbit Store",desc:"品牌电商前台:商品列表、购物车与极简三步结账流程。",tags:["电商","结账","SEO"],url:"./works/orbit/",img:"./works/covers/orbit.png"},
+    {k:"admin",tag:"管理后台",name:"Ledger Admin",desc:"记账类后台系统,细粒度权限、审批流与批量操作。",tags:["后台","权限","表格"],url:"./works/ledger/",img:"./works/covers/ledger.png"},
+    {k:"event",tag:"活动页",name:"Bloom Campaign",desc:"品牌快闪活动落地页,滚动叙事动效 + 预约转化组件。",tags:["微站","动效","表单"],url:"./works/bloom/",img:"./works/covers/bloom.png"},
+    {k:"docs",tag:"文档站",name:"Atlas Docs",desc:"开发者文档站,全文搜索、版本切换与可运行代码示例。",tags:["Docs","搜索","MDX"],url:"./works/atlas/",img:"./works/covers/atlas.png"}
   ];
   function webShot(type){
     const chrome='<rect x="8" y="10" width="304" height="184" rx="12" style="fill:var(--surface)" stroke="rgba(16,20,30,.10)"/>'+
@@ -536,7 +539,7 @@
   }
   function renderWeb(){const g=$("webGrid");if(!g)return;
     g.innerHTML=W.map(p=>'<article class="wcard" data-component="web-card">'+
-      '<div class="wshot"><span class="wbadge">'+p.tag+'</span>'+webShot(p.k)+'</div>'+
+      '<div class="wshot"><span class="wbadge">'+p.tag+'</span>'+(p.img?'<img src="'+esc(p.img)+'" alt="'+esc(p.name)+' 页面预览" loading="lazy">':webShot(p.k))+'</div>'+
       '<div class="wbody"><div class="wname">'+p.name+'</div><p class="wdesc">'+p.desc+'</p>'+
       '<div class="wtags">'+(p.tags||[]).map(t=>'<span class="wtag">'+t+'</span>').join("")+'</div>'+
       '<a class="wlink" href="'+esc(p.url||"#")+'" target="_blank" rel="noopener" data-web="'+esc(p.name)+'">查看网页 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>'+

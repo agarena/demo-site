@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pulse Analytics — 实时业务数据看板</title>
+<meta name="description" content="Pulse Analytics：多维筛选、点击下钻、一键导出的实时业务数据看板。" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230A0C10'/%3E%3Cpath d='M6 20l5-8 4 6 3-4 8 6' stroke='%2322D3EE' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<style>
+  @font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url("../../fonts/inter-latin-variable.woff2") format("woff2")}
+  @font-face{font-family:"Instrument Sans";font-style:normal;font-weight:400 700;font-display:swap;src:url("../../fonts/instrument-sans-latin-variable.woff2") format("woff2")}
+  :root{
+    --bg:#0A0C10; --panel:#10131A; --panel-2:#161A23; --line:rgba(255,255,255,.07); --line-2:rgba(255,255,255,.12);
+    --fg:#E8ECF3; --fg-2:#A8B1C2; --fg-3:#6B7486;
+    --acc:#22D3EE; --acc-2:#818CF8; --ok:#34D399; --warn:#FBBF24; --bad:#F87171;
+    --r:14px;
+    --disp:"Instrument Sans","Inter",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    --body:"Inter",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none} button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  ::selection{background:rgba(34,211,238,.3)}
+  ::-webkit-scrollbar{width:10px;height:10px} ::-webkit-scrollbar-thumb{background:#232838;border-radius:6px;border:2px solid var(--bg)} ::-webkit-scrollbar-track{background:transparent}
+
+  .app{display:grid;grid-template-columns:216px 1fr;min-height:100vh}
+
+  /* ---------- sidebar ---------- */
+  .side{border-right:1px solid var(--line);padding:18px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;background:linear-gradient(180deg,#0C0F15,#0A0C10)}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--disp);font-weight:700;font-size:16px;letter-spacing:-.01em;padding:4px 10px 18px}
+  .brand .lg{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#22D3EE,#818CF8);display:grid;place-items:center}
+  .brand .lg svg{width:15px;height:15px}
+  .brand small{font-size:9.5px;font-weight:700;letter-spacing:.12em;color:var(--acc);border:1px solid rgba(34,211,238,.35);border-radius:5px;padding:2px 6px;margin-left:auto}
+  .nav-sec{font-size:10.5px;font-weight:700;letter-spacing:.12em;color:var(--fg-3);text-transform:uppercase;padding:14px 10px 6px}
+  .ni{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:9px;font-size:13.5px;font-weight:500;color:var(--fg-2);width:100%;text-align:left;transition:background .15s,color .15s}
+  .ni svg{width:16px;height:16px;flex:none;opacity:.85}
+  .ni:hover{background:rgba(255,255,255,.05);color:var(--fg)}
+  .ni.on{background:linear-gradient(90deg,rgba(34,211,238,.14),rgba(129,140,248,.08));color:#fff}
+  .ni.on svg{color:var(--acc);opacity:1}
+  .ni .bdg{margin-left:auto;font-size:10px;font-weight:700;background:rgba(34,211,238,.16);color:var(--acc);border-radius:100px;padding:2px 7px}
+  .side-foot{margin-top:auto;border-top:1px solid var(--line);padding-top:14px}
+  .quota{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+  .quota p{font-size:11px;color:var(--fg-3);margin-bottom:8px}
+  .quota .tr{height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
+  .quota .tr i{display:block;height:100%;width:38%;border-radius:3px;background:linear-gradient(90deg,var(--acc),var(--acc-2))}
+  .quota b{font-size:11px;color:var(--fg-2);font-weight:600}
+  @media (max-width:960px){
+    .app{grid-template-columns:64px 1fr}
+    .side{padding:14px 10px}
+    .brand span.nm,.brand small,.nav-sec,.ni span,.side-foot{display:none}
+    .ni{justify-content:center;padding:10px}
+  }
+
+  /* ---------- main ---------- */
+  .main{padding:20px 24px 60px;max-width:1440px;width:100%;margin:0 auto}
+  .topbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+  .topbar h1{font-family:var(--disp);font-size:20px;font-weight:700;letter-spacing:-.02em;margin-right:auto;display:flex;align-items:center;gap:10px}
+  .live{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--ok);background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);border-radius:100px;padding:5px 12px}
+  .live i{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:blink 1.6s infinite}
+  @keyframes blink{50%{opacity:.3}}
+  .seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px}
+  .seg button{font-size:12.5px;font-weight:600;color:var(--fg-3);border-radius:8px;padding:7px 14px;transition:all .15s}
+  .seg button.on{background:var(--panel-2);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+  .btn-exp{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#06202A;background:linear-gradient(135deg,var(--acc),#67E8F9);border-radius:10px;padding:9px 18px;transition:transform .15s,filter .2s}
+  .btn-exp:hover{transform:translateY(-1px);filter:brightness(1.05)}
+
+  .filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+  .fl-lbl{font-size:12px;color:var(--fg-3);font-weight:600}
+  .chip{font-size:12.5px;font-weight:600;color:var(--fg-2);border:1px solid var(--line-2);border-radius:100px;padding:6px 14px;transition:all .15s}
+  .chip:hover{color:var(--fg);border-color:rgba(255,255,255,.25)}
+  .chip.on{background:rgba(34,211,238,.12);border-color:rgba(34,211,238,.5);color:var(--acc)}
+  .fl-clear{font-size:12px;color:var(--fg-3);text-decoration:underline;text-underline-offset:3px}
+  .fl-clear:hover{color:var(--fg)}
+
+  .grid{display:grid;gap:14px}
+  .kpis{grid-template-columns:repeat(4,1fr)}
+  @media (max-width:1180px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:620px){.kpis{grid-template-columns:1fr}}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden}
+  .kpi .lb{font-size:12px;color:var(--fg-3);font-weight:600;display:flex;justify-content:space-between;align-items:center}
+  .kpi .lb em{font-style:normal;font-size:10.5px}
+  .kpi .vl{font-family:var(--disp);font-size:26px;font-weight:700;letter-spacing:-.02em;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+  .kpi .dt{font-size:11.5px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+  .kpi .dt.up{color:var(--ok)} .kpi .dt.dn{color:var(--bad)}
+  .kpi svg.sp{position:absolute;right:12px;bottom:10px;opacity:.9}
+
+  .row-2{grid-template-columns:1.9fr 1fr}
+  @media (max-width:1080px){.row-2{grid-template-columns:1fr}}
+  .row-3{grid-template-columns:1fr 1fr 1fr}
+  @media (max-width:1080px){.row-3{grid-template-columns:1fr 1fr}}
+  @media (max-width:680px){.row-3{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+  .panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .panel-h h3{font-family:var(--disp);font-size:14.5px;font-weight:700;letter-spacing:-.01em}
+  .panel-h .hint{font-size:11px;color:var(--fg-3)}
+  .panel-h .sel{font-size:12px;color:var(--fg-2);background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:5px 10px;outline:none;cursor:pointer}
+  .chart-wrap{position:relative}
+  canvas{display:block;width:100%}
+  .tt{position:absolute;pointer-events:none;background:#1B202C;border:1px solid var(--line-2);border-radius:9px;padding:8px 11px;font-size:11.5px;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .12s;z-index:5;white-space:nowrap}
+  .tt b{display:block;font-family:var(--disp);font-size:12px;margin-bottom:2px}
+  .tt .v{color:var(--acc);font-weight:700;font-variant-numeric:tabular-nums}
+
+  .drill{margin-top:14px;border:1px solid rgba(34,211,238,.3);background:linear-gradient(180deg,rgba(34,211,238,.06),transparent);border-radius:12px;padding:14px 16px;animation:slideIn .3s ease}
+  @keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .drill-h{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .drill-h b{font-family:var(--disp);font-size:13.5px}
+  .drill-h .x{margin-left:auto;color:var(--fg-3);font-size:16px;line-height:1;padding:2px 6px;border-radius:6px}
+  .drill-h .x:hover{color:#fff;background:rgba(255,255,255,.08)}
+  .drill-g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media (max-width:720px){.drill-g{grid-template-columns:1fr}}
+  .drill-g .dg{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+  .drill-g .dg span{font-size:10.5px;color:var(--fg-3);font-weight:600;letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:6px}
+  .drill-g .dg b{font-family:var(--disp);font-size:17px;letter-spacing:-.01em}
+  .drill-g .dg small{display:block;font-size:11px;color:var(--fg-2);margin-top:3px}
+
+  .hbar{display:flex;flex-direction:column;gap:11px}
+  .hb{display:grid;grid-template-columns:74px 1fr 58px;align-items:center;gap:10px;cursor:pointer;border-radius:8px;padding:2px 4px;transition:background .15s}
+  .hb:hover{background:rgba(255,255,255,.04)}
+  .hb span{font-size:12.5px;color:var(--fg-2);white-space:nowrap}
+  .hb.on span{color:var(--acc);font-weight:700}
+  .hb .tr{height:16px;border-radius:5px;background:rgba(255,255,255,.05);overflow:hidden}
+  .hb .tr i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#0E7490,var(--acc));transition:width .6s cubic-bezier(.2,.7,.2,1);min-width:2px}
+  .hb.on .tr i{background:linear-gradient(90deg,#6D28D9,var(--acc-2))}
+  .hb b{font-size:12px;color:var(--fg-2);text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+  .legend span{font-size:11.5px;color:var(--fg-2);display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:9px;height:9px;border-radius:3px}
+  .heat{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+  .heat .hc{aspect-ratio:1.35;border-radius:4px;background:rgba(255,255,255,.05);position:relative;cursor:default}
+  .heat .hc:hover::after{content:attr(data-t);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1B202C;border:1px solid var(--line-2);border-radius:7px;padding:5px 9px;font-size:10.5px;white-space:nowrap;z-index:6}
+  .heat-cap{display:flex;justify-content:space-between;font-size:10px;color:var(--fg-3);margin-top:8px}
+
+  /* table */
+  .tbl-panel{padding:0;overflow:hidden}
+  .tbl-top{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .tbl-top h3{font-family:var(--disp);font-size:14.5px}
+  .search{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:7px 12px;min-width:210px}
+  .search svg{width:13px;height:13px;color:var(--fg-3);flex:none}
+  .search input{background:none;border:0;outline:none;color:var(--fg);font:inherit;font-size:12.5px;width:100%}
+  .search input::placeholder{color:var(--fg-3)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  thead th{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-3);text-align:left;padding:10px 18px;border-bottom:1px solid var(--line);white-space:nowrap;user-select:none}
+  thead th.sortable{cursor:pointer} thead th.sortable:hover{color:var(--fg)}
+  thead th .arr{font-size:9px;margin-left:3px}
+  tbody td{padding:11px 18px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--fg-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+  tbody tr{transition:background .12s;cursor:default}
+  tbody tr:hover{background:rgba(255,255,255,.03)}
+  .pill{font-size:10.5px;font-weight:700;border-radius:100px;padding:3px 10px}
+  .pl-ok{background:rgba(52,211,153,.12);color:var(--ok)}
+  .pl-cart{background:rgba(129,140,248,.14);color:var(--acc-2)}
+  .pl-sign{background:rgba(34,211,238,.12);color:var(--acc)}
+  .pl-churn{background:rgba(248,113,113,.12);color:var(--bad)}
+  .tbl-foot{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;color:var(--fg-3);font-size:12px}
+  .pg{display:flex;gap:4px}
+  .pg button{min-width:28px;height:28px;border-radius:7px;font-size:12px;color:var(--fg-2);display:grid;place-items:center;transition:background .15s}
+  .pg button:hover{background:rgba(255,255,255,.06)}
+  .pg button.on{background:rgba(34,211,238,.14);color:var(--acc);font-weight:700}
+  .empty{padding:34px;text-align:center;color:var(--fg-3);font-size:13px}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,80px);background:#1B202C;border:1px solid var(--line-2);color:var(--fg);
+    font-size:13px;border-radius:11px;padding:11px 20px;box-shadow:0 16px 44px rgba(0,0,0,.6);opacity:0;transition:all .35s cubic-bezier(.2,.7,.2,1);z-index:99;display:flex;gap:9px;align-items:center;pointer-events:none}
+  .toast.show{transform:translate(-50%,0);opacity:1}
+  .toast svg{color:var(--ok)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><span class="lg"><svg viewBox="0 0 24 24" fill="none" stroke="#0A0C10" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14l4.5-7 3.5 5.5L14 8l7 6"/></svg></span><span class="nm">Pulse</span><small>BETA</small></div>
+    <div class="nav-sec">分析</div>
+    <button class="ni on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span>数据概览</span></button>
+    <button class="ni" data-view="流量分析"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 17l5-6 4 3 5-8 4 5"/></svg><span>流量分析</span></button>
+    <button class="ni" data-view="转化漏斗"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 4h18l-7 8v6l-4 2v-8z"/></svg><span>转化漏斗</span></button>
+    <button class="ni" data-view="用户留存"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none" opacity=".25"/></svg><span>用户留存</span></button>
+    <div class="nav-sec">管理</div>
+    <button class="ni" data-view="报告中心"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg><span>报告中心</span></button>
+    <button class="ni" data-view="数据源设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg><span>数据源设置</span></button>
+    <div class="side-foot">
+      <div class="quota"><p>本月事件额度</p><div class="tr"><i></i></div><b>38 万 / 100 万</b></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h1>数据概览 <span class="live"><i></i>实时 · 在线 <b id="liveN">1,284</b></span></h1>
+      <div class="seg" id="rangeSeg" role="group" aria-label="时间范围">
+        <button data-r="7">近 7 天</button>
+        <button class="on" data-r="30">近 30 天</button>
+        <button data-r="90">近 90 天</button>
+      </div>
+      <button class="btn-exp" id="btnExport"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>导出 CSV</button>
+    </div>
+
+    <div class="filters">
+      <span class="fl-lbl">渠道</span>
+      <div id="chChips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      <span class="fl-lbl" style="margin-left:8px">地区</span>
+      <select class="panel-h sel" id="regionSel" style="margin:0">
+        <option value="">全部地区</option><option>华东</option><option>华北</option><option>华南</option><option>西南</option><option>海外</option>
+      </select>
+      <button class="fl-clear" id="flClear" hidden>清除筛选</button>
+    </div>
+
+    <div class="grid kpis" id="kpis"></div>
+
+    <div class="grid row-2" style="margin-top:14px">
+      <div class="panel">
+        <div class="panel-h">
+          <h3 id="mainTitle">访问量趋势</h3>
+          <span class="hint">点击图中数据点可下钻查看当日明细</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="mainChart" height="300" aria-label="访问量趋势图"></canvas>
+          <div class="tt" id="mainTT"></div>
+        </div>
+        <div class="drill" id="drill" hidden></div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h3>渠道分布</h3><span class="hint">点击条目可筛选全局</span></div>
+        <div class="hbar" id="chBars"></div>
+      </div>
+    </div>
+
+    <div class="grid row-3" style="margin-top:14px">
+      <div class="panel">
+        <div class="panel-h"><h3>设备构成</h3></div>
+        <div class="chart-wrap" style="display:grid;place-items:center">
+          <canvas id="devChart" width="230" height="170" aria-label="设备构成环图"></canvas>
+        </div>
+        <div class="legend" id="devLegend"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h3>次周留存率</h3><span class="hint">按获客周</span></div>
+        <div class="heat" id="heat"></div>
+        <div class="heat-cap"><span>← 较早</span><span>较近 →</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h3>转化概览</h3></div>
+        <div class="hbar" id="convList"></div>
+      </div>
+    </div>
+
+    <div class="panel tbl-panel" style="margin-top:14px">
+      <div class="tbl-top">
+        <h3>最近转化事件</h3>
+        <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="tblSearch" placeholder="搜索用户 / 渠道 / 地区…" /></label>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>时间</th><th>用户</th><th>事件</th><th class="sortable" data-k="ch">渠道 <span class="arr"></span></th><th>地区</th><th>设备</th><th class="sortable" data-k="val">价值 <span class="arr"></span></th>
+          </tr></thead>
+          <tbody id="tblBody"></tbody>
+        </table>
+      </div>
+      <div class="tbl-foot">
+        <span id="tblInfo"></span>
+        <div class="pg" id="pg"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+function toast(m){const t=$("#toast");t.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>'+m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2600);}
+
+/* ---------- 确定性伪随机（保证每次打开数据一致） ---------- */
+let seed=42; function rnd(){seed=(seed*1664525+1013904223)%4294967296;return seed/4294967296;}
+const CHANNELS=["自然搜索","直接访问","社交媒体","付费投放","邮件营销"];
+const REGIONS=["华东","华北","华南","西南","海外"];
+const DEVICES=[["桌面端",52,"#22D3EE"],["移动端",38,"#818CF8"],["平板",10,"#FBBF24"]];
+const DAYS=90, TODAY=new Date();
+
+/* 90 天基础数据：趋势 + 周季节性 + 噪声 */
+const daily=[];
+for(let i=0;i<DAYS;i++){
+  const d=new Date(TODAY); d.setDate(d.getDate()-(DAYS-1-i));
+  const trend=1+(i/DAYS)*0.42;
+  const dow=d.getDay(), season=(dow===0||dow===6)?0.78:1;
+  const base=Math.round(3100*trend*season*(0.9+rnd()*0.2));
+  const perCh=CHANNELS.map((c,ci)=>{
+    const w=[0.30,0.24,0.20,0.16,0.10][ci]*(0.85+rnd()*0.3);
+    return Math.round(base*w);
+  });
+  const rev=Math.round(base*(0.9+rnd()*0.35)*2.6);
+  daily.push({date:d,visits:base,perCh,rev,signups:Math.round(base*(0.05+rnd()*0.03)),dwell:Math.round(120+rnd()*90)});
+}
+
+/* ---------- 全局筛选状态 ---------- */
+const S={range:30,ch:new Set(),region:"",drill:null};
+function filtered(){return daily.slice(-S.range).filter(d=>true);}
+function inFilter(perChIdx){
+  return !S.ch.size||S.ch.has(CHANNELS[perChIdx]);
+}
+function regionFactor(d,i){return !S.region?1:(REGIONS.indexOf(S.region)===i%REGIONS.length?1:0.18+((i*7)%10)/40);}
+
+/* ---------- KPI ---------- */
+function fmt(n){return n>=10000?(n/10000).toFixed(1)+" 万":n.toLocaleString("zh-CN");}
+function kpiRender(){
+  const cur=filtered(), prev=daily.slice(-(S.range*2),-S.range);
+  const sum=(arr,f)=>arr.reduce((a,d)=>a+f(d),0);
+  const vNow=sum(cur,d=>regionAdj(d)), vPrev=sum(prev,d=>d.visits);
+  const rNow=sum(cur,d=>d.rev*regionScale()), rPrev=sum(prev,d=>d.rev);
+  const sNow=sum(cur,d=>d.signups*regionScale()), sPrev=sum(prev,d=>d.signups);
+  const dNow=Math.round(sum(cur,d=>d.dwell)/Math.max(1,cur.length)), dPrev=Math.round(sum(prev,d=>d.dwell)/Math.max(1,prev.length));
+  const delta=(a,b)=>b?((a-b)/b*100):0;
+  const items=[
+    {lb:"访问量",vl:fmt(vNow),dt:delta(vNow,vPrev),spark:cur.map(d=>regionAdj(d)),color:"#22D3EE"},
+    {lb:"注册转化",vl:fmt(sNow),dt:delta(sNow,sPrev),spark:cur.map(d=>Math.round(d.signups*regionScale())),color:"#818CF8"},
+    {lb:"收入（元）",vl:fmt(rNow),dt:delta(rNow,rPrev),spark:cur.map(d=>d.rev*regionScale()),color:"#34D399"},
+    {lb:"平均停留（秒）",vl:dNow,dt:delta(dNow,dPrev),spark:cur.map(d=>d.dwell),color:"#FBBF24"}
+  ];
+  $("#kpis").innerHTML=items.map(it=>{
+    const up=it.dt>=0;
+    const pts=spark(it.spark);
+    return `<div class="kpi"><div class="lb">${it.lb}<em style="color:var(--fg-3)">vs 上期</em></div>
+      <div class="vl">${typeof it.vl==="number"?it.vl.toLocaleString("zh-CN"):it.vl}</div>
+      <span class="dt ${up?"up":"dn"}">${up?"▲":"▼"} ${Math.abs(it.dt).toFixed(1)}%</span>
+      <svg class="sp" width="86" height="30"><path d="${pts}" fill="none" stroke="${it.color}" stroke-width="1.8" stroke-linecap="round" opacity=".85"/></svg></div>`;
+  }).join("");
+}
+function regionAdj(d){return S.region?Math.round(d.visits*regionScale()):d.visits;}
+function regionScale(){return S.region?0.18+ (REGIONS.indexOf(S.region)+1)*0.13:1;}
+function spark(arr){
+  const w=86,h=28,mx=Math.max(...arr),mn=Math.min(...arr),rg=mx-mn||1;
+  return arr.map((v,i)=>(i?"L":"M")+(i*(w/(arr.length-1))).toFixed(1)+" "+(h-((v-mn)/rg)*h).toFixed(1)).join(" ");
+}
+
+/* ---------- 主图（canvas 面积图，hover + 点击下钻） ---------- */
+const MC=$("#mainChart"), mctx=MC.getContext("2d"), TT=$("#mainTT");
+let MRECT=null, MDATA=[];
+function sizeCanvas(c){const r=c.getBoundingClientRect(),dpr=devicePixelRatio||1;c.width=r.width*dpr;c.height=(+c.getAttribute("height"))*1;const logicalH=+c.dataset.h||300;c.style.height=logicalH+"px";c.width=r.width*dpr;c.height=logicalH*dpr;c.getContext("2d").setTransform(dpr,0,0,dpr,0,0);return{w:r.width,h:logicalH};}
+MC.dataset.h=300;
+
+function drawMain(){
+  const {w,h}=sizeCanvas(MC);
+  MDATA=filtered().map(d=>({...d,v:regionAdj(d)}));
+  const pad={l:44,r:12,t:14,b:26};
+  const mx=Math.max(...MDATA.map(d=>d.v))*1.12;
+  const X=i=>pad.l+(w-pad.l-pad.r)*(MDATA.length<2?0.5:i/(MDATA.length-1));
+  const Y=v=>h-pad.b-(h-pad.t-pad.b)*(v/mx);
+  mctx.clearRect(0,0,w,h);
+  /* grid */
+  mctx.font="10px Inter,system-ui";mctx.fillStyle="rgba(255,255,255,.32)";mctx.strokeStyle="rgba(255,255,255,.06)";mctx.lineWidth=1;
+  for(let g=0;g<=4;g++){const y=pad.t+(h-pad.t-pad.b)*g/4;mctx.beginPath();mctx.moveTo(pad.l,y);mctx.lineTo(w-pad.r,y);mctx.stroke();
+    mctx.fillText(fmt(Math.round(mx*(1-g/4))),4,y+3);}
+  /* x labels */
+  const step=Math.ceil(MDATA.length/7);
+  mctx.textAlign="center";
+  MDATA.forEach((d,i)=>{if(i%step===0||i===MDATA.length-1){const mm=(d.date.getMonth()+1),dd=d.date.getDate();mctx.fillText(mm+"/"+dd,X(i),h-8);}});
+  /* area */
+  const grad=mctx.createLinearGradient(0,pad.t,0,h);
+  grad.addColorStop(0,"rgba(34,211,238,.30)");grad.addColorStop(1,"rgba(34,211,238,0)");
+  mctx.beginPath();
+  MDATA.forEach((d,i)=>{i?mctx.lineTo(X(i),Y(d.v)):mctx.moveTo(X(i),Y(d.v));});
+  mctx.lineTo(X(MDATA.length-1),h-pad.b);mctx.lineTo(X(0),h-pad.b);mctx.closePath();
+  mctx.fillStyle=grad;mctx.fill();
+  /* line */
+  mctx.beginPath();
+  MDATA.forEach((d,i)=>{i?mctx.lineTo(X(i),Y(d.v)):mctx.moveTo(X(i),Y(d.v));});
+  mctx.strokeStyle="#22D3EE";mctx.lineWidth=2;mctx.lineJoin="round";mctx.stroke();
+  /* drill point */
+  if(S.drill!=null&&MDATA[S.drill]){
+    const d=MDATA[S.drill];
+    mctx.beginPath();mctx.arc(X(S.drill),Y(d.v),4.5,0,7);mctx.fillStyle="#22D3EE";mctx.fill();
+    mctx.beginPath();mctx.arc(X(S.drill),Y(d.v),8.5,0,7);mctx.strokeStyle="rgba(34,211,238,.35)";mctx.lineWidth=2;mctx.stroke();
+  }
+  MRECT={X,Y,w,h,pad};
+}
+function mainHover(ev){
+  if(!MRECT||!MDATA.length)return;
+  const r=MC.getBoundingClientRect(),x=ev.clientX-r.left,y=ev.clientY-r.top;
+  const {X,Y}=MRECT;
+  let bi=0,bd=1e9;
+  MDATA.forEach((d,i)=>{const dd=Math.abs(X(i)-x);if(dd<bd){bd=dd;bi=i;}});
+  if(bd>60){TT.style.opacity=0;return;}
+  const d=MDATA[bi];
+  TT.innerHTML=`<b>${d.date.getMonth()+1}月${d.date.getDate()}日</b><span class="v">${d.v.toLocaleString("zh-CN")} 次访问</span>`;
+  TT.style.opacity=1;
+  TT.style.left=Math.min(r.width-130,Math.max(0,X(bi)-60))+"px";
+  TT.style.top=(Y(d.v)-54)+"px";
+  MC._hover=bi;
+  drawMain();
+  mctx.save();
+  const gx=X(bi),gy=Y(d.v);
+  mctx.strokeStyle="rgba(255,255,255,.18)";mctx.setLineDash([4,4]);
+  mctx.beginPath();mctx.moveTo(gx,MRECT.pad.t);mctx.lineTo(gx,MRECT.h-MRECT.pad.b);mctx.stroke();
+  mctx.beginPath();mctx.arc(gx,gy,4,0,7);mctx.fillStyle="#fff";mctx.fill();
+  mctx.restore();
+}
+MC.addEventListener("mousemove",mainHover);
+MC.addEventListener("mouseleave",()=>{TT.style.opacity=0;drawMain();});
+MC.addEventListener("click",ev=>{
+  if(MC._hover==null||!MDATA[MC._hover])return;
+  S.drill=(S.drill===MC._hover)?null:MC._hover;
+  S.drill!=null?drillShow(MDATA[S.drill]):drillHide();
+  drawMain();
+});
+function drillShow(d){
+  const rows=(S.ch.size?CHANNELS.filter((c,i)=>S.ch.has(i)):CHANNELS).map((c,i)=>{const ci=CHANNELS.indexOf(c);return [c,Math.round(d.perCh[ci]*(S.region?regionScale():1))];}).sort((a,b)=>b[1]-a[1]);
+  $("#drill").hidden=false;
+  $("#drill").innerHTML=`<div class="drill-h"><b>${d.date.getMonth()+1}月${d.date.getDate()}日 · 当日明细</b><button class="x" onclick="drillHide()">✕</button></div>
+  <div class="drill-g">
+    <div class="dg"><span>访问量</span><b>${d.v.toLocaleString("zh-CN")}</b><small>注册 ${Math.round(d.signups*regionScale())} · 转化率 ${(d.signups/d.visits*100).toFixed(1)}%</small></div>
+    <div class="dg"><span>收入</span><b>¥${Math.round(d.rev*regionScale()).toLocaleString("zh-CN")}</b><small>客单价 ¥${(d.rev*regionScale()/Math.max(1,d.signups*regionScale())).toFixed(0)}</small></div>
+    <div class="dg"><span>渠道 Top</span><b style="font-size:13px">${rows[0][0]} ${fmt(rows[0][1])}</b><small>${rows.slice(1,3).map(r=>r[0]+" "+fmt(r[1])).join(" · ")}</small></div>
+  </div>`;
+}
+function drillHide(){S.drill=null;$("#drill").hidden=true;drawMain();}
+
+/* ---------- 渠道条形（可点击筛选） ---------- */
+function chRender(){
+  const cur=filtered();
+  const totals=CHANNELS.map((c,i)=>cur.reduce((a,d)=>a+d.perCh[i],0));
+  const mx=Math.max(...totals,1);
+  const totalAll=totals.reduce((a,b)=>a+b,0)||1;
+  $("#chBars").innerHTML=CHANNELS.map((c,i)=>{
+    const on=S.ch.has(i);
+    const pct=(totals[i]/totalAll*100).toFixed(0);
+    return `<div class="hb ${on?"on":""}" data-ch="${i}"><span>${c}</span><span class="tr"><i style="width:${totals[i]/mx*100}%"></i></span><b>${pct}%</b></div>`;
+  }).join("");
+}
+$("#chBars").addEventListener("click",e=>{
+  const b=e.target.closest(".hb");if(!b)return;
+  const i=+b.dataset.ch;
+  S.ch.has(i)?S.ch.delete(i):S.ch.add(i);
+  S.drill=null;drillHide();
+  refresh();toast(S.ch.size?`已筛选 ${[...S.ch].map(c=>CHANNELS[c]).join("、")}`:"已清除渠道筛选");
+});
+
+/* ---------- 转化概览 ---------- */
+function convRender(){
+  const cur=filtered();
+  const signups=cur.reduce((a,d)=>a+d.signups*regionScale(),0);
+  const visits=cur.reduce((a,d)=>a+regionAdj(d),0);
+  const rev=cur.reduce((a,d)=>a+d.rev*regionScale(),0);
+  const rows=[
+    ["访问 → 注册",(signups/visits*100),8.2,"#22D3EE"],
+    ["注册 → 首单",34.6,30,"#818CF8"],
+    ["复购率",27.3,25,"#34D399"]
+  ];
+  $("#convList").innerHTML=rows.map(r=>`<div style="margin-bottom:4px">
+    <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span style="color:var(--fg-2)">${r[0]}</span><b style="font-variant-numeric:tabular-nums">${r[1].toFixed(1)}%</b></div>
+    <div class="tr" style="height:7px;border-radius:4px;background:rgba(255,255,255,.06);overflow:hidden"><i style="display:block;height:100%;width:${Math.min(100,r[1]/r[2]*100)}%;border-radius:4px;background:${r[3]}"></i></div>
+  </div>`).join("");
+}
+
+/* ---------- 设备环图 ---------- */
+function devRender(){
+  const c=$("#devChart"),ctx=c.getContext("2d"),dpr=devicePixelRatio||1,w=230,h=170;
+  c.width=w*dpr;c.height=h*dpr;c.style.width=w+"px";c.style.height=h+"px";ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2,cy=h/2,R=62,r=44;let a=-Math.PI/2;
+  DEVICES.forEach(d=>{
+    const ang=d[1]/100*Math.PI*2;
+    ctx.beginPath();ctx.arc(cx,cy,R,a+0.03,a+ang-0.03);ctx.arc(cx,cy,r,a+ang-0.03,a+0.03,true);ctx.closePath();
+    ctx.fillStyle=d[2];ctx.globalAlpha=.92;ctx.fill();ctx.globalAlpha=1;
+    a+=ang;
+  });
+  ctx.fillStyle="#E8ECF3";ctx.font="700 17px 'Instrument Sans',Inter,system-ui";ctx.textAlign="center";
+  ctx.fillText("52% 桌面",cx,cy-1);
+  ctx.fillStyle="rgba(255,255,255,.4)";ctx.font="10px Inter,system-ui";
+  ctx.fillText("移动端 38%",cx,cy+15);
+  $("#devLegend").innerHTML=DEVICES.map(d=>`<span><i style="background:${d[2]}"></i>${d[0]} ${d[1]}%</span>`).join("");
+}
+
+/* ---------- 留存热力 ---------- */
+function heatRender(){
+  const weeks=8,days=7;
+  let html="";
+  for(let w=0;w<weeks;w++){
+    for(let d=0;d<days;d++){
+      const base=Math.max(0,58-w*4.2-d*5.5+ (w*3+d*7)%9);
+      const v=Math.max(4,Math.min(72,base));
+      const alpha=0.08+ (v/72)*0.85;
+      html+=`<div class="hc" data-t="第${w+1}周 · D${d+1} 留存 ${v.toFixed(0)}%" style="background:rgba(34,211,238,${alpha.toFixed(2)})"></div>`;
+    }
+  }
+  $("#heat").innerHTML=html;
+}
+
+/* ---------- 明细表 ---------- */
+const EV=[["signup","注册","pl-sign"],["purchase","支付","pl-ok"],["add_cart","加购","pl-cart"],["churn_risk","流失预警","pl-churn"]];
+let tableAll=[];
+function tableGen(){
+  tableAll=[];
+  const names=["陈**","林**","王**","苏**","M**","K**","Z**","周**","吴**","郑**","A**","J**"];
+  for(let i=0;i<57;i++){
+    const d=new Date(TODAY);d.setDate(d.getDate()-Math.floor(rnd()*S.range));d.setHours(Math.floor(rnd()*24),Math.floor(rnd()*60));
+    const ev=EV[Math.floor(rnd()*EV.length)];
+    tableAll.push({
+      ts:d, name:names[Math.floor(rnd()*names.length)], ev,
+      ch:CHANNELS[Math.floor(rnd()*CHANNELS.length)],
+      rg:REGIONS[Math.floor(rnd()*REGIONS.length)],
+      dv:DEVICES[Math.floor(rnd()*3)][0],
+      val:ev[0]==="purchase"?Math.round(80+rnd()*900):ev[0]==="add_cart"?Math.round(30+rnd()*300):0
+    });
+  }
+  tableAll.sort((a,b)=>b.ts-a.ts);
+}
+let sortK=null,sortDir=-1,page=1,PAGE=12,q="";
+function tableRender(){
+  let rows=tableAll.filter(r=>
+    (!S.ch.size||S.ch.has(CHANNELS.indexOf(r.ch)))&&
+    (!S.region||r.rg===S.region)&&
+    (!q||(r.name+r.ch+r.rg+r.ev[1]+r.dv).includes(q))
+  );
+  if(sortK){rows=[...rows].sort((a,b)=>{const va=sortK==="ch"?a.ch:a.val,vb=sortK==="ch"?b.ch:b.val;return (va>vb?1:va<vb?-1:0)*sortDir;});}
+  const pages=Math.max(1,Math.ceil(rows.length/PAGE));
+  page=Math.min(page,pages);
+  const view=rows.slice((page-1)*PAGE,page*PAGE);
+  $("#tblBody").innerHTML=view.length?view.map(r=>`<tr>
+    <td>${String(r.ts.getMonth()+1).padStart(2,"0")}-${String(r.ts.getDate()).padStart(2,"0")} ${String(r.ts.getHours()).padStart(2,"0")}:${String(r.ts.getMinutes()).padStart(2,"0")}</td>
+    <td style="color:var(--fg)">${r.name}</td>
+    <td><span class="pill ${r.ev[2]}">${r.ev[1]}</span></td>
+    <td>${r.ch}</td><td>${r.rg}</td><td>${r.dv}</td>
+    <td style="color:${r.val?"var(--fg)":"var(--fg-3)"}">${r.val?"¥"+r.val:"—"}</td></tr>`).join("")
+    :`<tr><td colspan="7"><div class="empty">没有匹配的事件 —— 试试调整筛选或关键词</div></td></tr>`;
+  $("#tblInfo").textContent=`共 ${rows.length} 条 · 第 ${page}/${pages} 页`+(q?` · 搜索“${q}”`:"");
+  let pg="";for(let p=1;p<=pages&&p<=7;p++)pg+=`<button class="${p===page?"on":""}" data-p="${p}">${p}</button>`;
+  $("#pg").innerHTML=pg;
+}
+$("#pg").addEventListener("click",e=>{const b=e.target.closest("button[data-p]");if(b){page=+b.dataset.p;tableRender();}});
+$("#tblSearch").addEventListener("input",e=>{q=e.target.value.trim();page=1;tableRender();});
+$$("th.sortable").forEach(th=>th.addEventListener("click",()=>{
+  if(sortK===th.dataset.k)sortDir*=-1;else{sortK=th.dataset.k;sortDir=-1;}
+  $$("th.sortable .arr").forEach(a=>a.textContent="");
+  th.querySelector(".arr").textContent=sortDir>0?"▲":"▼";
+  tableRender();
+}));
+
+/* ---------- 导出 CSV ---------- */
+$("#btnExport").addEventListener("click",()=>{
+  let rows=tableAll.filter(r=>(!S.ch.size||S.ch.has(CHANNELS.indexOf(r.ch)))&&(!S.region||r.rg===S.region));
+  const head=["时间","用户","事件","渠道","地区","设备","价值(元)"];
+  const body=rows.map(r=>[
+    r.ts.toLocaleString("zh-CN"),r.name,r.ev[1],r.ch,r.rg,r.dv,r.val||0
+  ]);
+  const csv="\uFEFF"+[head,...body].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(",")).join("\r\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download="pulse-events-"+new Date().toISOString().slice(0,10)+".csv";
+  a.click();URL.revokeObjectURL(a.href);
+  toast(`已导出 ${rows.length} 条事件数据`);
+});
+
+/* ---------- 筛选控件 ---------- */
+$("#chChips").innerHTML=CHANNELS.map((c,i)=>`<button class="chip" data-ch="${i}">${c}</button>`).join("");
+$("#chChips").addEventListener("click",e=>{
+  const b=e.target.closest(".chip");if(!b)return;
+  const i=+b.dataset.ch;
+  S.ch.has(i)?S.ch.delete(i):S.ch.add(i);
+  refresh();
+});
+$("#regionSel").addEventListener("change",e=>{S.region=e.target.value;refresh();});
+$("#flClear").addEventListener("click",()=>{S.ch.clear();S.region="";$("#regionSel").value="";refresh();});
+$("#rangeSeg").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-r]");if(!b)return;
+  $$("#rangeSeg button").forEach(x=>x.classList.toggle("on",x===b));
+  S.range=+b.dataset.r;S.drill=null;drillHide();
+  tableGen();refresh();
+  toast(`已切换到近 ${S.range} 天数据`);
+});
+$$(".ni[data-view]").forEach(b=>b.addEventListener("click",()=>{
+  toast(`「${b.dataset.view}」为演示占位 · 概览页为完整实现`);
+}));
+
+/* ---------- 汇总刷新 ---------- */
+function refresh(){
+  $$("#chChips .chip").forEach(c=>c.classList.toggle("on",S.ch.has(+c.dataset.ch)));
+  $("#flClear").hidden=!S.ch.size&&!S.region;
+  $("#mainTitle").textContent=S.region?`访问量趋势 · ${S.region}`:S.ch.size?`访问量趋势 · ${[...S.ch].map(c=>CHANNELS[c]).join(" / ")}`:"访问量趋势";
+  kpiRender();drawMain();chRender();convRender();tableRender();
+}
+
+/* ---------- live 在线人数 ---------- */
+let live=1284;
+setInterval(()=>{live=Math.max(900,live+Math.round((Math.random()-0.48)*18));$("#liveN").textContent=live.toLocaleString("zh-CN");},2000);
+
+addEventListener("resize",()=>{drawMain();});
+tableGen();refresh();devRender();heatRender();
+</script>
+</body>
+</html>

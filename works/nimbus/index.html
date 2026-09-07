@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nimbus — AI 团队协作操作系统</title>
+<meta name="description" content="Nimbus 把需求整理、任务流转与进度洞察交给 AI，让团队专注在真正重要的判断上。" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%235B5BF0'/%3E%3Cpath d='M9 22V10l14 12V10' stroke='%23fff' stroke-width='3.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<style>
+  @font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url("../../fonts/inter-latin-variable.woff2") format("woff2")}
+  @font-face{font-family:"Instrument Sans";font-style:normal;font-weight:400 700;font-display:swap;src:url("../../fonts/instrument-sans-latin-variable.woff2") format("woff2")}
+  :root{
+    --ink:#0B0D1A; --ink-2:#3A3F55; --ink-3:#6B7186;
+    --line:#E7E8F0; --line-2:#D9DBE8;
+    --bg:#FBFBFE; --surface:#FFFFFF;
+    --pri:#5B5BF0; --pri-deep:#4646C6; --violet:#8B5CF6; --cyan:#22D3EE;
+    --grad:linear-gradient(120deg,#5B5BF0 0%,#8B5CF6 55%,#22D3EE 130%);
+    --ok:#16A34A; --warn:#D97706; --bad:#DC2626;
+    --r:16px; --r-s:10px;
+    --shadow-s:0 1px 2px rgba(20,22,50,.05),0 8px 24px -12px rgba(20,22,50,.12);
+    --shadow-l:0 24px 60px -24px rgba(35,36,90,.28);
+    --disp:"Instrument Sans","Inter",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    --body:"Inter",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  ::selection{background:color-mix(in srgb,var(--pri) 22%,transparent)}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 24px}
+
+  /* ---------- nav ---------- */
+  .nav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--bg) 72%,transparent);
+    backdrop-filter:blur(16px) saturate(1.5);-webkit-backdrop-filter:blur(16px) saturate(1.5);border-bottom:1px solid transparent;transition:border-color .3s}
+  .nav.scrolled{border-bottom-color:var(--line)}
+  .nav-in{display:flex;align-items:center;gap:34px;height:66px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--disp);font-weight:700;font-size:18px;letter-spacing:-.02em}
+  .brand .logo{width:26px;height:26px;border-radius:8px;background:var(--grad);display:grid;place-items:center;box-shadow:0 4px 14px -4px color-mix(in srgb,var(--pri) 60%,transparent)}
+  .brand .logo svg{width:14px;height:14px}
+  .nav-links{display:flex;gap:26px;font-size:14px;font-weight:500;color:var(--ink-3)}
+  .nav-links a{transition:color .2s;position:relative}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-cta{margin-left:auto;display:flex;align-items:center;gap:18px}
+  .nav-cta .ghost{font-size:14px;font-weight:500;color:var(--ink-2)}
+  .nav-cta .ghost:hover{color:var(--ink)}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:600;font-size:14px;
+    border-radius:100px;padding:11px 22px;transition:transform .16s,box-shadow .2s,filter .2s;white-space:nowrap}
+  .btn-pri{background:var(--ink);color:#fff;box-shadow:var(--shadow-s)}
+  .btn-pri:hover{transform:translateY(-2px)}
+  .btn-grad{background:var(--grad);color:#fff;box-shadow:0 8px 24px -8px color-mix(in srgb,var(--pri) 55%,transparent)}
+  .btn-grad:hover{transform:translateY(-2px);filter:brightness(1.06)}
+  .btn-line{border:1px solid var(--line-2);color:var(--ink)}
+  .btn-line:hover{border-color:var(--ink-3);transform:translateY(-2px)}
+  @media (max-width:860px){.nav-links,.nav-cta .ghost{display:none}}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;padding:84px 0 30px;overflow:hidden}
+  .hero::before{content:"";position:absolute;inset:-40% -20% auto;height:120%;pointer-events:none;
+    background:
+      radial-gradient(46% 38% at 24% 22%,color-mix(in srgb,var(--pri) 12%,transparent),transparent 70%),
+      radial-gradient(40% 34% at 78% 16%,color-mix(in srgb,var(--cyan) 10%,transparent),transparent 70%);
+  }
+  .hero-in{position:relative;text-align:center;max-width:820px;margin:0 auto}
+  .pill{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--pri-deep);
+    background:color-mix(in srgb,var(--pri) 8%,#fff);border:1px solid color-mix(in srgb,var(--pri) 22%,transparent);
+    border-radius:100px;padding:7px 16px}
+  .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--pri);animation:pulse 2s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  h1{font-family:var(--disp);font-weight:700;letter-spacing:-.035em;line-height:1.08;font-size:clamp(38px,5.6vw,64px);margin:22px 0 18px}
+  h1 .grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{font-size:clamp(16px,2vw,19px);color:var(--ink-3);max-width:56ch;margin:0 auto 32px}
+  .hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .hero-note{margin-top:14px;font-size:13px;color:var(--ink-3)}
+
+  /* ---------- product mock ---------- */
+  .mock-zone{position:relative;max-width:1000px;margin:56px auto 0;perspective:1600px}
+  .mock{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-l);
+    overflow:hidden;text-align:left;transform:rotateX(6deg);transform-origin:center bottom;transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+  .mock.flat{transform:none}
+  .mock-bar{display:flex;align-items:center;gap:8px;height:44px;padding:0 16px;border-bottom:1px solid var(--line);background:#FCFCFF}
+  .mock-bar i{width:10px;height:10px;border-radius:50%}
+  .mock-bar .r{width:10px;height:10px;border-radius:50%;background:#FF5F57}
+  .mock-bar .y{width:10px;height:10px;border-radius:50%;background:#FEBC2E}
+  .mock-bar .g{width:10px;height:10px;border-radius:50%;background:#28C840}
+  .mock-bar .addr{flex:1;max-width:340px;margin:0 auto;height:24px;border-radius:8px;background:#F1F2F8;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--ink-3)}
+  .mock-body{display:grid;grid-template-columns:190px 1fr 280px;min-height:420px}
+  .mock-side{border-right:1px solid var(--line);padding:16px 12px;background:#FBFBFE}
+  .ms-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;font-size:13px;font-weight:500;color:var(--ink-3)}
+  .ms-item.on{background:color-mix(in srgb,var(--pri) 9%,transparent);color:var(--pri-deep);font-weight:600}
+  .ms-item svg{width:15px;height:15px;flex:none}
+  .ms-cap{font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase;margin:16px 10px 6px}
+  .mock-main{padding:20px 22px}
+  .mm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .mm-head b{font-family:var(--disp);font-size:16px;letter-spacing:-.01em}
+  .mm-chip{font-size:11px;font-weight:600;color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,transparent);border-radius:100px;padding:4px 10px}
+  .task{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:#fff}
+  .task .cb{width:16px;height:16px;border-radius:6px;border:1.6px solid var(--line-2);flex:none}
+  .task.done .cb{background:var(--pri);border-color:var(--pri);position:relative}
+  .task.done .cb::after{content:"";position:absolute;inset:3px;border-radius:2px;background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 5.4 4.2 7.6 8 3' stroke='%23fff' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+  .task .t{font-size:13.5px;font-weight:500;flex:1;min-width:0}
+  .task.done .t{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--line-2)}
+  .task .tag{font-size:10.5px;font-weight:700;letter-spacing:.04em;border-radius:6px;padding:3px 8px;flex:none}
+  .tg-v{background:color-mix(in srgb,var(--violet) 12%,transparent);color:var(--violet)}
+  .tg-b{background:color-mix(in srgb,var(--pri) 12%,transparent);color:var(--pri-deep)}
+  .tg-c{background:color-mix(in srgb,var(--cyan) 16%,transparent);color:#0E7490}
+  .ai-panel{border-left:1px solid var(--line);padding:18px;background:linear-gradient(180deg,color-mix(in srgb,var(--violet) 5%,#fff),#fff)}
+  .ai-head{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+  .ai-orb{width:26px;height:26px;border-radius:50%;background:var(--grad);display:grid;place-items:center;box-shadow:0 4px 12px -3px color-mix(in srgb,var(--violet) 55%,transparent)}
+  .ai-orb svg{width:13px;height:13px}
+  .ai-head b{font-family:var(--disp);font-size:13.5px}
+  .ai-head span{font-size:11px;color:var(--ink-3)}
+  .ai-bubble{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font-size:12.5px;color:var(--ink-2);box-shadow:var(--shadow-s)}
+  .ai-bubble+.ai-bubble{margin-top:9px}
+  .ai-bubble b{color:var(--ink)}
+  .ai-suggest{margin-top:12px;border:1px dashed color-mix(in srgb,var(--pri) 35%,transparent);border-radius:12px;padding:11px 13px;font-size:12px;color:var(--pri-deep);background:color-mix(in srgb,var(--pri) 5%,transparent);cursor:pointer;transition:background .2s}
+  .ai-suggest:hover{background:color-mix(in srgb,var(--pri) 10%,transparent)}
+  .float-card{position:absolute;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-l);
+    padding:12px 16px;font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:10px;animation:float 5s ease-in-out infinite}
+  .float-card small{display:block;font-weight:500;color:var(--ink-3);font-size:11px}
+  .fc-1{left:-14px;bottom:70px;animation-delay:.4s}
+  .fc-2{right:-10px;top:60px}
+  .fc-ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none}
+  .fc-1 .fc-ic{background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--ok)}
+  .fc-2 .fc-ic{background:color-mix(in srgb,var(--pri) 12%,transparent);color:var(--pri)}
+  @keyframes float{50%{transform:translateY(-9px)}}
+  @media (max-width:900px){
+    .mock{transform:none}
+    .mock-body{grid-template-columns:1fr}
+    .mock-side,.ai-panel{display:none}
+    .float-card{display:none}
+  }
+
+  /* ---------- logos ---------- */
+  .logos{padding:56px 0 10px;text-align:center}
+  .logos p{font-size:13px;color:var(--ink-3);letter-spacing:.06em;margin-bottom:22px}
+  .logo-row{display:flex;justify-content:center;align-items:center;gap:clamp(24px,5vw,56px);flex-wrap:wrap;opacity:.85}
+  .logo-row span{font-family:var(--disp);font-weight:700;font-size:17px;color:#9BA0B5;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;filter:grayscale(1)}
+  .logo-row i{width:16px;height:16px;border-radius:5px;background:currentColor;opacity:.7}
+
+  /* ---------- sections ---------- */
+  section{padding:88px 0}
+  .sec-head{max-width:640px;margin-bottom:46px}
+  .sec-head.center{margin-left:auto;margin-right:auto;text-align:center}
+  .kicker{font-family:var(--disp);font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--pri);margin-bottom:12px}
+  h2{font-family:var(--disp);font-weight:700;letter-spacing:-.03em;font-size:clamp(28px,3.6vw,40px);line-height:1.14}
+  .sec-head p{margin-top:14px;color:var(--ink-3);font-size:16px}
+
+  /* bento */
+  .bento{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+  .b-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:26px;box-shadow:var(--shadow-s);
+    transition:transform .35s,box-shadow .35s;position:relative;overflow:hidden}
+  .b-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-l)}
+  .b-3{grid-column:span 3}.b-2{grid-column:span 2}
+  @media (max-width:860px){.b-3,.b-2{grid-column:span 6}}
+  .b-ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;margin-bottom:16px}
+  .b-card h3{font-family:var(--disp);font-size:17px;letter-spacing:-.01em;margin-bottom:7px}
+  .b-card p{font-size:13.5px;color:var(--ink-3)}
+  .b-vis{margin-top:20px;border-radius:10px;background:#F6F7FC;border:1px solid var(--line);padding:14px;min-height:96px}
+  .chip-flow{display:flex;flex-wrap:wrap;gap:7px}
+  .chip-flow span{font-size:11px;font-weight:600;border-radius:100px;padding:5px 11px;background:#fff;border:1px solid var(--line-2);color:var(--ink-2)}
+  .chip-flow span.hot{background:color-mix(in srgb,var(--pri) 10%,transparent);border-color:color-mix(in srgb,var(--pri) 30%,transparent);color:var(--pri-deep)}
+  .bar-mini{display:flex;flex-direction:column;gap:9px;margin-top:4px}
+  .bar-mini .bm{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--ink-3)}
+  .bar-mini .bm b{width:64px;font-weight:600;color:var(--ink-2)}
+  .bar-mini .tr{flex:1;height:7px;border-radius:4px;background:#E9EAF4;overflow:hidden}
+  .bar-mini .tr i{display:block;height:100%;border-radius:4px;background:var(--grad)}
+  .spark-wrap{display:flex;align-items:flex-end;gap:4px;height:84px}
+  .spark-wrap i{flex:1;border-radius:4px 4px 0 0;background:linear-gradient(180deg,color-mix(in srgb,var(--pri) 70%,transparent),color-mix(in srgb,var(--pri) 12%,transparent))}
+
+  /* demo zone */
+  .demo{background:#0E0F1E;border-radius:26px;padding:clamp(26px,4.5vw,56px);color:#fff;position:relative;overflow:hidden}
+  .demo::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(50% 60% at 80% 0%,rgba(139,92,246,.22),transparent 70%),radial-gradient(40% 50% at 8% 100%,rgba(34,211,238,.12),transparent 70%)}
+  .demo .kicker{color:#A5B4FC}
+  .demo h2{color:#fff}
+  .demo .sec-head p{color:rgba(255,255,255,.62)}
+  .demo-tabs{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;position:relative}
+  .dtab{font-size:13.5px;font-weight:600;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.14);border-radius:100px;padding:9px 18px;transition:all .2s}
+  .dtab:hover{color:#fff}
+  .dtab.on{background:#fff;color:#0E0F1E;border-color:#fff}
+  .dpane{display:none;position:relative}
+  .dpane.on{display:block;animation:fadeUp .45s cubic-bezier(.2,.7,.2,1)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .d-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media (max-width:820px){.d-grid{grid-template-columns:1fr}}
+  .d-win{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:20px;backdrop-filter:blur(6px)}
+  .d-win h4{font-family:var(--disp);font-size:14px;margin-bottom:12px;color:rgba(255,255,255,.9)}
+  .d-win textarea{width:100%;min-height:130px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;
+    color:#E7E9F5;padding:12px;font:inherit;font-size:13px;resize:vertical;outline:none}
+  .d-win textarea:focus{border-color:rgba(139,92,246,.6)}
+  .d-win textarea::placeholder{color:rgba(255,255,255,.35)}
+  .d-btn{display:inline-flex;align-items:center;gap:8px;background:var(--grad);color:#fff;font-weight:600;font-size:13px;
+    border-radius:100px;padding:10px 20px;margin-top:12px;transition:transform .16s,filter .2s}
+  .d-btn:hover{transform:translateY(-2px);filter:brightness(1.08)}
+  .d-btn[disabled]{opacity:.55;cursor:wait;transform:none}
+  .d-out{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+  .d-out .oi{display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);
+    border-radius:10px;padding:10px 13px;font-size:12.5px;color:rgba(255,255,255,.85);animation:fadeUp .4s both}
+  .d-out .oi i{font-style:normal;flex:none;width:18px;height:18px;border-radius:6px;background:var(--grad);display:grid;place-items:center;font-size:9px;font-weight:800;margin-top:1px}
+  .chat{display:flex;flex-direction:column;gap:10px;min-height:250px}
+  .msg{max-width:86%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.55}
+  .msg.user{align-self:flex-end;background:var(--grad);color:#fff;border-bottom-right-radius:4px}
+  .msg.ai{align-self:flex-start;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.9);border-bottom-left-radius:4px}
+  .chat-sugs{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:14px}
+  .chat-sugs button{font-size:12px;color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.16);border-radius:100px;padding:7px 13px;transition:all .2s}
+  .chat-sugs button:hover{color:#fff;border-color:rgba(255,255,255,.4)}
+  .kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media (max-width:620px){.kanban{grid-template-columns:1fr}}
+  .kb-col{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:12px;min-height:230px}
+  .kb-col h5{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:10px;display:flex;justify-content:space-between}
+  .kb-col h5 em{font-style:normal;background:rgba(255,255,255,.1);border-radius:100px;padding:1px 8px;font-size:10px}
+  .kb-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:10px 12px;font-size:12.5px;
+    margin-bottom:8px;cursor:grab;transition:background .2s,border-color .2s;color:rgba(255,255,255,.88)}
+  .kb-card:hover{border-color:rgba(139,92,246,.55)}
+  .kb-card.dragging{opacity:.4;cursor:grabbing}
+  .kb-col.over{border-color:rgba(139,92,246,.6);background:rgba(139,92,246,.08)}
+  .kb-card small{display:block;margin-top:6px;font-size:10.5px;color:rgba(255,255,255,.5)}
+  .d-tip{margin-top:14px;font-size:12px;color:rgba(255,255,255,.45)}
+
+  /* cases */
+  .case-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media (max-width:860px){.case-grid{grid-template-columns:1fr}}
+  .case{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:28px;box-shadow:var(--shadow-s);display:flex;flex-direction:column;gap:16px;transition:transform .35s,box-shadow .35s}
+  .case:hover{transform:translateY(-5px);box-shadow:var(--shadow-l)}
+  .case .co{display:flex;align-items:center;gap:10px;font-family:var(--disp);font-weight:700;font-size:15px}
+  .case .co i{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:12px;font-style:normal}
+  .case q{font-size:14.5px;color:var(--ink-2);line-height:1.7;quotes:"“" "”"}
+  .case .who{font-size:12.5px;color:var(--ink-3)}
+  .case .who b{color:var(--ink)}
+  .case .metrics{display:flex;gap:22px;border-top:1px solid var(--line);padding-top:16px;margin-top:auto}
+  .case .metrics b{display:block;font-family:var(--disp);font-size:22px;letter-spacing:-.02em;color:var(--pri)}
+  .case .metrics span{font-size:11.5px;color:var(--ink-3)}
+
+  /* pricing */
+  .pricing{background:linear-gradient(180deg,#fff, #F6F7FD);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .bill-toggle{display:inline-flex;align-items:center;gap:4px;background:#EDEEF6;border-radius:100px;padding:4px;margin:0 auto 40px}
+  .bill-toggle button{font-size:13.5px;font-weight:600;border-radius:100px;padding:8px 20px;color:var(--ink-3);transition:all .2s}
+  .bill-toggle button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow-s)}
+  .bill-toggle .save{font-size:10.5px;font-weight:700;color:var(--ok);margin-left:6px}
+  .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch}
+  @media (max-width:860px){.plans{grid-template-columns:1fr}}
+  .plan{background:#fff;border:1px solid var(--line);border-radius:20px;padding:30px;display:flex;flex-direction:column;position:relative;transition:transform .3s,box-shadow .3s}
+  .plan:hover{transform:translateY(-4px);box-shadow:var(--shadow-l)}
+  .plan.hot{border:2px solid var(--pri);box-shadow:0 20px 50px -20px color-mix(in srgb,var(--pri) 45%,transparent)}
+  .plan .pop{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--grad);color:#fff;font-size:11px;font-weight:700;letter-spacing:.04em;border-radius:100px;padding:5px 14px}
+  .plan h3{font-family:var(--disp);font-size:17px}
+  .plan .pdesc{font-size:13px;color:var(--ink-3);margin:5px 0 20px}
+  .price{display:flex;align-items:baseline;gap:6px}
+  .price b{font-family:var(--disp);font-size:42px;font-weight:700;letter-spacing:-.03em}
+  .price span{font-size:13px;color:var(--ink-3)}
+  .price .was{font-size:13px;color:var(--ink-3);text-decoration:line-through;margin-left:2px}
+  .plan ul{list-style:none;margin:22px 0 26px;display:flex;flex-direction:column;gap:11px;font-size:13.5px;color:var(--ink-2)}
+  .plan li{display:flex;gap:9px;align-items:flex-start}
+  .plan li svg{width:16px;height:16px;flex:none;color:var(--pri);margin-top:3px}
+  .plan .btn{justify-content:center;margin-top:auto}
+
+  /* faq */
+  .faq-list{max-width:760px;margin:0 auto}
+  .faq{border-bottom:1px solid var(--line)}
+  .faq button{width:100%;display:flex;justify-content:space-between;align-items:center;gap:16px;text-align:left;padding:21px 4px;font-family:var(--disp);font-weight:600;font-size:16px}
+  .faq .pm{width:26px;height:26px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;flex:none;transition:all .25s;color:var(--ink-3)}
+  .faq .pm svg{width:12px;height:12px;transition:transform .3s}
+  .faq.open .pm{background:var(--ink);border-color:var(--ink);color:#fff}
+  .faq.open .pm svg{transform:rotate(45deg)}
+  .faq .ans{max-height:0;overflow:hidden;transition:max-height .35s ease;color:var(--ink-3);font-size:14.5px}
+  .faq .ans p{padding:0 40px 22px 4px}
+
+  /* cta + footer */
+  .cta-band{background:#0E0F1E;border-radius:26px;padding:clamp(40px,6vw,72px);text-align:center;color:#fff;position:relative;overflow:hidden}
+  .cta-band::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 90% at 50% 120%,rgba(91,91,240,.4),transparent 70%)}
+  .cta-band>*{position:relative}
+  .cta-band h2{color:#fff}
+  .cta-band p{color:rgba(255,255,255,.6);margin:14px 0 30px}
+  footer{padding:56px 0 40px;color:var(--ink-3);font-size:13px}
+  .foot-in{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;align-items:flex-start}
+  .foot-links{display:flex;gap:clamp(24px,5vw,64px)}
+  .foot-links div{display:flex;flex-direction:column;gap:10px}
+  .foot-links b{font-family:var(--disp);font-size:13px;color:var(--ink)}
+  .foot-links a:hover{color:var(--ink)}
+  .foot-base{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+  /* modal + toast + reveal */
+  .modal{position:fixed;inset:0;z-index:90;display:none;place-items:center;background:rgba(14,15,30,.5);backdrop-filter:blur(8px);padding:24px}
+  .modal.open{display:grid;animation:fadeIn .25s ease}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal-box{width:min(440px,94vw);background:#fff;border-radius:20px;padding:34px;text-align:center;box-shadow:var(--shadow-l);animation:popIn .35s cubic-bezier(.2,.8,.2,1)}
+  @keyframes popIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+  .modal-box .mi{width:52px;height:52px;border-radius:16px;background:var(--grad);display:grid;place-items:center;margin:0 auto 18px;color:#fff}
+  .modal-box h3{font-family:var(--disp);font-size:19px;margin-bottom:8px}
+  .modal-box p{font-size:14px;color:var(--ink-3);margin-bottom:22px}
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,80px);background:var(--ink);color:#fff;font-size:13.5px;
+    border-radius:100px;padding:11px 22px;box-shadow:var(--shadow-l);opacity:0;transition:all .4s cubic-bezier(.2,.7,.2,1);z-index:95;pointer-events:none}
+  .toast.show{transform:translate(-50%,0);opacity:1}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top"><span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18V6l12 12V6"/></svg></span>Nimbus</a>
+    <div class="nav-links">
+      <a href="#features">产品能力</a><a href="#demo">在线演示</a><a href="#cases">客户案例</a><a href="#pricing">定价</a><a href="#faq">常见问题</a>
+    </div>
+    <div class="nav-cta">
+      <a class="ghost" href="#" data-signin>登录</a>
+      <button class="btn btn-pri" data-signin>免费试用</button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap hero-in">
+    <span class="pill"><span class="dot"></span>Nimbus 2.0 · AI 工作流引擎正式发布</span>
+    <h1>把重复工作交给 AI，<br>把判断力留给<span class="grad">团队</span>。</h1>
+    <p class="sub">Nimbus 连接需求、任务与知识，自动完成整理、拆解与跟进。上线团队平均减少 38% 的会议与同步成本。</p>
+    <div class="hero-cta">
+      <button class="btn btn-grad" data-signin>免费开始使用 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      <a class="btn btn-line" href="#demo">观看在线演示</a>
+    </div>
+    <p class="hero-note">免费版支持 10 人以内团队 · 无需绑定支付方式</p>
+  </div>
+
+  <div class="wrap mock-zone">
+    <div class="mock" id="mock">
+      <div class="mock-bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="addr">🔒 app.nimbus.team/workspace</span></div>
+      <div class="mock-body">
+        <aside class="mock-side">
+          <div class="ms-item on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>工作台</div>
+          <div class="ms-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>需求池</div>
+          <div class="ms-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11.5 11 13.5 15 9.5"/><circle cx="12" cy="12" r="9"/></svg>我的任务</div>
+          <div class="ms-cap">空间</div>
+          <div class="ms-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6S13.9 16 14.5 19"/><circle cx="16.5" cy="9" r="2.6"/><path d="M15.5 14.6c2.3.1 4.2 1.5 4.9 4.4"/></svg>产品组</div>
+          <div class="ms-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6S13.9 16 14.5 19"/><circle cx="16.5" cy="9" r="2.6"/><path d="M15.5 14.6c2.3.1 4.2 1.5 4.9 4.4"/></svg>设计组</div>
+        </aside>
+        <main class="mock-main">
+          <div class="mm-head"><b>本周迭代 · Sprint 42</b><span class="mm-chip">按计划推进</span></div>
+          <div class="task done"><span class="cb"></span><span class="t">整理用户访谈记录，输出需求摘要</span><span class="tag tg-v">AI 完成</span></div>
+          <div class="task"><span class="cb"></span><span class="t">审批流模块 · 首页交互走查</span><span class="tag tg-b">进行中</span></div>
+          <div class="task"><span class="cb"></span><span class="t">移动端性能优化：首屏加载 &lt; 1.5s</span><span class="tag tg-c">排期中</span></div>
+          <div class="task done"><span class="cb"></span><span class="t">Q3 路线图对齐会 · 纪要与行动项</span><span class="tag tg-v">AI 完成</span></div>
+          <div class="task"><span class="cb"></span><span class="t">开放 API 文档更新至 v2.4</span><span class="tag tg-b">进行中</span></div>
+        </main>
+        <aside class="ai-panel">
+          <div class="ai-head"><span class="ai-orb"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.1 5.6L20 9.7l-5.9 2.1L12 17.4 9.9 11.8 4 9.7l5.9-2.1z"/></svg></span>
+            <div><b>Nimbus AI</b><br><span>随时待命</span></div></div>
+          <div class="ai-bubble">我刚整理完<b>「审批流」评审会</b>的纪要：3 个决定、5 个行动项，已自动创建任务并指派到人。</div>
+          <div class="ai-bubble">检测到 <b>移动端首屏</b> 连续两个迭代超期，建议拆分为「图片懒加载」与「接口合并」两个子任务。</div>
+          <div class="ai-suggest" onclick="toast('演示环境：AI 会自动生成任务并同步给相关同事')">✦ 一键采纳建议，自动拆解并指派</div>
+        </aside>
+      </div>
+    </div>
+    <div class="float-card fc-1"><span class="fc-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></span><span>效率提升<b style="color:var(--ok)">+23%</b><small>对比上个季度 · 产品组</small></span></div>
+    <div class="float-card fc-2"><span class="fc-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.1 5.6L20 9.7l-5.9 2.1L12 17.4 9.9 11.8 4 9.7l5.9-2.1z"/></svg></span><span>AI 已自动整理<small>本周 12 条新需求</small></span></div>
+  </div>
+</header>
+
+<div class="logos wrap reveal">
+  <p>超过 2,000 家团队选择 Nimbus 组织他们的工作</p>
+  <div class="logo-row">
+    <span><i></i>星阑科技</span><span><i></i>MOKA</span><span><i></i>白鹭云</span><span><i></i>FutureLab</span><span><i></i>NP Digital</span><span><i></i>航兑信息</span>
+  </div>
+</div>
+
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <div class="kicker">Product · 产品能力</div>
+      <h2>一个工作台，装下团队的全部协作</h2>
+      <p>从需求进来到版本发布，Nimbus 用 AI 补齐每个环节之间的缝隙。</p>
+    </div>
+    <div class="bento">
+      <div class="b-card b-3 reveal">
+        <div class="b-ic" style="background:color-mix(in srgb,var(--violet) 12%,transparent);color:var(--violet)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.1 5.6L20 9.7l-5.9 2.1L12 17.4 9.9 11.8 4 9.7l5.9-2.1z"/></svg></div>
+        <h3>会议纪要 · 自动变行动</h3>
+        <p>接入音视频会议后自动生成结构化纪要，决定、行动项与负责人一一对应，错过会议也能 3 分钟读完。</p>
+        <div class="b-vis"><div class="chip-flow">
+          <span>会议录音</span><span class="hot">AI 摘要</span><span>行动项 → 任务</span><span class="hot">自动指派</span><span>同步到日历</span>
+        </div></div>
+      </div>
+      <div class="b-card b-3 reveal">
+        <div class="b-ic" style="background:color-mix(in srgb,var(--pri) 12%,transparent);color:var(--pri)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h10M4 17h7"/></svg></div>
+        <h3>需求池 · 自动拆解与排期</h3>
+        <p>把一段模糊描述拆成可执行的子任务，估算工作量并推荐迭代排期，产品经理从粘贴复制中解放出来。</p>
+        <div class="b-vis"><div class="bar-mini">
+          <div class="bm"><b>拆解置信度</b><span class="tr"><i style="width:92%"></i></span><span>92%</span></div>
+          <div class="bm"><b>排期占用</b><span class="tr"><i style="width:74%"></i></span><span>74%</span></div>
+          <div class="bm"><b>风险任务</b><span class="tr"><i style="width:18%;background:var(--warn)"></i></span><span>2 个</span></div>
+        </div></div>
+      </div>
+      <div class="b-card b-2 reveal">
+        <div class="b-ic" style="background:color-mix(in srgb,var(--cyan) 14%,transparent);color:#0E7490"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></div>
+        <h3>200+ 集成</h3>
+        <p>飞书、企业微信、GitHub、Figma、Jenkins… 在工具之间流动的信息，自动沉淀到 Nimbus。</p>
+        <div class="b-vis"><div class="chip-flow"><span>飞书</span><span>企微</span><span>GitHub</span><span>Figma</span><span class="hot">+198</span></div></div>
+      </div>
+      <div class="b-card b-2 reveal">
+        <div class="b-ic" style="background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17.5h.01"/></svg></div>
+        <h3>风险预警</h3>
+        <p>延期风险、阻塞依赖、人力过载，AI 提前一周给出预警与调整建议。</p>
+        <div class="b-vis"><div class="spark-wrap"><i style="height:34%"></i><i style="height:42%"></i><i style="height:38%"></i><i style="height:55%"></i><i style="height:48%"></i><i style="height:66%"></i><i style="height:58%"></i><i style="height:78%"></i><i style="height:72%;background:linear-gradient(180deg,color-mix(in srgb,var(--warn) 70%,transparent),color-mix(in srgb,var(--warn) 12%,transparent))"></i><i style="height:88%;background:linear-gradient(180deg,color-mix(in srgb,var(--warn) 80%,transparent),color-mix(in srgb,var(--warn) 14%,transparent))"></i></div></div>
+      </div>
+      <div class="b-card b-2 reveal">
+        <div class="b-ic" style="background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--ok)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5V12c0 1.7 3.6 3 8 3s8-1.3 8-3V5.5"/><path d="M4 12v6.5c0 1.7 3.6 3 8 3s8-1.3 8-3V12"/></svg></div>
+        <h3>团队知识问答</h3>
+        <p>「上季度定价的结论是什么？」——基于团队全部文档与决策记录，答案永远带出处。</p>
+        <div class="b-vis"><div class="chip-flow"><span class="hot">提问</span><span>检索 12,480 篇文档</span><span class="hot">带引用回答</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="demo" style="padding-top:0">
+  <div class="wrap">
+    <div class="demo reveal">
+      <div class="sec-head" style="margin-bottom:30px">
+        <div class="kicker">Live Demo · 在线演示</div>
+        <h2>现在就试，不用注册</h2>
+        <p>三个真实使用场景，全部可以动手操作。</p>
+      </div>
+      <div class="demo-tabs" role="tablist">
+        <button class="dtab on" data-pane="p1" role="tab" aria-selected="true">✦ 需求自动整理</button>
+        <button class="dtab" data-pane="p2" role="tab" aria-selected="false">AI 助手对话</button>
+        <button class="dtab" data-pane="p3" role="tab" aria-selected="false">进度看板（可拖拽）</button>
+      </div>
+
+      <div class="dpane on" id="p1" role="tabpanel">
+        <div class="d-grid">
+          <div class="d-win">
+            <h4>粘贴一段原始需求</h4>
+            <textarea id="reqIn">用户反馈希望移动端能离线查看任务列表，另外审批消息现在太吵了，建议支持按项目分组免打扰。还有测试组提到附件预览在安卓上经常失败，最好加个重试。</textarea>
+            <button class="d-btn" id="reqGo">✦ AI 整理为结构化需求</button>
+          </div>
+          <div class="d-win">
+            <h4>AI 输出</h4>
+            <div class="d-out" id="reqOut"><div class="oi" style="opacity:.6">左侧粘贴任意需求描述，点击按钮体验自动整理。</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dpane" id="p2" role="tabpanel">
+        <div class="d-grid" style="grid-template-columns:1.15fr .85fr">
+          <div class="d-win">
+            <h4>Nimbus AI 助手</h4>
+            <div class="chat" id="chat"></div>
+            <div class="chat-sugs" id="chatSugs">
+              <button data-q="本周有哪些延期风险？">本周有哪些延期风险？</button>
+              <button data-q="总结一下审批流项目的进展">总结审批流项目进展</button>
+              <button data-q="团队这个月谁的任务过载了？">谁的任务过载了？</button>
+            </div>
+          </div>
+          <div class="d-win">
+            <h4>助手能做什么</h4>
+            <div class="d-out">
+              <div class="oi"><i>1</i>跨项目查询进度、风险与阻塞点，秒级回答</div>
+              <div class="oi"><i>2</i>把对话结论一键变成任务、文档或日程</div>
+              <div class="oi"><i>3</i>每个回答都附引用来源，可追溯原文</div>
+              <div class="oi"><i>4</i>支持中文口语化提问，无需学任何指令</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dpane" id="p3" role="tabpanel">
+        <div class="kanban" id="kanban">
+          <div class="kb-col" data-col="todo"><h5>待开始 <em id="c-todo"></em></h5></div>
+          <div class="kb-col" data-col="doing"><h5>进行中 <em id="c-doing"></em></h5></div>
+          <div class="kb-col" data-col="done"><h5>已完成 <em id="c-done"></em></h5></div>
+        </div>
+        <p class="d-tip">试试把卡片拖到另一列 —— 状态、负责人通知与进度统计会自动更新。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="cases">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">Customers · 客户案例</div>
+      <h2>他们已经跑在 Nimbus 上</h2>
+    </div>
+    <div class="case-grid">
+      <article class="case reveal">
+        <div class="co"><i style="background:#5B5BF0">星</i>星阑科技</div>
+        <q>三个产品线 60 多人的需求原来靠周会对齐，现在 AI 纪要加自动拆解，周会从 90 分钟缩到 30 分钟，只做决策。</q>
+        <div class="who"><b>陈默</b> · 产品 VP</div>
+        <div class="metrics"><div><b>-64%</b><span>会议时间</span></div><div><b>2.1×</b><span>需求吞吐</span></div></div>
+      </article>
+      <article class="case reveal">
+        <div class="co"><i style="background:#0EA5A0">白</i>白鹭云</div>
+        <q>最值的是风险预警。以前延期是「发生了才知道」，现在提前一周就能收到建议并调整排期，交付准时率上了一个台阶。</q>
+        <div class="who"><b>林晚</b> · 研发总监</div>
+        <div class="metrics"><div><b>96%</b><span>准时交付率</span></div><div><b>-38%</b><span>需求交付周期</span></div></div>
+      </article>
+      <article class="case reveal">
+        <div class="co"><i style="background:#F59E0B">F</i>FutureLab</div>
+        <q>知识问答把散落在飞书文档、会议纪要里的决策都串起来了。新人入职第一周就能自己找到「为什么这么定」的答案。</q>
+        <div class="who"><b>苏航</b> · 联合创始人</div>
+        <div class="metrics"><div><b>-70%</b><span>新人答疑成本</span></div><div><b>4.9</b><span>团队评分 /5</span></div></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" class="pricing">
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <div class="kicker">Pricing · 定价</div>
+      <h2>按团队规模生长的成本</h2>
+      <p>所有付费方案均含 14 天全功能试用，随时可以降级，数据完整保留。</p>
+    </div>
+    <div style="text-align:center">
+      <div class="bill-toggle reveal" role="group" aria-label="计费周期">
+        <button class="on" data-bill="m">按月付费</button>
+        <button data-bill="y">按年付费<span class="save">省 20%</span></button>
+      </div>
+    </div>
+    <div class="plans">
+      <article class="plan reveal">
+        <h3>免费版</h3>
+        <p class="pdesc">小团队起步，核心功能永久免费</p>
+        <div class="price"><b>¥0</b><span>/ 人 / 月</span></div>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>10 人以内团队</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>任务 / 看板 / 文档协作</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>AI 整理每月 50 次</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>10 个常用集成</li>
+        </ul>
+        <button class="btn btn-line" data-signin>免费开始</button>
+      </article>
+      <article class="plan hot reveal">
+        <span class="pop">最多团队选择</span>
+        <h3>团队版</h3>
+        <p class="pdesc">释放全部 AI 能力，适合成长型团队</p>
+        <div class="price"><b class="p-num" data-m="68" data-y="54">¥54</b><span class="was p-was" hidden>¥68</span><span>/ 人 / 月<span class="p-cycle"> · 按年计费</span></span></div>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>无限成员与项目空间</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>AI 整理 / 拆解 / 纪要不限量</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>风险预警与资源负载分析</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>全部 200+ 集成与开放 API</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>细粒度权限与操作审计</li>
+        </ul>
+        <button class="btn btn-grad" data-signin>开始 14 天试用</button>
+      </article>
+      <article class="plan reveal">
+        <h3>企业版</h3>
+        <p class="pdesc">安全合规与专属支持</p>
+        <div class="price"><b>定制</b></div>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>私有化 / 专有云部署</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>SSO 单点登录与 SCIM</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>专属客户成功经理</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>99.9% SLA 与安全审计报告</li>
+        </ul>
+        <button class="btn btn-line" data-signin>联系销售</button>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <div class="kicker">FAQ · 常见问题</div>
+      <h2>你可能想问</h2>
+    </div>
+    <div class="faq-list reveal">
+      <div class="faq"><button>我们的数据会被用来训练模型吗？<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+        <div class="ans"><p>不会。客户数据仅用于为你提供服务，与任何模型训练完全隔离；企业版支持私有化部署，数据不出你的机房。所有 AI 功能均通过 SOC 2 与等保三级审计。</p></div></div>
+      <div class="faq"><button>从其他协作工具迁移麻烦吗？<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+        <div class="ans"><p>提供 Jira、Asana、飞书项目、Trello 的一键导入向导，任务、评论、附件与关联关系完整迁移。100 人以下团队通常半天完成，迁移期间双写不中断工作。</p></div></div>
+      <div class="faq"><button>AI 功能的准确率如何？错了怎么办？<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+        <div class="ans"><p>需求拆解与纪要在内部基准集上的结构准确率约 94%。所有 AI 产出都以「草稿」形式呈现，确认后才写入正式数据，且全程可撤销、可追溯。</p></div></div>
+      <div class="faq"><button>免费版真的永久免费？<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+        <div class="ans"><p>是。10 人以内团队可无限期使用免费版，仅 AI 次数与集成数量有限制，没有任何功能上的时间陷阱。</p></div></div>
+      <div class="faq"><button>支持私有化部署吗？<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+        <div class="ans"><p>企业版支持专有云与全私有化部署，可对接自建模型网关，AI 调用同样不出内网。实施周期通常 2–4 周。</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="cta-band reveal">
+      <h2>让下一次周会，<br>从 30 分钟开始。</h2>
+      <p>免费开始，十分钟把团队搬进 Nimbus。</p>
+      <button class="btn btn-grad" data-signin>免费创建工作台 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-in">
+      <div>
+        <a class="brand" href="#top" style="margin-bottom:12px"><span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18V6l12 12V6"/></svg></span>Nimbus</a>
+        <p style="max-width:32ch;margin-top:10px">AI 团队协作操作系统。把重复工作交给 AI，把判断力留给团队。</p>
+      </div>
+      <div class="foot-links">
+        <div><b>产品</b><a href="#features">产品能力</a><a href="#pricing">定价</a><a href="#demo">在线演示</a></div>
+        <div><b>资源</b><a href="#" data-signin>帮助中心</a><a href="#" data-signin>开发者 API</a><a href="#" data-signin>更新日志</a></div>
+        <div><b>公司</b><a href="#cases">客户案例</a><a href="#" data-signin>加入我们</a><a href="#" data-signin>联系我们</a></div>
+      </div>
+    </div>
+    <div class="foot-base"><span>© 2026 Nimbus Labs · 作品演示站点</span><span>为本页面由 <a href="../../" style="color:var(--pri);font-weight:600">shufy 作品站</a> 收录</span></div>
+  </div>
+</footer>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="mi"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.1 5.6L20 9.7l-5.9 2.1L12 17.4 9.9 11.8 4 9.7l5.9-2.1z"/></svg></div>
+    <h3>这是作品演示环境</h3>
+    <p>Nimbus 为前端作品展示，未接入真实的注册与支付。<br>想交流实现细节，欢迎联系作者。</p>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-line" id="modalClose">继续浏览</button>
+      <a class="btn btn-grad" href="mailto:hi@shufy.ai">联系作者</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+  const $=(s,c)=>(c||document).querySelector(s), $$=(s,c)=>[...(c||document).querySelectorAll(s)];
+  function toast(m){const t=$("#toastEl");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2600);}
+  addEventListener("scroll",()=>$("#nav").classList.toggle("scrolled",scrollY>10),{passive:true});
+
+  /* reveal on scroll */
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}}),{threshold:.12});
+  $$(".reveal").forEach(el=>io.observe(el));
+  setTimeout(()=>$("#mock").classList.add("flat"),350);
+
+  /* signin modal */
+  $$("[data-signin]").forEach(b=>b.addEventListener("click",e=>{e.preventDefault();$("#modal").classList.add("open");}));
+  $("#modalClose").addEventListener("click",()=>$("#modal").classList.remove("open"));
+  $("#modal").addEventListener("click",e=>{if(e.target===$("#modal"))$("#modal").classList.remove("open");});
+  addEventListener("keydown",e=>{if(e.key==="Escape")$("#modal").classList.remove("open");});
+
+  /* demo tabs */
+  $$(".dtab").forEach(t=>t.addEventListener("click",()=>{
+    $$(".dtab").forEach(x=>{x.classList.toggle("on",x===t);x.setAttribute("aria-selected",x===t);});
+    $$(".dpane").forEach(p=>p.classList.toggle("on",p.id===t.dataset.pane));
+  }));
+
+  /* p1 需求整理 */
+  const REQ_OUT=[
+    ["P0","移动端：任务列表离线可看","来源：多条用户反馈 · 建议下一迭代"],
+    ["P1","通知：按项目分组的免打扰规则","涉及设置中心改造 · 已标记关联模块"],
+    ["P0","附件预览：安卓失败重试机制","测试组反馈 · 优先修复，预估 2 人日"],
+    ["—","已自动创建 3 个任务并指派到对应模块负责人","可在需求池查看拆解过程"]
+  ];
+  $("#reqGo").addEventListener("click",function(){
+    this.disabled=true;this.textContent="✦ AI 正在整理…";
+    $("#reqOut").innerHTML='<div class="oi" style="opacity:.6">解析原文、识别主题与优先级…</div>';
+    setTimeout(()=>{
+      $("#reqOut").innerHTML=REQ_OUT.map((o,i)=>'<div class="oi" style="animation-delay:'+(i*.12)+'s"><i>'+o[0]+"</i><span><b>"+o[1]+"</b><br><span style=\"color:rgba(255,255,255,.5)\">"+o[2]+"</span></span></div>").join("");
+      this.disabled=false;this.textContent="✦ 再整理一次";
+      toast("已生成 3 个结构化需求，可直接同步到需求池");
+    },1100);
+  });
+
+  /* p2 chat */
+  const chat=$("#chat");
+  const AI_RES={
+    "本周有哪些延期风险？":"本周 2 个风险点：<b>① 移动端首屏优化</b>（连续两周超期，建议拆分任务）；<b>② 开放 API 文档</b>（依赖法务审核，建议今天跟进）。已给出调整建议，点击可一键采纳。",
+    "总结一下审批流项目的进展":"「审批流」当前完成度 72%：<br>· 交互走查进行中（设计组，剩余 2 天）<br>· 后端接口联调已开始<br>· 风险：iOS 端人力紧张<br>上次评审会的 5 个行动项已完成 3 个。",
+    "团队这个月谁的任务过载了？":"<b>王砚</b>（客户端）当前承载 14 个任务，超出团队均值 60%，其中 3 个为高优先级。建议将「附件预览重试」转给李澄，预计影响 1 人日。"
+  };
+  function addMsg(html,who){const d=document.createElement("div");d.className="msg "+who;d.innerHTML=html;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;return d;}
+  addMsg("你好，我是 Nimbus AI。今天想了解什么？","ai");
+  $("#chatSugs").addEventListener("click",e=>{
+    const b=e.target.closest("button[data-q]");if(!b)return;
+    const q=b.dataset.q;addMsg(q,"user");
+    const th=addMsg("正在检索工作区数据…","ai");
+    setTimeout(()=>{th.innerHTML=AI_RES[q]||"这个问题我需要更多上下文，试试其他建议问题。";chat.scrollTop=chat.scrollHeight;},900);
+  });
+
+  /* p3 kanban */
+  const KB={
+    todo:[["开放 API 文档更新至 v2.4","王砚 · 排期 8.26"],["竞品推送策略调研","刘一 · 本周"],["整理 Q4 招聘需求","HR · 待确认"]],
+    doing:[["审批流模块 · 交互走查","设计组 · 剩余 2 天"],["移动端首屏性能优化","王砚 · 有延期风险"],["首页信息架构改版","李澄 · 60%"]],
+    done:[["Q3 路线图对齐会（AI 纪要）","已归档"],["用户访谈第 3 轮 · 摘要","AI 完成"],["灰度方案评审","通过"]]
+  };
+  const kanban=$("#kanban");
+  function kbRender(){
+    for(const col of ["todo","doing","done"]){
+      const el=kanban.querySelector('[data-col="'+col+'"]');
+      el.querySelectorAll(".kb-card").forEach(c=>c.remove());
+      KB[col].forEach((c,i)=>{
+        const d=document.createElement("div");d.className="kb-card";d.draggable=true;
+        d.innerHTML=c[0]+"<small>"+c[1]+"</small>";
+        d.addEventListener("dragstart",ev=>{ev.dataTransfer.setData("text/plain",col+","+i);d.classList.add("dragging");});
+        d.addEventListener("dragend",()=>d.classList.remove("dragging"));
+        el.appendChild(d);
+      });
+      $("#c-"+col).textContent=KB[col].length;
+    }
+  }
+  kbRender();
+  kanban.addEventListener("dragover",e=>{const col=e.target.closest(".kb-col");if(col){e.preventDefault();col.classList.add("over");}});
+  kanban.addEventListener("dragleave",e=>{const col=e.target.closest(".kb-col");if(col)col.classList.remove("over");});
+  kanban.addEventListener("drop",e=>{
+    const col=e.target.closest(".kb-col");if(!col)return;e.preventDefault();col.classList.remove("over");
+    const [from,idx]=e.dataTransfer.getData("text/plain").split(",");
+    const to=col.dataset.col;
+    if(from===to&&KB[from][+idx])return;
+    const card=KB[from].splice(+idx,1)[0];if(!card)return;
+    KB[to].unshift(card);kbRender();
+    toast("「"+card[0]+"」→ "+{todo:"待开始",doing:"进行中",done:"已完成"}[to]+"，已通知负责人");
+  });
+
+  /* pricing toggle */
+  $$(".bill-toggle button").forEach(b=>b.addEventListener("click",()=>{
+    $$(".bill-toggle button").forEach(x=>x.classList.toggle("on",x===b));
+    const yearly=b.dataset.bill==="y";
+    const num=$(".p-num");num.textContent="¥"+(yearly?num.dataset.y:num.dataset.m);
+    $(".p-was").hidden=!yearly;
+    $(".p-cycle").textContent=yearly?" · 按年计费":" · 按月计费";
+  }));
+
+  /* faq */
+  $$(".faq").forEach(f=>{
+    const btn=f.querySelector("button"),ans=f.querySelector(".ans");
+    btn.addEventListener("click",()=>{
+      const open=f.classList.contains("open");
+      $$(".faq.open").forEach(o=>{o.classList.remove("open");o.querySelector(".ans").style.maxHeight="0";});
+      if(!open){f.classList.add("open");ans.style.maxHeight=ans.scrollHeight+"px";}
+    });
+  });
+</script>
+</body>
+</html>

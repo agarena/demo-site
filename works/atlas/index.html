@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atlas API 文档 — 数据接口平台</title>
+<meta name="description" content="Atlas API 开发者文档：快速开始、认证、分页与错误处理。支持全文搜索、版本切换与可运行示例。" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231B2733'/%3E%3Cpath d='M8 22L16 9l8 13' stroke='%2338BDF8' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M12 18h8' stroke='%2338BDF8' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E" />
+<style>
+  @font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url("../../fonts/inter-latin-variable.woff2") format("woff2")}
+  @font-face{font-family:"Instrument Sans";font-style:normal;font-weight:400 700;font-display:swap;src:url("../../fonts/instrument-sans-latin-variable.woff2") format("woff2")}
+  :root{
+    --bg:#FFFFFF; --bg-2:#F7F8FA; --line:#E5E8EC; --line-2:#D3D8DF;
+    --ink:#1A2430; --ink-2:#46525F; --ink-3:#7A8593;
+    --acc:#0C87C9; --acc-deep:#0A6FA6; --acc-bg:#E7F4FB;
+    --code-bg:#152230; --code-ink:#DCE7F2;
+    --warn:#9A5B00; --warn-bg:#FCF2DF;
+    --ok:#0E9F6E; --bad:#C0392B;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Consolas,"Cascadia Code",monospace;
+    --sans:"Inter",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    --disp:"Instrument Sans","Inter",system-ui,-apple-system,"PingFang SC",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+  a{color:var(--acc);text-decoration:none} a:hover{text-decoration:underline;text-underline-offset:3px}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  ::selection{background:rgba(12,135,201,.2)}
+
+  .shell{display:grid;grid-template-columns:262px minmax(0,1fr) 208px;max-width:1400px;margin:0 auto}
+  @media (max-width:1180px){.shell{grid-template-columns:250px minmax(0,1fr)}.toc{display:none}}
+  @media (max-width:860px){.shell{grid-template-columns:1fr}.sidebar{display:none}}
+
+  /* header */
+  .hdr{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.86);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 22px;height:60px}
+  .logo{display:flex;align-items:center;gap:10px;font-family:var(--disp);font-weight:700;font-size:16.5px;letter-spacing:-.01em;color:var(--ink)}
+  .logo:hover{text-decoration:none}
+  .logo i{width:25px;height:25px;border-radius:7px;background:linear-gradient(135deg,#1B2733,#2E4358);display:grid;place-items:center}
+  .logo svg{width:14px;height:14px}
+  .logo small{font-size:10.5px;font-weight:700;letter-spacing:.1em;color:var(--acc);border:1px solid color-mix(in srgb,var(--acc) 40%,transparent);border-radius:5px;padding:2px 6px}
+  .ver{position:relative}
+  .ver>button{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;border:1px solid var(--line-2);border-radius:8px;padding:6px 11px;color:var(--ink-2)}
+  .ver>button:hover{border-color:var(--ink-3)}
+  .ver .menu{position:absolute;top:calc(100% + 6px);left:0;width:230px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 40px -12px rgba(26,36,48,.25);padding:6px;display:none;z-index:60}
+  .ver .menu.open{display:block;animation:fade .18s}
+  .ver .menu button{width:100%;text-align:left;border-radius:9px;padding:9px 11px;display:flex;flex-direction:column;gap:1px}
+  .ver .menu button:hover{background:var(--bg-2)}
+  .ver .menu b{font-size:13px;display:flex;align-items:center;gap:8px}
+  .ver .menu b .tag{font-size:9.5px;font-weight:800;letter-spacing:.06em;border-radius:5px;padding:2px 6px}
+  .tag-cur{background:var(--acc-bg);color:var(--acc-deep)}
+  .tag-old{background:var(--warn-bg);color:var(--warn)}
+  .ver .menu span{font-size:11.5px;color:var(--ink-3)}
+  .searchbtn{margin-left:auto;display:flex;align-items:center;gap:10px;border:1px solid var(--line-2);border-radius:10px;padding:8px 12px;color:var(--ink-3);font-size:13px;min-width:230px;transition:border-color .15s}
+  .searchbtn:hover{border-color:var(--acc)}
+  .searchbtn svg{width:14px;height:14px;flex:none}
+  .searchbtn .kbd{margin-left:auto;display:flex;gap:3px}
+  kbd{font-family:var(--mono);font-size:10.5px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;padding:1px 5px;color:var(--ink-3);background:var(--bg-2)}
+  .gh{font-size:13px;font-weight:600;color:var(--ink-2);display:inline-flex;align-items:center;gap:6px}
+  .gh:hover{color:var(--ink)}
+  @media (max-width:860px){.searchbtn{min-width:0}.searchbtn span.s-txt{display:none}}
+
+  /* v1 banner */
+  .banner{grid-column:1/-1;background:var(--warn-bg);color:var(--warn);font-size:13px;padding:9px 22px;text-align:center;display:none}
+  .banner.show{display:block}
+  .banner b{font-weight:700}
+
+  /* sidebar */
+  .sidebar{border-right:1px solid var(--line);padding:26px 18px 40px;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto}
+  .sg{font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--ink-3);text-transform:uppercase;margin:22px 0 8px}
+  .sg:first-child{margin-top:0}
+  .si{display:block;width:100%;text-align:left;font-size:13.5px;color:var(--ink-2);padding:6px 12px;border-radius:8px;margin:1px 0;transition:background .12s,color .12s}
+  .si:hover{background:var(--bg-2);color:var(--ink);text-decoration:none}
+  .si.on{background:var(--acc-bg);color:var(--acc-deep);font-weight:600}
+  .si .dep{font-size:9.5px;font-weight:800;color:var(--warn);background:var(--warn-bg);border-radius:4px;padding:1.5px 6px;margin-left:7px;vertical-align:1px}
+
+  /* article */
+  .art{padding:38px clamp(24px,4vw,54px) 80px;min-width:0}
+  .breadcrumb{font-size:12.5px;color:var(--ink-3);margin-bottom:14px}
+  h1{font-family:var(--disp);font-size:32px;font-weight:700;letter-spacing:-.025em;line-height:1.2;margin-bottom:10px}
+  .lead{color:var(--ink-2);font-size:16px;margin-bottom:30px;max-width:64ch}
+  .art h2{font-family:var(--disp);font-size:21px;font-weight:700;letter-spacing:-.015em;margin:44px 0 14px;scroll-margin-top:80px}
+  .art h3{font-size:16.5px;font-weight:700;margin:30px 0 10px;scroll-margin-top:80px}
+  .art p{color:var(--ink-2);margin-bottom:14px;max-width:70ch}
+  .art ul,.art ol{color:var(--ink-2);padding-left:24px;margin-bottom:16px}
+  .art li{margin-bottom:6px}
+  .art code:not(pre code){font-family:var(--mono);font-size:.86em;background:var(--bg-2);border:1px solid var(--line);border-radius:6px;padding:1.5px 6px;color:var(--acc-deep)}
+  .callout{display:flex;gap:12px;border:1px solid;border-radius:12px;padding:14px 17px;margin:20px 0;font-size:14px}
+  .callout b{display:block;margin-bottom:2px}
+  .callout.info{background:var(--acc-bg);border-color:color-mix(in srgb,var(--acc) 30%,transparent);color:var(--ink-2)}
+  .callout.warn{background:var(--warn-bg);border-color:color-mix(in srgb,var(--warn) 30%,transparent);color:var(--ink-2)}
+  .callout .co-ic{flex:none;font-size:15px}
+  table.params{width:100%;border-collapse:collapse;font-size:13.5px;margin:16px 0 22px}
+  table.params th{text-align:left;font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:8px 12px;border-bottom:2px solid var(--line)}
+  table.params td{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--ink-2);vertical-align:top}
+  table.params td:first-child{font-family:var(--mono);font-size:12.5px;color:var(--ink);white-space:nowrap}
+  .req{font-size:9.5px;font-weight:800;letter-spacing:.05em;border-radius:5px;padding:2px 6px;margin-left:6px;vertical-align:1px}
+  .req.y{background:#FDEBE9;color:var(--bad)} .req.n{background:var(--bg-2);color:var(--ink-3)}
+
+  /* code block */
+  .code{border-radius:13px;overflow:hidden;margin:18px 0 24px;border:1px solid #0E1B28;background:var(--code-bg)}
+  .code-h{display:flex;align-items:center;padding:0 8px 0 16px;height:44px;background:#1B2C3D;border-bottom:1px solid rgba(255,255,255,.07)}
+  .code-h .fn{font-family:var(--mono);font-size:12px;color:#8FA5BC;display:flex;gap:8px;align-items:center}
+  .code-h .fn .dots{display:inline-flex;gap:5px}
+  .code-h .fn .dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.14)}
+  .ctabs{display:flex;gap:2px;margin-left:14px}
+  .ctabs button{font-family:var(--mono);font-size:11.5px;color:#7E93A9;padding:6px 12px;border-radius:7px}
+  .ctabs button.on{background:rgba(255,255,255,.1);color:#fff}
+  .code-actions{margin-left:auto;display:flex;gap:6px}
+  .cbtn{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:#AFC3D6;border-radius:7px;padding:6px 11px;transition:background .15s}
+  .cbtn:hover{background:rgba(255,255,255,.1);color:#fff}
+  .cbtn.run{color:#5EEAD4}
+  .cbtn.run:hover{background:rgba(94,234,212,.12)}
+  pre{padding:17px 19px;overflow-x:auto;font-family:var(--mono);font-size:12.8px;line-height:1.75;color:var(--code-ink);tab-size:2}
+  .tok-k{color:#7DD3FC} .tok-s{color:#BEF264} .tok-n{color:#FBBF24} .tok-c{color:#5B7186;font-style:italic} .tok-f{color:#C4B5FD}
+  .cout{border-top:1px solid rgba(255,255,255,.08);background:#0D1822;padding:14px 19px;display:none}
+  .cout.show{display:block;animation:fade .25s}
+  .cout .cl{font-size:11px;font-weight:800;letter-spacing:.1em;color:#5B7186;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+  .cout pre{padding:0;font-size:12.3px}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+
+  /* pager */
+  .pager{display:flex;justify-content:space-between;gap:14px;margin-top:56px;border-top:1px solid var(--line);padding-top:22px}
+  .pager a{border:1px solid var(--line);border-radius:12px;padding:13px 18px;flex:1;max-width:290px;transition:border-color .15s,transform .15s}
+  .pager a:hover{text-decoration:none;border-color:var(--acc);transform:translateY(-2px)}
+  .pager .dir{font-size:11px;color:var(--ink-3);display:block;margin-bottom:3px}
+  .pager b{font-size:14px;color:var(--ink)}
+  .pager .next{text-align:right;margin-left:auto}
+  .editlink{display:block;margin-top:26px;font-size:12.5px;color:var(--ink-3)}
+
+  /* toc */
+  .toc{border-left:1px solid var(--line);padding:38px 20px;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto}
+  .toc .t{font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--ink-3);text-transform:uppercase;margin-bottom:12px}
+  .toc a{display:block;font-size:12.8px;color:var(--ink-3);padding:4px 0 4px 12px;border-left:2px solid var(--line)}
+  .toc a:hover{color:var(--ink);text-decoration:none}
+  .toc a.on{color:var(--acc-deep);border-left-color:var(--acc);font-weight:600}
+  .footline{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-3)}
+
+  /* search modal */
+  .sm-ov{position:fixed;inset:0;z-index:90;background:rgba(20,30,40,.45);backdrop-filter:blur(5px);display:none;padding:12vh 20px 20px}
+  .sm-ov.open{display:block;animation:fade .18s}
+  .sm{width:min(600px,100%);margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 30px 80px -20px rgba(10,20,30,.45);overflow:hidden;animation:pop .28s cubic-bezier(.2,.8,.2,1)}
+  @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+  .sm-in{display:flex;align-items:center;gap:11px;padding:16px 18px;border-bottom:1px solid var(--line)}
+  .sm-in svg{width:17px;height:17px;color:var(--ink-3);flex:none}
+  .sm-in input{flex:1;border:0;outline:none;font:inherit;font-size:15.5px}
+  .sm-in .esc{font-size:10.5px;color:var(--ink-3);border:1px solid var(--line-2);border-radius:6px;padding:2px 7px}
+  .sm-res{max-height:52vh;overflow-y:auto;padding:8px}
+  .sm-g{font-size:10.5px;font-weight:800;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase;padding:10px 12px 5px}
+  .sm-i{width:100%;text-align:left;display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border-radius:10px}
+  .sm-i .ic{width:30px;height:30px;border-radius:8px;background:var(--bg-2);display:grid;place-items:center;font-size:13px;flex:none;color:var(--acc-deep)}
+  .sm-i b{font-size:13.8px;display:block}
+  .sm-i small{font-size:12px;color:var(--ink-3);display:block;line-height:1.5}
+  .sm-i small mark{background:rgba(12,135,201,.16);color:var(--acc-deep);border-radius:3px;padding:0 2px}
+  .sm-i.sel{background:var(--acc-bg)}
+  .sm-i .enter{margin-left:auto;align-self:center;opacity:0;flex:none}
+  .sm-i.sel .enter{opacity:1}
+  .sm-empty{padding:44px;text-align:center;color:var(--ink-3);font-size:13.5px}
+  .sm-foot{display:flex;gap:16px;padding:10px 16px;border-top:1px solid var(--line);color:var(--ink-3);font-size:11px}
+  .sm-foot span{display:inline-flex;gap:5px;align-items:center}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <header class="hdr">
+    <a class="logo" href="#" onclick="go('intro');return false"><i><svg viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 19 12 6l6 13"/><path d="M9 14h6"/></svg></i>Atlas<small>DOCS</small></a>
+    <div class="ver">
+      <button id="verBtn">v2.4 <svg width="9" height="9" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg></button>
+      <div class="menu" id="verMenu">
+        <button data-v="v24"><b>v2.4 <span class="tag tag-cur">最新稳定版</span></b><span>推荐所有新项目使用</span></button>
+        <button data-v="v19"><b>v1.9 <span class="tag tag-old">维护模式</span></b><span>仅安全修复，2026-12 停止支持</span></button>
+      </div>
+    </div>
+    <button class="searchbtn" id="searchBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span class="s-txt">搜索文档…</span><span class="kbd"><kbd>⌘</kbd><kbd>K</kbd></span></button>
+    <a class="gh" href="#" onclick="return false"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.1.39-1.99 1.03-2.69-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.56 9.56 0 0 1 5 0c1.91-1.3 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.6 1.03 2.69 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85V21c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>GitHub</a>
+  </header>
+  <div class="banner" id="vBanner">您正在浏览 <b>v1.9（维护模式）</b> 的文档 —— 部分端点已标记弃用，新项目请使用 <b>v2.4</b>。<button style="color:var(--warn);font-weight:700;text-decoration:underline;text-underline-offset:3px" onclick="setVer('v24')">切换到 v2.4 →</button></div>
+
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <article class="art" id="art"></article>
+
+  <aside class="toc"><div class="t">本页目录</div><div id="tocList"></div>
+    <div class="footline">© 2026 Atlas API<br><a href="../../" style="color:var(--acc)">← shufy 作品站</a></div>
+  </aside>
+</div>
+
+<!-- 搜索弹窗 -->
+<div class="sm-ov" id="smOv">
+  <div class="sm" role="dialog" aria-label="搜索文档">
+    <div class="sm-in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="smIn" placeholder="搜索页面、端点、参数…" /><span class="esc">ESC</span></div>
+    <div class="sm-res" id="smRes"></div>
+    <div class="sm-foot"><span><kbd>↑</kbd><kbd>↓</kbd> 选择</span><span><kbd>↵</kbd> 打开</span><span><kbd>ESC</kbd> 关闭</span></div>
+  </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+
+/* ==================== 内容 ==================== */
+/* 代码高亮（极简 token 处理，仅用于展示） */
+function hi(code){
+  return code
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/(#.*$)/gm,'<span class="tok-c">$1</span>')
+    .replace(/(\/\/.*$)/gm,'<span class="tok-c">$1</span>')
+    .replace(/"([^"]*)"/g,'<span class="tok-s">"$1"</span>')
+    .replace(/\b(curl|const|await|fetch|new|return|import|from|export|async|function|let|print|require|def|true|false|null|None|True)\b/g,'<span class="tok-k">$1</span>')
+    .replace(/\b(\d+(?:\.\d+)?)\b/g,'<span class="tok-n">$1</span>')
+    .replace(/\b(atlas|messages|list|create|Authorization|Bearer|GET|POST)\b/g,'<span class="tok-f">$1</span>');
+}
+function codeBlock(fn,tabs,active,actions){
+  return `<div class="code"><div class="code-h"><span class="fn"><span class="dots"><i></i><i></i><i></i></span>${fn}</span>
+    <div class="ctabs">${tabs.map((t,i)=>`<button class="${t===active?"on":""}" data-ct="${t}">${t}</button>`).join("")}</div>
+    <div class="code-actions">${actions||""}</div></div>
+    <div class="code-panes">${tabs.map((t,i)=>`<pre data-ctp="${t}" ${t===active?"":'hidden'}></pre>`).join("")}</div>
+    <div class="cout"><div class="cl"><span>OUTPUT · 运行结果</span><button class="cbtn" onclick="this.closest('.cout').classList.remove('show')">关闭</button></div><pre></pre></div></div>`;
+}
+/* 各语言示例（随版本变化 base URL） */
+function snippet(kind,lang,VER){
+  const B=VER==="v19"?"https://api.atlas.dev/v1.9":"https://api.atlas.dev/v2";
+  if(kind==="install"){
+    if(lang==="cURL")return `# 安装官方 SDK（其余语言见对应仓库）\nnpm install atlas-sdk`;
+    if(lang==="JavaScript")return `import { Atlas } from "atlas-sdk";`;
+    if(lang==="Python")return `pip install atlas\n\nimport atlas`;
+  }
+  if(kind==="quick"){
+    if(lang==="cURL")return `curl ${B}/messages \\\n  -H "Authorization: Bearer sk_live_51Hx…" \\\n  -H "Content-Type: application/json"`;
+    if(lang==="JavaScript")return `import { Atlas } from "atlas-sdk";\n\nconst atlas = new Atlas("sk_live_51Hx…");\n\n// 拉取最近 5 条消息\nconst { data } = await atlas.messages.list({ limit: 5 });\nconsole.log(data.map(m => m.content));`;
+    if(lang==="Python")return `import atlas\n\nclient = atlas.Client("sk_live_51Hx…")\n\n# 拉取最近 5 条消息\nmessages = client.messages.list(limit=5)\nfor m in messages.data:\n    print(m.content)`;
+  }
+  if(kind==="auth"){
+    if(lang==="cURL")return `curl ${B}/messages \\\n  -H "Authorization: Bearer sk_live_51Hx…"`;
+    if(lang==="JavaScript")return `// 密钥放在服务端，切勿暴露到浏览器\nconst atlas = new Atlas(process.env.ATLAS_KEY);\n\n// 已收到请求即视为已认证\n// 无效密钥会返回 401 invalid_api_key`;
+    if(lang==="Python")return `import os\nclient = atlas.Client(os.environ["ATLAS_KEY"])`;
+  }
+  if(kind==="create"){
+    if(lang==="cURL")return `curl -X POST ${B}/messages \\\n  -H "Authorization: Bearer sk_live_51Hx…" \\\n  -d '{\n    "topic": "orders",\n    "content": "订单 #8823 已发货",\n    "ttl": 3600\n  }'`;
+    if(lang==="JavaScript")return `const msg = await atlas.messages.create({\n  topic: "orders",\n  content: "订单 #8823 已发货",\n  ttl: 3600 // 秒\n});\nconsole.log(msg.id, msg.created_at);`;
+    if(lang==="Python")return `msg = client.messages.create(\n    topic="orders",\n    content="订单 #8823 已发货",\n    ttl=3600,\n)\nprint(msg.id, msg.created_at)`;
+  }
+  return "";
+}
+const RUN_JS={
+  quick:`// 点击「运行」：SDK 调用将在本地模拟执行\nconst { data } = await atlas.messages.list({ limit: 5 });\nconsole.log("共拉取", data.length, "条消息");\nconsole.log(data[0]);`,
+  create:`const msg = await atlas.messages.create({\n  topic: "orders",\n  content: "订单 #8823 已发货",\n  ttl: 3600,\n});\nconsole.log("已创建消息:", msg.id);\nconsole.log("到期时间:", msg.expires_at);`
+};
+const RESPONSES={
+  list:`{
+  "data": [
+    { "id": "msg_9x2Kd", "topic": "orders",  "content": "订单 #8823 已发货", "created_at": "2026-09-06T08:21:04Z" },
+    { "id": "msg_9x2Jc", "topic": "orders",  "content": "订单 #8819 已支付", "created_at": "2026-09-06T08:18:52Z" },
+    { "id": "msg_9x2Ha", "topic": " billing","content": "月度账单已生成",     "created_at": "2026-09-06T08:00:11Z" },
+    { "id": "msg_9x2Gz", "topic": "orders",  "content": "订单 #8815 已发货", "created_at": "2026-09-06T07:58:40Z" },
+    { "id": "msg_9x2Fy", "topic": "system",  "content": "例行维护已完成",     "created_at": "2026-09-06T07:30:00Z" }
+  ],
+  "has_more": true,
+  "next_cursor": "cur_8aZk"
+}`,
+  create:`{
+  "id": "msg_9x3Tp",
+  "topic": "orders",
+  "content": "订单 #8823 已发货",
+  "ttl": 3600,
+  "expires_at": "2026-09-06T09:24:12Z",
+  "created_at": "2026-09-06T08:24:12Z"
+}`
+};
+
+/* ==================== 页面定义 ==================== */
+const BASE=(V)=>V==="v19"?"https://api.atlas.dev/v1.9":"https://api.atlas.dev/v2";
+const PAGES={
+  intro:{
+    group:"指南",title:"简介",
+    toc:[["what","Atlas 是什么"],["features","核心能力"],["sdk","SDK 与生态"]],
+    html:(V)=>`
+      <div class="breadcrumb">指南 / 简介</div>
+      <h1>简介</h1>
+      <p class="lead">Atlas 是一套面向中小团队的消息与数据同步 API。把设备、服务与机器人的状态放进同一个消息流，用统一的接口写入和消费。</p>
+      <h2 id="what">Atlas 是什么</h2>
+      <p>现代系统里总有这样的时刻：订单服务、客服机器人、内部仪表盘都想在「订单发货」这件事发生时收到通知。为每个组合写一次对接既昂贵又脆弱。Atlas 把这类同步抽象成<span style="white-space:nowrap"><code>主题（topic）</code></span>与<code>消息（message）</code>：生产者往主题里写消息，消费者按主题订阅，Atlas 负责投递、重试与过期。</p>
+      <div class="callout info"><span class="co-ic">ⓘ</span><div><b>5 分钟接入</b>本页所有示例都可直接复制。右上角「运行」按钮可以在文档内直接执行 JavaScript 示例，查看真实返回结构。</div></div>
+      <h2 id="features">核心能力</h2>
+      <ul>
+        <li><b>统一消息流</b> —— REST 写入，HTTP 长轮询或 WebSocket 消费，TTL 自动过期，无需自建队列。</li>
+        <li><b>幂等写入</b> —— 携带 <code>Idempotency-Key</code> 重复请求不会产生重复消息。</li>
+        <li><b>游标分页</b> —— 稳定游标语义，消费端重启后从断点继续。</li>
+        <li><b>可观测</b> —— 每条消息有完整生命周期事件，投递延迟与失败原因可在控制台回溯。</li>
+      </ul>
+      <h2 id="sdk">SDK 与生态</h2>
+      <p>官方提供 Node.js 与 Python SDK，社区维护 Go / Rust / Java 版本。SDK 只是 REST API 的薄封装 —— 本文档的所有示例同时给出 cURL、JavaScript 与 Python 三种写法，行为完全一致。</p>
+      ${codeBlock("terminal",["cURL","JavaScript","Python"],"cURL")}
+      <script-like hidden data-kind="quick"></script-like>`
+  },
+  quick:{
+    group:"指南",title:"快速开始",
+    toc:[["install","安装 SDK"],["first","第一条消息"],["run","运行示例"]],
+    html:(V)=>`
+      <div class="breadcrumb">指南 / 快速开始</div>
+      <h1>快速开始</h1>
+      <p class="lead">从注册密钥到写入第一条消息，大约需要五分钟。</p>
+      <h2 id="install">安装 SDK</h2>
+      <p>通过常用包管理器安装官方 SDK（也可以直接用 cURL 调 REST API）：</p>
+      ${codeBlock("terminal",["cURL","JavaScript","Python"],"cURL")}
+      <h2 id="first">第一条消息</h2>
+      <p>向 <code>orders</code> 主题写入一条消息。主题不存在时 Atlas 会自动创建：</p>
+      ${codeBlock("POST "+BASE(V)+"/messages",["cURL","JavaScript","Python"],"cURL")}
+      <h2 id="run">运行示例</h2>
+      <p>切换到 <b>JavaScript</b> 页签，点击右上角「运行」—— 文档会模拟 SDK 调用并展示返回值：</p>
+      ${codeBlock("quickstart.js",["cURL","JavaScript","Python"],"JavaScript",`<button class="cbtn run" data-run="create">▶ 运行</button>`)}
+      <div class="callout info"><span class="co-ic">ⓘ</span><div><b>下一步</b>阅读「认证」了解密钥管理，或直接翻到「错误处理」在写代码前了解错误语义。</div></div>`
+  },
+  auth:{
+    group:"指南",title:"认证",
+    toc:[["keys","API 密钥"],["bearer","携带方式"],["rotate","轮换与泄露"]],
+    html:(V)=>`
+      <div class="breadcrumb">指南 / 认证</div>
+      <h1>认证</h1>
+      <p class="lead">所有 API 请求通过 Bearer Token 认证。密钥在控制台创建，分 live 与 test 两种模式。</p>
+      <h2 id="keys">API 密钥</h2>
+      <p>密钥以 <code>sk_live_</code> 或 <code>sk_test_</code> 开头。test 模式的所有数据与 live 完全隔离，且不产生费用。</p>
+      ${codeBlock("GET "+BASE(V)+"/messages",["cURL","JavaScript","Python"],"cURL")}
+      <h2 id="bearer">携带方式</h2>
+      <p>把密钥放在 <code>Authorization</code> 请求头中。<b>密钥只能保存在服务端</b> —— 任何出现在浏览器、App 或仓库里的密钥都应立即视为泄露并轮换。</p>
+      <h2 id="rotate">轮换与泄露</h2>
+      <p>控制台支持平滑轮换：新旧密钥在最长 24 小时内同时有效，部署完新密钥后再吊销旧密钥，全程零停机。</p>
+      <div class="callout warn"><span class="co-ic">⚠</span><div><b>最低权限</b>为 CI、第三方服务创建独立密钥并绑定最小 scope。一个密钥只能做一类事，泄露时的爆炸半径才可控。</div></div>`
+  },
+  errors:{
+    group:"指南",title:"错误处理",
+    toc:[["format","错误格式"],["codes","错误码表"],["retry","重试语义"]],
+    html:(V)=>`
+      <div class="breadcrumb">指南 / 错误处理</div>
+      <h1>错误处理</h1>
+      <p class="lead">Atlas 使用带结构化错误码的常规 HTTP 状态码。SDK 会把每个错误解析成带类型的异常。</p>
+      <h2 id="format">错误格式</h2>
+      <p>错误响应永远是同一个结构，<code>code</code> 适合程序判断，<code>message</code> 面向人类，<code>doc_url</code> 直接指向对应文档：</p>
+      ${codeBlock("application/json",["JSON"],"JSON")}
+      <h2 id="codes">错误码表</h2>
+      <table class="params">
+        <thead><tr><th>HTTP</th><th>code</th><th>说明与处理建议</th></tr></thead>
+        <tbody>
+          <tr><td>400</td><td>invalid_request</td><td>参数缺失或格式错误。检查 <code>param</code> 字段指向的参数。</td></tr>
+          <tr><td>401</td><td>invalid_api_key</td><td>密钥无效或已吊销。检查环境变量是否指向了正确项目。</td></tr>
+          <tr><td>402</td><td>quota_exceeded</td><td>${V==="v19"?"本月配额已用尽。":"本月配额已用尽。可在控制台购买弹性配额包。"}</td></tr>
+          <tr><td>409</td><td>idempotency_conflict</td><td>相同幂等键但请求体不同。换一个新的 Idempotency-Key。</td></tr>
+          <tr><td>429</td><td>rate_limited</td><td>触发限流。按 <code>Retry-After</code> 头等待后重试。</td></tr>
+          <tr><td>500</td><td>internal_error</td><td>服务端错误，自动重试通常安全。持续出现请携带 <code>x-request-id</code> 联系支持。</td></tr>
+        </tbody>
+      </table>
+      <h2 id="retry">重试语义</h2>
+      <p><code>402 / 429 / 500 / 503</code> 可安全重试；<code>400 / 401 / 409</code> 属于确定性错误，重试必然失败。官方 SDK 默认对可重试错误做指数退避，最多 3 次。</p>`
+  },
+  messages:{
+    group:"API 参考",title:"Message · 消息",
+    toc:[["obj","对象结构"],["create","写入消息"],["list","列出消息"],["del","删除消息"]],
+    html:(V)=>`
+      <div class="breadcrumb">API 参考 / ${V==="v19"?"<span class='req y' style='vertical-align:2px'>v1.9</span> ":""}Message</div>
+      <h1>Message · 消息</h1>
+      <p class="lead">消息是 Atlas 的基本数据单元：属于某个主题，带正文与 TTL，写入后即可被订阅者消费。</p>
+      ${V==="v19"?'<div class="callout warn"><span class="co-ic">⚠</span><div><b>v1.9 差异</b>此版本写入端点为 <code>POST /messages/publish</code>，已标记弃用。v2 起合并为 <code>POST /messages</code>。</div></div>':""}
+      <h2 id="obj">对象结构</h2>
+      ${codeBlock("Message",["JSON"],"JSON")}
+      <h2 id="create">写入消息</h2>
+      <p>${V==="v19"?"<span class='req y'>DEPRECATED</span> v1.9 使用 <code>/messages/publish</code>":"POST"} 向主题写入一条消息：</p>
+      ${codeBlock((V==="v19"?"POST "+BASE(V)+"/messages/publish":"POST "+BASE(V)+"/messages"),["cURL","JavaScript","Python"],"cURL",`<button class="cbtn run" data-run="create">▶ 运行</button>`)}
+      <table class="params">
+        <thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>topic<span class="req y">必填</span></td><td>string</td><td>主题名，小写字母、数字与连字符，最长 64 字符。不存在时自动创建。</td></tr>
+          <tr><td>content<span class="req y">必填</span></td><td>string</td><td>消息正文，UTF-8，最长 64 KB。</td></tr>
+          <tr><td>ttl<span class="req n">可选</span></td><td>integer</td><td>存活秒数（60 – 259200）。缺省为 86400（一天）。</td></tr>
+          <tr><td>Idempotency-Key<span class="req n">可选</span></td><td>header</td><td>幂等键，24 小时内相同键的重复写入返回首次结果。</td></tr>
+        </tbody>
+      </table>
+      <h2 id="list">列出消息</h2>
+      <p>按主题倒序列出消息，使用游标分页：</p>
+      ${codeBlock("GET "+BASE(V)+"/messages?topic=orders&limit=5",["cURL","JavaScript","Python"],"JavaScript",`<button class="cbtn run" data-run="quick">▶ 运行</button>`)}
+      <table class="params">
+        <thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>topic<span class="req n">可选</span></td><td>string</td><td>按主题过滤。缺省返回项目内全部消息。</td></tr>
+          <tr><td>limit<span class="req n">可选</span></td><td>integer</td><td>每页数量（1 – 100），缺省 20。</td></tr>
+          <tr><td>cursor<span class="req n">可选</span></td><td>string</td><td>上一页响应中的 <code>next_cursor</code>。</td></tr>
+        </tbody>
+      </table>
+      <h2 id="del">删除消息</h2>
+      <p>提前删除未过期的消息（如撤回场景）。删除是异步的，已开始的投递不会被召回。</p>
+      ${codeBlock("DELETE "+BASE(V)+"/messages/:id",["cURL","JavaScript","Python"],"cURL")}`
+  },
+  changelog:{
+    group:"资源",title:"更新日志",
+    toc:[["v24","v2.4"],["v191","v1.9 系列"]],
+    html:(V)=>`
+      <div class="breadcrumb">资源 / 更新日志</div>
+      <h1>更新日志</h1>
+      <p class="lead">重大变更会提前 90 天在邮件与控制台公告。订阅 RSS 可在小版本发布时收到通知。</p>
+      <h2 id="v24">v2.4 · 2026-08-12</h2>
+      <ul>
+        <li><b>新增</b>弹性配额包：<code>quota_exceeded</code> 时可按量自动续量，不再直接失败。</li>
+        <li><b>新增</b>消息生命周期 Webhook：写入、投递、过期、删除四类事件可推送到你的端点。</li>
+        <li><b>优化</b>P99 写入延迟从 86ms 降至 41ms。</li>
+      </ul>
+      <h2 id="v191">v1.9 系列（维护模式）</h2>
+      <div class="callout warn"><span class="co-ic">⚠</span><div><b>停止支持倒计时</b>v1.9 将于 2026 年 12 月停止服务，仅接收安全修复。迁移指南见下方链接。</div></div>
+      <ul>
+        <li><b>2026-06-30 · v1.9.7</b>安全修复：收紧 CORS 默认配置。</li>
+        <li><b>2026-03-18 · v1.9.6</b>安全修复：轮换内部签名密钥。</li>
+      </ul>
+      <p><a href="#" onclick="return false">v1.9 → v2 迁移指南 ↗</a></p>`
+  }
+};
+
+/* ==================== 渲染 ==================== */
+let VER="v24", CUR="intro";
+const GROUPS=["指南","API 参考","资源"];
+function sidebarRender(){
+  $("#sidebar").innerHTML=GROUPS.map(g=>{
+    const items=Object.entries(PAGES).filter(([,p])=>p.group===g);
+    return `<div class="sg">${g}</div>`+items.map(([k,p])=>
+      `<a class="si ${k===CUR?"on":""}" href="#" data-page="${k}">${p.title}${(k==="messages"&&VER==="v19")?'<span class="dep">DEP</span>':""}</a>`).join("");
+  }).join("");
+}
+function tocRender(){
+  const p=PAGES[CUR];
+  $("#tocList").innerHTML=p.toc.map(([id,t])=>`<a href="#${id}" data-toc="${id}">${t}</a>`).join("");
+}
+function pageRender(){
+  const p=PAGES[CUR];
+  document.title=p.title+" — Atlas API 文档";
+  $("#art").innerHTML=p.html(VER);
+  /* 填充代码块内容 */
+  const kindMap={"快速开始":"quick","第一条消息":"quick","认证":"auth","写入消息":"create","列出消息":"quick"};
+  $$(".code").forEach(cd=>{
+    const fn=cd.querySelector(".fn").textContent.trim();
+    const tabs=[...cd.querySelectorAll("[data-ct]")].map(b=>b.dataset.ct);
+    const panes=[...cd.querySelectorAll("[data-ctp]")];
+    panes.forEach(pre=>{
+      const lang=pre.dataset.ctp;
+      let code="Response";
+      if(lang==="JSON"){
+        code=fn.includes("Message")&&!fn.includes("/")?RESPONSES.create:(fn.includes("GET")?RESPONSES.list:RESPONSES.create);
+        if(fn==="application/json")code=`{\n  "error": {\n    "type": "invalid_request_error",\n    "code": "invalid_api_key",\n    "message": "未找到密钥 sk_live_51Hx…，可能已被吊销。",\n    "param": "Authorization",\n    "doc_url": "https://docs.atlas.dev/errors#invalid_api_key"\n  }\n}`;
+        pre.innerHTML=hi(code);
+      } else {
+        let kind;
+        if(fn==="terminal")kind="install";
+        else if(fn.includes("quickstart"))kind="quick";
+        else if(fn.includes("POST")&&fn.includes("/messages"))kind="create";
+        else if(fn.includes("GET")&&fn.includes("/messages"))kind="quick";
+        else kind="auth";
+        pre.innerHTML=hi(snippet(kind,lang,VER));
+      }
+    });
+    /* 语言页签切换 */
+    cd.querySelector(".ctabs").addEventListener("click",e=>{
+      const b=e.target.closest("[data-ct]");if(!b)return;
+      [...cd.querySelectorAll("[data-ct]")].forEach(x=>x.classList.toggle("on",x===b));
+      panes.forEach(pre=>pre.hidden=pre.dataset.ctp!==b.dataset.ct);
+    });
+    /* 复制 */
+    const cp=cd.querySelector("[data-copy]");
+    if(cp)cp.addEventListener("click",()=>{
+      const vis=panes.find(p=>!p.hidden);
+      navigator.clipboard&&navigator.clipboard.writeText(vis.textContent);
+      cp.textContent="✓ 已复制";setTimeout(()=>cp.textContent="复制",1400);
+    });
+    /* 运行 */
+    const run=cd.querySelector("[data-run]");
+    if(run)run.addEventListener("click",()=>{
+      const out=cd.querySelector(".cout"),pre=out.querySelector("pre");
+      pre.textContent="$ 正在通过 SDK 发起请求…";
+      out.classList.add("show");
+      setTimeout(()=>{
+        if(run.dataset.run==="quick"){
+          pre.innerHTML=`<span class="tok-c">console</span> 共拉取 5 条消息\n`+RESPONSES.list;
+        } else {
+          pre.innerHTML=`<span class="tok-c">console</span> 已创建消息: msg_9x3Tp\n`+RESPONSES.create;
+        }
+      },650);
+    });
+  });
+  sidebarRender();tocRender();
+  /* 复制按钮注入（若模板未带） */
+  $$(".code").forEach(cd=>{
+    if(!cd.querySelector("[data-copy]")){
+      const b=document.createElement("button");b.className="cbtn";b.dataset.copy="";b.textContent="复制";
+      cd.querySelector(".code-actions").appendChild(b);
+      b.addEventListener("click",()=>{
+        const vis=[...cd.querySelectorAll("[data-ctp]")].find(p=>!p.hidden);
+        navigator.clipboard&&navigator.clipboard.writeText(vis.textContent);
+        b.textContent="✓ 已复制";setTimeout(()=>b.textContent="复制",1400);
+      });
+    }
+  });
+  $("#art").scrollTop=0;scrollTo(0,0);
+}
+function go(k){if(!PAGES[k])return;CUR=k;pageRender();}
+$("#sidebar").addEventListener("click",e=>{const a=e.target.closest("[data-page]");if(a){e.preventDefault();go(a.dataset.page);}});
+
+/* TOC scrollspy */
+const artEl=$("#art");
+artEl.addEventListener("scroll",spy);addEventListener("scroll",spy,{passive:true});
+function spy(){
+  const hs=[...$("#art").querySelectorAll("h2[id]")];
+  let cur=hs[0];
+  for(const h of hs){if(h.getBoundingClientRect().top<140)cur=h;}
+  $$("#tocList a").forEach(a=>a.classList.toggle("on",a.dataset.toc===(cur&&cur.id)));
+}
+
+/* ==================== 版本切换 ==================== */
+function setVer(v){
+  VER=v;
+  $("#verBtn").firstChild.textContent=v==="v19"?"v1.9 ":"v2.4 ";
+  $("#vBanner").classList.toggle("show",v==="v19");
+  $("#verMenu").classList.remove("open");
+  pageRender();
+}
+$("#verBtn").addEventListener("click",e=>{e.stopPropagation();$("#verMenu").classList.toggle("open");});
+$("#verMenu").addEventListener("click",e=>{const b=e.target.closest("[data-v]");if(b)setVer(b.dataset.v);});
+document.addEventListener("click",e=>{if(!e.target.closest(".ver"))$("#verMenu").classList.remove("open");});
+
+/* ==================== 全文搜索 ==================== */
+function buildIndex(){
+  const idx=[];
+  for(const [k,p] of Object.entries(PAGES)){
+    const tmp=document.createElement("div");
+    tmp.innerHTML=p.html(VER);
+    tmp.querySelectorAll("style,script").forEach(n=>n.remove());
+    const text=tmp.textContent.replace(/\s+/g," ").trim();
+    idx.push({page:k,title:p.title,group:p.group,heading:"",text});
+    tmp.querySelectorAll("h2[id]").forEach(h=>{
+      let t=h.textContent,snip="";
+      let n=h.nextElementSibling;
+      while(n&&!/^H2$/.test(n.tagName)&&snip.length<130){snip+=" "+n.textContent;n=n.nextElementSibling;}
+      idx.push({page:k,title:p.title+" → "+t.trim(),group:p.group,heading:t.trim(),text:snip.replace(/\s+/g," ").trim()});
+    });
+  }
+  return idx;
+}
+let INDEX=[];
+function searchOpen(){
+  INDEX=buildIndex();
+  $("#smOv").classList.add("open");
+  $("#smIn").value="";smRender("");
+  setTimeout(()=>$("#smIn").focus(),40);
+}
+function searchClose(){$("#smOv").classList.remove("open");}
+$("#searchBtn").addEventListener("click",searchOpen);
+$("#smOv").addEventListener("click",e=>{if(e.target.id==="smOv")searchClose();});
+addEventListener("keydown",e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();$("#smOv").classList.contains("open")?searchClose():searchOpen();}
+  if(e.key==="Escape")searchClose();
+});
+let smHits=[],smSel=0;
+function hl(text,q){
+  if(!q)return text.slice(0,120);
+  const i=text.toLowerCase().indexOf(q.toLowerCase());
+  if(i<0)return text.slice(0,120);
+  const s=Math.max(0,i-40);
+  return (s>0?"…":"")+text.slice(s,i)+'<mark>'+text.slice(i,i+q.length)+'</mark>'+text.slice(i+q.length,i+q.length+90)+"…";
+}
+function smRender(q){
+  const box=$("#smRes");smSel=0;
+  if(!q.trim()){
+    smHits=Object.entries(PAGES).map(([k,p])=>({page:k,title:p.title,group:p.group,text:""})).slice(0,6);
+    box.innerHTML='<div class="sm-g">快速跳转</div>'+smHits.map((h,i)=>smItem(h,i,"")).join("");
+    return;
+  }
+  const kw=q.toLowerCase();
+  smHits=INDEX.filter(x=>(x.title+" "+x.text).toLowerCase().includes(kw)).slice(0,12);
+  if(!smHits.length){box.innerHTML='<div class="sm-empty">没有找到「'+q.replace(/</g,"&lt;")+'」相关内容<br><span style="font-size:12px">试试「认证」「消息」「错误」或「cursor」</span></div>';return;}
+  const byG={};smHits.forEach(h=>{(byG[h.group]=byG[h.group]||[]).push(h);});
+  let html="",i=0;
+  for(const g of GROUPS){
+    if(!byG[g])continue;
+    html+=`<div class="sm-g">${g}</div>`+byG[g].map(h=>smItem(h,i++,q)).join("");
+  }
+  box.innerHTML=html;smMark();
+}
+function smItem(h,i,q){
+  return `<button class="sm-i ${i===0?"sel":""}" data-hit="${h.page}" data-i="${i}">
+    <span class="ic">§</span><span><b>${h.title}</b><small>${hl(h.text,q)||"打开页面"}</small></span>
+    <span class="enter"><kbd>↵</kbd></span></button>`;
+}
+function smMark(){$$("#smRes .sm-i").forEach((el,i)=>el.classList.toggle("sel",i===smSel));const s=$("#smRes .sm-i.sel");if(s)s.scrollIntoView({block:"nearest"});}
+$("#smIn").addEventListener("input",e=>smRender(e.target.value));
+$("#smRes").addEventListener("click",e=>{const b=e.target.closest("[data-hit]");if(b){searchClose();go(b.dataset.hit);}});
+$("#smIn").addEventListener("keydown",e=>{
+  if(e.key==="ArrowDown"){e.preventDefault();smSel=Math.min(smHits.length-1,smSel+1);smMark();}
+  else if(e.key==="ArrowUp"){e.preventDefault();smSel=Math.max(0,smSel-1);smMark();}
+  else if(e.key==="Enter"){const hit=$("#smRes .sm-i.sel");if(hit){searchClose();go(hit.dataset.hit);}}
+});
+
+/* 修复 codeBlock 模板里注入的 hidden script-like 占位（无实际作用） */
+$$("script-like").forEach(n=>n.remove());
+
+pageRender();
+</script>
+</body>
+</html>

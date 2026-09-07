@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ledger — 团队记账与审批后台</title>
+<meta name="description" content="Ledger：细粒度权限、审批流与批量操作的团队记账后台。" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230E9F6E'/%3E%3Cpath d='M10 8h12M10 13h12M10 18h7' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/%3E%3Cpath d='M21 21l2.4 2.4L27 19.6' stroke='%23fff' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<style>
+  @font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url("../../fonts/inter-latin-variable.woff2") format("woff2")}
+  :root{
+    --bg:#F4F6F8; --card:#FFFFFF; --line:#E5E9EE; --line-2:#D4DAE2;
+    --ink:#17212E; --ink-2:#43505F; --ink-3:#7B8794;
+    --pri:#0E9F6E; --pri-dk:#0B7A55; --pri-bg:#E4F5EE;
+    --warn:#B45309; --warn-bg:#FCF0DC; --bad:#C0392B; --bad-bg:#FBEAE7; --info:#2563EB; --info-bg:#E8EFFD;
+    --r:12px;
+    --sans:"Inter",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Consolas,monospace;
+    --sh-s:0 1px 2px rgba(23,33,46,.05),0 4px 14px -6px rgba(23,33,46,.08);
+    --sh-l:0 20px 50px -16px rgba(23,33,46,.25);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none} button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  ::selection{background:rgba(14,159,110,.2)}
+  .app{display:grid;grid-template-columns:212px 1fr;min-height:100vh}
+
+  /* sidebar */
+  .side{background:#101B26;color:#B9C4D0;padding:16px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh}
+  .brand{display:flex;align-items:center;gap:10px;padding:6px 10px 20px;color:#fff;font-weight:700;font-size:16.5px;letter-spacing:-.01em}
+  .brand .lg{width:28px;height:28px;border-radius:8px;background:var(--pri);display:grid;place-items:center}
+  .brand .lg svg{width:16px;height:16px}
+  .brand small{margin-left:auto;font-size:9px;font-weight:700;letter-spacing:.1em;color:#2DD4A0;border:1px solid rgba(45,212,160,.4);border-radius:5px;padding:2px 6px}
+  .nav-sec{font-size:10.5px;font-weight:700;letter-spacing:.12em;color:#5B6B7C;padding:16px 12px 6px;text-transform:uppercase}
+  .ni{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 12px;border-radius:9px;font-size:13.5px;font-weight:500;color:#B9C4D0;transition:background .15s,color .15s}
+  .ni svg{width:16px;height:16px;flex:none}
+  .ni:hover{background:rgba(255,255,255,.06);color:#fff}
+  .ni.on{background:var(--pri);color:#fff;font-weight:600}
+  .ni .bdg{margin-left:auto;font-size:10px;font-weight:700;background:rgba(255,255,255,.14);border-radius:100px;padding:2px 7px}
+  .ni.on .bdg{background:rgba(255,255,255,.25)}
+  .side-user{margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;display:flex;gap:10px;align-items:center}
+  .ava{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0E9F6E,#2563EB);display:grid;place-items:center;color:#fff;font-size:13px;font-weight:700;flex:none}
+  .side-user b{display:block;color:#fff;font-size:13px}
+  .side-user span{font-size:11px;color:#7B8794}
+  @media (max-width:920px){
+    .app{grid-template-columns:60px 1fr}
+    .brand span,.brand small,.nav-sec,.ni span,.side-user div{display:none}
+    .ni{justify-content:center;padding:10px}
+    .side-user{justify-content:center}
+  }
+
+  /* topbar */
+  .top{background:var(--card);border-bottom:1px solid var(--line);padding:0 24px;height:60px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:30}
+  .crumb{font-size:13px;color:var(--ink-3)}
+  .crumb b{color:var(--ink);font-weight:600}
+  .role{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12.5px}
+  .role label{color:var(--ink-3);font-weight:600}
+  .role select{font:inherit;font-size:12.5px;font-weight:600;border:1px solid var(--line-2);border-radius:9px;padding:7px 10px;background:var(--card);outline:none;cursor:pointer;color:var(--ink)}
+  .role select:focus{border-color:var(--pri)}
+  .icb{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;color:var(--ink-2);position:relative;transition:background .15s}
+  .icb:hover{background:var(--bg)}
+  .icb .rd{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--bad);border:1.5px solid #fff}
+  @media (max-width:680px){.role label{display:none}}
+
+  main{padding:22px 24px 80px;max-width:1360px}
+  h1{font-size:20px;letter-spacing:-.01em;font-weight:700}
+  .sub{color:var(--ink-3);font-size:13px;margin-top:3px}
+
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
+  @media (max-width:1080px){.stats{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:560px){.stats{grid-template-columns:1fr}}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh-s)}
+  .stat .l{font-size:12.5px;color:var(--ink-3);font-weight:600;display:flex;justify-content:space-between;align-items:center}
+  .stat .l i{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-style:normal}
+  .stat .v{font-size:23px;font-weight:700;letter-spacing:-.02em;margin-top:8px;font-variant-numeric:tabular-nums}
+  .stat .v small{font-size:12px;font-weight:500;color:var(--ink-3)}
+  .stat .d{font-size:11.5px;margin-top:2px;color:var(--ink-3)}
+  .stat .d b.up{color:var(--pri-dk)} .stat .d b.dn{color:var(--bad)}
+
+  /* tabs + toolbar */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-s);overflow:hidden}
+  .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:6px 10px 0;overflow-x:auto}
+  .tab{font-size:13.5px;font-weight:600;color:var(--ink-3);padding:11px 16px;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s;display:flex;gap:7px;align-items:center}
+  .tab em{font-style:normal;font-size:10.5px;font-weight:700;background:var(--bg);border-radius:100px;padding:2px 8px;color:var(--ink-3)}
+  .tab.on{color:var(--pri-dk);border-bottom-color:var(--pri)}
+  .tab.on em{background:var(--pri-bg);color:var(--pri-dk)}
+  .toolbar{display:flex;align-items:center;gap:10px;padding:14px 16px;flex-wrap:wrap}
+  .search{display:flex;align-items:center;gap:8px;border:1px solid var(--line-2);border-radius:9px;padding:8px 12px;background:var(--card);min-width:220px}
+  .search svg{width:14px;height:14px;color:var(--ink-3)}
+  .search input{border:0;outline:none;font:inherit;font-size:13px;width:100%;background:none}
+  .sel{font:inherit;font-size:13px;border:1px solid var(--line-2);border-radius:9px;padding:8px 30px 8px 12px;background:var(--card);outline:none;cursor:pointer;color:var(--ink-2);
+    appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237B8794' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+  .tbtn{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;border:1px solid var(--line-2);border-radius:9px;padding:8px 15px;color:var(--ink-2);transition:all .15s;background:var(--card)}
+  .tbtn:hover{border-color:var(--ink-3);color:var(--ink)}
+  .tbtn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+  .tbtn.pri:hover{background:var(--pri-dk)}
+  .tbtn:disabled{opacity:.45;cursor:not-allowed}
+  .cnt{margin-left:auto;font-size:12.5px;color:var(--ink-3)}
+
+  /* table */
+  .twrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:860px}
+  thead th{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--ink-3);text-align:left;padding:10px 14px;background:#FAFBFC;border-bottom:1px solid var(--line);white-space:nowrap;user-select:none}
+  thead th.s{cursor:pointer} thead th.s:hover{color:var(--ink)}
+  thead th .ar{font-size:9px}
+  tbody td{padding:12px 14px;border-bottom:1px solid #EEF1F4;color:var(--ink-2);white-space:nowrap}
+  tbody tr{transition:background .12s;cursor:pointer}
+  tbody tr:hover{background:#F7FAF9}
+  tbody tr.sel{background:#F0F9F5}
+  tbody tr:last-child td{border-bottom:0}
+  .cbx{width:16px;height:16px;accent-color:var(--pri);cursor:pointer}
+  .no{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+  .amt{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .amt.out{color:var(--bad)} .amt.in{color:var(--pri-dk)}
+  .pill{font-size:11px;font-weight:700;border-radius:100px;padding:3.5px 11px;white-space:nowrap}
+  .pl-p{background:var(--warn-bg);color:var(--warn)}
+  .pl-a{background:var(--pri-bg);color:var(--pri-dk)}
+  .pl-r{background:var(--bad-bg);color:var(--bad)}
+  .pl-d{background:var(--info-bg);color:var(--info)}
+  .lk{color:var(--info);font-weight:600;font-size:12.5px}
+  .lk:hover{text-decoration:underline;text-underline-offset:3px}
+  .tfoot{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;font-size:12.5px;color:var(--ink-3);flex-wrap:wrap;gap:10px}
+  .pg{display:flex;gap:4px}
+  .pg button{min-width:29px;height:29px;border-radius:8px;border:1px solid var(--line);background:var(--card);font-size:12.5px;color:var(--ink-2);display:grid;place-items:center;transition:all .12s}
+  .pg button:hover{border-color:var(--ink-3)}
+  .pg button.on{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:700}
+  .empty{padding:60px 20px;text-align:center;color:var(--ink-3)}
+  .empty svg{width:44px;height:44px;opacity:.35;margin-bottom:12px}
+  .empty b{display:block;color:var(--ink-2);font-size:14.5px;margin-bottom:4px}
+
+  /* batch bar */
+  .batch{position:fixed;left:50%;bottom:26px;transform:translate(-50%,110px);z-index:60;background:#101B26;color:#fff;border-radius:14px;
+    padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh-l);transition:transform .4s cubic-bezier(.2,.75,.2,1);max-width:94vw;flex-wrap:wrap}
+  .batch.show{transform:translate(-50%,0)}
+  .batch b{font-size:13px;font-weight:600;padding:0 6px}
+  .bb{font-size:12.5px;font-weight:600;border-radius:9px;padding:8px 14px;transition:all .15s;display:inline-flex;gap:6px;align-items:center}
+  .bb:hover{filter:brightness(1.15)}
+  .bb.ok{background:var(--pri)} .bb.no{background:rgba(255,255,255,.1)} .bb.ex{background:rgba(255,255,255,.1)}
+  .bb[disabled]{opacity:.4;cursor:not-allowed}
+  .bb .lk2{font-size:11px;color:rgba(255,255,255,.55);font-weight:500}
+
+  /* drawer */
+  .scrim{position:fixed;inset:0;background:rgba(16,27,38,.45);z-index:70;opacity:0;pointer-events:none;transition:opacity .3s}
+  .scrim.on{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,96vw);background:var(--card);z-index:75;box-shadow:var(--sh-l);
+    transform:translateX(105%);transition:transform .42s cubic-bezier(.2,.75,.2,1);display:flex;flex-direction:column}
+  .drawer.open{transform:none}
+  .dw-h{padding:20px 24px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:12px}
+  .dw-h h3{font-size:16px;font-weight:700}
+  .dw-h .no{display:block;margin-top:3px}
+  .dw-x{margin-left:auto;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--ink-3);font-size:15px}
+  .dw-x:hover{background:var(--bg);color:var(--ink)}
+  .dw-body{flex:1;overflow-y:auto;padding:22px 24px}
+  .sect{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ink-3);text-transform:uppercase;margin-bottom:12px}
+  .kv{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+  .kv div{background:#FAFBFC;border:1px solid var(--line);border-radius:10px;padding:10px 13px}
+  .kv span{display:block;font-size:11px;color:var(--ink-3);margin-bottom:3px}
+  .kv b{font-size:13.5px;font-weight:600}
+  .kv .wide{grid-column:1/-1}
+  /* timeline */
+  .tl{position:relative;padding-left:26px}
+  .tl::before{content:"";position:absolute;left:8px;top:8px;bottom:14px;width:2px;background:var(--line)}
+  .ti{position:relative;padding-bottom:20px}
+  .ti:last-child{padding-bottom:0}
+  .ti::before{content:"";position:absolute;left:-24px;top:3px;width:14px;height:14px;border-radius:50%;background:var(--card);border:3px solid var(--line-2)}
+  .ti.done::before{border-color:var(--pri);background:var(--pri);box-shadow:0 0 0 3px var(--pri-bg)}
+  .ti.rej::before{border-color:var(--bad);background:var(--bad)}
+  .ti.cur::before{border-color:var(--warn);background:#fff;box-shadow:0 0 0 3px var(--warn-bg)}
+  .ti b{font-size:13.5px;display:block}
+  .ti span{font-size:12px;color:var(--ink-3)}
+  .ti p{font-size:12.5px;color:var(--ink-2);background:#FAFBFC;border:1px solid var(--line);border-radius:9px;padding:8px 12px;margin-top:7px}
+  .dw-foot{border-top:1px solid var(--line);padding:16px 24px;display:flex;gap:10px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:13.5px;font-weight:600;border-radius:10px;padding:11px 18px;transition:all .15s;flex:1}
+  .btn-ok{background:var(--pri);color:#fff} .btn-ok:hover{background:var(--pri-dk)}
+  .btn-no{background:var(--card);border:1px solid var(--line-2);color:var(--bad)} .btn-no:hover{border-color:var(--bad)}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+  .dw-comment{margin:0 24px 14px}
+  .dw-comment textarea{width:100%;border:1px solid var(--line-2);border-radius:10px;padding:10px 13px;font:inherit;font-size:13px;min-height:64px;resize:vertical;outline:none}
+  .dw-comment textarea:focus{border-color:var(--pri)}
+
+  /* modal */
+  .modal{position:fixed;inset:0;z-index:85;display:none;place-items:center;background:rgba(16,27,38,.5);backdrop-filter:blur(5px);padding:20px}
+  .modal.open{display:grid;animation:fade .2s}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .mbox{width:min(680px,96vw);max-height:90vh;overflow:auto;background:var(--card);border-radius:16px;box-shadow:var(--sh-l);animation:pop .3s cubic-bezier(.2,.8,.2,1)}
+  @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+  .mhead{display:flex;align-items:center;gap:10px;padding:18px 22px;border-bottom:1px solid var(--line)}
+  .mhead h3{font-size:15.5px;font-weight:700}
+  .mhead p{font-size:12px;color:var(--ink-3);margin-top:2px}
+  .mbody{padding:20px 22px}
+  table.perm{min-width:0}
+  table.perm thead th{text-align:center}
+  table.perm thead th:first-child{text-align:left}
+  table.perm td{text-align:center;padding:9px 12px}
+  table.perm td:first-child{text-align:left;font-weight:600;color:var(--ink)}
+  table.perm td small{display:block;font-weight:400;color:var(--ink-3);font-size:11px}
+  .sw{position:relative;width:34px;height:20px;background:var(--line-2);border-radius:20px;transition:background .2s;display:inline-block;cursor:pointer;vertical-align:middle}
+  .sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+  .sw.on{background:var(--pri)} .sw.on::after{transform:translateX(14px)}
+  .sw.lock{opacity:.4;cursor:not-allowed}
+  .mfoot{padding:14px 22px 20px;display:flex;gap:10px;justify-content:flex-end}
+  .mnote{background:var(--info-bg);color:var(--info);border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:16px;display:flex;gap:8px}
+  /* confirm dialog */
+  .cbox{width:min(400px,94vw);background:var(--card);border-radius:16px;padding:26px;text-align:center}
+  .cbox .ci2{width:48px;height:48px;border-radius:50%;background:var(--warn-bg);color:var(--warn);display:grid;place-items:center;margin:0 auto 14px;font-size:20px}
+  .cbox h3{font-size:16px;margin-bottom:6px}
+  .cbox p{font-size:13px;color:var(--ink-3);margin-bottom:20px}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,90px);background:#101B26;color:#fff;font-size:13px;border-radius:11px;padding:11px 20px;box-shadow:var(--sh-l);opacity:0;transition:all .35s cubic-bezier(.2,.7,.2,1);z-index:99;display:flex;gap:9px;align-items:center;pointer-events:none}
+  .toast.show{transform:translate(-50%,0);opacity:1}
+  .toast svg{color:#2DD4A0;flex:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><span class="lg"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M7 6h10M7 10.5h10M7 15h6"/><path d="M16.5 17.5l2 2 3.5-3.5"/></svg></span><span>Ledger</span><small>PRO</small></div>
+    <div class="nav-sec">工作区</div>
+    <button class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span>工作台</span></button>
+    <button class="ni on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 13h6M9 17h6"/></svg><span>凭证管理</span></button>
+    <button class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg><span>审批中心</span><span class="bdg" id="navAp">3</span></button>
+    <button class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6S13.9 16 14.5 19"/><circle cx="16.5" cy="9" r="2.6"/><path d="M15.5 14.6c2.3.1 4.2 1.5 4.9 4.4"/></svg><span>往来单位</span></button>
+    <div class="nav-sec">分析</div>
+    <button class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 17l5-6 4 3 5-8 4 5"/></svg><span>收支报表</span></button>
+    <button class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3l-9 9"/><path d="M15 3h6v6"/></svg><span>导出中心</span></button>
+    <div class="nav-sec">设置</div>
+    <button class="ni" id="permBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span>权限管理</span></button>
+    <div class="side-user"><span class="ava">周</span><div><b>周砚</b><span id="roleLbl">财务主管</span></div></div>
+  </aside>
+
+  <div>
+    <div class="top">
+      <span class="crumb">工作台 / <b id="crumbCur">凭证管理</b></span>
+      <div class="role"><label>当前身份</label>
+        <select id="roleSel">
+          <option value="admin">管理员 · 周砚</option>
+          <option value="finance">财务 · 沈书</option>
+          <option value="cashier">出纳 · 李澄</option>
+        </select>
+      </div>
+      <button class="icb" onclick="toast('2 条系统通知：D1 备份完成 · 发票额度即将用尽')" aria-label="通知"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg><span class="rd"></span></button>
+      <button class="icb" onclick="toast('帮助中心为演示占位')" aria-label="帮助"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.3 9.5a2.8 2.8 0 0 1 5.4.9c0 1.8-2.7 2.2-2.7 3.6"/><path d="M12 17.5h.01"/></svg></button>
+    </div>
+
+    <main>
+      <h1>凭证管理</h1>
+      <p class="sub">报销、付款与收款凭证的提交、审批与归档。点击任意行可查看审批流。</p>
+
+      <div class="stats">
+        <div class="stat"><div class="l">本月支出<i style="background:var(--pri-bg);color:var(--pri-dk)">支</i></div><div class="v">¥ 128,460</div><div class="d">较上月 <b class="dn">+8.2%</b> · 预算内</div></div>
+        <div class="stat"><div class="l">待我审批<i style="background:var(--warn-bg);color:var(--warn)">审</i></div><div class="v" id="stPend">3</div><div class="d">最早已等待 <b>2 天</b></div></div>
+        <div class="stat"><div class="l">本月已报销<i style="background:var(--info-bg);color:var(--info)">销</i></div><div class="v">¥ 96,210</div><div class="d">37 笔 · 平均 ¥2,601</div></div>
+        <div class="stat"><div class="l">异常凭证<i style="background:var(--bad-bg);color:var(--bad)">异</i></div><div class="v">2</div><div class="d">金额重复 · 票据缺失</div></div>
+      </div>
+
+      <div class="card">
+        <div class="tabs" id="tabs">
+          <button class="tab on" data-st="all">全部 <em id="nAll"></em></button>
+          <button class="tab" data-st="pending">待审批 <em id="nPend"></em></button>
+          <button class="tab" data-st="approved">已通过 <em id="nApp"></em></button>
+          <button class="tab" data-st="rejected">已驳回 <em id="nRej"></em></button>
+          <button class="tab" data-st="draft">草稿 <em id="nDr"></em></button>
+        </div>
+        <div class="toolbar">
+          <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" placeholder="搜索凭证号 / 提交人 / 事由…" /></label>
+          <select class="sel" id="fDept"><option value="">全部部门</option><option>产品部</option><option>研发部</option><option>市场部</option><option>设计部</option><option>行政部</option></select>
+          <select class="sel" id="fType"><option value="">全部类型</option><option>差旅报销</option><option>采购付款</option><option>备用金</option><option>收款</option></select>
+          <span class="cnt" id="cnt"></span>
+        </div>
+        <div class="twrap">
+          <table>
+            <thead><tr>
+              <th style="width:40px"><input type="checkbox" class="cbx" id="cbAll" aria-label="全选"></th>
+              <th>凭证号</th><th>类型</th><th>提交人</th><th>部门</th><th>事由</th>
+              <th class="s" data-k="amt">金额 <span class="ar"></span></th>
+              <th class="s" data-k="ts">日期 <span class="ar"></span></th>
+              <th>状态</th><th>审批流</th>
+            </tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="tfoot">
+          <span id="tfootInfo"></span>
+          <div class="pg" id="pg"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- 批量操作条 -->
+<div class="batch" id="batch">
+  <b>已选 <span id="bSel">0</span> 条</b>
+  <button class="bb ok" id="bApprove">✓ 批量通过</button>
+  <button class="bb no" id="bReject">✕ 批量驳回</button>
+  <button class="bb ex" id="bExport">⤓ 导出选中</button>
+  <button class="bb no lk2" id="bClear">取消选择</button>
+</div>
+
+<!-- 审批流抽屉 -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer">
+  <div class="dw-h"><div><h3 id="dTitle">凭证详情</h3><span class="no" id="dNo"></span></div><button class="dw-x" id="dwX">✕</button></div>
+  <div class="dw-body">
+    <div class="sect">基本信息</div>
+    <div class="kv" id="dKv"></div>
+    <div class="sect">审批流程</div>
+    <div class="tl" id="dTl"></div>
+  </div>
+  <textarea class="dw-comment" id="dComment" placeholder="审批意见（可选，驳回时建议填写原因）…"></textarea>
+  <div class="dw-foot">
+    <button class="btn btn-no" id="dReject">驳 回</button>
+    <button class="btn btn-ok" id="dApprove">通 过</button>
+  </div>
+</aside>
+
+<!-- 权限矩阵 -->
+<div class="modal" id="permModal">
+  <div class="mbox">
+    <div class="mhead"><div><h3>角色权限矩阵</h3><p>细粒度控制每个角色能做的事。灰色开关为系统锁定项。</p></div><button class="dw-x" id="pmX">✕</button></div>
+    <div class="mbody">
+      <div class="mnote">ⓘ 修改即时生效于当前演示：切换右上角身份后，批量操作与审批按钮的可用状态会跟随这里的状态。</div>
+      <table class="perm">
+        <thead><tr><th>权限</th><th>管理员</th><th>财务</th><th>出纳</th></tr></thead>
+        <tbody id="permBody"></tbody>
+      </table>
+    </div>
+    <div class="mfoot"><button class="btn btn-ok" style="flex:0 0 auto;padding:10px 26px" id="pmOk">完成</button></div>
+  </div>
+</div>
+
+<!-- 确认弹窗 -->
+<div class="modal" id="cfModal">
+  <div class="cbox">
+    <div class="ci2">!</div>
+    <h3 id="cfTitle">确认操作</h3>
+    <p id="cfMsg"></p>
+    <div style="display:flex;gap:10px">
+      <button class="btn" style="border:1px solid var(--line-2)" id="cfNo">取消</button>
+      <button class="btn btn-ok" id="cfYes">确认</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+function toast(m){const t=$("#toast");t.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>'+m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2600);}
+
+/* ---------- 数据 ---------- */
+const DEPTS=["产品部","研发部","市场部","设计部","行政部"];
+const TYPES=["差旅报销","采购付款","备用金","收款"];
+const PEOPLE=["沈书","李澄","陈默","林晚","苏航","王砚","刘一","何白"];
+const REASONS=["Q3 客户拜访差旅","服务器续费（阿里云）","六月投放备用金","打印耗材采购","团建晚餐费用","外包设计尾款","客户礼物采购","会议差旅预支","软件年费续订","办公室绿植养护","快递月结费用","测试设备采购"];
+let seq=3260, day0=new Date();
+let rows=[];
+let seed=7; function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647;}
+const ST=["pending","approved","rejected","draft"];
+const STC={pending:["待审批","pl-p"],approved:["已通过","pl-a"],rejected:["已驳回","pl-r"],draft:["草稿","pl-d"]};
+for(let i=0;i<26;i++){
+  const st=rnd()<.14?"pending":rnd()<.7?"approved":rnd()<.75?"rejected":"draft";
+  const type=TYPES[Math.floor(rnd()*TYPES.length)];
+  const isIn=type==="收款";
+  rows.push({
+    id:"PZ-2026-"+(seq++),
+    type,
+    person:PEOPLE[Math.floor(rnd()*PEOPLE.length)],
+    dept:DEPTS[Math.floor(rnd()*DEPTS.length)],
+    reason:REASONS[Math.floor(rnd()*REASONS.length)],
+    amt:Math.round((rnd()*8800+120)*(isIn?3:1)),
+    isIn,
+    ts:new Date(day0.getTime()-Math.floor(rnd()*40)*86400000),
+    st
+  });
+}
+rows[2].st="pending";rows[5].st="pending";rows[8].st="pending";
+rows.sort((a,b)=>b.ts-a.ts);
+
+/* ---------- 权限 ---------- */
+const PERMS=[
+  {k:"approve", name:"审批凭证", hint:"通过 / 驳回", lock:{admin:true}, def:{admin:true,finance:true,cashier:false}},
+  {k:"batch",   name:"批量操作", hint:"批量通过 / 驳回", lock:{admin:true}, def:{admin:true,finance:true,cashier:false}},
+  {k:"export",  name:"导出数据", hint:"导出选中 / 筛选结果", lock:{admin:true,finance:true}, def:{admin:true,finance:true,cashier:false}},
+  {k:"edit",    name:"编辑凭证", hint:"修改金额与附件", lock:{admin:true}, def:{admin:true,finance:true,cashier:true}},
+  {k:"viewAll", name:"查看全部部门", hint:"取消则仅可见本部门", lock:{admin:true}, def:{admin:true,finance:true,cashier:false}}
+];
+const ROLES={admin:"管理员",finance:"财务",cashier:"出纳"};
+let ROLE="admin";
+PERMS.forEach(p=>p.state={...p.def});
+let curDept=DEPTS[2]; /* 财务/出纳演示所属部门：市场部 */
+
+function can(k){const p=PERMS.find(p=>p.k===k);return p&&p.state[ROLE];}
+
+/* ---------- 表格 ---------- */
+const PAGE=9;
+let tab="all",q="",fDept="",fType="",sortK=null,sortDir=-1,page=1,checked=new Set();
+function view(){
+  let r=rows.filter(x=>
+    (tab==="all"||x.st===tab)&&
+    (!q||(x.id+x.person+x.reason).toLowerCase().includes(q))&&
+    (!fDept||x.dept===fDept)&&
+    (!fType||x.type===fType)&&
+    (ROLE==="admin"||can("viewAll")||x.dept===curDept)
+  );
+  if(sortK)r=[...r].sort((a,b)=>((sortK==="amt"?a.amt:a.ts)>(sortK==="amt"?b.amt:b.ts)?1:-1)*sortDir);
+  return r;
+}
+function render(){
+  const r=view();
+  const pages=Math.max(1,Math.ceil(r.length/PAGE));
+  page=Math.min(page,pages);
+  const rowsPg=r.slice((page-1)*PAGE,page*PAGE);
+  $("#tbody").innerHTML=rowsPg.length?rowsPg.map(x=>`<tr data-id="${x.id}" class="${checked.has(x.id)?"sel":""}">
+    <td><input type="checkbox" class="cbx rowcb" ${checked.has(x.id)?"checked":""} data-cb="${x.id}"></td>
+    <td class="no">${x.id}</td><td>${x.type}</td><td>${x.person}</td><td>${x.dept}</td>
+    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">${x.reason}</td>
+    <td class="amt ${x.isIn?"in":"out"}">${x.isIn?"+":"−"}¥${x.amt.toLocaleString("zh-CN")}</td>
+    <td>${x.ts.getMonth()+1}-${String(x.ts.getDate()).padStart(2,"0")}</td>
+    <td><span class="pill ${STC[x.st][1]}">${STC[x.st][0]}</span></td>
+    <td><span class="lk">查看</span></td></tr>`).join("")
+    :`<tr><td colspan="10"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 13h6M9 17h4"/></svg><b>没有符合条件的凭证</b>试试切换状态页签或清除筛选</div></td></tr>`;
+  $("#nAll").textContent=rows.length;
+  $("#nPend").textContent=rows.filter(x=>x.st==="pending").length;
+  $("#nApp").textContent=rows.filter(x=>x.st==="approved").length;
+  $("#nRej").textContent=rows.filter(x=>x.st==="rejected").length;
+  $("#nDr").textContent=rows.filter(x=>x.st==="draft").length;
+  $("#cnt").textContent=r.length+" 条记录";
+  $("#tfootInfo").textContent=`第 ${page} / ${pages} 页 · 共 ${r.length} 条`;
+  let pg="";for(let p=1;p<=pages;p++)pg+=`<button class="${p===page?"on":""}" data-p="${p}">${p}</button>`;
+  $("#pg").innerHTML=pg;
+  $("#navAp").textContent=$("#nPend").textContent;
+  $("#stPend").textContent=$("#nPend").textContent;
+  batchRender();
+  /* 权限可见性提示 */
+  if(ROLE!=="admin"&&!can("viewAll"))$("#tfootInfo").textContent+=` · 已按「${curDept}」过滤数据`;
+}
+$("#tabs").addEventListener("click",e=>{const t=e.target.closest(".tab");if(!t)return;
+  $$(".tab").forEach(x=>x.classList.toggle("on",x===t));tab=t.dataset.st;page=1;render();});
+$("#q").addEventListener("input",e=>{q=e.target.value.trim().toLowerCase();page=1;render();});
+$("#fDept").addEventListener("change",e=>{fDept=e.target.value;page=1;render();});
+$("#fType").addEventListener("change",e=>{fType=e.target.value;page=1;render();});
+$$("th.s").forEach(th=>th.addEventListener("click",()=>{
+  if(sortK===th.dataset.k)sortDir*=-1;else{sortK=th.dataset.k;sortDir=-1;}
+  $$("th.s .ar").forEach(a=>a.textContent="");
+  th.querySelector(".ar").textContent=sortDir>0?"▲":"▼";
+  render();
+}));
+$("#pg").addEventListener("click",e=>{const b=e.target.closest("button[data-p]");if(b){page=+b.dataset.p;render();}});
+$("#tbody").addEventListener("click",e=>{
+  const cb=e.target.closest(".rowcb");
+  if(cb){cb.checked?checked.add(cb.dataset.cb):checked.delete(cb.dataset.cb);
+    cb.closest("tr").classList.toggle("sel",cb.checked);syncAll();batchRender();return;}
+  if(e.target.closest("a,lable"))return;
+  const tr=e.target.closest("tr[data-id]");
+  if(tr)drawerOpen(tr.dataset.id);
+});
+function syncAll(){
+  const r=view(),pg=r.slice((page-1)*PAGE,page*PAGE);
+  const all=pg.length&&pg.every(x=>checked.has(x.id));
+  $("#cbAll").checked=all;
+  $("#cbAll").indeterminate=!all&&pg.some(x=>checked.has(x.id));
+}
+$("#cbAll").addEventListener("change",()=>{
+  const pg=view().slice((page-1)*PAGE,page*PAGE);
+  pg.forEach(x=>$("#cbAll").checked?checked.add(x.id):checked.delete(x.id));
+  render();
+});
+
+/* ---------- 批量操作 ---------- */
+function batchRender(){
+  const n=checked.size;
+  $("#batch").classList.toggle("show",n>0);
+  $("#bSel").textContent=n;
+  $("#bApprove").disabled=!can("approve")||!can("batch");
+  $("#bReject").disabled=!can("approve")||!can("batch");
+  $("#bExport").disabled=!can("export");
+  $("#bApprove").innerHTML='✓ 批量通过'+(!can("batch")?' <span class="lk2">无权限</span>':"");
+  $("#bReject").innerHTML='✕ 批量驳回'+(!can("batch")?' <span class="lk2">无权限</span>':"");
+}
+$("#bClear").addEventListener("click",()=>{checked.clear();render();});
+$("#bApprove").addEventListener("click",()=>{
+  if(!can("batch"))return toast("当前身份无批量操作权限，可在「权限管理」中调整");
+  confirmBox("批量通过","确定批量通过选中的 "+checked.size+" 张凭证？该操作会通知全部提交人。",()=>{
+    checked.forEach(id=>{const r=rows.find(x=>x.id===id);if(r.st==="pending")r.st="approved";});
+    toast("已批量通过 "+checked.size+" 张凭证");checked.clear();render();
+  });
+});
+$("#bReject").addEventListener("click",()=>{
+  if(!can("batch"))return toast("当前身份无批量操作权限，可在「权限管理」中调整");
+  confirmBox("批量驳回","确定批量驳回选中的 "+checked.size+" 张凭证？提交人将收到驳回通知。",()=>{
+    checked.forEach(id=>{const r=rows.find(x=>x.id===id);if(r.st==="pending")r.st="rejected";});
+    toast("已批量驳回 "+checked.size+" 张凭证");checked.clear();render();
+  });
+});
+$("#bExport").addEventListener("click",()=>{
+  if(!can("export"))return toast("当前身份无导出权限");
+  const sel=rows.filter(x=>checked.has(x.id));
+  const csv="\uFEFF"+["凭证号,类型,提交人,部门,事由,金额,状态"]
+    .concat(sel.map(x=>[x.id,x.type,x.person,x.dept,x.reason,(x.isIn?"+":"-")+x.amt,STC[x.st][0]].join(","))).join("\r\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="ledger-export.csv";a.click();
+  toast("已导出 "+sel.length+" 条凭证");
+  checked.clear();render();
+});
+
+/* ---------- 审批抽屉 ---------- */
+function flowOf(r){
+  const steps=[
+    {t:"提交申请",by:r.person,ts:dateStr(r.ts),st:"done"},
+    {t:"部门负责人初审",by:r.dept+" · 何白",ts:dateStr(r.ts,1),st:r.st==="draft"?"wait":r.st==="rejected"&&(r.rejStep||0)===1?"rej":"done"},
+    {t:"财务复审",by:"财务 · 沈书",ts:r.st==="pending"?"进行中":dateStr(r.ts,2),st:r.st==="draft"?"wait":r.st==="pending"?"cur":r.st==="rejected"&&(r.rejStep||0)===2?"rej":r.st==="approved"?"done":"done"},
+    {t:"出纳放款 / 归档",by:"出纳 · 李澄",ts:r.st==="approved"?"已完成":"—",st:r.st==="approved"?"done":"wait"}
+  ];
+  return steps;
+}
+function dateStr(d,off){const x=new Date(d.getTime()+(off||0)*3600e3*8);return (x.getMonth()+1)+"月"+x.getDate()+"日 "+String(x.getHours()).padStart(2,"0")+":"+String(x.getMinutes()).padStart(2,"0");}
+let curRow=null;
+function drawerOpen(id){
+  curRow=rows.find(x=>x.id===id);
+  $("#dTitle").textContent=curRow.reason;
+  $("#dNo").textContent=curRow.id+" · "+STC[curRow.st][0];
+  $("#dKv").innerHTML=`
+    <div><span>类型</span><b>${curRow.type}</b></div>
+    <div><span>金额</span><b class="amt ${curRow.isIn?"in":"out"}">${curRow.isIn?"+":"−"}¥${curRow.amt.toLocaleString("zh-CN")}</b></div>
+    <div><span>提交人</span><b>${curRow.person} · ${curRow.dept}</b></div>
+    <div><span>提交时间</span><b>${dateStr(curRow.ts)}</b></div>
+    <div class="wide"><span>附件</span><b>发票.pdf · 行程单.pdf</b></div>`;
+  $("#dTl").innerHTML=flowOf(curRow).map(s=>`<div class="ti ${s.st==="done"?"done":s.st==="rej"?"rej":s.st==="cur"?"cur":""}">
+    <b>${s.t}${s.st==="rej"?" · 已驳回":s.st==="cur"?" · 待处理":""}</b><span>${s.by} · ${s.ts}</span>
+    ${s.st==="rej"?"<p>金额与发票不一致，请补充说明后重新提交。</p>":""}</div>`).join("");
+  $("#dComment").value="";
+  const ok=$("#dApprove"),no=$("#dReject");
+  ok.disabled=no.disabled=!(can("approve")&&curRow.st==="pending");
+  ok.textContent=!can("approve")?"无审批权限":"通 过";
+  drawer.classList.add("open");scrim.classList.add("on");
+}
+function drawerClose(){drawer.classList.remove("open");scrim.classList.remove("on");}
+$("#dwX").addEventListener("click",drawerClose);
+scrim.addEventListener("click",drawerClose);
+$("#dApprove").addEventListener("click",()=>{
+  curRow.st="approved";curRow.comment=$("#dComment").value.trim();
+  drawerClose();render();toast("已通过「"+curRow.reason+"」，已通知提交人");
+});
+$("#dReject").addEventListener("click",()=>{
+  curRow.st="rejected";curRow.rejStep=2;curRow.comment=$("#dComment").value.trim();
+  drawerClose();render();toast("已驳回，退回财务复审节点");
+});
+addEventListener("keydown",e=>{if(e.key==="Escape"){drawerClose();$("#permModal").classList.remove("open");$("#cfModal").classList.remove("open");}});
+
+/* ---------- 确认弹窗 ---------- */
+let cfCb=null;
+function confirmBox(title,msg,cb){
+  $("#cfTitle").textContent=title;$("#cfMsg").textContent=msg;cfCb=cb;
+  $("#cfModal").classList.add("open");
+}
+$("#cfYes").addEventListener("click",()=>{$("#cfModal").classList.remove("open");cfCb&&cfCb();});
+$("#cfNo").addEventListener("click",()=>$("#cfModal").classList.remove("open"));
+$("#cfModal").addEventListener("click",e=>{if(e.target.id==="cfModal")$("#cfModal").classList.remove("open");});
+
+/* ---------- 权限矩阵 ---------- */
+function permRender(){
+  $("#permBody").innerHTML=PERMS.map(p=>`<tr><td>${p.name}<small>${p.hint}</small></td>${["admin","finance","cashier"].map(r=>
+    `<td><span class="sw ${p.state[r]?"on":""} ${p.lock[r]?"lock":""}" data-perm="${p.k}" data-role="${r}"></span></td>`).join("")}</tr>`).join("");
+}
+$("#permBody").addEventListener("click",e=>{
+  const sw=e.target.closest(".sw");if(!sw||sw.classList.contains("lock"))return;
+  const p=PERMS.find(x=>x.k===sw.dataset.perm);
+  p.state[sw.dataset.role]=!p.state[sw.dataset.role];
+  permRender();render();
+  toast(ROLES[sw.dataset.role]+"的「"+p.name+"」已"+(p.state[sw.dataset.role]?"开启":"关闭"));
+});
+$("#permBtn").addEventListener("click",()=>{permRender();$("#permModal").classList.add("open");});
+$("#pmX").addEventListener("click",()=>$("#permModal").classList.remove("open"));
+$("#pmOk").addEventListener("click",()=>{$("#permModal").classList.remove("open");toast("权限设置已保存");});
+$("#permModal").addEventListener("click",e=>{if(e.target.id==="permModal")$("#permModal").classList.remove("open");});
+
+/* ---------- 角色切换 ---------- */
+$("#roleSel").addEventListener("change",e=>{
+  ROLE=e.target.value;
+  $("#roleLbl").textContent=ROLES[ROLE]+" · "+{admin:"周砚",finance:"沈书",cashier:"李澄"}[ROLE];
+  checked.clear();page=1;render();
+  toast("已切换为「"+ROLES[ROLE]+"」身份，按钮可用状态已更新");
+});
+
+$$(".ni:not(.on):not(#permBtn)").forEach(b=>b.addEventListener("click",()=>toast("「"+b.querySelector("span").textContent+"」为演示占位 · 凭证管理为完整实现")));
+render();syncAll();
+</script>
+</body>
+</html>
