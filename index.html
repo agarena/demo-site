@@ -306,7 +306,7 @@
 
     <footer class="foot" id="contact" data-component="contact">
       <div class="foot-c"><span class="lbl">商务合作 · 联系方式 · 作品定制</span><a class="foot-mail" href="mailto:hi@shufy.ai">hi@shufy.ai</a></div>
-      <div class="foot-fine">© 2026 舒狐 shufy · AI Builder · Studio White</div>
+      <div class="foot-fine">© 2026 舒狐 shufy · AI Builder · Studio White · 本站记录匿名访问统计，仅用于改进服务</div>
     </footer>
   </div>
 
@@ -475,8 +475,10 @@
   if(!ANON){ANON='u-'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); try{localStorage.setItem('shufy_anon',ANON);}catch(e){}}
   const SID=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2);
   const FP=[navigator.userAgent,screen.width,screen.height,navigator.language].join('|');
+  /* 来源暗号：站外链接统一带 ?from=平台&v=内容编号，如 ?from=bilibili&v=lv01 */
+  let SRC=null,SRCV=null; try{const _q=new URLSearchParams(location.search); SRC=(_q.get('from')||'').slice(0,40)||null; SRCV=(_q.get('v')||'').slice(0,40)||null;}catch(e){}
   const Q=[];
-  function ctx(){return {path:location.pathname,referrer:document.referrer||null,language:navigator.language,timezone:(Intl.DateTimeFormat().resolvedOptions().timeZone||null),screen:{w:innerWidth,h:innerHeight},platform:navigator.platform,consent:true};}
+  function ctx(){return {path:location.pathname,referrer:document.referrer||null,language:navigator.language,timezone:(Intl.DateTimeFormat().resolvedOptions().timeZone||null),screen:{w:innerWidth,h:innerHeight},platform:navigator.platform,src:SRC,v:SRCV,landing:location.pathname+location.search,consent:true};}
   function track(type,targetType,targetId,extra){if(!API_ON)return; Q.push(Object.assign({type,targetType,targetId,path:location.pathname,ts:new Date().toISOString()},extra||{})); if(Q.length>=12)flush();}
   function flush(){if(!API_ON||!Q.length)return; const body={anonId:ANON,fingerprint:FP,sessionId:SID,context:ctx(),events:Q.splice(0)};
     try{const j=JSON.stringify(body); if(navigator.sendBeacon)navigator.sendBeacon(API_BASE+'/api/collect',new Blob([j],{type:'application/json'})); else fetch(API_BASE+'/api/collect',{method:'POST',headers:{'Content-Type':'application/json'},body:j,keepalive:true});}catch(e){}}
