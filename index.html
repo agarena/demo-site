@@ -85,42 +85,47 @@
   .intro .r b{display:block;font-family:var(--display);font-size:30px;font-weight:700;color:var(--fg);letter-spacing:-.02em;line-height:1}
 
   /* showcase: flagship + 2 others, all above the fold */
-  .show{display:grid;grid-template-columns:1.62fr 1fr;gap:20px;padding-bottom:14px;height:clamp(430px,55vh,600px);align-items:stretch}
+  .show{display:grid;grid-template-columns:1.62fr 1fr;gap:20px;padding-bottom:14px;height:clamp(510px,58vh,600px);align-items:stretch}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-s);
     transition:transform calc(.4s*var(--motion-mult)),box-shadow calc(.4s*var(--motion-mult));position:relative;overflow:hidden}
   .hero{display:grid;grid-template-columns:1.02fr .98fr;gap:26px;padding:26px;align-items:stretch}
   .h-info{display:flex;flex-direction:column;min-width:0}
-  .h-gal{display:flex;flex-direction:column;gap:12px;min-width:0}
+  .h-gal{display:flex;flex-direction:column;gap:10px;min-width:0;min-height:0;flex:none;margin-top:8px}
   .hero .h-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
   .h-name{font-family:var(--display);font-weight:700;letter-spacing:-.03em;font-size:clamp(26px,2.6vw,38px)}
   .h-tag{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;font-family:var(--display);white-space:nowrap}
-  .h-desc{color:var(--muted);font-size:15px;max-width:42ch;margin-top:2px}
-  .qa{margin-top:16px}
-  .qa .qa-h{margin-bottom:6px}
-  .qa ul{list-style:none;display:flex;flex-direction:column}
+  .h-desc{color:var(--muted);font-size:15px;max-width:46ch;margin-top:2px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .qa{min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+  .qa .qa-h{margin-bottom:6px;flex:0 0 auto}
+  .qa ul{list-style:none;display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow-y:auto;padding-right:6px}
+  .qa ul::-webkit-scrollbar{width:8px}
+  .qa ul::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:8px}
+  .qa ul::-webkit-scrollbar-track{background:transparent}
   .qitem{padding:10px 0;border-top:1px solid var(--line)}
   .qitem:first-child{border-top:0;padding-top:2px}
   .qitem .q{font-family:var(--display);font-weight:600;font-size:14.5px;color:var(--fg);display:flex;gap:9px;align-items:baseline;letter-spacing:-.01em}
   .qitem .q i{font-style:normal;color:var(--primary);font-weight:700;font-size:11px;letter-spacing:.04em;flex:0 0 auto}
   .qitem .a{color:var(--muted);font-size:13px;margin-top:3px;padding-left:23px;line-height:1.55}
-  .h-links{display:flex;align-items:center;gap:18px;margin-top:auto;padding-top:16px}
+  .h-links{display:flex;align-items:center;gap:18px;margin-top:auto;padding-top:12px}
   .lnk{font-family:var(--display);font-weight:600;font-size:14px;color:var(--primary);display:inline-flex;align-items:center;gap:6px;transition:gap .2s}
   .lnk:hover{gap:10px}
   .lnk svg{width:14px;height:14px}
 
-  /* product gallery: big viewer + 1-3 thumbnails */
-  .stageview{position:relative;flex:1;min-height:250px;background:radial-gradient(120% 120% at 50% 0%,var(--tint),transparent 70%),var(--surface);
-    border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;box-shadow:var(--shadow-s)}
-  .render{position:absolute;inset:0;display:grid;place-items:center;opacity:0;transform:translateY(14px) scale(.965);
-    transition:opacity calc(.45s*var(--motion-mult)) ease,transform calc(.5s*var(--motion-mult)) cubic-bezier(.2,.75,.25,1)}
-  .render.on{opacity:1;transform:none}
-  .render svg{height:240px;width:auto;max-width:92%;filter:drop-shadow(0 18px 30px rgba(16,20,30,.16))}
-  .h-thumbs{display:flex;gap:10px}
-  .gal-th{width:80px;height:54px;border:1px solid var(--line-2);border-radius:10px;overflow:hidden;background:var(--surface);
-    box-shadow:var(--shadow-s);transition:border-color .2s,transform .2s;padding:0}
-  .gal-th svg{width:100%;height:100%;display:block}
-  .gal-th[aria-selected="true"]{border-color:var(--fg);transform:translateY(-3px);box-shadow:var(--shadow-l)}
-  .gal-th:hover{transform:translateY(-2px)}
+  /* product gallery: stacked card deck, auto-dealing carousel */
+  /* 牌堆:占地固定 16:15(单图 16:9),每张牌本身严格 16:9;张数越多每层错位越薄,高度不变;
+     前牌在最上,后面的牌向下逐层露出;逐层调暗/模糊/降饱和 + 投影做层次;deal=顶牌向上抽走 */
+  .stageview{position:relative;flex:none;display:grid;aspect-ratio:16/15;background:radial-gradient(120% 120% at 50% 0%,var(--tint),transparent 70%),var(--surface);
+    border-radius:var(--radius-sm);overflow:hidden;box-shadow:var(--shadow-s)}
+  .stageview.deck{cursor:pointer}
+  .render{grid-area:1/1;width:100%;aspect-ratio:16/9;display:grid;place-items:center;
+    border-radius:var(--radius-sm);background:var(--surface);overflow:hidden;
+    box-shadow:0 12px 28px rgba(16,20,30,.14);
+    transition:transform calc(.55s*var(--motion-mult)) cubic-bezier(.22,.75,.25,1),opacity calc(.4s*var(--motion-mult)) ease,filter calc(.4s*var(--motion-mult)) ease}
+  .render.deal{transform:translate(26%,-135%) rotate(7deg)!important;z-index:40;
+    transition:transform calc(.48s*var(--motion-mult)) cubic-bezier(.55,.06,.68,.19)}
+  .render.snap{transition:none!important}
+  .render.dh{opacity:0;pointer-events:none}
+  .render svg{height:min(80%,232px);width:auto;max-width:92%;filter:drop-shadow(0 18px 30px rgba(16,20,30,.16))}
 
   /* all-tools scroll list (right column) */
   .alltools{display:flex;flex-direction:column;min-height:0;overflow:hidden;height:100%}
@@ -144,7 +149,7 @@
   .tr-desc{color:var(--muted);font-size:12px;line-height:1.45;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .trow .tr-thumb{width:56px;height:42px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2,var(--bg))}
   .trow .tr-thumb svg{width:100%;height:100%;display:block}
-  .gal-th:focus-visible,.lnk:focus-visible,.trow:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:10px}
+  .lnk:focus-visible,.trow:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:10px}
   .trow{position:relative}
   .trow::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:var(--primary);
     transform:scaleY(0);transform-origin:center;transition:transform calc(.3s*var(--motion-mult)) cubic-bezier(.2,.7,.2,1)}
@@ -157,7 +162,7 @@
   .hero.swap .qitem{animation:qaIn calc(.45s*var(--motion-mult)) both;animation-delay:calc(.18s + var(--i,0)*.08s)}
 
   /* demo modal + real-image support */
-  .render img,.gal-th img{width:100%;height:100%;object-fit:cover;display:block}
+  .render img{width:100%;height:100%;object-fit:cover;display:block;object-position:center top}
   .demo-modal{position:fixed;inset:0;z-index:80;display:none;place-items:center;background:rgba(14,16,22,.55);
     backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:24px}
   .demo-modal.open{display:grid;animation:fadeIn calc(.25s*var(--motion-mult)) ease}
@@ -194,7 +199,8 @@
 
   @media (max-width:920px){
     .show{grid-template-columns:1fr;height:auto}
-    .hero{grid-template-columns:1fr} .stageview{min-height:230px}
+    .hero{grid-template-columns:1fr}
+    .qa ul{max-height:460px}
     .alltools{height:auto;max-height:440px} .nlinks{display:none}
   }
   @media (max-width:560px){.intro .r{text-align:left}}
@@ -271,18 +277,17 @@
         <div class="h-info">
           <div class="h-top"><h2 class="h-name" id="h-name">LumenVox</h2><span class="h-tag" id="h-tag">Voice</span></div>
           <p class="h-desc" id="h-desc"></p>
-          <div class="qa" data-component="tool-usage">
-            <div class="qa-h lbl">主要用法 · Q&amp;A</div>
-            <ul id="qa-list"></ul>
+          <div class="h-gal" data-component="tool-gallery" style="color:var(--fg)">
+            <div class="stageview" id="stageview" role="group" aria-label="例图轮播,点击切换"></div>
           </div>
           <div class="h-links">
             <a class="lnk" id="lnk-open" href="#" target="_blank" rel="noopener">打开工具 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             <a class="lnk" id="lnk-demo" href="#" role="button" style="color:var(--fg)">使用演示 <svg class="play-ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></a>
           </div>
         </div>
-        <div class="h-gal" data-component="tool-gallery" style="color:var(--fg)">
-          <div class="stageview" id="stageview"></div>
-          <div class="h-thumbs" id="thumbs" role="tablist" aria-label="例图切换"></div>
+        <div class="qa" data-component="tool-usage">
+          <div class="qa-h lbl">主要用法 · Q&amp;A</div>
+          <ul id="qa-list"></ul>
         </div>
       </article>
 
@@ -322,20 +327,22 @@
 <script>
   const $=id=>document.getElementById(id);
   let T=[
-    {k:"voice",tag:"Voice",name:"LumenVox",shots:3,desc:"把 60 秒清唱变成可商用的多语种配音与音色克隆,保留气声与情绪起伏。",
-      qa:[["需要准备什么?","一段 60 秒以上、背景干净的清晰人声即可开始克隆。"],["支持多少语言?","中、英、日、韩等 22 种语言,可跨语种保留同一音色。"],["能商用吗?","可用于商业配音,并附可追溯的音色来源说明。"]]},
-    {k:"video",tag:"Video",name:"FrameForge",shots:3,desc:"从一段文字脚本自动生成带分镜、运镜与配乐的短视频初稿,一键导出成片。",
-      qa:[["输入什么?","粘贴一段文字脚本或要点,自动拆分镜与镜头。"],["出片要多久?","常见 30–60 秒短片,几分钟内得到带配乐的初稿。"],["能改吗?","分镜、运镜、配乐都可逐条重生成后再导出。"]]},
-    {k:"rag",tag:"RAG",name:"Cortex Chat",shots:2,desc:"接入你的私有知识库,给出带引用来源、可追溯原文的精准问答。",
-      qa:[["接哪些数据?","支持 PDF、Markdown、Notion、网页与数据库等私有知识源。"],["回答可信吗?","每条答案带引用来源,可一键跳转原文核对。"],["数据安全吗?","支持私有部署,知识库不外传,权限按人隔离。"]]},
-    {k:"image",tag:"Image",name:"PaletteDiffusion",shots:3,desc:"用一张品牌参考图,扩散出整套风格一致的视觉物料与配色体系。",
-      qa:[["需要几张参考图?","一张品牌主视觉即可起步,参考越多风格越稳。"],["一致性如何?","锁定配色与版式,批量产出海报、封面与社媒物料。"],["能换风格吗?","可微调参考权重或叠加第二参考,快速切换风格。"]]},
-    {k:"code",tag:"Dev",name:"CodePilot X",shots:2,desc:"读懂整个仓库的上下文,在 IDE 里直接完成重构、写测试并开 PR。",
-      qa:[["能读多大项目?","解析整仓索引,理解跨文件的依赖与团队约定。"],["产出是什么?","直接给出可运行 diff、测试与 PR 说明。"],["安全吗?","支持本地/私有模型选项,代码不用于训练。"]]},
-    {k:"data",tag:"Data",name:"InsightBoard",shots:3,desc:"用自然语言提问,秒级生成可下钻、可分享的交互式 BI 看板。",
-      qa:[["怎么提问?","用自然语言描述想看的数据,自动生成图表与 SQL。"],["能深挖吗?","支持点击下钻、维度筛选,并可保存分享看板。"],["连哪些数据源?","常见数据库、表格与 API,配置一次即可复用。"]]},
-    {k:"writing",tag:"Writing",name:"MuseWrite",shots:1,desc:"把零散素材与要点,整理成结构清晰的多版本长文与营销文案。",
-      qa:[["从什么开始?","丢入零散要点、录音或素材,先生成结构大纲。"],["能几种版本?","一键生成多个语气/长度版本,方便对比挑选。"],["会编造吗?","基于你给的事实扩展,并标注需要核实之处。"]]}
+    {k:"model-price-compare",slug:"model-price-compare",tag:"Data",name:"token定价对比",desc:"16 家供应商、114 个模型、640+ 套餐统一折算成 ¥/百万 token，一眼找出最划算的 AI 模型套餐。",
+      media:[{type:"image",url:"./assets/tools/model-price-1.png",caption:"定价行情主表"},{type:"image",url:"./assets/tools/model-price-2.png",caption:"模型信息表"}],
+      qa:[["这表能帮我做什么？","把订阅套餐和按量付费统一折算成 ¥/百万 token 比价，配合热门筛选、同模型排名、性价比指数，30 秒找到最适合的套餐。"],["数据多久更新？","持续跟进供应商调价，顶部显示更新日期，更新日志页记录每次变更；下单前以官方页面为准。"],["能按我的场景调吗？","顶部参数可自定义缓存命中率、输入占比、汇率、评分基准（6 种测评可选），全表实时重算。"]],
+      url:"https://docs.qq.com/sheet/DTWJhT290dnpuSUJY?tab=000001"},
+    {k:"video",tag:"Video",name:"FrameForge",shots:3,desc:"从一段文字脚本自动生成带分镜、运镜与配乐的短视频初稿，一键导出成片。",
+      qa:[["输入什么?","粘贴一段文字脚本或要点，自动拆分镜与镜头。"],["出片要多久?","常见 30–60 秒短片，几分钟内得到带配乐的初稿。"],["能改吗?","分镜、运镜、配乐都可逐条重生成后再导出。"]]},
+    {k:"rag",tag:"RAG",name:"Cortex Chat",shots:2,desc:"接入你的私有知识库，给出带引用来源、可追溯原文的精准问答。",
+      qa:[["接哪些数据?","支持 PDF、Markdown、Notion、网页与数据库等私有知识源。"],["回答可信吗?","每条答案带引用来源，可一键跳转原文核对。"],["数据安全吗?","支持私有部署，知识库不外传，权限按人隔离。"]]},
+    {k:"image",tag:"Image",name:"PaletteDiffusion",shots:3,desc:"用一张品牌参考图，扩散出整套风格一致的视觉物料与配色体系。",
+      qa:[["需要几张参考图?","一张品牌主视觉即可起步，参考越多风格越稳。"],["一致性如何?","锁定配色与版式，批量产出海报、封面与社媒物料。"],["能换风格吗?","可微调参考权重或叠加第二参考，快速切换风格。"]]},
+    {k:"code",tag:"Dev",name:"CodePilot X",shots:2,desc:"读懂整个仓库的上下文，在 IDE 里直接完成重构、写测试并开 PR。",
+      qa:[["能读多大项目?","解析整仓索引，理解跨文件的依赖与团队约定。"],["产出是什么?","直接给出可运行 diff、测试与 PR 说明。"],["安全吗?","支持本地/私有模型选项，代码不用于训练。"]]},
+    {k:"data",tag:"Data",name:"InsightBoard",shots:3,desc:"用自然语言提问，秒级生成可下钻、可分享的交互式 BI 看板。",
+      qa:[["怎么提问?","用自然语言描述想看的数据，自动生成图表与 SQL。"],["能深挖吗?","支持点击下钻、维度筛选，并可保存分享看板。"],["连哪些数据源?","常见数据库、表格与 API，配置一次即可复用。"]]},
+    {k:"writing",tag:"Writing",name:"MuseWrite",shots:1,desc:"把零散素材与要点，整理成结构清晰的多版本长文与营销文案。",
+      qa:[["从什么开始?","丢入零散要点、录音或素材，先生成结构大纲。"],["能几种版本?","一键生成多个语气/长度版本，方便对比挑选。"],["会编造吗?","基于你给的事实扩展，并标注需要核实之处。"]]}
   ];
   // light, refined product render: white app window, soft colored widgets. view 0/1/2 = different layouts.
   function render(type,view){
@@ -384,20 +391,64 @@
   }
   function barsFor(type){let b="";if(type==="voice"){for(let i=0;i<12;i++){const h=8+Math.abs(Math.sin(i*.6))*36;b+='<rect x="'+(10+i*8)+'" y="'+(60-h/2)+'" width="4" height="'+h+'" rx="2" style="fill:var(--p-blue)" opacity="'+(.4+(i%3)*.2)+'"/>'}}else if(type==="rag"){b='<rect x="10" y="30" width="60" height="14" rx="7" style="fill:var(--p-blue)" opacity=".8"/><rect x="30" y="50" width="60" height="14" rx="7" fill="rgba(16,20,30,.08)"/>';}else{const hs=[26,40,20,46,32];hs.forEach((h,i)=>b+='<rect x="'+(12+i*20)+'" y="'+(66-h)+'" width="12" height="'+h+'" rx="3" style="fill:var(--p-blue)" opacity="'+(.4+i*.14)+'"/>');}return b;}
 
-  let hero=0, view=0;
+  let hero=0;
 
   function renderHero(){const t=T[hero];
     $("h-name").textContent=t.name; $("h-tag").textContent=t.tag; $("h-desc").textContent=t.desc;
     $("qa-list").innerHTML=t.qa.map((p,i)=>'<li class="qitem" style="--i:'+i+'"><div class="q"><i>Q'+(i+1)+'</i>'+p[0]+'</div><div class="a">'+p[1]+'</div></li>').join("");
-    const n=shotCount(t); if(view>=n)view=0;
+    const n=shotCount(t);
     const sv=$("stageview"); sv.querySelectorAll(".render").forEach(r=>r.remove());
-    for(let v=0;v<n;v++){const d=document.createElement("div");d.className="render"+(v===view?" on":"");d.dataset.v=v;d.innerHTML=shotHTML(t,v);sv.appendChild(d);}
-    $("thumbs").innerHTML=Array.from({length:n},(_,v)=>'<button class="gal-th" role="tab" aria-selected="'+(v===view)+'" data-v="'+v+'" aria-label="例图 '+(v+1)+'">'+shotHTML(t,v)+'</button>').join("");
+    for(let v=0;v<n;v++){const d=document.createElement("div");d.className="render";d.innerHTML=shotHTML(t,v);sv.appendChild(d);}
+    deckOrder=Array.from({length:n},(_,i)=>i); deckN=n; deckLayout(); deckPlay();
     const open=$("lnk-open"); open.href=(t.url&&t.url!=='#')?t.url:'#';
     const h=$("hero"); h.classList.remove("swap"); void h.offsetWidth; h.classList.add("swap");
     track('tool_view','tool',t.slug||t.k);
   }
-  function setView(v){view=v;document.querySelectorAll("#stageview .render").forEach(r=>r.classList.toggle("on",+r.dataset.v===v));document.querySelectorAll(".gal-th").forEach(f=>f.setAttribute("aria-selected",+f.dataset.v===v));}
+  /* ---------- 牌堆式图廊:每张 16:9,纵向错位堆叠,层数跟随图片张数 ---------- */
+  let deckOrder=[],deckN=1,deckTimer=null;
+  function deckLayout(){const sv=$("stageview");const cards=sv.querySelectorAll(".render");
+    const n=deckOrder.length, lv=Math.min(n-1,7);
+    sv.style.aspectRatio=n<2?"16/9":"16/15";
+    const step=n>1?66.66/lv:0;
+    deckOrder.forEach((ci,pos)=>{const el=cards[ci]; if(!el)return;
+      const k=Math.min(pos,lv);
+      el.className="render"+(pos>lv?" dh":"");
+      el.style.zIndex=30-pos*4;
+      let tf="translateY("+(k*step).toFixed(2)+"%)", fl="none",
+          op=pos>lv?"0":(k===0?"1":Math.max(.25,1-k*.15).toFixed(2)),
+          sh=k===0
+            ?"0 2px 6px rgba(16,20,30,.08), 0 18px 44px rgba(16,20,30,.20)"
+            :"0 2px 4px rgba(16,20,30,"+Math.max(.03,.08-k*.01).toFixed(2)+")";
+      if(k>0){
+        tf+=" rotate("+((k%2?1:-1)*Math.min(.5+k*.12,1.2)).toFixed(2)+"deg)";
+        fl="saturate("+Math.max(.8,1-k*.05).toFixed(2)+") blur("+Math.min(k*.25,1).toFixed(2)+"px)";
+      }
+      el.style.transform=tf;
+      el.style.filter=fl;
+      el.style.boxShadow=sh;
+      el.style.opacity=op;
+    });}
+  function deckNext(){if(deckN<2)return;const top=$("stageview").querySelectorAll(".render")[deckOrder[0]];
+    if(!top||top.classList.contains("deal"))return;
+    top.classList.add("deal");
+    setTimeout(()=>{deckOrder.push(deckOrder.shift());
+      deckLayout();
+      const n=deckOrder.length, lv=Math.min(n-1,7), step=n>1?66.66/lv:0, k=Math.min(n-1,lv);
+      const yF=(k*step).toFixed(2),
+            rF=((k%2?1:-1)*Math.min(.5+k*.12,1.2)).toFixed(2),
+            oF=k===0?"1":Math.max(.25,1-k*.15).toFixed(2);
+      /* 归位动画:从槽位下方 60px 向上冒出淡入,衔接切牌 */
+      top.classList.add("snap");
+      top.style.opacity="0";
+      top.style.transform="translateY(calc("+yF+"% + 60px))";
+      void top.offsetWidth;
+      top.classList.remove("snap");
+      top.style.opacity=oF;
+      top.style.transform="translateY("+yF+"%) rotate("+rF+"deg)";
+    },480);}
+  function deckPause(){if(deckTimer){clearInterval(deckTimer);deckTimer=null;}}
+  function deckPlay(){deckPause(); const still=matchMedia("(prefers-reduced-motion:reduce)").matches;
+    if(deckN>1&&!still)deckTimer=setInterval(deckNext,3600);}
   function renderList(){$("at-count").textContent=T.length+" 个 · 点击查看";
     $("at-scroll").innerHTML=T.map((t,i)=>'<button class="trow'+(i===hero?" on":"")+'" data-hero="'+i+'" aria-label="查看 '+t.name+'">'+
       '<span class="tr-idx">0'+(i+1)+'</span>'+
@@ -405,14 +456,15 @@
       '<span class="tr-thumb">'+listThumb(t)+'</span></button>').join("");
   }
   function renderAll(){renderHero();renderList();}
-  function setHero(i){i=+i;if(i<0||i>=T.length||i===hero)return;hero=i;view=0;renderHero();document.querySelectorAll(".trow").forEach(r=>r.classList.toggle("on",+r.dataset.hero===hero));}
-  document.addEventListener("click",e=>{const f=e.target.closest(".gal-th");if(f){setView(+f.dataset.v);return;}const h=e.target.closest("[data-hero]");if(h)setHero(h.dataset.hero);});
+  function setHero(i){i=+i;if(i<0||i>=T.length||i===hero)return;hero=i;renderHero();document.querySelectorAll(".trow").forEach(r=>r.classList.toggle("on",+r.dataset.hero===hero));}
+  document.addEventListener("click",e=>{const h=e.target.closest("[data-hero]");if(h)setHero(h.dataset.hero);});
   document.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){const h=e.target.closest&&e.target.closest("[data-hero]");if(h){e.preventDefault();setHero(h.dataset.hero);}}});
-  if(!matchMedia("(prefers-reduced-motion:reduce)").matches){
+  /* 牌堆交互:点击顶牌手动切牌,悬停暂停自动轮播(替代原鼠标视差晃动) */
+  {
     const sv=$("stageview");
-    sv.addEventListener("mousemove",e=>{const r=sv.getBoundingClientRect();const x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
-      const on=sv.querySelector(".render.on");if(on)on.style.transform="translate3d("+(x*-10)+"px,"+(y*-10)+"px,0)";});
-    sv.addEventListener("mouseleave",()=>{const on=sv.querySelector(".render.on");if(on)on.style.transform="";});
+    sv.addEventListener("click",()=>{if(deckN>1){deckNext();deckPlay();}});
+    sv.addEventListener("mouseenter",deckPause);
+    sv.addEventListener("mouseleave",deckPlay);
   }
   // 通知条数据源:后续可用数据库/API 返回替换 FEED —— 结构 [类型, 文本, 标签码(up|news|soon)]
   const FEED=[
@@ -445,7 +497,7 @@
   /* ---------- 图片双路径:真实图 <img> 或 生成的 SVG ---------- */
   function esc(s){return String(s==null?'':s).replace(/"/g,'&quot;').replace(/</g,'&lt;');}
   function imgList(t){return (t.media||[]).filter(m=>m.type==='image');}
-  function shotCount(t){const n=imgList(t).length; return Math.max(1,Math.min(3, n||t.shots||1));}
+  function shotCount(t){const n=imgList(t).length; return Math.max(1,Math.min(12, n||t.shots||1));}
   function shotHTML(t,idx){const im=imgList(t); if(im[idx]&&im[idx].url)return '<img src="'+esc(im[idx].url)+'" alt="'+esc(im[idx].caption||t.name+' 例图')+'">'; return render(t.k,idx);}
   function listThumb(t){const im=imgList(t); if(im[0]&&im[0].url)return '<img src="'+esc(im[0].url)+'" alt="">'; return thumb(t.k);}
 
