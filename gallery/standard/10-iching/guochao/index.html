@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="观象台 · 周易占卜馆——国潮新中式风格，铜钱摇卦、数字起卦、六十四卦锦囊检索与白话解卦。">
+<title>观象台 · 周易占卜馆 | 一卦知进退</title>
+<style>
+/* ============ 基础与色板（国潮新中式六色） ============ */
+:root{
+  --red:#C3272B;        /* 朱红：主色块 */
+  --red-hi:#D02F31;     /* 朱红亮：悬停 */
+  --deep:#8C1F28;       /* 绛：深底/页脚 */
+  --gold:#D9A441;       /* 金：描线 */
+  --gold-lit:#F9DEA4;   /* 亮金：红底上的金字（保对比） */
+  --silk:#F5EDD8;       /* 绢白 */
+  --silk-paper:#FBF4E2; /* 纸面亮绢 */
+  --blue:#2B4A6F;       /* 黛蓝：次色块 */
+  --ink:#221F1F;        /* 墨黑 */
+  --muted:#6E5D48;      /* 绢底弱字 */
+  --f-disp:"ZCOOL XiaoWei","Ma Shan Zheng","STKaiti","KaiTi","SimSun","Noto Serif SC",serif;
+  --f-body:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --f-seal:"ZCOOL QingKe HuangYou","STKaiti","KaiTi","SimHei",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--f-body);background:var(--silk);color:var(--ink);line-height:1.75;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+::selection{background:var(--red);color:#FFF1D6}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+img,svg{display:block}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+:focus-visible{outline:2px dashed var(--gold);outline-offset:3px}
+
+/* ============ 印章方按钮（红底方章，禁胶囊） ============ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-family:var(--f-seal);font-size:17px;letter-spacing:.18em;text-indent:.18em;
+  padding:13px 24px;background:var(--red);color:#FFF1D6;
+  border:2px solid var(--deep);border-radius:4px;
+  outline:1px solid rgba(249,222,164,.85);outline-offset:-6px;
+  transition:transform .15s ease,filter .15s ease,background .2s ease}
+.btn:hover{background:var(--red-hi)}
+.btn:active{transform:translateY(2px);filter:brightness(.88)}
+.btn.gold{background:var(--gold);color:#4A2F07;border-color:#A9782A;outline-color:rgba(140,31,40,.55)}
+.btn.gold:hover{background:#E4B155}
+.btn.ghost{background:transparent;color:var(--gold-lit);border-color:var(--gold-lit);outline:none}
+.btn.ghost:hover{background:rgba(249,222,164,.12)}
+.btn.small{padding:8px 14px;font-size:14px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+
+/* ============ 顶栏 ============ */
+.topbar{position:sticky;top:0;z-index:60;background:var(--deep);border-bottom:2px solid var(--gold)}
+.topbar .wrap{display:flex;align-items:center;gap:22px;height:64px}
+.logo{display:flex;align-items:center;gap:12px;color:var(--silk)}
+.logo-seal{width:40px;height:40px;flex:none;background:var(--red);color:#FFEFD2;
+  font-family:var(--f-disp);font-size:25px;display:grid;place-items:center;
+  border-radius:4px;transform:rotate(-6deg);
+  outline:1px solid var(--gold-lit);outline-offset:-4px}
+.logo b{font-family:var(--f-disp);font-size:21px;letter-spacing:.12em;font-weight:700}
+.logo span{font-size:12px;color:var(--gold-lit);letter-spacing:.3em;display:block;line-height:1.2}
+.nav{margin-left:auto;display:flex;gap:4px;overflow-x:auto;white-space:nowrap}
+.nav a{color:#F2E5C6;font-size:15px;padding:8px 12px;position:relative;letter-spacing:.08em}
+.nav a::after{content:"";position:absolute;left:12px;right:12px;bottom:4px;height:2px;
+  background:var(--gold-lit);transform:scaleX(0);transform-origin:left;transition:transform .3s ease}
+.nav a:hover::after{transform:scaleX(1)}
+
+/* ============ 祥云 / 回纹 ============ */
+.cloud-deco{position:absolute;color:var(--gold);pointer-events:none}
+.fret-band{height:16px;background-color:var(--red);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='16' viewBox='0 0 44 16'%3E%3Cg fill='none' stroke='%23D9A441' stroke-width='2'%3E%3Cpath d='M0 2h44M0 14h44'/%3E%3Cpath d='M7 5h24v6H13V8h12'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat:repeat-x;background-size:44px 16px;
+  border-top:2px solid var(--deep);border-bottom:2px solid var(--deep)}
+
+/* ============ 海报式 Hero ============ */
+.hero{position:relative;background:var(--deep);color:var(--silk);overflow:hidden;padding:88px 0 96px}
+.hero .cloud-deco.tl{top:34px;left:-34px;width:360px;opacity:.75}
+.hero .cloud-deco.br{bottom:64px;right:-46px;width:320px;opacity:.6;transform:scaleX(-1)}
+.hero-ghost{position:absolute;right:3%;top:50%;transform:translateY(-50%);
+  font-family:var(--f-disp);font-size:min(44vh,400px);line-height:1;
+  color:transparent;-webkit-text-stroke:2px rgba(217,164,65,.26);
+  user-select:none;pointer-events:none}
+.hero-side{position:absolute;right:30px;top:90px;writing-mode:vertical-rl;
+  letter-spacing:.42em;font-size:14px;color:var(--gold-lit);
+  border-right:1px solid rgba(217,164,65,.5);padding-right:12px;height:300px}
+.hero-kicker{display:inline-block;border:1.5px solid var(--gold-lit);color:var(--gold-lit);
+  padding:6px 16px;letter-spacing:.35em;text-indent:.35em;font-size:13px;margin-bottom:26px}
+.hero h1{font-family:var(--f-disp);font-weight:800;color:#FBF3DC;
+  font-size:clamp(62px,10vw,130px);line-height:1.06;letter-spacing:.06em}
+.hero h1 .ch{display:inline-block}
+.hero h1 .ch:nth-child(even){transform:translateY(10px)}
+.hero h1 .accent{color:var(--gold-lit)}
+.hero-slogan{font-family:var(--f-disp);font-size:clamp(22px,3vw,32px);color:var(--gold-lit);
+  letter-spacing:.22em;margin:18px 0 16px}
+.hero-stamp{display:inline-grid;grid-template-columns:auto auto;gap:2px 4px;
+  background:var(--red);color:#FFEFD2;font-family:var(--f-seal);
+  padding:10px 12px;border-radius:4px;transform:rotate(-7deg);
+  outline:1px solid var(--gold-lit);outline-offset:-5px;
+  font-size:17px;line-height:1.15;vertical-align:middle;margin-left:18px;letter-spacing:.1em}
+.hero-sub{max-width:560px;color:#F1E3C4;font-size:16.5px;line-height:1.95;margin-bottom:30px}
+.hero-cta{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:38px}
+.h-chips{display:flex;flex-wrap:wrap;gap:14px}
+.h-chip{background:var(--red);border:1px solid var(--gold);border-radius:4px;
+  padding:10px 18px;display:flex;align-items:baseline;gap:10px}
+.h-chip:nth-child(2){transform:rotate(1.6deg)}
+.h-chip:nth-child(3){transform:rotate(-1.4deg)}
+.h-chip b{font-family:var(--f-disp);font-size:20px;color:#FFF3D9;letter-spacing:.1em}
+.h-chip span{font-size:12.5px;color:var(--gold-lit);letter-spacing:.2em}
+.scroll-hint{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);
+  color:var(--gold-lit);font-size:12px;letter-spacing:.4em;text-indent:.4em}
+.scroll-hint::before{content:"";display:block;width:2px;height:22px;margin:0 auto 8px;
+  background:var(--gold-lit)}
+
+/* ============ 区块标题（海报构成） ============ */
+section{padding:84px 0}
+.sec-head{display:flex;align-items:baseline;gap:18px;margin-bottom:44px;flex-wrap:wrap}
+.sec-no{width:54px;height:54px;flex:none;background:var(--red);color:#FFEFD2;
+  font-family:var(--f-disp);font-size:27px;display:grid;place-items:center;
+  border-radius:4px;transform:rotate(-4deg);
+  box-shadow:5px 5px 0 rgba(195,39,43,.22);
+  outline:1px solid rgba(249,222,164,.8);outline-offset:-5px;align-self:center}
+.sec-head h2{font-family:var(--f-disp);font-size:42px;letter-spacing:.1em;color:var(--ink);font-weight:700}
+.sec-head .deep h2{color:#FBF3DC}
+.sec-line{flex:1;min-width:60px;height:2px;background:var(--gold);position:relative;top:-8px}
+.sec-line::after{content:"";position:absolute;right:0;top:-4px;width:10px;height:10px;background:var(--red);transform:rotate(45deg)}
+.sec-sub{font-size:13px;letter-spacing:.32em;color:var(--muted)}
+.sec-head.deep .sec-sub{color:var(--gold-lit)}
+
+/* ============ 今日一卦（红底海报卡） ============ */
+.today{background:var(--red);position:relative;overflow:hidden}
+.today .cloud-deco.a{bottom:-20px;left:-30px;width:300px;opacity:.35;color:var(--gold-lit)}
+.today .cloud-deco.b{top:30px;right:-20px;width:240px;opacity:.3;transform:scaleX(-1)}
+.today-poster{position:relative;background:var(--silk-paper);border:2px solid var(--ink);
+  border-radius:4px;box-shadow:10px 10px 0 var(--deep);
+  display:grid;grid-template-columns:300px 1fr;overflow:hidden}
+.corner-stripe{position:absolute;top:0;right:0;width:84px;height:84px;z-index:2;
+  background:repeating-linear-gradient(45deg,var(--gold) 0 5px,transparent 5px 11px);
+  clip-path:polygon(100% 0,0 0,100% 100%)}
+.t-gua{background:var(--deep);color:#F6ECD2;padding:30px 24px;display:flex;
+  flex-direction:column;align-items:center;gap:16px;text-align:center}
+.t-gua .gua-lines{width:150px}
+.t-gua .mv{color:#F2C879}
+.t-name{font-family:var(--f-disp);font-size:56px;line-height:1.1;color:#FFF3D9;font-weight:700}
+.t-name i{font-style:normal;font-size:20px;margin-left:4px;color:var(--gold-lit)}
+.t-date{display:inline-block;background:var(--red);color:#FFEFD2;font-size:13px;
+  letter-spacing:.2em;padding:5px 14px;border-radius:3px;margin-bottom:14px}
+.t-body{padding:34px 38px;display:flex;flex-direction:column;gap:14px}
+.t-body .t-g{font-family:var(--f-disp);font-size:24px;color:var(--deep);
+  border-left:4px solid var(--gold);padding-left:14px;line-height:1.5}
+.t-body .t-b{color:#4A4136;font-size:15px}
+.t-mini{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.t-mini .yy,.t-mini .jj{border-radius:4px;padding:10px 14px;font-size:13.5px}
+.t-mini .yy{background:rgba(217,164,65,.2);border:1px solid var(--gold)}
+.t-mini .jj{background:rgba(43,74,111,.08);border:1px solid var(--blue)}
+.t-mini b{font-family:var(--f-disp);font-size:16px;display:block;margin-bottom:4px}
+.t-mini .yy b{color:#8A6212}
+.t-mini .jj b{color:var(--blue)}
+.t-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px}
+
+/* ============ 起卦馆（红底 + 绢白操作台） ============ */
+.cast{background:var(--red);position:relative;overflow:hidden}
+.cast .cloud-deco{top:20px;right:6%;width:260px;opacity:.3;color:var(--gold-lit)}
+.cast-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:30px;align-items:start}
+.cast-panel{background:var(--silk-paper);border:2px solid var(--ink);border-radius:4px;
+  box-shadow:10px 10px 0 var(--deep);padding:28px 30px}
+.cast-panel h3{font-family:var(--f-disp);font-size:22px;letter-spacing:.15em;
+  color:var(--deep);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.cast-panel h3::before{content:"";width:10px;height:10px;background:var(--red);transform:rotate(45deg)}
+.field-label{font-size:13px;letter-spacing:.2em;color:var(--muted);margin-bottom:6px;display:block}
+.field{width:100%;background:#FFFDF4;border:2px solid var(--ink);border-radius:4px;
+  padding:12px 14px;font-size:15px;color:var(--ink);transition:border-color .2s}
+.field:focus{outline:none;border-color:var(--red)}
+.tabs{display:flex;margin:20px 0 18px}
+.tab{flex:1;padding:12px 8px;border:2px solid var(--red);background:transparent;
+  color:var(--red);font-family:var(--f-seal);font-size:16px;letter-spacing:.22em;text-indent:.22em;border-radius:0}
+.tab:first-child{border-radius:4px 0 0 4px}
+.tab:last-child{border-radius:0 4px 4px 0;border-left:none}
+.tab.on{background:var(--red);color:#FFF1D6}
+.coin-stage{background:var(--deep);border:1px solid rgba(233,196,106,.5);border-radius:4px;
+  padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.coins{display:flex;gap:26px;color:var(--gold)}
+.coin{width:76px;height:76px}
+.coin.toss{animation:coinToss .52s cubic-bezier(.22,.9,.32,1.12) both}
+.coin:nth-child(2).toss{animation-delay:.11s}
+.coin:nth-child(3).toss{animation-delay:.22s}
+@keyframes coinToss{
+  0%{transform:translateY(-48px) rotateY(0deg);opacity:0}
+  55%{transform:translateY(8px) rotateY(420deg);opacity:1}
+  100%{transform:translateY(0) rotateY(720deg)}}
+.face-chips{display:flex;gap:10px;min-height:28px}
+.fc{min-width:60px;text-align:center;border:1px solid var(--gold-lit);color:var(--gold-lit);
+  font-size:13px;letter-spacing:.1em;padding:4px 8px;border-radius:3px}
+.sum-line{color:#F6ECD2;font-size:14px;letter-spacing:.12em;min-height:22px;text-align:center}
+.cast-tip{font-size:12.5px;color:#D9BE8C;text-align:center;line-height:1.8}
+.cast-ops{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;align-items:center}
+.cast-count{margin-left:auto;font-size:13px;color:var(--muted);letter-spacing:.1em}
+.rack-wrap{border:2px dashed #C9B694;border-radius:4px;padding:16px 18px;background:#FFFDF4}
+.rack{display:flex;flex-direction:column;gap:9px}
+.rack-row{display:flex;align-items:center;gap:12px;min-height:20px;color:var(--ink)}
+.rack-row .lab{width:48px;flex:none;font-size:12px;color:#8B7A63;text-align:right;letter-spacing:.1em}
+.rack-row .slot{flex:1;border:1.5px dashed #C9B694;border-radius:3px;height:13px}
+.rack-row.mv{color:var(--red)}
+.rack-row.mv .lab{color:var(--red)}
+.num-panel{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.num-note{font-size:13px;color:var(--muted);line-height:1.9;border-left:3px solid var(--gold);padding-left:12px;margin-bottom:18px}
+.steps{display:flex;flex-direction:column;gap:16px}
+.step{border:1px solid rgba(249,222,164,.55);border-radius:4px;padding:18px 20px;
+  background:rgba(140,31,40,.55);color:#F6ECD2}
+.step .s-no{font-family:var(--f-disp);font-size:34px;color:var(--gold-lit);line-height:1;
+  display:block;margin-bottom:6px}
+.step b{font-size:17px;letter-spacing:.14em;display:block;margin-bottom:4px;color:#FFF3D9;font-family:var(--f-disp)}
+.step span{font-size:13.5px;color:#EAD9B4;line-height:1.8}
+
+/* ============ 卦象结果（现代构成） ============ */
+.result{background:var(--silk)}
+.result-shell{background:var(--silk-paper);border:2px solid var(--ink);border-radius:4px;
+  box-shadow:10px 10px 0 var(--red);overflow:hidden}
+.r-empty{padding:70px 30px;text-align:center;color:#8B7A63;position:relative}
+.r-empty .g-ghost{font-family:var(--f-disp);font-size:120px;line-height:1;
+  color:transparent;-webkit-text-stroke:2px rgba(195,39,43,.3);display:block;margin-bottom:14px}
+.r-empty p{letter-spacing:.2em;font-size:15px}
+.r-grid{display:grid;grid-template-columns:330px 1fr}
+.r-left{background:var(--red);padding:34px 30px;display:flex;flex-direction:column;
+  align-items:center;gap:18px;color:#F8EED6;position:relative}
+.r-left .cloud-deco{bottom:-14px;left:-20px;width:220px;opacity:.3;color:var(--gold-lit)}
+.r-left .gua-lines{width:160px}
+.r-left .mv{color:#F2C879}
+.r-name{font-family:var(--f-disp);font-size:72px;line-height:1;color:#FFF3D9;font-weight:700}
+.r-name i{font-style:normal;font-size:24px;color:var(--gold-lit);margin-left:6px}
+.r-meta{font-size:13.5px;letter-spacing:.24em;color:var(--gold-lit)}
+.r-bian{margin-top:auto;width:100%;background:var(--blue);color:#EAF0F6;border-radius:4px;
+  padding:14px 16px;display:flex;align-items:center;gap:16px}
+.r-bian .gua-lines{width:64px;flex:none}
+.r-bian .gua-lines .ln{height:5px}
+.r-bian b{font-size:15px;letter-spacing:.12em;display:block}
+.r-bian span{font-size:12px;color:#C4D2E4}
+.x-badge{width:68px;height:68px;display:grid;place-items:center;font-family:var(--f-seal);
+  font-size:23px;letter-spacing:.06em;border-radius:4px;transform:rotate(-6deg);
+  outline:1px solid currentColor;outline-offset:-5px}
+.xb-good{background:var(--gold);color:#4A2F07}
+.xb-mid{background:#F3E9CF;color:var(--ink)}
+.xb-care{background:var(--blue);color:#EAF0F6}
+.xb-bad{background:var(--deep);color:#FFD9D2}
+.r-right{padding:34px 38px;display:flex;flex-direction:column;gap:18px}
+.r-q{font-size:14px;color:var(--muted);letter-spacing:.08em;
+  border-bottom:1px dashed #C9B694;padding-bottom:12px}
+.r-g{font-family:var(--f-disp);font-size:26px;color:var(--deep);
+  border-left:5px solid var(--gold);padding:4px 0 4px 16px;line-height:1.5}
+.r-b{font-size:15.5px;color:#3E372E;line-height:2}
+.yy-jj{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.yy,.jj{border-radius:4px;padding:14px 16px}
+.yy{background:rgba(217,164,65,.18);border:1px solid var(--gold)}
+.jj{background:rgba(43,74,111,.07);border:1px solid var(--blue)}
+.yy b,.jj b{font-family:var(--f-disp);font-size:18px;display:block;margin-bottom:8px}
+.yy b{color:#8A6212}
+.jj b{color:var(--blue)}
+.chip{display:inline-block;padding:3px 12px;margin:0 8px 8px 0;border-radius:3px;
+  font-size:13.5px;letter-spacing:.06em}
+.yy .chip{background:var(--gold);color:#332104}
+.jj .chip{background:var(--blue);color:#F5EDD8}
+.r-note{font-size:12.5px;color:#8B7A63;border-top:1px dashed #C9B694;padding-top:12px;line-height:1.9}
+.r-actions{display:flex;gap:14px;flex-wrap:wrap}
+
+/* ============ 六十四卦锦囊库 ============ */
+.library{background:var(--deep);position:relative;overflow:hidden}
+.library .cloud-deco{top:24px;right:4%;width:280px;opacity:.35}
+.toolbar{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:26px;align-items:center}
+.toolbar .field{width:260px}
+.toolbar select{width:150px}
+.btn-reset{background:transparent;border:2px solid var(--gold);color:var(--gold-lit)}
+.btn-reset:hover{background:rgba(217,164,65,.15)}
+.gua-count{margin-left:auto;color:var(--gold-lit);font-size:13.5px;letter-spacing:.2em}
+.gua-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.gua-card{position:relative;background:var(--red);border:1px solid rgba(233,196,106,.55);
+  border-radius:4px;padding:16px 10px 14px;text-align:center;color:#F8EED6;
+  transition:transform .22s ease,border-color .22s ease,background .22s ease}
+.gua-card:hover{transform:translateY(-5px);border-color:var(--gold-lit);background:var(--red-hi)}
+.gua-seal{position:absolute;top:9px;right:9px;width:22px;height:22px;background:var(--gold);
+  color:#4A2F07;font-size:11px;font-weight:700;display:grid;place-items:center;
+  border-radius:2px;transform:rotate(-8deg);transition:transform .25s ease}
+.gua-card:hover .gua-seal{transform:rotate(0deg) scale(1.1)}
+.gx{position:absolute;top:11px;left:10px;font-size:11px;color:var(--gold-lit);
+  border:1px solid currentColor;padding:1px 5px;border-radius:2px;letter-spacing:.1em}
+.gua-card .lines{display:block;width:62px;margin:16px auto 14px;color:#F8EED6}
+.gua-card .gua-lines{gap:5px}
+.gua-card .gua-lines .ln{height:6px;gap:7px}
+.gua-card .nm{display:block;font-family:var(--f-disp);font-size:24px;color:#FFF4DC;
+  letter-spacing:.08em;line-height:1.2}
+.gua-card .xiang{display:block;font-size:11px;color:var(--gold-lit);letter-spacing:.18em;margin-top:4px}
+.empty-tip{grid-column:1/-1;text-align:center;color:var(--gold-lit);padding:40px 0;letter-spacing:.2em}
+
+/* ============ 周易知识（国潮图文卡） ============ */
+.knowledge{background:var(--silk);position:relative}
+.k-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.k-card{border-radius:4px;padding:28px 24px;position:relative;overflow:hidden;min-height:300px;
+  display:flex;flex-direction:column;border:2px solid transparent;
+  transition:transform .25s ease,box-shadow .25s ease}
+.k-card:hover{transform:translateY(-6px);box-shadow:8px 8px 0 rgba(34,31,31,.18)}
+.k-red{background:var(--red);color:#FFF1D6;border-color:var(--deep)}
+.k-blue{background:var(--blue);color:#EAF0F6;border-color:#1D3550}
+.k-silk{background:var(--silk-paper);color:var(--ink);border-color:var(--ink)}
+.k-ink{background:var(--ink);color:#F0E9DA;border-color:#000}
+.k-char{font-family:var(--f-disp);font-size:66px;line-height:1;font-weight:700}
+.k-red .k-char{color:#FFE9BE}
+.k-blue .k-char{color:#BCD0E8}
+.k-silk .k-char{color:var(--red)}
+.k-ink .k-char{color:var(--gold)}
+.k-title{font-size:20px;font-weight:700;letter-spacing:.16em;margin:14px 0 10px}
+.k-text{font-size:14px;line-height:1.95;opacity:.94}
+.k-deco{margin-top:auto;padding-top:14px;position:relative;z-index:1}
+.k-deco svg{width:72px;height:72px;opacity:.85}
+.tchip{display:inline-block;border:1px solid rgba(234,240,246,.5);padding:4px 9px;
+  margin:0 6px 8px 0;font-size:13px;border-radius:3px;letter-spacing:.1em}
+.k-silk .tchip{border-color:var(--blue);color:var(--blue)}
+.k-link{margin-top:16px;font-size:13.5px;letter-spacing:.2em;display:inline-block;
+  border-bottom:1.5px solid currentColor;padding-bottom:2px;transition:opacity .2s}
+.k-link:hover{opacity:.7}
+.step-line{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
+.s-no{width:26px;height:26px;flex:none;background:var(--red);color:#FFF1D6;
+  display:grid;place-items:center;font-size:14px;border-radius:2px;font-family:var(--f-disp)}
+
+/* ============ 页脚 ============ */
+footer{background:var(--deep);color:#EFE3C4}
+.f-grid{display:grid;grid-template-columns:1.3fr 1fr 1.2fr;gap:34px;padding:52px 0 34px}
+.f-brand{display:flex;gap:16px;align-items:flex-start}
+.f-brand .logo-seal{width:52px;height:52px;font-size:30px}
+.f-brand b{font-family:var(--f-disp);font-size:24px;letter-spacing:.14em;color:#FBF3DC;display:block}
+.f-brand p{font-size:13.5px;color:#D9BE8C;margin-top:8px;line-height:1.9}
+.f-col h4{font-family:var(--f-disp);font-size:18px;letter-spacing:.24em;color:var(--gold-lit);margin-bottom:14px}
+.f-col a{display:block;font-size:14px;color:#EAD9B4;padding:5px 0;letter-spacing:.1em;transition:color .2s}
+.f-col a:hover{color:var(--gold-lit)}
+.f-quote{font-family:var(--f-disp);font-size:19px;letter-spacing:.14em;color:#F2E5C6;line-height:2}
+.f-quote svg{width:130px;height:52px;color:var(--gold);opacity:.8;margin-top:12px}
+.f-bottom{border-top:1px solid rgba(233,196,106,.35);padding:20px 0 30px;text-align:center;
+  font-size:13px;color:#D9BE8C;letter-spacing:.08em;line-height:2}
+
+/* ============ 详情弹层 ============ */
+.mask{position:fixed;inset:0;background:rgba(34,31,31,.62);display:none;
+  place-items:center;z-index:100;padding:20px}
+.mask.open{display:grid}
+.modal{background:var(--silk-paper);border:2px solid var(--ink);border-radius:4px;
+  box-shadow:12px 12px 0 var(--red);max-width:880px;width:100%;max-height:88vh;
+  overflow:auto;position:relative;animation:mIn .28s ease both}
+@keyframes mIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.m-head{background:var(--deep);color:var(--silk);padding:18px 26px;display:flex;
+  align-items:center;gap:16px;border-bottom:2px solid var(--gold);flex-wrap:wrap}
+.m-title{font-family:var(--f-disp);font-size:34px;color:#FBF3DC;letter-spacing:.1em;line-height:1}
+.m-xiang{font-size:13.5px;color:var(--gold-lit);letter-spacing:.2em}
+.m-close{margin-left:auto;background:var(--red);color:#FFEFD2;border:2px solid var(--deep);
+  border-radius:4px;width:44px;height:44px;font-family:var(--f-seal);font-size:19px;
+  outline:1px solid var(--gold-lit);outline-offset:-5px;transition:transform .15s,filter .15s}
+.m-close:hover{background:var(--red-hi)}
+.m-close:active{transform:translateY(2px)}
+.m-body{display:grid;grid-template-columns:290px 1fr;gap:26px;padding:26px}
+.m-gua{background:var(--red);border-radius:4px;padding:26px 22px;display:flex;
+  flex-direction:column;align-items:center;gap:18px;color:#F8EED6}
+.m-gua .gua-lines{width:140px}
+.m-gua .mv{color:#F2C879}
+.m-name{font-family:var(--f-disp);font-size:44px;color:#FFF3D9;line-height:1;font-weight:700}
+.m-name i{font-style:normal;font-size:18px;color:var(--gold-lit);margin-left:4px}
+.m-txt .m-g{font-family:var(--f-disp);font-size:22px;color:var(--deep);
+  border-left:4px solid var(--gold);padding-left:14px;margin-bottom:14px;line-height:1.6}
+.m-txt .m-b{font-size:14.5px;color:#3E372E;line-height:2;margin-bottom:18px}
+.m-bian{background:var(--blue);color:#EAF0F6;border-radius:4px;padding:14px 16px;
+  display:flex;align-items:center;gap:16px;margin-bottom:18px}
+.m-bian .gua-lines{width:64px;flex:none}
+.m-bian .gua-lines .ln{height:5px}
+.m-bian b{display:block;font-size:15px;letter-spacing:.1em}
+.m-bian span{font-size:12px;color:#C4D2E4}
+
+/* ============ 提示条 ============ */
+#toast{position:fixed;left:50%;bottom:36px;transform:translateX(-50%) translateY(18px);
+  background:var(--ink);color:var(--gold-lit);border:1px solid var(--gold);
+  padding:11px 22px;border-radius:4px;opacity:0;pointer-events:none;
+  transition:opacity .3s ease,transform .3s ease;z-index:300;font-size:14px;letter-spacing:.1em}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ============ 滚动进入（常规淡入） ============ */
+.rv{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease}
+.rv.in{opacity:1;transform:none}
+
+/* ============ 响应式 ============ */
+@media (max-width:1199px){
+  .gua-grid{grid-template-columns:repeat(4,1fr)}
+  .k-grid{grid-template-columns:repeat(2,1fr)}
+  .cast-grid{grid-template-columns:1fr}
+  .today-poster{grid-template-columns:260px 1fr}
+  .hero-side{display:none}
+  .hero-ghost{opacity:.6}
+}
+@media (max-width:900px){
+  .today-poster{grid-template-columns:1fr}
+  .t-gua{flex-direction:row;justify-content:center;gap:26px}
+  .t-gua .gua-lines{width:110px}
+  .r-grid{grid-template-columns:1fr}
+  .m-body{grid-template-columns:1fr}
+  .f-grid{grid-template-columns:1fr;gap:26px}
+  section{padding:64px 0}
+}
+@media (max-width:767px){
+  .wrap{padding:0 16px}
+  .hero{padding:64px 0 84px}
+  .hero .cloud-deco.tl{width:230px}
+  .hero .cloud-deco.br{width:200px}
+  .hero-ghost{display:none}
+  .sec-head h2{font-size:32px}
+  .gua-grid{grid-template-columns:repeat(3,1fr);gap:10px}
+  .gua-card .nm{font-size:20px}
+  .k-grid{grid-template-columns:1fr}
+  .yy-jj,.t-mini{grid-template-columns:1fr}
+  .num-panel{grid-template-columns:1fr}
+  .toolbar .field{width:100%}
+  .gua-count{margin-left:0;width:100%}
+  .coin{width:60px;height:60px}
+  .coins{gap:16px}
+  .r-name{font-size:54px}
+  .hero-stamp{margin-left:0;margin-top:10px}
+  .topbar .wrap{gap:12px}
+  .logo span{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .rv{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== SVG 纹样库（祥云 / 回纹带 / 锦鲤 / 铜钱 / 太极 / 罗盘） ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="cloud" viewBox="0 0 220 90">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M12 66 H128"/>
+        <path d="M128 66 c26 0 26 -30 0 -30 c-19 0 -19 23 3 23"/>
+        <path d="M62 36 c1 -16 24 -16 25 0"/>
+        <path d="M84 30 c5 -14 26 -11 26 4"/>
+        <path d="M12 66 c-9 0 -9 -14 1 -14 c7 0 9 5 9 9"/>
+        <path d="M158 66 c22 0 40 -8 52 -24"/>
+      </g>
+    </symbol>
+    <symbol id="cloud2" viewBox="0 0 120 56">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M8 40 h70"/>
+        <path d="M78 40 c20 0 20 -24 0 -24 c-14 0 -14 18 2 18"/>
+        <path d="M40 16 c1 -12 19 -12 20 0"/>
+        <path d="M8 40 c-7 0 -7 -11 1 -11 c6 0 7 4 7 7"/>
+      </g>
+    </symbol>
+    <symbol id="koi" viewBox="0 0 240 140">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 78 C40 50 88 40 128 52 C150 58 164 70 172 84 C160 98 140 108 116 110 C76 113 42 104 22 78 Z"/>
+        <path d="M172 84 C188 70 204 62 224 60 C212 72 208 80 208 88 C216 90 222 96 226 104 C206 104 186 98 172 84 Z"/>
+        <path d="M96 47 C104 34 120 28 136 31 C124 40 116 46 110 55"/>
+        <circle cx="44" cy="74" r="4"/>
+        <path d="M60 88 a12 12 0 0 1 18 -2"/>
+        <path d="M84 94 a12 12 0 0 1 18 -2"/>
+        <path d="M110 98 a12 12 0 0 1 18 -2"/>
+        <path d="M22 78 C14 72 8 64 6 54 C14 58 20 62 26 68"/>
+      </g>
+    </symbol>
+    <symbol id="coin" viewBox="0 0 100 100">
+      <g fill="none" stroke="currentColor">
+        <circle cx="50" cy="50" r="46" stroke-width="2"/>
+        <circle cx="50" cy="50" r="37" stroke-width="1.2" opacity=".7"/>
+        <rect x="39" y="39" width="22" height="22" stroke-width="2"/>
+      </g>
+      <g fill="currentColor" font-size="14" font-family="KaiTi,STKaiti,serif" text-anchor="middle">
+        <text x="50" y="24">乾</text>
+        <text x="50" y="87">隆</text>
+        <text x="79" y="55">通</text>
+        <text x="21" y="55">宝</text>
+      </g>
+    </symbol>
+    <symbol id="taiji" viewBox="0 0 100 100">
+      <g fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="50" cy="50" r="46"/>
+        <path d="M50 4 A46 46 0 0 1 50 96 A23 23 0 0 1 50 50 A23 23 0 0 0 50 4"/>
+        <circle cx="50" cy="27" r="5"/>
+        <circle cx="50" cy="73" r="5"/>
+      </g>
+    </symbol>
+    <symbol id="luopan" viewBox="0 0 100 100">
+      <g fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="50" cy="50" r="46"/>
+        <circle cx="50" cy="50" r="32"/>
+        <rect x="42" y="42" width="16" height="16"/>
+        <path d="M84 50 H94 M74 74 L81.1 81.1 M50 84 V94 M26 74 L18.9 81.1 M16 50 H6 M26 26 L18.9 18.9 M50 16 V6 M74 26 L81.1 18.9"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ===== 顶栏 ===== -->
+<header class="topbar">
+  <div class="wrap">
+    <a class="logo" href="#top">
+      <span class="logo-seal">易</span>
+      <span><b>观象台</b><span>周易占卜馆 · 国潮新中式</span></span>
+    </a>
+    <nav class="nav">
+      <a href="#today">今日一卦</a>
+      <a href="#cast">起卦馆</a>
+      <a href="#library">卦象锦囊</a>
+      <a href="#knowledge">周易知识</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ===== 海报式 Hero ===== -->
+<section class="hero" id="top">
+  <svg class="cloud-deco tl" aria-hidden="true"><use href="#cloud"/></svg>
+  <svg class="cloud-deco br" aria-hidden="true"><use href="#cloud"/></svg>
+  <span class="hero-ghost" aria-hidden="true">易</span>
+  <p class="hero-side"><span id="gy">丙午年</span> · 观象台谨制 · 一卦知进退</p>
+  <div class="wrap">
+    <span class="hero-kicker">国潮新中式 · 观象问天</span>
+    <h1>
+      <span class="ch">周</span><span class="ch">易</span><span class="ch">占</span><span class="ch accent">卜</span>
+    </h1>
+    <p class="hero-slogan">一卦知进退，三摇见天心<span class="hero-stamp">觀象<br>問天</span></p>
+    <p class="hero-sub">三枚铜钱，六次推演，六十四种人间局面。静气默念所问之事，让六爻替你把局面摆开——不为问吉凶，只为停三秒，看清脚下的路。</p>
+    <div class="hero-cta">
+      <a class="btn" href="#cast">摇卦问事</a>
+      <a class="btn ghost" href="#library">翻阅六十四卦</a>
+    </div>
+    <div class="h-chips">
+      <div class="h-chip"><b>六十四卦</b><span>锦囊随取</span></div>
+      <div class="h-chip"><b>三枚铜钱</b><span>古法手摇</span></div>
+      <div class="h-chip"><b>一念之间</b><span>静心成卦</span></div>
+    </div>
+  </div>
+  <p class="scroll-hint">向下滑 · 摇一卦</p>
+</section>
+
+<div class="fret-band" aria-hidden="true"></div>
+
+<!-- ===== 今日一卦 ===== -->
+<section class="today" id="today">
+  <svg class="cloud-deco a" aria-hidden="true"><use href="#cloud2"/></svg>
+  <svg class="cloud-deco b" aria-hidden="true"><use href="#cloud2"/></svg>
+  <div class="wrap">
+    <div class="sec-head deep rv">
+      <span class="sec-no">壹</span>
+      <h2>今日一卦</h2>
+      <span class="sec-line"></span>
+      <span class="sec-sub">每日一签 · 观象知微</span>
+    </div>
+    <div class="today-poster rv">
+      <span class="corner-stripe" aria-hidden="true"></span>
+      <div class="t-gua">
+        <span id="tX" class="x-badge xb-good">吉</span>
+        <div id="tLines" class="gua-lines"></div>
+        <div class="t-name" id="tName">坤<i>卦</i></div>
+        <span style="font-size:12.5px;letter-spacing:.3em;color:#D9BE8C">今日所值 · 按日轮转</span>
+      </div>
+      <div class="t-body">
+        <span class="t-date" id="tDate">——</span>
+        <p class="t-g" id="tG">「」</p>
+        <p class="t-b" id="tB">一日一卦，不为问吉凶，只为停三秒。静心默想今日之事，让六爻替你把局面摆开。</p>
+        <div class="t-mini">
+          <div class="yy"><b>宜</b><span id="tYi"></span></div>
+          <div class="jj"><b>忌</b><span id="tJi"></span></div>
+        </div>
+        <div class="t-actions">
+          <button type="button" class="btn" id="tDetail">详解今日卦</button>
+          <a class="btn gold" href="#cast">另摇一卦</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="fret-band" aria-hidden="true"></div>
+
+<!-- ===== 起卦馆 ===== -->
+<section class="cast" id="cast">
+  <svg class="cloud-deco" aria-hidden="true"><use href="#cloud"/></svg>
+  <div class="wrap">
+    <div class="sec-head deep rv">
+      <span class="sec-no">贰</span>
+      <h2>起卦馆</h2>
+      <span class="sec-line"></span>
+      <span class="sec-sub">三摇成卦 · 心诚则明</span>
+    </div>
+    <div class="cast-grid">
+      <div class="cast-panel rv">
+        <h3>凝神 · 立问</h3>
+        <label class="field-label" for="qInput">所问何事（非必填，一事一占）</label>
+        <input class="field" id="qInput" type="text" maxlength="50" placeholder="如：此事该不该应承下来">
+        <div class="tabs" role="tablist">
+          <button type="button" class="tab on" id="tabCoin" role="tab" aria-selected="true">铜钱摇卦</button>
+          <button type="button" class="tab" id="tabNum" role="tab" aria-selected="false">数字起卦</button>
+        </div>
+
+        <div id="panelCoin">
+          <div class="coin-stage">
+            <div class="coins" id="coins">
+              <svg class="coin" aria-hidden="true"><use href="#coin"/></svg>
+              <svg class="coin" aria-hidden="true"><use href="#coin"/></svg>
+              <svg class="coin" aria-hidden="true"><use href="#coin"/></svg>
+            </div>
+            <div class="face-chips" id="faceChips">
+              <span class="fc">候掷</span><span class="fc">候掷</span><span class="fc">候掷</span>
+            </div>
+            <p class="sum-line" id="sumLine">静候三摇 · 正面记三，背面记二</p>
+            <p class="cast-tip">六为老阴（动）、七为少阳、八为少阴、九为老阳（动）<br>六爻自下而上，掷满六次而成一卦</p>
+          </div>
+          <div class="cast-ops">
+            <button type="button" class="btn" id="btnToss">掷 · 成一爻</button>
+            <button type="button" class="btn gold" id="btnQuick">速成六爻</button>
+            <button type="button" class="btn small" id="btnCastReset" style="background:var(--ink);border-color:#000;color:#F0E9DA;outline-color:rgba(217,164,65,.7)">重置</button>
+            <span class="cast-count" id="castCount">已成 0 爻 · 尚余 6 爻</span>
+          </div>
+        </div>
+
+        <div id="panelNum" hidden>
+          <div class="num-panel">
+            <div>
+              <label class="field-label" for="numA">前数（定上卦）</label>
+              <input class="field" id="numA" type="number" min="1" placeholder="任报一数，如 188">
+            </div>
+            <div>
+              <label class="field-label" for="numB">后数（定下卦）</label>
+              <input class="field" id="numB" type="number" min="1" placeholder="任报一数，如 306">
+            </div>
+          </div>
+          <p class="num-note">古法数占：前数除八取余定上卦，后数除八取余定下卦，两数相合除六取余定动爻；余尽则上卦取坤、动爻取上爻。卦序以乾一、兑二、离三、震四、巽五、坎六、艮七、坤八为次。</p>
+          <button type="button" class="btn" id="btnNum">立卦 · 观象</button>
+        </div>
+
+        <h3 style="margin-top:26px">卦架 · 六爻自下而上</h3>
+        <div class="rack-wrap">
+          <div class="rack" id="rack"></div>
+        </div>
+      </div>
+
+      <div class="steps rv">
+        <div class="step">
+          <span class="s-no">壹</span>
+          <b>默念所问</b>
+          <span>一事一占，心诚则明。把要问的事在心里说清楚，再落铜钱。</span>
+        </div>
+        <div class="step">
+          <span class="s-no">贰</span>
+          <b>择法起卦</b>
+          <span>铜钱摇卦最合古法，数字起卦最为便捷，各随其便。</span>
+        </div>
+        <div class="step">
+          <span class="s-no">叁</span>
+          <b>凝神三摇</b>
+          <span>三枚铜钱连掷六次，自下而上记录六爻，卦象乃成。</span>
+        </div>
+        <div class="step">
+          <span class="s-no">肆</span>
+          <b>观象解卦</b>
+          <span>读卦辞、参宜忌、看变卦趋向，心里原有的答案自会浮出。</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="fret-band" aria-hidden="true"></div>
+
+<!-- ===== 卦象结果 ===== -->
+<section class="result" id="result">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="sec-no">叁</span>
+      <h2>卦象显示</h2>
+      <span class="sec-line"></span>
+      <span class="sec-sub">观象玩辞 · 断在分明</span>
+    </div>
+    <div class="result-shell rv">
+      <div class="r-empty" id="rEmpty">
+        <span class="g-ghost" aria-hidden="true">卦</span>
+        <p>卦象未成 —— 移步起卦馆，掷满六爻，卦自显现</p>
+      </div>
+      <div id="rFull" hidden>
+        <div class="r-grid">
+          <div class="r-left">
+            <svg class="cloud-deco" aria-hidden="true"><use href="#cloud2"/></svg>
+            <span id="rX" class="x-badge xb-good">吉</span>
+            <div id="rLines" class="gua-lines"></div>
+            <div class="r-name" id="rName">乾<i>卦</i></div>
+            <div class="r-meta" id="rMeta"></div>
+            <div class="r-bian" id="rBian"></div>
+          </div>
+          <div class="r-right">
+            <p class="r-q" id="rQ"></p>
+            <blockquote class="r-g" id="rG"></blockquote>
+            <p class="r-b" id="rB"></p>
+            <div class="yy-jj">
+              <div class="yy"><b>宜</b><span id="rYi"></span></div>
+              <div class="jj"><b>忌</b><span id="rJi"></span></div>
+            </div>
+            <p class="r-note">卦辞是镜子，照见的是你心里已有的答案。遇老阳「○」老阴「✕」即为动爻，动则生变，变卦示其去向；若无动爻，即以本卦断之。</p>
+            <div class="r-actions">
+              <button type="button" class="btn" id="btnAgain">再占一卦</button>
+              <button type="button" class="btn gold" id="btnDetail">锦囊详解</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="fret-band" aria-hidden="true"></div>
+
+<!-- ===== 六十四卦锦囊库 ===== -->
+<section class="library" id="library">
+  <svg class="cloud-deco" aria-hidden="true"><use href="#cloud"/></svg>
+  <div class="wrap">
+    <div class="sec-head deep rv">
+      <span class="sec-no">肆</span>
+      <h2>六十四卦锦囊</h2>
+      <span class="sec-line"></span>
+      <span class="sec-sub">检索查卦 · 随取随用</span>
+    </div>
+    <div class="toolbar rv">
+      <input class="field" id="kw" type="text" placeholder="检卦名或卦象，如：泰 / 水火既济">
+      <select class="field" id="fx">
+        <option>全部</option>
+        <option>大吉</option>
+        <option>吉</option>
+        <option>中平</option>
+        <option>慎</option>
+        <option>凶</option>
+      </select>
+      <button type="button" class="btn small btn-reset" id="btnLx">重置筛选</button>
+      <span class="gua-count" id="guaCount">共得 64 签</span>
+    </div>
+    <div class="gua-grid rv" id="guaGrid"></div>
+  </div>
+</section>
+
+<div class="fret-band" aria-hidden="true"></div>
+
+<!-- ===== 周易知识 ===== -->
+<section class="knowledge" id="knowledge">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="sec-no">伍</span>
+      <h2>周易知识</h2>
+      <span class="sec-line"></span>
+      <span class="sec-sub">入门须知 · 渐次有得</span>
+    </div>
+    <div class="k-grid">
+      <div class="k-card k-red rv">
+        <span class="k-char">爻</span>
+        <h3 class="k-title">阴阳之画</h3>
+        <p class="k-text">「—」为阳爻，属天、属刚、属动；「- -」为阴爻，属地、属柔、属静。三爻叠成一卦，八卦相荡而生六十四卦，万物之理尽在二画之间。</p>
+        <div class="k-deco">
+          <svg aria-hidden="true"><use href="#taiji"/></svg>
+        </div>
+      </div>
+      <div class="k-card k-blue rv">
+        <span class="k-char">卦</span>
+        <h3 class="k-title">八卦之象</h3>
+        <p class="k-text">八卦即八种气象，取法天地之间最寻常的物象，两两相重叠，便演成六十四种局面。</p>
+        <div class="k-deco">
+          <span class="tchip">乾·天</span><span class="tchip">兑·泽</span><span class="tchip">离·火</span><span class="tchip">震·雷</span><span class="tchip">巽·风</span><span class="tchip">坎·水</span><span class="tchip">艮·山</span><span class="tchip">坤·地</span>
+        </div>
+      </div>
+      <div class="k-card k-silk rv">
+        <span class="k-char">动</span>
+        <h3 class="k-title">六爻与动爻</h3>
+        <p class="k-text">六爻自下而上，初为事之始，上为事之终。摇卦遇老阳「○」、老阴「✕」，即为动爻——物极必反，动则生变，变卦由此而来，断卦先看动爻。</p>
+        <div class="k-deco">
+          <a class="k-link" href="#cast" style="color:var(--red)">去掷一爻试试</a>
+        </div>
+      </div>
+      <div class="k-card k-ink rv">
+        <span class="k-char">占</span>
+        <h3 class="k-title">起卦心法</h3>
+        <div style="margin-top:12px">
+          <div class="step-line"><span class="s-no">壹</span><span style="font-size:13.5px;line-height:1.8">默念所问之事，一事一占，心诚则明</span></div>
+          <div class="step-line"><span class="s-no">贰</span><span style="font-size:13.5px;line-height:1.8">择一起卦法，铜钱合古法，数字最便捷</span></div>
+          <div class="step-line"><span class="s-no">叁</span><span style="font-size:13.5px;line-height:1.8">凝神摇卦，六爻自下而上而成卦</span></div>
+          <div class="step-line"><span class="s-no">肆</span><span style="font-size:13.5px;line-height:1.8">观象解卦，参宜忌断语，随时回味</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="fret-band" aria-hidden="true"></div>
+
+<!-- ===== 页脚 ===== -->
+<footer>
+  <div class="wrap">
+    <div class="f-grid">
+      <div class="f-brand">
+        <span class="logo-seal">易</span>
+        <div>
+          <b>观象台 · 周易占卜馆</b>
+          <p>国潮新中式观象问卦之所。仰观天文，俯察地理，近取诸身，远取诸物——六十四卦，是六十四面镜子。</p>
+        </div>
+      </div>
+      <div class="f-col">
+        <h4>速达</h4>
+        <a href="#today">今日一卦</a>
+        <a href="#cast">起卦馆</a>
+        <a href="#library">六十四卦锦囊</a>
+        <a href="#knowledge">周易知识</a>
+      </div>
+      <div class="f-col f-quote">
+        观象于天，观法于地。<br>吉凶以情迁，卦象由心照。
+        <svg aria-hidden="true"><use href="#cloud"/></svg>
+      </div>
+    </div>
+    <div class="f-bottom">
+      本站内容仅供传统文化研究与娱乐参考，重大决策请理性判断。<br>
+      © 2026 观象台 · 国潮新中式标准站 · 一卦知进退
+    </div>
+  </div>
+</footer>
+
+<!-- ===== 卦象详情弹层 ===== -->
+<div class="mask" id="mask">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="m-head">
+      <div>
+        <div class="m-title" id="mTitle">卦</div>
+        <div class="m-xiang" id="mXiang"></div>
+      </div>
+      <span id="mXbadge" class="x-badge xb-good" style="transform:rotate(5deg)">吉</span>
+      <button type="button" class="m-close" id="mClose" aria-label="关闭详情">閉</button>
+    </div>
+    <div class="m-body">
+      <div class="m-gua">
+        <div id="mLines" class="gua-lines"></div>
+        <div class="m-name" id="mName">乾<i>卦</i></div>
+      </div>
+      <div class="m-txt">
+        <p class="m-g" id="mG"></p>
+        <p class="m-b" id="mB"></p>
+        <div class="m-bian" id="mBianBox" hidden>
+          <div id="mBianLines" class="gua-lines"></div>
+          <div><b id="mBianName"></b><span>动爻所变 · 示事之去向</span></div>
+        </div>
+        <div class="yy-jj">
+          <div class="yy"><b>宜</b><span id="mYi"></span></div>
+          <div class="jj"><b>忌</b><span id="mJi"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" role="status"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============ 六十四卦数据（六爻自下而上：1 阳 0 阴） ============ */
+var HEX=[
+{n:'乾',bin:'111111',up:'乾',dn:'乾',w:'乾为天',x:'大吉',g:'元亨，利贞。',b:'天行健，君子以自强不息。刚健盛大，正是大有作为之时，惟须守正而不骄。',yi:'进取、立业、求名',ji:'骄横、冒进'},
+{n:'坤',bin:'000000',up:'坤',dn:'坤',w:'坤为地',x:'吉',g:'元亨，利牝马之贞。',b:'地势坤，厚德载物。以柔顺承载万物，厚积薄发，随而不争先。',yi:'踏实、配合、积累',ji:'抢先、独断'},
+{n:'屯',bin:'100010',up:'坎',dn:'震',w:'水雷屯',x:'慎',g:'屯，元亨利贞，勿用有攸往。',b:'万物初生多艰，如草穿地而行。宜蓄力扎根、筹划周全，勿急于远行。',yi:'蓄力、筹划、结伴',ji:'冒进、独行'},
+{n:'蒙',bin:'010001',up:'艮',dn:'坎',w:'山水蒙',x:'中平',g:'蒙，亨。匪我求童蒙，童蒙求我。',b:'蒙昧待启，虚心求教则亨。先明事理，再谈行动，切莫自以为是。',yi:'求学、请教、启蒙',ji:'自满、盲动'},
+{n:'需',bin:'111010',up:'坎',dn:'乾',w:'水天需',x:'吉',g:'需，有孚，光亨，贞吉。',b:'云上于天，待时而动。机会未到，沉住气便是赢，有诚则终有所获。',yi:'等待、准备、守正',ji:'急躁、抢跑'},
+{n:'讼',bin:'010111',up:'乾',dn:'坎',w:'天水讼',x:'凶',g:'讼，有孚窒，中吉终凶。',b:'天水违行，争讼不休。凡事以和为贵，得理也要让人，缠斗必有两伤。',yi:'和解、退让、调解',ji:'争讼、缠斗'},
+{n:'师',bin:'010000',up:'坤',dn:'坎',w:'地水师',x:'中平',g:'师，贞，丈人吉，无咎。',b:'地中有水，行险而顺。兴师动众须有名目，纪律严明、任人以老成为要。',yi:'有备、严明、担当',ji:'妄动、散漫'},
+{n:'比',bin:'000010',up:'坎',dn:'坤',w:'水地比',x:'吉',g:'比，吉。原筮，元永贞，无咎。',b:'水行地上，相亲相助。择善而从、推诚相与，众人拾柴火焰自高。',yi:'结盟、合作、亲近',ji:'迟疑、观望'},
+{n:'小畜',bin:'111011',up:'巽',dn:'乾',w:'风天小畜',x:'中平',g:'小畜，亨。密云不雨，自我西郊。',b:'力量小有积蓄，尚不能大成。以小养大、以柔济刚，且再等等风向。',yi:'储蓄、修身、小试',ji:'大手笔、硬拼'},
+{n:'履',bin:'110111',up:'乾',dn:'兑',w:'天泽履',x:'中平',g:'履虎尾，不咥人，亨。',b:'如踩虎尾，礼让谨慎则无伤。规矩之内方得从容，谦和行事自有活路。',yi:'守礼、谨慎、践行',ji:'鲁莽、越位'},
+{n:'泰',bin:'111000',up:'坤',dn:'乾',w:'地天泰',x:'大吉',g:'泰，小往大来，吉亨。',b:'天地交泰，上下相通。正是顺境得意时，更要居安思危、持盈保泰。',yi:'开拓、合作、成事',ji:'骄逸、懈怠'},
+{n:'否',bin:'000111',up:'乾',dn:'坤',w:'天地否',x:'凶',g:'否之匪人，不利君子贞。',b:'天地不交，闭塞之世。宜守正静待、退而内修，不宜妄动强求。',yi:'守成、静待、内修',ji:'强求、远行'},
+{n:'同人',bin:'101111',up:'乾',dn:'离',w:'天火同人',x:'吉',g:'同人于野，亨。',b:'天火同明，志同道合。开诚布公、与人为善，携手则亨通无阻。',yi:'结社、协商、共事',ji:'偏私、内耗'},
+{n:'大有',bin:'111101',up:'离',dn:'乾',w:'火天大有',x:'吉',g:'大有，元亨。',b:'火在天上，普照万物。盛大丰有之时，须以德承之，施比受更有福。',yi:'丰收、施予、正用',ji:'骄奢、独占'},
+{n:'谦',bin:'001000',up:'坤',dn:'艮',w:'地山谦',x:'吉',g:'谦，亨，君子有终。',b:'地中有山，藏才于朴。谦受益，满招损；低处行事，反得众人成全。',yi:'谦让、学习、藏锋',ji:'炫耀、自大'},
+{n:'豫',bin:'000100',up:'震',dn:'坤',w:'雷地豫',x:'中平',g:'豫，利建侯行师。',b:'雷出地奋，顺而动则喜。喜乐有度方不丧志，顺势当为大局谋划。',yi:'顺势、庆功、规划',ji:'沉迷、懈怠'},
+{n:'随',bin:'100110',up:'兑',dn:'震',w:'泽雷随',x:'吉',g:'随，元亨利贞，无咎。',b:'泽中有雷，随时而息。顺势而为、择善而从，跟着对的人走就对。',yi:'随缘、从师、顺势',ji:'固执、逆势'},
+{n:'蛊',bin:'011001',up:'艮',dn:'巽',w:'山风蛊',x:'慎',g:'蛊，元亨，利涉大川。',b:'山下有风，积久生蛊。旧局既坏，宜大刀整顿、根治积弊，忌讳疾忌医。',yi:'整顿、除弊、革新',ji:'因循、讳疾'},
+{n:'临',bin:'110000',up:'坤',dn:'兑',w:'地泽临',x:'吉',g:'临，元亨利贞，至于八月有凶。',b:'泽上有地，居高临下。以宽厚临人则众心归附，盛时当思退步之机。',yi:'督导、亲临、施教',ji:'高压、轻率'},
+{n:'观',bin:'000011',up:'巽',dn:'坤',w:'风地观',x:'中平',g:'观，盥而不荐，有孚颙若。',b:'风行地上，观人亦观己。多看多思再定行止，以身作则胜于千言。',yi:'观察、学习、示范',ji:'盲从、浮躁'},
+{n:'噬嗑',bin:'100101',up:'离',dn:'震',w:'火雷噬嗑',x:'中平',g:'噬嗑，亨，利用狱。',b:'雷电交合，明罚敕法。遇梗阻当咬合断制，是非分明、宽严有度。',yi:'明断、立规、除障',ji:'姑息、苛暴'},
+{n:'贲',bin:'101001',up:'艮',dn:'离',w:'山火贲',x:'中平',g:'贲，亨，小利有攸往。',b:'山下有火，文饰有度。质胜于文，装点门面可以，铺张浪费不必。',yi:'修饰、礼仪、文创',ji:'虚饰、铺张'},
+{n:'剥',bin:'000001',up:'艮',dn:'坤',w:'山地剥',x:'凶',g:'剥，不利有攸往。',b:'山附于地，剥落之时。阴盛阳衰，硕果仅存——宜守不宜进，保元气为上。',yi:'守成、避险、休整',ji:'扩张、投入'},
+{n:'复',bin:'100000',up:'坤',dn:'震',w:'地雷复',x:'吉',g:'复，亨。出入无疾，朋来无咎。',b:'一阳来复，是 否极泰来之始。迷途未远，回头是岸，元气正在恢复。',yi:'回头、蓄力、重启',ji:'冒进、远行'},
+{n:'无妄',bin:'100111',up:'乾',dn:'震',w:'天雷无妄',x:'慎',g:'无妄，元亨利贞。',b:'天下雷行，物与无妄。守本分、循正道则吉，一存侥幸妄念便招灾。',yi:'守正、务实、顺天',ji:'侥幸、妄为'},
+{n:'大畜',bin:'111001',up:'艮',dn:'乾',w:'山天大畜',x:'吉',g:'大畜，利贞，不家食吉，利涉大川。',b:'山中有天，厚德蓄养。学养已丰、器识已足，正可出山做事、涉险成事。',yi:'进修、蓄力、出仕',ji:'急售、浅尝'},
+{n:'颐',bin:'100001',up:'艮',dn:'震',w:'山雷颐',x:'中平',g:'颐，贞吉。观颐，自求口实。',b:'山下有雷，颐养之道。慎言语、节饮食，自食其力方得长久安养。',yi:'养生、慎言、自立',ji:'贪食、多话'},
+{n:'大过',bin:'011110',up:'兑',dn:'巽',w:'泽风大过',x:'慎',g:'大过，栋桡，利有攸往，亨。',b:'泽灭木，非常之时。刚过易折，非常之事须量力而行，及时补救则亨。',yi:'担当、果断、补救',ji:'硬撑、冒险'},
+{n:'坎',bin:'010010',up:'坎',dn:'坎',w:'坎为水',x:'凶',g:'习坎，有孚，维心亨。',b:'重险叠陷，如临深水。唯诚信与定力可以涉险，步步谨慎，不可侥幸。',yi:'守心、谨慎、习练',ji:'涉险、侥幸'},
+{n:'离',bin:'101101',up:'离',dn:'离',w:'离为火',x:'中平',g:'离，利贞，亨。畜牝牛吉。',b:'明两作离，光明相续。依附正道而明，以柔顺持之，切忌火气过盛。',yi:'借力、明理、守正',ji:'急躁、附恶'},
+{n:'咸',bin:'001110',up:'兑',dn:'艮',w:'泽山咸',x:'吉',g:'咸，亨，利贞，取女吉。',b:'山上有泽，二气交感。以至诚相感，则无人不亲、无事不成。',yi:'交心、联姻、合作',ji:'虚情、敷衍'},
+{n:'恒',bin:'011100',up:'震',dn:'巽',w:'雷风恒',x:'吉',g:'恒，亨，无咎，利贞。',b:'雷风相与，持恒守常。久于其道，日久见功；朝令夕改则一事无成。',yi:'坚持、守约、深耕',ji:'三心、见异'},
+{n:'遁',bin:'001111',up:'乾',dn:'艮',w:'天山遁',x:'中平',g:'遁，亨，小利贞。',b:'天下有山，远小人以保身。退不是败，是为蓄势；身退心不退，来日方长。',yi:'隐退、避让、休整',ji:'恋栈、硬顶'},
+{n:'大壮',bin:'111100',up:'震',dn:'乾',w:'雷天大壮',x:'中平',g:'大壮，利贞。',b:'雷在天上，声势正壮。壮而守礼方不为暴，力可用于事，不可用于气。',yi:'趁势、攻坚、立信',ji:'逞强、蛮干'},
+{n:'晋',bin:'000101',up:'离',dn:'坤',w:'火地晋',x:'吉',g:'晋，康侯用锡马蕃庶。',b:'明出地上，旭日东升。进而向明，柔而上行，自有贵人赏识提携。',yi:'晋升、进取、拜贵',ji:'贪功、躁进'},
+{n:'明夷',bin:'101000',up:'坤',dn:'离',w:'地火明夷',x:'凶',g:'明夷，利艰贞。',b:'明入地中，光明受损。晦时藏明、和顺有容，守志待旦，勿以卵击石。',yi:'藏拙、守志、低调',ji:'露锋、强谏'},
+{n:'家人',bin:'101011',up:'巽',dn:'离',w:'风火家人',x:'吉',g:'家人，利女贞。',b:'风自火出，内外有序。各安其位、以诚相待，正家而天下自定。',yi:'齐家、立规、相亲',ji:'纵容、失序'},
+{n:'睽',bin:'110101',up:'离',dn:'兑',w:'火泽睽',x:'慎',g:'睽，小事吉。',b:'火泽背向，同床异梦。分歧之时异中求同，小事尚可为，大事勿轻合。',yi:'求同、沟通、小谋',ji:'合营、深交'},
+{n:'蹇',bin:'001010',up:'坎',dn:'艮',w:'水山蹇',x:'凶',g:'蹇，利西南，不利东北。',b:'山上有水，行路维艰。遇险则止、反身修德，借人之力共渡，勿独自强渡。',yi:'止步、求助、修德',ji:'强渡、独行'},
+{n:'解',bin:'010100',up:'震',dn:'坎',w:'雷水解',x:'吉',g:'解，利西南。',b:'雷雨作，险散难解。郁结既开，冤家宜解不宜结，宽赦旧过、速谋新局。',yi:'化解、赦过、出行',ji:'结怨、恋战'},
+{n:'损',bin:'110001',up:'艮',dn:'兑',w:'山泽损',x:'中平',g:'损，有孚，元吉。',b:'泽下山上，损己利人。惩忿窒欲、减省浮费，看似吃亏，终得大益。',yi:'减省、奉献、戒怒',ji:'贪多、虚耗'},
+{n:'益',bin:'100011',up:'巽',dn:'震',w:'风雷益',x:'吉',g:'益，利有攸往，利涉大川。',b:'风雷相益，损上益下。厚施得众，此时投入与播种，天时正利。',yi:'施惠、投入、兴业',ji:'吝啬、自肥'},
+{n:'夬',bin:'111110',up:'兑',dn:'乾',w:'泽天夬',x:'慎',g:'夬，扬于王庭，孚号有厉。',b:'泽上于天，决而去之。除旧当断则断、光明正大，切忌意气用事、孤注一掷。',yi:'决断、清理、公开',ji:'拖延、意气'},
+{n:'姤',bin:'011111',up:'乾',dn:'巽',w:'天风姤',x:'慎',g:'姤，女壮，勿用取女。',b:'天下有风，不期而遇。遇合须辨正邪，防微杜渐，勿为一时之诱所动。',yi:'观察、防微、自律',ji:'轻信、苟合'},
+{n:'萃',bin:'000110',up:'兑',dn:'坤',w:'泽地萃',x:'吉',g:'萃，王假有庙，利见大人。',b:'泽上于地，聚人以正。荟萃之时人心可用，聚众成事、共商大计。',yi:'聚集、会商、合力',ji:'散漫、离群'},
+{n:'升',bin:'011000',up:'坤',dn:'巽',w:'地风升',x:'吉',g:'升，元亨，用见大人，勿恤。',b:'地中生木，循序而上。日进一寸，终至千仞；积小成大，不必忧疑。',yi:'晋升、积累、拜见',ji:'跳级、急切'},
+{n:'困',bin:'010110',up:'兑',dn:'坎',w:'泽水困',x:'慎',g:'困，亨，贞，大人吉。',b:'泽无水，身处困顿。守正自亨，穷则思变；困而不失其所，终有出头之日。',yi:'守节、忍耐、谋划',ji:'怨天、挥霍'},
+{n:'井',bin:'011010',up:'坎',dn:'巽',w:'水风井',x:'吉',g:'井，改邑不改井。',b:'木上有水，养人不穷。守位不废、修身不辍，井养之功在常年不歇。',yi:'修身、供给、坚守',ji:'搬迁、废弃'},
+{n:'革',bin:'101110',up:'兑',dn:'离',w:'泽火革',x:'吉',g:'革，巳日乃孚，元亨利贞。',b:'泽中有火，去故取新。顺天应人而行变革，改而得当，天下信服。',yi:'革新、变法、换挡',ji:'守旧、朝令夕改'},
+{n:'鼎',bin:'011101',up:'离',dn:'巽',w:'火风鼎',x:'吉',g:'鼎，元吉，亨。',b:'木上有火，鼎新凝命。正位凝命、纳贤养士，正是建功立业之时。',yi:'创业、定基、纳贤',ji:'动摇、浅尝'},
+{n:'震',bin:'100100',up:'震',dn:'震',w:'震为雷',x:'慎',g:'震，亨。震来虩虩，笑言哑哑。',b:'重雷发声，闻惊而省。临危不乱、处变如常，惊涛之后自有笑言。',yi:'警醒、演练、抗压',ji:'慌乱、麻痹'},
+{n:'艮',bin:'001001',up:'艮',dn:'艮',w:'艮为山',x:'中平',g:'艮其背，不获其身。',b:'兼山艮，时止则止。知止而后有定，当停则停、当守则守，妄动无益。',yi:'止步、静修、守位',ji:'妄动、多言'},
+{n:'渐',bin:'001011',up:'巽',dn:'艮',w:'风山渐',x:'吉',g:'渐，女归吉，利贞。',b:'山上有木，循序渐进。如行嘉礼、按部就班，事缓则圆，欲速不达。',yi:'渐进、按部就班、议婚',ji:'跳跃、催逼'},
+{n:'归妹',bin:'110100',up:'震',dn:'兑',w:'雷泽归妹',x:'慎',g:'归妹，征凶，无攸利。',b:'泽上有雷，名不正则言不顺。守本分、正名分，勿越礼躁进而失据。',yi:'守正、正名、自省',ji:'僭越、仓促'},
+{n:'丰',bin:'101100',up:'震',dn:'离',w:'雷火丰',x:'吉',g:'丰，亨，王假之。',b:'雷电皆至，盛大光明。如日中天之时，更要守正惜福——日中则昃。',yi:'趁盛、决断、庆功',ji:'骄纵、挥霍'},
+{n:'旅',bin:'001101',up:'离',dn:'艮',w:'火山旅',x:'中平',g:'旅，小亨，旅贞吉。',b:'山上有火，行旅之象。客居在外，谨言慎行、守正自持，小事尚亨。',yi:'出行、客居、小事',ji:'置业、大兴'},
+{n:'巽',bin:'011011',up:'巽',dn:'巽',w:'巽为风',x:'中平',g:'巽，小亨，利有攸往。',b:'随风相入，谦逊行事。以柔渗透、反复申明，事半功倍；然须自有主张。',yi:'沟通、渗透、顺势',ji:'优柔、无主见'},
+{n:'兑',bin:'110110',up:'兑',dn:'兑',w:'兑为泽',x:'吉',g:'兑，亨，利贞。',b:'丽泽相说，朋友讲习。和颜悦色、以诚相说，交流切磋两相益。',yi:'交流、讲授、庆贺',ji:'谄媚、空谈'},
+{n:'涣',bin:'010011',up:'巽',dn:'坎',w:'风水涣',x:'中平',g:'涣，亨，王假有庙。',b:'风行水上，涣散之局。当聚人心、立纲纪，散中求聚则亨。',yi:'聚心、消散、解郁',ji:'散漫、放任'},
+{n:'节',bin:'110010',up:'坎',dn:'兑',w:'水泽节',x:'吉',g:'节，亨，苦节不可贞。',b:'泽上有水，节以制度。节而有度则通，过俭伤生、过奢败度，守其中可也。',yi:'节制、预算、立规',ji:'奢靡、苦节'},
+{n:'中孚',bin:'110011',up:'巽',dn:'兑',w:'风泽中孚',x:'吉',g:'中孚，豚鱼吉，利涉大川。',b:'泽上有风，中心诚信。诚感万物，虽豚鱼亦应；立信于内，涉险何妨。',yi:'守信、立誓、合作',ji:'失信、猜疑'},
+{n:'小过',bin:'001100',up:'震',dn:'艮',w:'雷山小过',x:'慎',g:'小过，亨，利贞，可小事，不可大事。',b:'山上有雷，声高雨小。小事可为、宜就下宜俭，大事勿举、高飞必凶。',yi:'小事、谨慎、就下',ji:'大事、高调'},
+{n:'既济',bin:'101010',up:'坎',dn:'离',w:'水火既济',x:'吉',g:'既济，亨小，利贞，初吉终乱。',b:'水火既济，功德初成。成而易乱，慎终如始，则无败事。',yi:'收尾、巩固、庆成',ji:'松懈、麻痹'},
+{n:'未济',bin:'010101',up:'离',dn:'坎',w:'火水未济',x:'中平',g:'未济，亨，小狐汔济，濡其尾。',b:'火水未济，事未竟成。如小狐渡河濡其尾——慎择所行、审其终局，终得济。',yi:'蓄势、复盘、再启',ji:'收兵、懈怠'}
+];
+var TRI_BITS={'乾':'111','兑':'110','离':'101','震':'100','巽':'011','坎':'010','艮':'001','坤':'000'};
+var TRI_ORDER={'1':'乾','2':'兑','3':'离','4':'震','5':'巽','6':'坎','7':'艮','8':'坤'};
+var BYBIN={};
+HEX.forEach(function(h){BYBIN[h.bin]=h;});
+
+/* ============ 工具 ============ */
+function $(s){return document.querySelector(s);}
+function $$(s){return Array.prototype.slice.call(document.querySelectorAll(s));}
+var CN=['一','二','三','四','五','六'];
+var POS=['初','二','三','四','五','上'];
+var FACE={6:'老阴 ✕',7:'少阳',8:'少阴',9:'老阳 ○'};
+
+function xCls(x){
+  if(x==='大吉'||x==='吉')return 'xb-good';
+  if(x==='中平')return 'xb-mid';
+  if(x==='慎')return 'xb-care';
+  return 'xb-bad';
+}
+function chips(str){return str.split('、').map(function(s){return '<span class="chip">'+s+'</span>';}).join('');}
+function linesHTML(bin,moving){
+  var h='';
+  for(var i=5;i>=0;i--){
+    var yang=bin.charAt(i)==='1';
+    var mv=moving&&moving[i];
+    h+='<span class="lrow'+(mv?' mv':'')+'">';
+    h+=yang?'<i class="ln yang"></i>':'<i class="ln yin"><span></span><span></span></i>';
+    if(mv)h+='<em class="mk">'+(yang?'○':'✕')+'</em>';
+    h+='</span>';
+  }
+  return h;
+}
+function yaoName(i,yang){
+  var xy=yang?'九':'六';
+  if(i===0)return '初'+xy;
+  if(i===5)return '上'+xy;
+  return xy+POS[i];
+}
+function ganzhi(y){
+  var s='甲乙丙丁戊己庚辛壬癸',b='子丑寅卯辰巳午未申酉戌亥';
+  var i=(y-4)%60;
+  return s.charAt(i%10)+b.charAt(i%12);
+}
+var toastEl=$('#toast'),tTimer=null;
+function toast(m){
+  toastEl.textContent=m;
+  toastEl.classList.add('show');
+  clearTimeout(tTimer);
+  tTimer=setTimeout(function(){toastEl.classList.remove('show');},2200);
+}
+
+/* 爻线样式（lrow 内 ln 着色交给上下文的 color） */
+(function(){
+  var st=document.createElement('style');
+  st.textContent='.lrow{display:flex;align-items:center;gap:10px;width:100%}'+
+    '.lrow .ln{flex:1;display:flex;gap:10px;height:8px}'+
+    '.lrow .ln.yang{background:currentColor;border-radius:1px}'+
+    '.lrow .ln.yin span{flex:1;background:currentColor;border-radius:1px}'+
+    '.lrow .mk{font-style:normal;font-size:13px;flex:none;width:18px;text-align:center;line-height:1}'+
+    '.gua-lines{display:flex;flex-direction:column;gap:6px;width:100%}'+
+    '.gua-lines .lrow .ln{height:8px}'+
+    '.gua-lines.mini{gap:4px}.gua-lines.mini .lrow .ln{height:5px;gap:6px}'+
+    '.gua-lines.big{gap:10px}.gua-lines.big .lrow .ln{height:13px}'+
+    '.gua-card .gua-lines{gap:5px}.gua-card .gua-lines .lrow .ln{height:6px;gap:7px}';
+  document.head.appendChild(st);
+})();
+
+/* ============ 详情弹层 ============ */
+var mask=$('#mask'),mClose=$('#mClose'),lastFocus=null;
+function openModal(hex,moving,bian){
+  lastFocus=document.activeElement;
+  $('#mTitle').textContent=hex.n+' 卦';
+  $('#mXiang').textContent=hex.w+' · 上'+hex.up+'下'+hex.dn;
+  var xb=$('#mXbadge');
+  xb.textContent=hex.x;
+  xb.className='x-badge '+xCls(hex.x);
+  $('#mLines').innerHTML=linesHTML(hex.bin,moving||null);
+  $('#mName').innerHTML=hex.n+'<i>卦</i>';
+  $('#mG').textContent='卦辞 · '+hex.g;
+  $('#mB').textContent=hex.b;
+  $('#mYi').innerHTML=chips(hex.yi);
+  $('#mJi').innerHTML=chips(hex.ji);
+  var bb=$('#mBianBox');
+  if(bian){
+    bb.hidden=false;
+    $('#mBianLines').innerHTML=linesHTML(bian.bin,null);
+    $('#mBianName').textContent='变卦 · '+bian.n+'（'+bian.w+'）';
+  }else{
+    bb.hidden=true;
+  }
+  mask.classList.add('open');
+  document.body.style.overflow='hidden';
+  mClose.focus();
+}
+function closeModal(){
+  mask.classList.remove('open');
+  document.body.style.overflow='';
+  if(lastFocus&&lastFocus.focus)lastFocus.focus();
+}
+mClose.addEventListener('click',closeModal);
+mask.addEventListener('click',function(e){if(e.target===mask)closeModal();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&mask.classList.contains('open'))closeModal();});
+
+/* ============ 今日一卦 ============ */
+(function(){
+  var d=new Date();
+  var seed=d.getFullYear()*372+(d.getMonth()+1)*31+d.getDate();
+  var th=HEX[seed%HEX.length];
+  $('#tDate').textContent=d.getFullYear()+' 年 '+(d.getMonth()+1)+' 月 '+d.getDate()+' 日 · '+ganzhi(d.getFullYear())+'年';
+  $('#tLines').innerHTML=linesHTML(th.bin,null);
+  $('#tName').innerHTML=th.n+'<i>卦</i>';
+  var tx=$('#tX');
+  tx.textContent=th.x;
+  tx.className='x-badge '+xCls(th.x);
+  $('#tG').textContent='「'+th.g+'」';
+  $('#tB').textContent=th.b;
+  $('#tYi').innerHTML=chips(th.yi);
+  $('#tJi').innerHTML=chips(th.ji);
+  $('#tDetail').addEventListener('click',function(){openModal(th,null,null);});
+  $('#gy').textContent=ganzhi(d.getFullYear())+'年';
+})();
+
+/* ============ 起卦馆 · 方式切换 ============ */
+var tabCoin=$('#tabCoin'),tabNum=$('#tabNum'),panelCoin=$('#panelCoin'),panelNum=$('#panelNum');
+function setTab(coin){
+  tabCoin.classList.toggle('on',coin);
+  tabNum.classList.toggle('on',!coin);
+  tabCoin.setAttribute('aria-selected',coin?'true':'false');
+  tabNum.setAttribute('aria-selected',coin?'false':'true');
+  panelCoin.hidden=!coin;
+  panelNum.hidden=coin;
+}
+tabCoin.addEventListener('click',function(){setTab(true);});
+tabNum.addEventListener('click',function(){setTab(false);});
+
+/* ============ 铜钱摇卦 ============ */
+var vals=[],busy=false,cur=null;
+var rack=$('#rack'),sumLine=$('#sumLine'),castCount=$('#castCount');
+var btnToss=$('#btnToss'),btnQuick=$('#btnQuick'),qInput=$('#qInput');
+
+function buildRack(){
+  var h='';
+  for(var i=5;i>=0;i--){
+    h+='<div class="rack-row" data-i="'+i+'"><em class="lab">'+POS[i]+'爻</em><span class="slot"></span></div>';
+  }
+  rack.innerHTML=h;
+}
+function fillRow(i,v){
+  var row=rack.querySelector('[data-i="'+i+'"]');
+  if(!row)return;
+  var yang=v%2===1,mv=(v===6||v===9);
+  row.classList.toggle('mv',mv);
+  row.querySelector('.lab').textContent=yaoName(i,yang);
+  row.querySelector('.slot').outerHTML='<span class="lrow">'+
+    (yang?'<i class="ln yang"></i>':'<i class="ln yin"><span></span><span></span></i>')+
+    (mv?'<em class="mk">'+(yang?'○':'✕')+'</em>':'')+'</span>';
+}
+function updateCount(){
+  var done=vals.length,left=6-done;
+  castCount.textContent=left>0?('已成 '+done+' 爻 · 尚余 '+left+' 爻'):'六爻已齐 · 观象可也';
+}
+function resetCast(silent){
+  vals=[];busy=false;cur=null;
+  buildRack();
+  sumLine.textContent='静候三摇 · 正面记三，背面记二';
+  $$('#coins .coin').forEach(function(c){c.classList.remove('toss');});
+  $('#faceChips').innerHTML='<span class="fc">候掷</span><span class="fc">候掷</span><span class="fc">候掷</span>';
+  btnToss.disabled=false;btnQuick.disabled=false;
+  updateCount();
+  $('#rEmpty').hidden=false;
+  $('#rFull').hidden=true;
+  if(!silent)toast('已重置，可重新起卦');
+}
+function finish(){
+  var bin='',moving={};
+  vals.forEach(function(v,i){
+    bin+=(v%2===1?'1':'0');
+    if(v===6||v===9)moving[i]=true;
+  });
+  var hex=BYBIN[bin];
+  var arr=bin.split('');
+  Object.keys(moving).forEach(function(i){arr[+i]=arr[+i]==='1'?'0':'1';});
+  var bian=BYBIN[arr.join('')];
+  cur={hex:hex,moving:moving,bian:bian,q:qInput.value.trim()};
+  renderResult(cur);
+  setTimeout(function(){
+    document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
+  },90);
+}
+btnToss.addEventListener('click',function(){
+  if(busy||vals.length>=6)return;
+  busy=true;btnToss.disabled=true;
+  var coins=$$('#coins .coin'),faces=[];
+  for(var c=0;c<3;c++)faces.push(Math.random()<0.5?3:2);
+  coins.forEach(function(el,idx){
+    setTimeout(function(){
+      el.classList.remove('toss');
+      void el.offsetWidth;
+      el.classList.add('toss');
+      $('#faceChips').children[idx].textContent=faces[idx]===3?'正 · 3':'背 · 2';
+    },idx*110);
+  });
+  setTimeout(function(){
+    var sum=faces[0]+faces[1]+faces[2];
+    var i=vals.length;
+    vals.push(sum);
+    var names=faces.map(function(f){return f===3?'正3':'背2';}).join(' + ');
+    sumLine.textContent='第'+CN[i]+'掷 · '+names+' = '+sum+' · '+FACE[sum];
+    fillRow(i,sum);
+    updateCount();
+    if(vals.length>=6){
+      btnQuick.disabled=true;
+      setTimeout(finish,680);
+    }else{
+      busy=false;btnToss.disabled=false;
+    }
+  },660);
+});
+btnQuick.addEventListener('click',function(){
+  if(busy||vals.length>=6)return;
+  busy=true;btnToss.disabled=true;btnQuick.disabled=true;
+  while(vals.length<6){
+    var s=0;
+    for(var k=0;k<3;k++)s+=Math.random()<0.5?3:2;
+    fillRow(vals.length,s);
+    vals.push(s);
+  }
+  sumLine.textContent='六爻速成 · 观象可也';
+  updateCount();
+  setTimeout(finish,320);
+});
+$('#btnCastReset').addEventListener('click',function(){resetCast(false);});
+
+/* ============ 数字起卦 ============ */
+$('#btnNum').addEventListener('click',function(){
+  var a=parseInt($('#numA').value,10),b=parseInt($('#numB').value,10);
+  if(!a||!b||a<=0||b<=0){toast('请先报两个正整数，再行起卦');return;}
+  var upK=a%8||8,dnK=b%8||8,md=(a+b)%6||6;
+  var bin=TRI_BITS[TRI_ORDER[dnK]]+TRI_BITS[TRI_ORDER[upK]];
+  var mi=md-1,moving={};moving[mi]=true;
+  var arr=bin.split('');
+  arr[mi]=arr[mi]==='1'?'0':'1';
+  cur={hex:BYBIN[bin],moving:moving,bian:BYBIN[arr.join('')],q:qInput.value.trim()};
+  renderResult(cur);
+  toast('数既立，卦已成 · 上'+cur.hex.up+'下'+cur.hex.dn+'，动爻在第'+CN[mi]+'爻');
+  setTimeout(function(){
+    document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
+  },120);
+});
+
+/* ============ 卦象结果渲染 ============ */
+function renderResult(res){
+  var hex=res.hex;
+  $('#rEmpty').hidden=true;
+  $('#rFull').hidden=false;
+  var rx=$('#rX');
+  rx.textContent=hex.x;
+  rx.className='x-badge '+xCls(hex.x);
+  $('#rLines').innerHTML=linesHTML(hex.bin,res.moving);
+  $('#rName').innerHTML=hex.n+'<i>卦</i>';
+  $('#rMeta').textContent=hex.w+' · 上'+hex.up+'下'+hex.dn;
+  var rb=$('#rBian');
+  rb.innerHTML='<div class="gua-lines mini">'+linesHTML(res.bian.bin,null)+'</div>'+
+    '<div><b>变卦 · '+res.bian.n+'</b><span>'+(Object.keys(res.moving).length?('动爻所变 · 示事之去向'):'未得动爻 · 以本卦为断')+'</span></div>';
+  $('#rQ').textContent=res.q?('所问 · '+res.q):'未具所问 · 泛观全局';
+  $('#rG').textContent='「'+hex.g+'」';
+  $('#rB').textContent=hex.b;
+  $('#rYi').innerHTML=chips(hex.yi);
+  $('#rJi').innerHTML=chips(hex.ji);
+}
+$('#btnAgain').addEventListener('click',function(){
+  resetCast(true);
+  toast('铜钱已备，静气再占');
+  document.getElementById('cast').scrollIntoView({behavior:'smooth',block:'start'});
+});
+$('#btnDetail').addEventListener('click',function(){
+  if(cur)openModal(cur.hex,cur.moving,cur.bian);
+});
+
+/* ============ 六十四卦锦囊库 ============ */
+var grid=$('#guaGrid'),kw=$('#kw'),fx=$('#fx'),guaCount=$('#guaCount');
+function renderGrid(){
+  var k=kw.value.trim(),f=fx.value,n=0,html='';
+  HEX.forEach(function(h,i){
+    if(k&&h.n.indexOf(k)<0&&h.w.indexOf(k)<0)return;
+    if(f!=='全部'&&h.x!==f)return;
+    n++;
+    html+='<button type="button" class="gua-card" data-i="'+i+'" aria-label="查看'+h.n+'卦详情">'+
+      '<span class="gua-seal">'+(i+1)+'</span>'+
+      '<span class="gx">'+h.x+'</span>'+
+      '<span class="lines"><span class="gua-lines mini">'+linesHTML(h.bin,null)+'</span></span>'+
+      '<span class="nm">'+h.n+'</span>'+
+      '<span class="xiang">'+h.w+'</span></button>';
+  });
+  grid.innerHTML=html||'<p class="empty-tip">未检得此卦 · 换个名目试试</p>';
+  guaCount.textContent='共得 '+n+' 签';
+}
+kw.addEventListener('input',renderGrid);
+fx.addEventListener('change',renderGrid);
+$('#btnLx').addEventListener('click',function(){
+  kw.value='';fx.value='全部';
+  renderGrid();
+  toast('筛选已重置');
+});
+grid.addEventListener('click',function(e){
+  var b=e.target.closest('.gua-card');
+  if(b)openModal(HEX[+b.getAttribute('data-i')],null,null);
+});
+renderGrid();
+
+/* ============ 滚动进入（常规淡显） ============ */
+var rvs=$$('.rv');
+if('IntersectionObserver' in window){
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(en){
+      if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}
+    });
+  },{threshold:0.1});
+  rvs.forEach(function(el){io.observe(el);});
+}else{
+  rvs.forEach(function(el){el.classList.add('in');});
+}
+
+/* ============ 初始化 ============ */
+buildRack();
+updateCount();
+})();
+</script>
+</body>
+</html>

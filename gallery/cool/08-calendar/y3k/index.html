@@ -1,0 +1,2741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="拾光历 CHRONO·GRID —— Y3K 科技未来主义全息日历：HUD 开机序列、瞄准环今日标记、液态铬时间流。">
+<title>拾光历 // CHRONO·GRID — Y3K 全息日历</title>
+<style>
+/* ============================================================
+   拾光历 CHRONO·GRID · Y3K 科技未来主义
+   石墨深底 / 全息虹彩 conic（每屏 ≤2 处）/ 铬字 / HUD 线框
+   瞄准环今日标记 / 液态铬分割 / 等宽数据读数 / 扫描微光
+   ============================================================ */
+
+/* ---------- 属性注册：conic 光泽角度（渐进增强） ---------- */
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* ---------- 设计令牌 ---------- */
+:root {
+  /* 石墨底色系 */
+  --bg: #0A0C10;
+  --bg-deep: #06080C;
+  --panel: #10141C;
+  --panel-2: #131826;
+  --line: rgba(160, 190, 210, .12);
+  --line-strong: rgba(160, 190, 210, .26);
+  /* 文本（#0A0C10 上对比 ≥7:1） */
+  --txt: #F2F5F7;
+  --txt-2: #A9B4BF;
+  --txt-3: #98A3B0;
+  /* 冷谱强调 + 粉（防彩虹汤：仅冷谱 + 一味粉） */
+  --cyan: #6FE0F2;
+  --cyan-soft: rgba(111, 224, 242, .35);
+  --pink: #F27BB8;
+  --violet: #A78BFA;
+  --mint: #8FD8C0;
+  --red: #FF8FA5;
+  /* 全息虹彩膜（冷谱 + 粉，禁黄绿） */
+  --holo: linear-gradient(105deg, #C8FFFA, #E7C8FF 30%, #FFD6E8 55%, #D6E5FF 80%, #C8FFFA);
+  /* 铬金属渐变（四段银灰，来自规格） */
+  --chrome: linear-gradient(172deg, #F5F5F5 0%, #8A8F98 30%, #E8E8E8 52%, #5B6068 76%, #C9CED6 100%);
+  /* 字体栈 */
+  --mono: "JetBrains Mono", "Cascadia Code", "Share Tech Mono", ui-monospace, Consolas, "Courier New", monospace;
+  --sans: "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+}
+
+/* ---------- 基础重置 ---------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--txt);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 静态神经网格底纹（canvas 的降级基座始终存在） */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(rgba(148, 180, 205, .032) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 180, 205, .032) 1px, transparent 1px);
+  background-size: 56px 56px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 暗角，收拢视觉焦点 */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(120% 90% at 50% 8%, transparent 55%, rgba(4, 6, 10, .55) 100%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+::selection {
+  background: rgba(111, 224, 242, .3);
+  color: #fff;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: var(--cyan);
+}
+
+:focus-visible {
+  outline: 1px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+/* 细滚动条 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A323E;
+  border-radius: 5px;
+  border: 2px solid var(--bg-deep);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3A4654;
+}
+
+/* ---------- 通用铬字 / 全息膜 ---------- */
+.chrome-text {
+  background: var(--chrome);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 全息膜条：全站仅两处常驻（品牌下方 + 月标题下方），位移动画 */
+.film {
+  display: block;
+  height: 3px;
+  width: 128px;
+  border-radius: 2px;
+  background: var(--holo);
+  background-size: 300% 100%;
+  animation: filmMove 6s linear infinite;
+  box-shadow: 0 0 12px rgba(214, 229, 255, .22);
+}
+
+.film-sm {
+  width: 76px;
+  height: 2px;
+  opacity: .85;
+}
+
+@keyframes filmMove {
+  from { background-position: 0% 0; }
+  to   { background-position: 300% 0; }
+}
+
+/* ---------- 背景层：神经网格 canvas / 液态铬 blob / 扫描微光 ---------- */
+#neuro {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.blob {
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  /* 液态铬：银灰冷金属，非虹彩 */
+  background:
+    radial-gradient(closest-side at 42% 40%, rgba(210, 224, 235, .13), rgba(111, 224, 242, .05) 55%, transparent 72%);
+  opacity: .8;
+  will-change: transform, border-radius;
+}
+
+.blob.b1 {
+  width: 520px;
+  height: 460px;
+  top: -140px;
+  right: -120px;
+  animation: blobMorph1 20s ease-in-out infinite alternate, blobDrift1 26s ease-in-out infinite alternate;
+}
+
+.blob.b2 {
+  width: 460px;
+  height: 520px;
+  bottom: -180px;
+  left: -140px;
+  animation: blobMorph2 23s ease-in-out infinite alternate, blobDrift2 31s ease-in-out infinite alternate;
+}
+
+@keyframes blobMorph1 {
+  0%   { border-radius: 58% 42% 63% 37% / 44% 59% 41% 56%; }
+  50%  { border-radius: 38% 62% 46% 54% / 61% 38% 62% 39%; }
+  100% { border-radius: 63% 37% 55% 45% / 38% 55% 45% 62%; }
+}
+
+@keyframes blobMorph2 {
+  0%   { border-radius: 42% 58% 35% 65% / 57% 43% 57% 43%; }
+  50%  { border-radius: 61% 39% 58% 42% / 39% 62% 38% 61%; }
+  100% { border-radius: 36% 64% 49% 51% / 58% 36% 64% 42%; }
+}
+
+@keyframes blobDrift1 {
+  from { transform: translate(0, 0) rotate(0deg); }
+  to   { transform: translate(-46px, 40px) rotate(14deg); }
+}
+
+@keyframes blobDrift2 {
+  from { transform: translate(0, 0) rotate(0deg); }
+  to   { transform: translate(42px, -38px) rotate(-12deg); }
+}
+
+/* 扫描微光：一条极淡的水平光带周期下掠 */
+.scan {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 150px;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(111, 224, 242, .045) 45%, rgba(214, 229, 255, .06) 50%, rgba(111, 224, 242, .045) 55%, transparent);
+  mix-blend-mode: screen;
+  animation: scanDown 9s linear infinite;
+}
+
+@keyframes scanDown {
+  from { transform: translateY(-30vh); opacity: 0; }
+  8%   { opacity: 1; }
+  88%  { opacity: 1; }
+  to   { transform: translateY(120vh); opacity: 0; }
+}
+
+/* ---------- HUD 视口角框与角标刻度（装饰层，不拦截点击） ---------- */
+.hud-c {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.hud-c i {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+}
+
+.hud-c i.tl { top: 10px; left: 10px; border-top: 1px solid var(--line-strong); border-left: 1px solid var(--line-strong); }
+.hud-c i.tr { top: 10px; right: 10px; border-top: 1px solid var(--line-strong); border-right: 1px solid var(--line-strong); }
+.hud-c i.bl { bottom: 10px; left: 10px; border-bottom: 1px solid var(--line-strong); border-left: 1px solid var(--line-strong); }
+.hud-c i.br { bottom: 10px; right: 10px; border-bottom: 1px solid var(--line-strong); border-right: 1px solid var(--line-strong); }
+
+.hud-c i.tl::after,
+.hud-c i.tr::after,
+.hud-c i.bl::after,
+.hud-c i.br::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: var(--cyan);
+  opacity: .55;
+}
+
+.hud-c i.tl::after { top: -1px; left: -1px; }
+.hud-c i.tr::after { top: -1px; right: -1px; }
+.hud-c i.bl::after { bottom: -1px; left: -1px; }
+.hud-c i.br::after { bottom: -1px; right: -1px; }
+
+.hud-c b {
+  position: absolute;
+  font: 400 9px/1 var(--mono);
+  letter-spacing: .18em;
+  color: var(--txt-3);
+  opacity: .62;
+}
+
+.hud-c b.h-tl { top: 14px; left: 54px; }
+.hud-c b.h-tr { top: 14px; right: 54px; }
+.hud-c b.h-bl { bottom: 14px; left: 54px; }
+.hud-c b.h-br { bottom: 14px; right: 54px; }
+
+/* ---------- HUD 开机序列 ---------- */
+.boot {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--bg-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity .4s ease;
+}
+
+.boot.off {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.boot i.bc {
+  position: absolute;
+  width: 96px;
+  height: 96px;
+  border: 0 solid var(--cyan-soft);
+  animation: bootCorner .7s cubic-bezier(.2, .8, .3, 1) both;
+}
+
+.boot i.bc.tl { top: 34px; left: 34px; border-top-width: 2px; border-left-width: 2px; animation-delay: .05s; }
+.boot i.bc.tr { top: 34px; right: 34px; border-top-width: 2px; border-right-width: 2px; animation-delay: .14s; }
+.boot i.bc.bl { bottom: 34px; left: 34px; border-bottom-width: 2px; border-left-width: 2px; animation-delay: .23s; }
+.boot i.bc.br { bottom: 34px; right: 34px; border-bottom-width: 2px; border-right-width: 2px; animation-delay: .32s; }
+
+@keyframes bootCorner {
+  from { opacity: 0; transform: scale(1.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.boot-box {
+  width: min(460px, calc(100vw - 48px));
+  text-align: left;
+}
+
+.boot-logo {
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  line-height: 1.1;
+}
+
+.boot-tag {
+  margin-top: 6px;
+  font: 400 11px/1.6 var(--mono);
+  letter-spacing: .14em;
+  color: var(--txt-3);
+}
+
+.boot-lines {
+  margin-top: 26px;
+  min-height: 132px;
+  font: 400 12px/2.1 var(--mono);
+  color: var(--txt-2);
+}
+
+.boot-lines p {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.boot-lines p.on {
+  opacity: 1;
+  transform: none;
+}
+
+.boot-lines b {
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+.boot-lines p.final b {
+  color: var(--pink);
+}
+
+.boot-bar {
+  margin-top: 18px;
+  height: 3px;
+  background: rgba(160, 190, 210, .12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.boot-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+}
+
+.boot-bar i.run {
+  animation: bootFill 1.35s linear forwards;
+}
+
+@keyframes bootFill {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+.boot-skip {
+  margin-top: 14px;
+  font: 400 10px/1 var(--mono);
+  letter-spacing: .2em;
+  color: var(--txt-3);
+  text-align: right;
+}
+
+/* ---------- 应用主体（开机后显现） ---------- */
+.app {
+  position: relative;
+  z-index: 5;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 26px 26px 0;
+}
+
+html.js .app {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+html.js body.booted .app {
+  opacity: 1;
+  transform: none;
+  transition: opacity .55s ease .06s, transform .55s ease .06s;
+}
+
+/* 滚动显现 */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .55s ease, transform .55s ease;
+}
+
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- 顶栏 ---------- */
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand .mark {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  color: var(--cyan);
+  font-size: 15px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: linear-gradient(160deg, rgba(111, 224, 242, .12), rgba(167, 139, 250, .06));
+  box-shadow: inset 0 0 14px rgba(111, 224, 242, .12);
+}
+
+.brand h1 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  line-height: 1.15;
+}
+
+.brand .sub {
+  font: 400 9px/1 var(--mono);
+  letter-spacing: .3em;
+  color: var(--txt-3);
+  margin-top: 3px;
+}
+
+.brand .film {
+  margin-left: 6px;
+  align-self: flex-end;
+  margin-bottom: 5px;
+}
+
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.readout {
+  font: 400 11px/1 var(--mono);
+  letter-spacing: .12em;
+  color: var(--txt-2);
+}
+
+.readout::before {
+  content: "●";
+  color: var(--mint);
+  font-size: 8px;
+  margin-right: 8px;
+  vertical-align: 1px;
+  animation: breath 2.4s ease-in-out infinite;
+}
+
+@keyframes breath {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .3; }
+}
+
+/* ---------- 按钮 ---------- */
+.btn {
+  font: 600 12px/1 var(--sans);
+  letter-spacing: .1em;
+  color: var(--cyan);
+  background: rgba(111, 224, 242, .07);
+  border: 1px solid rgba(111, 224, 242, .42);
+  padding: 9px 16px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background .18s ease, box-shadow .18s ease, color .18s ease, border-color .18s ease;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background: rgba(111, 224, 242, .16);
+  box-shadow: 0 0 14px rgba(111, 224, 242, .28);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn.ghost {
+  color: var(--txt-2);
+  border-color: var(--line-strong);
+  background: transparent;
+}
+
+.btn.ghost:hover {
+  color: var(--txt);
+  border-color: rgba(160, 190, 210, .5);
+  box-shadow: none;
+  background: rgba(160, 190, 210, .07);
+}
+
+.btn.wide {
+  width: 100%;
+}
+
+.nav-btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  color: var(--txt-2);
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  font: 500 16px/1 var(--mono);
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+
+.nav-btn:hover {
+  color: var(--cyan);
+  border-color: rgba(111, 224, 242, .5);
+  box-shadow: 0 0 10px rgba(111, 224, 242, .2);
+}
+
+/* ---------- 布局 ---------- */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+  align-items: start;
+  margin-top: 22px;
+}
+
+/* ---------- HUD 面板通用（线框 + 四角角标） ---------- */
+.panel {
+  position: relative;
+  background: linear-gradient(180deg, rgba(148, 180, 205, .05), rgba(148, 180, 205, .015));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.cnr {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  opacity: .85;
+}
+
+.cnr.tl { top: -1px; left: -1px; border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
+.cnr.tr { top: -1px; right: -1px; border-top: 2px solid var(--cyan); border-right: 2px solid var(--cyan); }
+.cnr.bl { bottom: -1px; left: -1px; border-bottom: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
+.cnr.br { bottom: -1px; right: -1px; border-bottom: 2px solid var(--cyan); border-right: 2px solid var(--cyan); }
+
+/* ---------- 月历面板 ---------- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mtitle {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.mtitle h2 {
+  font: 800 27px/1.1 var(--mono);
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+
+.mname {
+  font-size: 14px;
+  color: var(--txt-2);
+  letter-spacing: .3em;
+}
+
+.mtitle .film-sm {
+  align-self: center;
+}
+
+.view-tag {
+  margin-left: auto;
+  font: 400 10px/1 var(--mono);
+  letter-spacing: .22em;
+  color: var(--txt-3);
+}
+
+/* HUD 刻度尺 */
+.ruler {
+  height: 8px;
+  margin: 14px 0 10px;
+  background: repeating-linear-gradient(90deg, var(--line-strong) 0 1px, transparent 1px 12px);
+  border-right: 1px solid var(--line-strong);
+  opacity: .75;
+}
+
+/* 星期表头 */
+.wkrow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.wk {
+  text-align: center;
+  padding: 7px 0 8px;
+  border-bottom: 1px solid var(--line);
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .2em;
+  color: var(--txt-3);
+}
+
+.wk i {
+  font-style: normal;
+  font-size: 9px;
+  color: rgba(111, 224, 242, .5);
+  margin-left: 5px;
+  letter-spacing: .1em;
+}
+
+.wk.wknd {
+  color: rgba(242, 123, 184, .72);
+}
+
+.wk.wknd i {
+  color: rgba(242, 123, 184, .45);
+}
+
+/* 42 格网格 */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 6px;
+}
+
+/* 切月：数据流闪断帧（全息滑动） */
+.mgrid.out-l { animation: glitchOutL .18s steps(3, end) forwards; }
+.mgrid.out-r { animation: glitchOutR .18s steps(3, end) forwards; }
+.mgrid.in-l  { animation: glitchInL .26s steps(4, end) backwards; }
+.mgrid.in-r  { animation: glitchInR .26s steps(4, end) backwards; }
+
+@keyframes glitchOutL {
+  0%   { clip-path: inset(0 0 0 0); opacity: 1; transform: none; }
+  35%  { clip-path: inset(8% 0 46% 0); transform: translateX(-9px); }
+  70%  { clip-path: inset(55% 0 6% 0); transform: translateX(7px); }
+  100% { clip-path: inset(0 0 100% 0); opacity: 0; transform: translateX(-28px); }
+}
+
+@keyframes glitchOutR {
+  0%   { clip-path: inset(0 0 0 0); opacity: 1; transform: none; }
+  35%  { clip-path: inset(46% 0 10% 0); transform: translateX(9px); }
+  70%  { clip-path: inset(6% 0 52% 0); transform: translateX(-7px); }
+  100% { clip-path: inset(100% 0 0 0); opacity: 0; transform: translateX(28px); }
+}
+
+@keyframes glitchInL {
+  0%   { clip-path: inset(48% 0 14% 0); opacity: 0; transform: translateX(30px); }
+  45%  { clip-path: inset(10% 0 58% 0); transform: translateX(-8px); }
+  100% { clip-path: inset(0 0 0 0); opacity: 1; transform: none; }
+}
+
+@keyframes glitchInR {
+  0%   { clip-path: inset(14% 0 48% 0); opacity: 0; transform: translateX(-30px); }
+  45%  { clip-path: inset(58% 0 8% 0); transform: translateX(8px); }
+  100% { clip-path: inset(0 0 0 0); opacity: 1; transform: none; }
+}
+
+/* ---------- 日期格 ---------- */
+.cell {
+  position: relative;
+  min-height: 94px;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 9px 7px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: linear-gradient(180deg, rgba(148, 180, 205, .045), rgba(148, 180, 205, .012));
+  cursor: pointer;
+  overflow: hidden;
+  outline: none;
+  transition: border-color .18s ease, transform .18s ease, background-color .18s ease, box-shadow .18s ease;
+}
+
+.cell:hover,
+.cell:focus-visible {
+  border-color: rgba(111, 224, 242, .55);
+  transform: translateY(-2px);
+}
+
+.cell:focus-visible {
+  box-shadow: 0 0 0 2px rgba(111, 224, 242, .3);
+}
+
+/* 格内全息微光：conic 光泽随 hover 流转（transform 旋转，全浏览器可用） */
+.cell .glow {
+  position: absolute;
+  inset: -62%;
+  pointer-events: none;
+  opacity: 0;
+  background: conic-gradient(from 0deg,
+    transparent 0deg,
+    rgba(125, 227, 240, .17) 55deg,
+    rgba(231, 200, 255, .15) 105deg,
+    rgba(255, 214, 232, .13) 155deg,
+    transparent 215deg,
+    transparent 360deg);
+  transition: opacity .25s ease;
+}
+
+.cell:hover .glow,
+.cell:focus-visible .glow {
+  opacity: 1;
+  animation: glowSpin 3.4s linear infinite;
+}
+
+@keyframes glowSpin {
+  to { transform: rotate(360deg); }
+}
+
+.cell-top {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.dnum {
+  font: 500 15px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--txt);
+  letter-spacing: .04em;
+}
+
+/* 跨月置灰 */
+.cell.dim {
+  opacity: .34;
+}
+
+.cell.dim:hover {
+  opacity: .7;
+}
+
+/* 周末淡染 */
+.cell.wknd {
+  background: linear-gradient(180deg, rgba(242, 123, 184, .035), rgba(148, 180, 205, .012));
+}
+
+/* 节气日整格淡晕 */
+.cell.has-term {
+  background:
+    radial-gradient(130% 95% at 50% 0%, rgba(111, 224, 242, .085), transparent 62%),
+    linear-gradient(180deg, rgba(148, 180, 205, .045), rgba(148, 180, 205, .012));
+}
+
+/* 休 / 班 角标 */
+.badge {
+  flex: none;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  display: grid;
+  place-items: center;
+  font: 700 10px/1 var(--sans);
+  border-radius: 2px;
+  letter-spacing: 0;
+}
+
+.badge.rest {
+  color: var(--red);
+  border: 1px solid rgba(255, 143, 165, .55);
+  background: rgba(255, 143, 165, .08);
+}
+
+.badge.work-mark {
+  color: var(--cyan);
+  border: 1px solid rgba(111, 224, 242, .55);
+  background: rgba(111, 224, 242, .08);
+}
+
+/* 标注标签 */
+.tags {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.tag {
+  font: 500 10px/1.5 var(--sans);
+  letter-spacing: .06em;
+  padding: 0 5px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.tag.term {
+  color: var(--cyan);
+  border: 1px solid rgba(111, 224, 242, .4);
+  background: rgba(111, 224, 242, .06);
+}
+
+.tag.fest {
+  color: #F5A8CC;
+  border: 1px solid rgba(242, 123, 184, .45);
+  background: rgba(242, 123, 184, .08);
+}
+
+.tag.lunar {
+  font-family: var(--mono);
+  color: var(--txt-3);
+  border: 1px dashed var(--line-strong);
+  background: transparent;
+}
+
+/* 用户事件胶囊 */
+.evs {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 6px;
+}
+
+.ev {
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--txt-2);
+  padding: 1px 5px 1px 7px;
+  background: rgba(148, 180, 205, .06);
+  border-left: 2px solid var(--cat, var(--cyan));
+  border-radius: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ev em {
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--txt-3);
+  margin-right: 4px;
+}
+
+.ev-more {
+  font: 400 9px/1.4 var(--mono);
+  letter-spacing: .12em;
+  color: var(--txt-3);
+  padding-left: 2px;
+}
+
+/* ---------- 瞄准环「今天」标记（标志性瞬间） ---------- */
+.cell.today {
+  border-color: rgba(111, 224, 242, .42);
+  background:
+    radial-gradient(130% 95% at 50% 0%, rgba(111, 224, 242, .09), transparent 62%),
+    linear-gradient(180deg, rgba(148, 180, 205, .045), rgba(148, 180, 205, .012));
+}
+
+.cell.today .dnum {
+  color: var(--cyan);
+  font-weight: 700;
+}
+
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* 外环：青色虚线，12s 正转 */
+.ring.ro {
+  inset: -7px;
+  border: 1px dashed rgba(111, 224, 242, .68);
+  animation: ringRot 12s linear infinite;
+}
+
+/* 内环：粉色虚线，8s 反转（双环叠成瞄准环） */
+.ring.ri {
+  inset: -2px;
+  border: 1px dashed rgba(242, 123, 184, .62);
+  animation: ringRot 8s linear infinite reverse;
+}
+
+@keyframes ringRot {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* 锁定入场：环从中心弹出 */
+.cell.lock .ring.ro { animation: ringIn .5s cubic-bezier(.2, .9, .3, 1.15) .1s backwards, ringRot 12s linear infinite .6s; }
+.cell.lock .ring.ri { animation: ringIn .5s cubic-bezier(.2, .9, .3, 1.15) .2s backwards, ringRot 8s linear infinite reverse .7s; }
+
+@keyframes ringIn {
+  from { transform: scale(.3); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* 四角瞄准括号：从外向内收缩锁定今日格 */
+.bk {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  pointer-events: none;
+}
+
+.bk.k-tl { top: -6px; left: -6px; border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
+.bk.k-tr { top: -6px; right: -6px; border-top: 2px solid var(--cyan); border-right: 2px solid var(--cyan); }
+.bk.k-bl { bottom: -6px; left: -6px; border-bottom: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
+.bk.k-br { bottom: -6px; right: -6px; border-bottom: 2px solid var(--cyan); border-right: 2px solid var(--cyan); }
+
+.cell.lock .bk {
+  animation: bracketLock .55s cubic-bezier(.2, .85, .3, 1.1) backwards;
+}
+
+.cell.lock .bk.k-tl { animation-delay: 0s; }
+.cell.lock .bk.k-tr { animation-delay: .06s; }
+.cell.lock .bk.k-bl { animation-delay: .12s; }
+.cell.lock .bk.k-br { animation-delay: .18s; }
+
+@keyframes bracketLock {
+  from { transform: scale(2.7); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* 选中态 */
+.cell.sel {
+  border-color: var(--cyan);
+  box-shadow: inset 0 0 0 1px rgba(111, 224, 242, .35), 0 0 16px rgba(111, 224, 242, .12);
+}
+
+/* ---------- 侧栏：时间流 ---------- */
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.card {
+  position: relative;
+  background: linear-gradient(180deg, rgba(148, 180, 205, .05), rgba(148, 180, 205, .018));
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 15px 16px 14px;
+}
+
+.card h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font: 600 10px/1 var(--mono);
+  letter-spacing: .2em;
+  color: var(--cyan);
+  margin-bottom: 13px;
+}
+
+.card h3 .live {
+  color: var(--txt-3);
+  font-weight: 400;
+  letter-spacing: .14em;
+}
+
+.card h3 .live::before {
+  content: "◍ ";
+  color: var(--mint);
+}
+
+/* 实时时钟 */
+.clk {
+  font: 500 33px/1.1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .04em;
+  color: var(--txt);
+}
+
+.clk i {
+  font-style: normal;
+  color: var(--cyan);
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes blink {
+  50% { opacity: .25; }
+}
+
+.clk-sub {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font: 400 10px/1.5 var(--mono);
+  letter-spacing: .12em;
+  color: var(--txt-3);
+}
+
+.daybar {
+  margin-top: 11px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(160, 190, 210, .12);
+  overflow: hidden;
+}
+
+.daybar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  transition: width .8s ease;
+}
+
+/* 倒计时 */
+.cd-big {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.cd-big .n {
+  font: 600 40px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  background: var(--chrome);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.cd-big .u {
+  font-size: 13px;
+  color: var(--txt-2);
+}
+
+.cd-big .name {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--pink);
+  letter-spacing: .1em;
+}
+
+.cd-list {
+  list-style: none;
+  margin-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+
+.cd-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0 6px;
+  border-bottom: 1px dashed var(--line);
+  font-size: 12px;
+  color: var(--txt-2);
+}
+
+.cd-list .d {
+  font: 400 10px/1 var(--mono);
+  color: var(--cyan);
+  letter-spacing: .08em;
+}
+
+.cd-list .tag-ev {
+  margin-left: auto;
+  font: 400 10px/1 var(--mono);
+  color: var(--txt-3);
+  letter-spacing: .1em;
+}
+
+.cd-empty {
+  font: 400 11px/1.8 var(--mono);
+  color: var(--txt-3);
+  letter-spacing: .1em;
+}
+
+/* 今日时间轴 */
+.tline {
+  position: relative;
+  padding-left: 19px;
+  list-style: none;
+}
+
+.tline::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: linear-gradient(180deg, var(--cyan), rgba(148, 180, 205, .12));
+}
+
+.tline li {
+  position: relative;
+  padding: 5px 0 5px 6px;
+  font-size: 12px;
+  color: var(--txt-2);
+}
+
+.tline li::before {
+  content: "";
+  position: absolute;
+  left: -18px;
+  top: 12px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--cyan);
+}
+
+.tline li.sys::before {
+  border-color: var(--pink);
+}
+
+.tline .t {
+  font: 500 11px/1 var(--mono);
+  color: var(--cyan);
+  margin-right: 8px;
+  letter-spacing: .06em;
+}
+
+.tline li.sys .t {
+  color: var(--pink);
+}
+
+.tline .empty {
+  font: 400 11px/1.8 var(--mono);
+  color: var(--txt-3);
+  letter-spacing: .1em;
+}
+
+/* 每日一句：未来电文 */
+.feed {
+  border: 1px dashed rgba(111, 224, 242, .38);
+  border-radius: 4px;
+  padding: 12px 13px 11px;
+  background:
+    repeating-linear-gradient(0deg, rgba(111, 224, 242, .022) 0 1px, transparent 1px 4px),
+    rgba(111, 224, 242, .03);
+}
+
+.feed-head {
+  display: flex;
+  justify-content: space-between;
+  font: 400 9px/1 var(--mono);
+  letter-spacing: .2em;
+  color: var(--txt-3);
+  margin-bottom: 9px;
+}
+
+.feed-head b {
+  color: var(--pink);
+  font-weight: 400;
+}
+
+.feed p.q {
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--txt);
+  letter-spacing: .04em;
+}
+
+.feed p.sig {
+  margin-top: 9px;
+  font: 400 9px/1 var(--mono);
+  letter-spacing: .18em;
+  color: var(--txt-3);
+}
+
+/* ---------- 页脚：液态金属分割线 ---------- */
+.foot {
+  margin-top: 26px;
+}
+
+.divider {
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    #5B6068 14%,
+    #E8E8E8 32%,
+    #8A8F98 46%,
+    #E8E8E8 60%,
+    #5B6068 80%,
+    transparent);
+  background-size: 220% 100%;
+  animation: sheen 8s linear infinite;
+}
+
+@keyframes sheen {
+  from { background-position: 200% 0; }
+  to   { background-position: -100% 0; }
+}
+
+.foot-in {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 2px 22px;
+}
+
+.foot-in p {
+  font: 400 10px/1.8 var(--mono);
+  letter-spacing: .1em;
+  color: var(--txt-3);
+}
+
+.foot-in p b {
+  color: var(--mint);
+  font-weight: 400;
+}
+
+/* ---------- 事件面板（HUD 窗口） ---------- */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.modal.show {
+  display: flex;
+}
+
+.modal-back {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 10, .72);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+
+.modal-win {
+  position: relative;
+  width: min(440px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: linear-gradient(180deg, #12172233, #10141C), var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 18px 18px 16px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .6), 0 0 0 1px rgba(111, 224, 242, .06);
+  animation: winIn .28s cubic-bezier(.2, .9, .3, 1.1);
+}
+
+@keyframes winIn {
+  from { opacity: 0; transform: translateY(14px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+.mw-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.mw-head h4 {
+  font: 600 12px/1 var(--mono);
+  letter-spacing: .2em;
+  color: var(--cyan);
+}
+
+.mw-close {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  color: var(--txt-2);
+  font: 400 12px/1 var(--mono);
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease;
+}
+
+.mw-close:hover {
+  color: var(--red);
+  border-color: rgba(255, 143, 165, .5);
+}
+
+.mw-date {
+  font: 400 11px/1.7 var(--mono);
+  letter-spacing: .1em;
+  color: var(--txt-2);
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--line);
+  margin-bottom: 10px;
+}
+
+.mw-date b {
+  color: var(--pink);
+  font-weight: 400;
+}
+
+.ev-list {
+  list-style: none;
+  margin-bottom: 4px;
+}
+
+.ev-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 2px;
+  border-bottom: 1px dashed var(--line);
+  font-size: 12px;
+  color: var(--txt-2);
+}
+
+.ev-item .ev-time {
+  font: 500 10px/1 var(--mono);
+  color: var(--cyan);
+  min-width: 38px;
+  letter-spacing: .06em;
+}
+
+.ev-item .ev-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--cat, var(--cyan));
+}
+
+.ev-item .ev-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ev-del {
+  flex: none;
+  font: 400 10px/1 var(--mono);
+  letter-spacing: .12em;
+  color: var(--txt-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  padding: 4px 7px;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease;
+}
+
+.ev-del:hover {
+  color: var(--red);
+  border-color: rgba(255, 143, 165, .45);
+}
+
+.ev-list .none {
+  font: 400 11px/1.8 var(--mono);
+  color: var(--txt-3);
+  letter-spacing: .1em;
+  padding: 4px 0 8px;
+}
+
+/* 表单 */
+#evForm {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.frow {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 11px;
+}
+
+.frow label {
+  font-size: 11px;
+  letter-spacing: .16em;
+  color: var(--txt-2);
+}
+
+.frow input,
+.frow select {
+  background: rgba(6, 9, 14, .7);
+  border: 1px solid var(--line-strong);
+  color: var(--txt);
+  padding: 9px 10px;
+  border-radius: 3px;
+  font: 400 13px/1.4 var(--mono);
+  letter-spacing: .04em;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.frow input::placeholder {
+  color: #5A6470;
+}
+
+.frow input:focus,
+.frow select:focus {
+  outline: none;
+  border-color: rgba(111, 224, 242, .6);
+  box-shadow: 0 0 0 2px rgba(111, 224, 242, .16);
+}
+
+.frow select option {
+  background: var(--panel);
+  color: var(--txt);
+}
+
+.ferr {
+  min-height: 18px;
+  font-size: 12px;
+  color: var(--red);
+  letter-spacing: .04em;
+  margin: -2px 0 8px;
+}
+
+.ferr.ok {
+  color: var(--mint);
+}
+
+/* ---------- HUD 提示条 ---------- */
+.toast {
+  position: fixed;
+  top: 22px;
+  left: 50%;
+  transform: translate(-50%, -12px);
+  z-index: 95;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .16em;
+  color: var(--cyan);
+  background: rgba(10, 13, 18, .92);
+  border: 1px solid rgba(111, 224, 242, .45);
+  border-left-width: 3px;
+  padding: 10px 18px;
+  border-radius: 3px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---------- 无 JS 兜底 ---------- */
+.nojs {
+  max-width: 560px;
+  margin: 40px auto;
+  padding: 18px 22px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 6px;
+  color: var(--txt-2);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ============================================================
+   响应式：≥1200 / 768 / 375 三档
+   ============================================================ */
+@media (max-width: 1199px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .side {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .cell {
+    min-height: 78px;
+  }
+
+  .brand .film {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .app {
+    padding: 18px 16px 0;
+  }
+
+  .hud-c {
+    display: none;
+  }
+
+  .top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .top-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .view-tag {
+    display: none;
+  }
+
+  .mtitle h2 {
+    font-size: 22px;
+  }
+
+  .cell {
+    min-height: 64px;
+    padding: 5px 6px 5px;
+  }
+
+  .dnum {
+    font-size: 13px;
+  }
+
+  .wk i {
+    display: none;
+  }
+
+  .tag {
+    font-size: 9px;
+    padding: 0 4px;
+  }
+
+  .ev {
+    font-size: 9px;
+  }
+
+  .ev em {
+    display: none;
+  }
+
+  .badge {
+    min-width: 14px;
+    height: 14px;
+    font-size: 9px;
+  }
+
+  .grid {
+    gap: 4px;
+  }
+
+  .wkrow {
+    gap: 4px;
+  }
+
+  .ring.ro {
+    inset: -5px;
+  }
+
+  .ring.ri {
+    inset: -1px;
+  }
+
+  .bk {
+    width: 8px;
+    height: 8px;
+  }
+
+  .bk.k-tl, .bk.k-tr, .bk.k-bl, .bk.k-br {
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+  }
+
+  .bk.k-tl { top: -4px; left: -4px; }
+  .bk.k-tr { top: -4px; right: -4px; }
+  .bk.k-bl { bottom: -4px; left: -4px; }
+  .bk.k-br { bottom: -4px; right: -4px; }
+
+  .clk {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .side {
+    grid-template-columns: 1fr;
+  }
+
+  .mname {
+    letter-spacing: .14em;
+  }
+
+  .brand h1 {
+    font-size: 20px;
+  }
+
+  .brand .sub {
+    letter-spacing: .2em;
+  }
+
+  .cd-big .n {
+    font-size: 32px;
+  }
+
+  .btn {
+    padding: 8px 12px;
+  }
+}
+
+/* ---------- 375 级紧凑微调 ---------- */
+@media (max-width: 399px) {
+  .cell {
+    min-height: 58px;
+  }
+
+  .tags {
+    gap: 3px;
+  }
+
+  .evs {
+    display: none;
+  }
+
+  .cell.today .glow,
+  .cell:hover .glow {
+    opacity: .8;
+  }
+}
+
+/* ============================================================
+   降级：prefers-reduced-motion —— 全部动效定格
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  .scan,
+  #neuro {
+    display: none;
+  }
+
+  .blob {
+    animation: none !important;
+    opacity: .5;
+  }
+
+  .film,
+  .divider {
+    animation: none !important;
+  }
+
+  .ring.ro,
+  .ring.ri {
+    animation: none !important;
+  }
+
+  .readout::before,
+  .clk i {
+    animation: none !important;
+  }
+
+  .mgrid.out-l,
+  .mgrid.out-r,
+  .mgrid.in-l,
+  .mgrid.in-r {
+    animation: none !important;
+  }
+}
+
+/* 无 canvas 时的静态网格已由 body::before 兜底 */
+</style>
+</head>
+<body>
+
+<!-- 神经网格 canvas（60 节点硬顶；失败时仅剩 CSS 静态网格） -->
+<canvas id="neuro" aria-hidden="true"></canvas>
+
+<!-- 液态铬 blob 背景 -->
+<div class="blob b1" aria-hidden="true"></div>
+<div class="blob b2" aria-hidden="true"></div>
+
+<!-- 扫描微光 -->
+<div class="scan" aria-hidden="true"></div>
+
+<!-- HUD 视口角框（装饰层，不拦截点击） -->
+<div class="hud-c" aria-hidden="true">
+  <i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i>
+  <b class="h-tl">CHRONO·GRID</b>
+  <b class="h-tr">SYS.ONLINE</b>
+  <b class="h-bl">GRID.A-56PX</b>
+  <b class="h-br">Y3K.2026</b>
+</div>
+
+<!-- HUD 开机序列（1.5s，可点击跳过） -->
+<div class="boot" id="boot" role="dialog" aria-label="系统启动序列">
+  <i class="bc tl"></i><i class="bc tr"></i><i class="bc bl"></i><i class="bc br"></i>
+  <div class="boot-box">
+    <p class="boot-logo chrome-text">拾光历</p>
+    <p class="boot-tag">CHROMA-OS v3.0.26 // 拾光历核心</p>
+    <div class="boot-lines" id="bootLines">
+      <p>&gt; 内存自检 ............ <b>OK</b></p>
+      <p>&gt; 渲染管线 ............ <b>OK</b></p>
+      <p>&gt; 时间同步 [原子钟] ... <b>OK</b></p>
+      <p>&gt; 农历数据库 2026 ..... <b>已挂载</b></p>
+      <p class="final">&gt; 日历核心上线 // <b>CALENDAR CORE ONLINE</b></p>
+    </div>
+    <div class="boot-bar"><i id="bootFill"></i></div>
+    <p class="boot-skip">点击任意处跳过 [ SKIP ▸ ]</p>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- 顶栏 -->
+  <header class="top">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">◤◢</span>
+      <div>
+        <h1 class="chrome-text">拾光历</h1>
+        <p class="sub">CHRONO·GRID // Y3K EDITION</p>
+      </div>
+      <span class="film" aria-hidden="true"></span>
+    </div>
+    <div class="top-right">
+      <p class="readout" id="sysReadout">SYS // 正在同步时间线…</p>
+      <button class="btn" id="openTodayBtn" type="button">+ 写入事件</button>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <!-- 全息月历 -->
+    <section class="panel cal reveal" aria-label="全息月历">
+      <i class="cnr tl"></i><i class="cnr tr"></i><i class="cnr bl"></i><i class="cnr br"></i>
+
+      <div class="toolbar">
+        <button class="nav-btn" id="prevM" type="button" aria-label="上一月">‹</button>
+        <div class="mtitle">
+          <h2 class="chrome-text" id="mTitle">----</h2>
+          <span class="mname" id="mName">--</span>
+          <span class="film film-sm" aria-hidden="true"></span>
+        </div>
+        <button class="nav-btn" id="nextM" type="button" aria-label="下一月">›</button>
+        <span class="view-tag">月视图 // MONTH·GRID 7×6</span>
+        <button class="btn ghost" id="backTodayBtn" type="button">回到今日</button>
+      </div>
+
+      <div class="ruler" aria-hidden="true"></div>
+
+      <div class="wkrow" aria-hidden="true">
+        <div class="wk">一<i>01</i></div>
+        <div class="wk">二<i>02</i></div>
+        <div class="wk">三<i>03</i></div>
+        <div class="wk">四<i>04</i></div>
+        <div class="wk">五<i>05</i></div>
+        <div class="wk wknd">六<i>06</i></div>
+        <div class="wk wknd">日<i>07</i></div>
+      </div>
+
+      <div class="grid mgrid" id="grid" aria-label="日期网格"></div>
+    </section>
+
+    <!-- 侧栏：时间流 -->
+    <aside class="side">
+
+      <section class="card reveal" aria-label="实时时间流">
+        <i class="cnr tl"></i><i class="cnr br"></i>
+        <h3>时间流 // TIME STREAM <span class="live">LIVE</span></h3>
+        <p class="clk" id="clk" aria-live="off">--<i>:</i>--<i>:</i>--</p>
+        <div class="clk-sub">
+          <span id="clkDate">----</span>
+          <span id="clkPct">DAY --.-%</span>
+        </div>
+        <div class="daybar"><i id="dayFill"></i></div>
+      </section>
+
+      <section class="card reveal" aria-label="倒计时">
+        <i class="cnr tr"></i><i class="cnr bl"></i>
+        <h3>倒计时 // COUNTDOWN <span class="live">SYNC</span></h3>
+        <div class="cd-big">
+          <span class="n" id="cdNum">--</span>
+          <span class="u" id="cdUnit">天</span>
+          <span class="name" id="cdName">--</span>
+        </div>
+        <ul class="cd-list" id="cdList"></ul>
+      </section>
+
+      <section class="card reveal" aria-label="今日时间轴">
+        <i class="cnr tl"></i><i class="cnr br"></i>
+        <h3>今日时间轴 // AGENDA <span class="live">T-0</span></h3>
+        <ul class="tline" id="tline"></ul>
+      </section>
+
+      <section class="card reveal" aria-label="每日一句">
+        <i class="cnr tr"></i><i class="cnr bl"></i>
+        <h3>每日一句 // DAILY FEED</h3>
+        <div class="feed">
+          <p class="feed-head"><span>◤ INCOMING · 未来电文</span><b>CH.<span id="feedCh">--</span></b></p>
+          <p class="q" id="feedQ">--</p>
+          <p class="sig">SIG ▮▮▮▮▯ · 已解密 · <span id="feedDate">--</span></p>
+        </div>
+      </section>
+
+    </aside>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="foot">
+    <div class="divider" aria-hidden="true"></div>
+    <div class="foot-in">
+      <p><b>SYS.OK</b> // SHIGUANG·CHRONO BUILD 2026.09</p>
+      <p>农历 / 节气 / 节假日为 2026 内置数据 · 换算仅供参考 · 调休安排以国务院公告为准</p>
+      <p>© 2026 拾光历 CHRONO·GRID // Y3K</p>
+    </div>
+  </footer>
+
+</div>
+
+<!-- 事件面板 -->
+<div class="modal" id="modal" aria-hidden="true">
+  <div class="modal-back" id="modalBack"></div>
+  <div class="modal-win" role="dialog" aria-modal="true" aria-labelledby="mwTitle">
+    <i class="cnr tl"></i><i class="cnr tr"></i><i class="cnr bl"></i><i class="cnr br"></i>
+    <div class="mw-head">
+      <h4 id="mwTitle">事件写入 // EVENT INJECT</h4>
+      <button class="mw-close" id="mwClose" type="button" aria-label="关闭面板">✕</button>
+    </div>
+    <p class="mw-date" id="mwDate">--</p>
+    <ul class="ev-list" id="evList"></ul>
+    <form id="evForm" novalidate>
+      <div class="frow">
+        <label for="evTitle">标题 ＊</label>
+        <input id="evTitle" type="text" maxlength="24" placeholder="例：产品评审会 · 3F 会议室" autocomplete="off">
+      </div>
+      <div class="frow">
+        <label for="evTime">时间</label>
+        <input id="evTime" type="text" maxlength="5" placeholder="HH:MM（留空 = 全天）" autocomplete="off">
+      </div>
+      <div class="frow">
+        <label for="evCat">分类</label>
+        <select id="evCat">
+          <option value="work">工作</option>
+          <option value="life">生活</option>
+          <option value="study">学习</option>
+          <option value="mem">纪念</option>
+        </select>
+      </div>
+      <p class="ferr" id="evErr" role="alert"></p>
+      <button class="btn wide" type="submit">写入时间线 ▸</button>
+    </form>
+  </div>
+</div>
+
+<!-- HUD 提示条 -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<noscript>
+  <p class="nojs">拾光历需要启用 JavaScript 才能渲染时间线与全息月历。<br>请在浏览器设置中允许脚本后刷新。</p>
+</noscript>
+
+<script>
+(function () {
+  'use strict';
+
+  document.documentElement.classList.add('js');
+
+  var reduceMotion = false;
+  try {
+    reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch (e) { reduceMotion = false; }
+
+  /* ============ 工具 ============ */
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function ymd(y, m, d) { return y + '-' + pad(m) + '-' + pad(d); }
+  function addDays(date, n) { var c = new Date(date.getTime()); c.setDate(c.getDate() + n); return c; }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* ============ 2026 内置数据（来源：调研文档第六节） ============ */
+  /* 法定节假日（休）与公历纪念日 */
+  var HOLIDAYS_2026 = {
+    '2026-01-01': { name: '元旦', rest: true },
+    '2026-02-16': { name: '除夕', rest: true },
+    '2026-02-17': { name: '春节', rest: true },
+    '2026-03-08': { name: '妇女节', rest: false },
+    '2026-04-05': { name: '清明节', rest: true },
+    '2026-05-01': { name: '劳动节', rest: true },
+    '2026-06-01': { name: '儿童节', rest: false },
+    '2026-09-10': { name: '教师节', rest: false },
+    '2026-10-01': { name: '国庆节', rest: true },
+    '2026-12-25': { name: '圣诞节', rest: false }
+  };
+
+  /* 二十四节气（2026，±1 日） */
+  var SOLAR_TERMS_2026 = {
+    '2026-02-04': '立春', '2026-02-19': '雨水',
+    '2026-03-05': '惊蛰', '2026-03-20': '春分', '2026-04-05': '清明', '2026-04-20': '谷雨',
+    '2026-05-05': '立夏', '2026-05-21': '小满', '2026-06-06': '芒种', '2026-06-21': '夏至',
+    '2026-07-07': '小暑', '2026-07-23': '大暑',
+    '2026-08-07': '立秋', '2026-08-23': '处暑',
+    '2026-09-08': '白露', '2026-09-23': '秋分',
+    '2026-10-08': '寒露', '2026-10-23': '霜降',
+    '2026-11-07': '立冬', '2026-11-22': '小雪',
+    '2026-12-07': '大雪', '2026-12-22': '冬至'
+  };
+
+  /* 农历节日（2026） */
+  var LUNAR_FESTIVALS_2026 = {
+    '2026-02-17': '春节', '2026-03-03': '元宵节', '2026-06-19': '端午节',
+    '2026-08-19': '七夕', '2026-09-25': '中秋节', '2026-10-18': '重阳节'
+  };
+
+  /* 农历月名（初一日期 → 月名，2026 丙午年置闰六月；跨年腊月供 12 月网格溢出格使用） */
+  var LUNAR_MONTH_STARTS = {
+    '2026-02-17': '正月', '2026-03-19': '二月', '2026-04-17': '三月', '2026-05-17': '四月',
+    '2026-06-15': '五月', '2026-07-15': '闰六月', '2026-08-13': '七月', '2026-09-11': '八月',
+    '2026-10-10': '九月', '2026-11-09': '十月', '2026-12-08': '冬月', '2027-01-07': '腊月'
+  };
+
+  /* 每日一句（8 条，按年积日取模轮换） */
+  var QUOTES = [
+    '把日子过成日历，一页一页，皆是收成。',
+    '时间不语，却回答了所有问题。',
+    '今日宜：把想做的事，做成今天的事。',
+    '撕去的是纸，留下的是经历。',
+    '节气不催人，人自赶路。',
+    '所有的明天，都会准时抵达。',
+    '认真记下的一天，才算真正来过。',
+    '翻页之间，春天就近了一格。'
+  ];
+
+  var CATS = {
+    work: { n: '工作', c: '#6FE0F2' },
+    life: { n: '生活', c: '#8FD8C0' },
+    study: { n: '学习', c: '#A78BFA' },
+    mem:  { n: '纪念', c: '#F27BB8' }
+  };
+
+  var WEEK_CN = ['一', '二', '三', '四', '五', '六', '日'];
+  var MONTH_CN = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+
+  /* ============ 状态 ============ */
+  var today = new Date();
+  var todayKey = ymd(today.getFullYear(), today.getMonth() + 1, today.getDate());
+  var state = {
+    y: today.getFullYear(),
+    m: today.getMonth() + 1,
+    sel: null,
+    lock: false
+  };
+
+  /* ============ 事件存储：localStorage ============ */
+  var LS_KEY = 'y3k_chrono_events_v1';
+  var events = loadEvents();
+
+  function loadEvents() {
+    var raw = null;
+    try { raw = localStorage.getItem(LS_KEY); } catch (e) { raw = null; }
+    if (raw !== null) {
+      try {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') { return parsed; }
+      } catch (e) { /* 数据损坏，回落种子 */ }
+    }
+    /* 首次访问：写入示例事件（调研文档第二节示例文案） */
+    var seed = {
+      '2026-09-08': [
+        { id: 's1', t: '产品评审会 · 3F 会议室', time: '09:30', cat: 'work' },
+        { id: 's2', t: '健身 · 腿日硬拉 5×5', time: '19:30', cat: 'life' }
+      ],
+      '2026-09-10': [
+        { id: 's3', t: '提交周报 + 下周排期', time: '22:00', cat: 'work' }
+      ],
+      '2026-09-25': [
+        { id: 's4', t: '中秋家宴 · 提前订花', time: '', cat: 'mem' }
+      ],
+      '2026-10-01': [
+        { id: 's5', t: '国庆出行 · 值机确认', time: '08:00', cat: 'life' }
+      ]
+    };
+    saveEvents(seed);
+    return seed;
+  }
+
+  function saveEvents(obj) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(obj || events)); } catch (e) { /* 隐私模式忽略 */ }
+  }
+
+  /* ============ 全息月历渲染 ============ */
+  var grid = $('#grid');
+  var mTitle = $('#mTitle');
+  var mName = $('#mName');
+
+  function buildCell(date) {
+    var y = date.getFullYear();
+    var m = date.getMonth() + 1;
+    var d = date.getDate();
+    var key = ymd(y, m, d);
+    var dow = (date.getDay() + 6) % 7; /* 周一 = 0 */
+    var isToday = key === todayKey;
+    var dim = m !== state.m;
+    var cls = 'cell';
+    if (dim) { cls += ' dim'; }
+    if (dow >= 5) { cls += ' wknd'; }
+    if (isToday) { cls += ' today'; }
+    if (key === state.sel) { cls += ' sel'; }
+
+    var term = SOLAR_TERMS_2026[key] || null;
+    var hol = HOLIDAYS_2026[key] || null;
+    var fest = LUNAR_FESTIVALS_2026[key] || null;
+    if (term && hol && (hol.name.indexOf(term) > -1 || term.indexOf(hol.name) > -1)) {
+      term = null; /* 清明节 = 清明，去重 */
+    }
+    if (fest && hol && hol.name === fest) {
+      fest = null; /* 春节在节假日表中已标注 */
+    }
+    if (term) { cls += ' has-term'; }
+    if (isToday && !reduceMotion) { cls += ' lock'; }
+
+    var label = (m + '月' + d + '日 星期' + WEEK_CN[dow]);
+    if (term) { label += ' ' + term; }
+    if (hol) { label += ' ' + hol.name + (hol.rest ? '（休）' : ''); }
+    if (fest) { label += ' ' + fest; }
+
+    var html = '<div class="' + cls + '" data-date="' + key + '" tabindex="0" role="button" aria-label="' + escapeHtml(label) + '">';
+
+    /* 瞄准环 + 瞄准括号（仅今日） */
+    if (isToday) {
+      html += '<span class="ring ro" aria-hidden="true"></span><span class="ring ri" aria-hidden="true"></span>';
+      html += '<span class="bk k-tl" aria-hidden="true"></span><span class="bk k-tr" aria-hidden="true"></span>';
+      html += '<span class="bk k-bl" aria-hidden="true"></span><span class="bk k-br" aria-hidden="true"></span>';
+    }
+
+    /* 格内全息微光 */
+    html += '<span class="glow" aria-hidden="true"></span>';
+
+    html += '<div class="cell-top"><span class="dnum">' + pad(d) + '</span>';
+    if (hol && hol.rest) {
+      html += '<span class="badge rest">休</span>';
+    }
+    html += '</div>';
+
+    /* 标注层：节假日 > 农历节日 > 节气 > 农历月名（初一） */
+    var tags = '';
+    if (hol) { tags += '<span class="tag fest">' + escapeHtml(hol.name) + '</span>'; }
+    if (fest) { tags += '<span class="tag fest">' + escapeHtml(fest) + '</span>'; }
+    if (term) { tags += '<span class="tag term">' + escapeHtml(term) + '</span>'; }
+    if (!tags && LUNAR_MONTH_STARTS[key]) {
+      tags += '<span class="tag lunar">' + escapeHtml(LUNAR_MONTH_STARTS[key]) + '初一</span>';
+    }
+    if (tags) { html += '<div class="tags">' + tags + '</div>'; }
+
+    /* 用户事件（最多 2 条 + 溢出计数） */
+    var list = (events[key] || []).slice().sort(function (a, b) {
+      var ta = a.time || '00:00';
+      var tb = b.time || '00:00';
+      if (ta === '' && tb !== '') { return -1; }
+      if (tb === '' && ta !== '') { return 1; }
+      return ta < tb ? -1 : (ta > tb ? 1 : 0);
+    });
+    if (list.length) {
+      html += '<div class="evs">';
+      var shown = Math.min(2, list.length);
+      for (var i = 0; i < shown; i++) {
+        var ev = list[i];
+        var cat = CATS[ev.cat] || CATS.work;
+        html += '<span class="ev" style="--cat:' + cat.c + '">';
+        if (ev.time) { html += '<em>' + escapeHtml(ev.time) + '</em>'; }
+        html += escapeHtml(ev.t) + '</span>';
+      }
+      if (list.length > 2) {
+        html += '<span class="ev-more">+' + (list.length - 2) + ' 项 // MORE</span>';
+      }
+      html += '</div>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  function render(dir) {
+    var first = new Date(state.y, state.m - 1, 1);
+    var shift = (first.getDay() + 6) % 7;
+    var cursor = addDays(first, -shift);
+    var html = '';
+    for (var i = 0; i < 42; i++) {
+      html += buildCell(cursor);
+      cursor = addDays(cursor, 1);
+    }
+    grid.innerHTML = html;
+
+    mTitle.textContent = state.y + ' / ' + pad(state.m);
+    mName.textContent = MONTH_CN[state.m - 1];
+    if (dir && !reduceMotion) {
+      scramble(mTitle, state.y + ' / ' + pad(state.m));
+    }
+  }
+
+  /* 读数乱码刷新（HUD 数据流质感） */
+  function scramble(el, txt) {
+    if (reduceMotion || !el) { return; }
+    var chars = '01░▒│◢◤/·';
+    var step = 0;
+    var timer = setInterval(function () {
+      step += 2;
+      var out = '';
+      for (var i = 0; i < txt.length; i++) {
+        out += i < step ? txt.charAt(i) : chars[(Math.random() * chars.length) | 0];
+      }
+      el.textContent = out;
+      if (step >= txt.length) {
+        clearInterval(timer);
+        el.textContent = txt;
+      }
+    }, 28);
+  }
+
+  /* 切月：全息滑动（数据流闪断帧） */
+  function switchMonth(delta) {
+    if (state.lock) { return; }
+    var next = new Date(state.y, state.m - 1 + delta, 1);
+    state.y = next.getFullYear();
+    state.m = next.getMonth() + 1;
+
+    if (reduceMotion) {
+      render(0);
+      return;
+    }
+
+    state.lock = true;
+    var outCls = delta > 0 ? 'out-l' : 'out-r';
+    var inCls = delta > 0 ? 'in-l' : 'in-r';
+    grid.classList.add(outCls);
+
+    window.setTimeout(function () {
+      render(delta);
+      grid.classList.remove(outCls);
+      grid.classList.add(inCls);
+      window.setTimeout(function () {
+        grid.classList.remove(inCls);
+        state.lock = false;
+      }, 300);
+    }, 190);
+  }
+
+  function backToToday() {
+    if (state.lock) { return; }
+    var dir = 0;
+    if (state.y !== today.getFullYear() || state.m !== today.getMonth() + 1) {
+      dir = (state.y * 12 + state.m) < (today.getFullYear() * 12 + today.getMonth() + 1) ? 1 : -1;
+    }
+    state.y = today.getFullYear();
+    state.m = today.getMonth() + 1;
+    if (dir && !reduceMotion) {
+      state.lock = true;
+      grid.classList.add('out-r');
+      window.setTimeout(function () {
+        render(dir);
+        grid.classList.remove('out-r');
+        grid.classList.add('in-l');
+        window.setTimeout(function () {
+          grid.classList.remove('in-l');
+          state.lock = false;
+        }, 300);
+      }, 190);
+    } else {
+      render(0);
+    }
+  }
+
+  /* ============ 实时时钟 + 日进度 ============ */
+  var clk = $('#clk');
+  var clkDate = $('#clkDate');
+  var clkPct = $('#clkPct');
+  var dayFill = $('#dayFill');
+  var sysReadout = $('#sysReadout');
+
+  function tickClock() {
+    var n = new Date();
+    var h = n.getHours();
+    var mi = n.getMinutes();
+    var s = n.getSeconds();
+    clk.innerHTML = pad(h) + '<i>:</i>' + pad(mi) + '<i>:</i>' + pad(s);
+    var pct = (h * 3600 + mi * 60 + s) / 864;
+    clkPct.textContent = 'DAY ' + pct.toFixed(1) + '%';
+    dayFill.style.width = pct + '%';
+    if (n.getDate() !== today.getDate() || n.getMonth() !== today.getMonth()) {
+      /* 跨日：刷新今日基准 */
+      today = n;
+      todayKey = ymd(today.getFullYear(), today.getMonth() + 1, today.getDate());
+      render(0);
+      renderSidebar();
+    }
+  }
+
+  function updateReadout() {
+    var n = new Date();
+    var txt = 'SYS // ' + ymd(n.getFullYear(), n.getMonth() + 1, n.getDate()) + ' · 星期' + WEEK_CN[(n.getDay() + 6) % 7];
+    sysReadout.textContent = txt;
+  }
+
+  /* ============ 倒计时 ============ */
+  function buildUpcoming() {
+    var list = [];
+    var base = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    function push(key, name, kind) {
+      var parts = key.split('-');
+      var dt = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+      var diff = Math.round((dt - base) / 86400000);
+      if (diff >= 0) { list.push({ key: key, name: name, diff: diff, kind: kind }); }
+    }
+    Object.keys(HOLIDAYS_2026).forEach(function (k) { push(k, HOLIDAYS_2026[k].name, 'hol'); });
+    Object.keys(LUNAR_FESTIVALS_2026).forEach(function (k) {
+      if (!HOLIDAYS_2026[k]) { push(k, LUNAR_FESTIVALS_2026[k], 'fest'); }
+    });
+    Object.keys(SOLAR_TERMS_2026).forEach(function (k) { push(k, SOLAR_TERMS_2026[k], 'term'); });
+    Object.keys(events).forEach(function (k) {
+      (events[k] || []).forEach(function (ev) { push(k, ev.t, 'ev'); });
+    });
+    list.sort(function (a, b) {
+      if (a.diff !== b.diff) { return a.diff - b.diff; }
+      return a.kind === 'ev' ? -1 : 1;
+    });
+    return list;
+  }
+
+  function renderCountdown() {
+    var num = $('#cdNum');
+    var unit = $('#cdUnit');
+    var name = $('#cdName');
+    var listEl = $('#cdList');
+    var up = buildUpcoming();
+
+    if (!up.length) {
+      num.textContent = '--';
+      unit.textContent = '';
+      name.textContent = '数据已归档';
+      listEl.innerHTML = '';
+      return;
+    }
+
+    var top = up[0];
+    num.textContent = top.diff === 0 ? '0' : String(top.diff);
+    unit.textContent = '天';
+    name.textContent = top.name;
+
+    var html = '';
+    for (var i = 1; i < Math.min(4, up.length); i++) {
+      var it = up[i];
+      html += '<li><span class="d">' + it.key.slice(5).replace('-', '/') + '</span>'
+        + '<span>' + escapeHtml(it.name.length > 9 ? it.name.slice(0, 9) + '…' : it.name) + '</span>'
+        + '<span class="tag-ev">' + (it.diff === 0 ? '今天' : 'T-' + it.diff) + '</span></li>';
+    }
+    listEl.innerHTML = html;
+  }
+
+  /* ============ 今日时间轴 ============ */
+  function renderTimeline() {
+    var el = $('#tline');
+    var items = [];
+    var key = todayKey;
+
+    var term = SOLAR_TERMS_2026[key];
+    if (term) { items.push({ t: '节气', name: term + ' · 系统标记', sys: true }); }
+    var hol = HOLIDAYS_2026[key];
+    if (hol) { items.push({ t: '公告', name: hol.name + (hol.rest ? ' · 休' : ''), sys: true }); }
+    var fest = LUNAR_FESTIVALS_2026[key];
+    if (fest && (!hol || hol.name !== fest)) { items.push({ t: '农历', name: fest, sys: true }); }
+    if (LUNAR_MONTH_STARTS[key]) { items.push({ t: '农历', name: LUNAR_MONTH_STARTS[key] + '初一 · 新月开启', sys: true }); }
+
+    (events[key] || []).slice().sort(function (a, b) {
+      var ta = a.time || '';
+      var tb = b.time || '';
+      if (ta === '' && tb !== '') { return -1; }
+      if (tb === '' && ta !== '') { return 1; }
+      return ta < tb ? -1 : (ta > tb ? 1 : 0);
+    }).forEach(function (ev) {
+      var cat = CATS[ev.cat] || CATS.work;
+      items.push({ t: ev.time || '全天', name: ev.t + ' · ' + cat.n, sys: false });
+    });
+
+    if (!items.length) {
+      el.innerHTML = '<li class="empty">&gt; 时间线空闲 · 等待写入_</li>';
+      return;
+    }
+
+    var html = '';
+    items.forEach(function (it) {
+      html += '<li' + (it.sys ? ' class="sys"' : '') + '><span class="t">' + escapeHtml(it.t) + '</span>' + escapeHtml(it.name) + '</li>';
+    });
+    el.innerHTML = html;
+  }
+
+  /* ============ 每日一句（未来电文） ============ */
+  function renderFeed() {
+    var doy = Math.floor((new Date(today.getFullYear(), today.getMonth(), today.getDate()) - new Date(today.getFullYear(), 0, 0)) / 86400000);
+    $('#feedQ').textContent = '「' + QUOTES[doy % QUOTES.length] + '」';
+    $('#feedCh').textContent = pad((doy % 24) + 1);
+    $('#feedDate').textContent = todayKey.replace(/-/g, '.');
+  }
+
+  function renderSidebar() {
+    renderCountdown();
+    renderTimeline();
+    renderFeed();
+  }
+
+  /* ============ 事件面板 ============ */
+  var modal = $('#modal');
+  var evList = $('#evList');
+  var mwDate = $('#mwDate');
+  var evErr = $('#evErr');
+  var evTitle = $('#evTitle');
+  var evTime = $('#evTime');
+  var evCat = $('#evCat');
+
+  function panelDateInfo(key) {
+    var parts = key.split('-');
+    var dt = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+    var txt = key + ' · 星期' + WEEK_CN[(dt.getDay() + 6) % 7];
+    var marks = [];
+    if (SOLAR_TERMS_2026[key]) { marks.push(SOLAR_TERMS_2026[key]); }
+    if (HOLIDAYS_2026[key]) { marks.push(HOLIDAYS_2026[key].name); }
+    if (LUNAR_FESTIVALS_2026[key] && marks.indexOf(LUNAR_FESTIVALS_2026[key]) === -1) { marks.push(LUNAR_FESTIVALS_2026[key]); }
+    if (marks.length) { txt += ' · <b>' + escapeHtml(marks.join(' / ')) + '</b>'; }
+    return txt;
+  }
+
+  function openPanel(key) {
+    state.sel = key;
+    $all('.cell', grid).forEach(function (c) {
+      c.classList.toggle('sel', c.getAttribute('data-date') === key);
+    });
+    mwDate.innerHTML = panelDateInfo(key);
+    evErr.textContent = '';
+    evErr.classList.remove('ok');
+    renderEvList(key);
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    window.setTimeout(function () { evTitle.focus(); }, 60);
+  }
+
+  function closeModal() {
+    if (!modal.classList.contains('show')) { return; }
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+    state.sel = null;
+    $all('.cell.sel', grid).forEach(function (c) { c.classList.remove('sel'); });
+  }
+
+  function renderEvList(key) {
+    var list = events[key] || [];
+    if (!list.length) {
+      evList.innerHTML = '<li class="none">&gt; 该日期无写入记录 // EMPTY</li>';
+      return;
+    }
+    var html = '';
+    list.forEach(function (ev) {
+      var cat = CATS[ev.cat] || CATS.work;
+      html += '<li class="ev-item">'
+        + '<span class="ev-time">' + (ev.time ? escapeHtml(ev.time) : '全天') + '</span>'
+        + '<span class="ev-dot" style="--cat:' + cat.c + '"></span>'
+        + '<span class="ev-name">' + escapeHtml(ev.t) + ' · ' + cat.n + '</span>'
+        + '<button class="ev-del" type="button" data-id="' + escapeHtml(ev.id) + '">抹除</button>'
+        + '</li>';
+    });
+    evList.innerHTML = html;
+  }
+
+  /* 提交写入（含校验） */
+  $('#evForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!state.sel) { return; }
+    var title = evTitle.value.trim();
+    var time = evTime.value.trim();
+    var cat = evCat.value;
+
+    if (!title || title.length > 24) {
+      evErr.textContent = '⚠ 校验失败：标题为必填项（1–24 字）';
+      evErr.classList.remove('ok');
+      evTitle.focus();
+      return;
+    }
+    if (time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+      evErr.textContent = '⚠ 校验失败：时间格式应为 HH:MM（24 小时制）';
+      evErr.classList.remove('ok');
+      evTime.focus();
+      return;
+    }
+
+    if (!events[state.sel]) { events[state.sel] = []; }
+    events[state.sel].push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      t: title,
+      time: time,
+      cat: cat
+    });
+    saveEvents();
+    renderEvList(state.sel);
+    render(0);
+    renderSidebar();
+    evErr.textContent = '✓ 已写入时间线 // ' + state.sel;
+    evErr.classList.add('ok');
+    toast('信号已写入 // ' + state.sel);
+    evTitle.value = '';
+    evTime.value = '';
+    evTitle.focus();
+  });
+
+  /* 抹除（事件委托） */
+  evList.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('.ev-del') : null;
+    if (!btn || !state.sel) { return; }
+    var id = btn.getAttribute('data-id');
+    events[state.sel] = (events[state.sel] || []).filter(function (ev) { return ev.id !== id; });
+    if (!events[state.sel].length) { delete events[state.sel]; }
+    saveEvents();
+    renderEvList(state.sel);
+    render(0);
+    renderSidebar();
+    toast('记录已抹除 // PURGED');
+  });
+
+  /* ============ HUD 提示条 ============ */
+  var toastEl = $('#toast');
+  var toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = '▸ ' + msg;
+    toastEl.classList.add('show');
+    if (toastTimer) { window.clearTimeout(toastTimer); }
+    toastTimer = window.setTimeout(function () { toastEl.classList.remove('show'); }, 1800);
+  }
+
+  /* ============ 交互绑定 ============ */
+  $('#prevM').addEventListener('click', function () { switchMonth(-1); });
+  $('#nextM').addEventListener('click', function () { switchMonth(1); });
+  $('#backTodayBtn').addEventListener('click', backToToday);
+  $('#openTodayBtn').addEventListener('click', function () { openPanel(todayKey); });
+
+  grid.addEventListener('click', function (e) {
+    var cell = e.target.closest ? e.target.closest('.cell') : null;
+    if (cell && cell.getAttribute('data-date')) { openPanel(cell.getAttribute('data-date')); }
+  });
+
+  grid.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') { return; }
+    var cell = e.target.closest ? e.target.closest('.cell') : null;
+    if (cell && cell.getAttribute('data-date')) {
+      e.preventDefault();
+      openPanel(cell.getAttribute('data-date'));
+    }
+  });
+
+  $('#mwClose').addEventListener('click', closeModal);
+  $('#modalBack').addEventListener('click', closeModal);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { closeModal(); return; }
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'select' || tag === 'textarea') { return; }
+    if (modal.classList.contains('show')) { return; }
+    if (e.key === 'ArrowLeft') { switchMonth(-1); }
+    if (e.key === 'ArrowRight') { switchMonth(1); }
+  });
+
+  /* ============ HUD 开机序列（1.5s，可跳过） ============ */
+  var boot = $('#boot');
+  var booted = false;
+
+  function dismissBoot() {
+    if (booted || !boot) { return; }
+    booted = true;
+    boot.classList.add('off');
+    document.body.classList.add('booted');
+    lockTodayCell();
+    window.setTimeout(function () {
+      if (boot.parentNode) { boot.parentNode.removeChild(boot); }
+    }, 460);
+  }
+
+  function lockTodayCell() {
+    /* 标志性瞬间：四角括号收缩 + 双环旋出，锁定今日格 */
+    var cell = $('.cell.today', grid);
+    if (!cell) { return; }
+    if (reduceMotion) { return; } /* 降级：静态瞄准环已渲染 */
+    cell.classList.add('lock');
+  }
+
+  if (boot) {
+    var bootLines = $all('#bootLines p');
+    var fill = $('#bootFill');
+    if (reduceMotion) {
+      bootLines.forEach(function (p) { p.classList.add('on'); });
+      if (fill) { fill.style.width = '100%'; }
+      window.setTimeout(dismissBoot, 550);
+    } else {
+      bootLines.forEach(function (p, i) {
+        window.setTimeout(function () { p.classList.add('on'); }, 130 + i * 205);
+      });
+      if (fill) { fill.classList.add('run'); }
+      window.setTimeout(dismissBoot, 1600);
+    }
+    boot.addEventListener('click', dismissBoot);
+    window.setTimeout(function () {
+      document.addEventListener('keydown', function onKey() {
+        dismissBoot();
+        document.removeEventListener('keydown', onKey);
+      });
+    }, 200);
+  } else {
+    document.body.classList.add('booted');
+  }
+
+  /* ============ 滚动显现 ============ */
+  (function initReveal() {
+    var els = $all('.reveal');
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+      els.forEach(function (el) { el.classList.add('in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: .12 });
+    els.forEach(function (el, i) {
+      el.style.transitionDelay = (i % 5) * 70 + 'ms';
+      io.observe(el);
+    });
+  })();
+
+  /* ============ 神经网格 canvas（60 节点硬顶，单 rAF） ============ */
+  (function initNeuro() {
+    var cv = $('#neuro');
+    if (!cv || !cv.getContext || reduceMotion) { return; }
+    var ctx = cv.getContext('2d');
+    if (!ctx) { return; }
+
+    var W = 0, H = 0, dpr = 1;
+    var nodes = [];
+    var mouse = { x: -9999, y: -9999 };
+    var LINK = 116, CUR = 132;
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = window.innerWidth;
+      H = window.innerHeight;
+      cv.width = Math.floor(W * dpr);
+      cv.height = Math.floor(H * dpr);
+      cv.style.width = W + 'px';
+      cv.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var count = Math.max(26, Math.min(60, Math.round(W * H / 26000)));
+      nodes = [];
+      for (var i = 0; i < count; i++) {
+        nodes.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          vx: (Math.random() - .5) * .2,
+          vy: (Math.random() - .5) * .2,
+          r: 1 + Math.random() * 1.5,
+          ph: Math.random() * Math.PI * 2
+        });
+      }
+    }
+
+    window.addEventListener('resize', resize);
+    window.addEventListener('pointermove', function (e) {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+    window.addEventListener('pointerleave', function () {
+      mouse.x = -9999;
+      mouse.y = -9999;
+    });
+
+    function frame(t) {
+      if (document.hidden) {
+        window.requestAnimationFrame(frame);
+        return;
+      }
+      ctx.clearRect(0, 0, W, H);
+      var i, j, a, b, dx, dy, dist, alpha;
+
+      for (i = 0; i < nodes.length; i++) {
+        a = nodes[i];
+        a.x += a.vx;
+        a.y += a.vy;
+        if (a.x < -8) { a.x = W + 8; }
+        if (a.x > W + 8) { a.x = -8; }
+        if (a.y < -8) { a.y = H + 8; }
+        if (a.y > H + 8) { a.y = -8; }
+      }
+
+      /* 节点连线 */
+      for (i = 0; i < nodes.length; i++) {
+        for (j = i + 1; j < nodes.length; j++) {
+          a = nodes[i];
+          b = nodes[j];
+          dx = a.x - b.x;
+          dy = a.y - b.y;
+          dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < LINK) {
+            alpha = (1 - dist / LINK) * .1;
+            ctx.strokeStyle = 'rgba(148,190,214,' + alpha.toFixed(3) + ')';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      /* 指针 120px 内连线提亮 */
+      for (i = 0; i < nodes.length; i++) {
+        a = nodes[i];
+        dx = a.x - mouse.x;
+        dy = a.y - mouse.y;
+        dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < CUR) {
+          alpha = (1 - dist / CUR) * .34;
+          ctx.strokeStyle = 'rgba(111,224,242,' + alpha.toFixed(3) + ')';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(mouse.x, mouse.y);
+          ctx.stroke();
+        }
+      }
+
+      /* 节点呼吸微光 */
+      for (i = 0; i < nodes.length; i++) {
+        a = nodes[i];
+        var glow = .22 + .14 * Math.sin(t / 900 + a.ph);
+        ctx.fillStyle = 'rgba(170,208,226,' + glow.toFixed(3) + ')';
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      window.requestAnimationFrame(frame);
+    }
+
+    resize();
+    window.requestAnimationFrame(frame);
+  })();
+
+  /* ============ 启动 ============ */
+  render(0);
+  renderSidebar();
+  tickClock();
+  updateReadout();
+  scramble(sysReadout, 'SYS // ' + todayKey + ' · 星期' + WEEK_CN[(today.getDay() + 6) % 7]);
+  window.setInterval(function () {
+    tickClock();
+    updateReadout();
+  }, 1000);
+
+})();
+</script>
+</body>
+</html>

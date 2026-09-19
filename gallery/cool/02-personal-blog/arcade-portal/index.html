@@ -1,0 +1,2625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>慢速缓存 Slow Cache · 深夜街机厅 ARCADE PORTAL</title>
+<meta name="description" content="慢速缓存 Slow Cache —— 沈知远的个人博客，以深夜街机厅形式呈现：17 台街机就是 17 件作品，投币、START，屏幕亮起进入 CRT 详情。">
+<meta name="color-scheme" content="dark">
+<style>
+/* ============================================================
+   慢速缓存 Slow Cache · 街机大厅 Arcade Portal（three.js 全屏 3D 版）
+   分区：base / ledbar / hud / contact / crt / blog / grid / degrade / responsive
+   ============================================================ */
+
+/* ---------- base ---------- */
+:root{
+  --bg:#120B1E;            /* 厅内暗紫 */
+  --bg2:#0B0714;
+  --blue:#2635C8;          /* 机台宝蓝 */
+  --green:#58FF9B;         /* CRT 荧光绿 */
+  --gold:#FFC94A;          /* 投币金 */
+  --pink:#FF4FA0;          /* 品红按钮 */
+  --cyan:#4FC3F7;
+  --violet:#8EA8FF;
+  --ink:#EDEFF8;
+  --dim:#9A93B8;
+  --line:#2B2440;
+  --mono:'Courier New', ui-monospace, SFMono-Regular, Menlo, Consolas, 'PingFang SC', 'Microsoft YaHei', monospace;
+  --sans:-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:auto;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  overflow-x:hidden;
+  line-height:1.6;
+}
+body.locked{overflow:hidden;}
+canvas#stage{
+  position:fixed; inset:0; z-index:0;
+  width:100%; height:100%;
+  display:block;
+  touch-action:pan-y;   /* 触屏：竖滑滚页面漫游，横拖环视 */
+  cursor:grab;
+}
+canvas#stage.dragging{cursor:grabbing;}
+canvas#stage.coinable{cursor:pointer;}
+#scroll-space{position:relative; width:100%; height:920vh; pointer-events:none; z-index:1;}
+button{font-family:inherit; cursor:pointer;}
+a{color:var(--green);}
+::selection{background:var(--green); color:#08130c;}
+
+/* 通用浮层 */
+.overlay{position:fixed; inset:0; z-index:60;}
+.shade{position:absolute; inset:0; background:rgba(4,2,10,.66); backdrop-filter:blur(3px);}
+
+/* toast */
+#toast{
+  position:fixed; left:50%; bottom:96px; transform:translateX(-50%) translateY(20px);
+  background:#0d0a18; border:1px solid var(--green); color:var(--green);
+  font-family:var(--mono); font-size:13px; letter-spacing:.08em;
+  padding:10px 22px; border-radius:4px; z-index:95;
+  opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
+  box-shadow:0 0 0 1px #000, 0 6px 24px rgba(0,0,0,.6);
+}
+#toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+/* 加载幕 */
+#loader{
+  position:fixed; inset:0; z-index:100; background:var(--bg2);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+  transition:opacity .5s; font-family:var(--mono);
+}
+#loader.hide{opacity:0; pointer-events:none;}
+#loader .ldr-logo{font-size:26px; letter-spacing:.35em; color:var(--green); font-weight:700;}
+#loader .ldr-bar{width:min(300px,70vw); height:4px; background:#241d3a; border-radius:2px; overflow:hidden;}
+#loader .ldr-bar i{display:block; height:100%; width:36%; background:var(--green); border-radius:2px; animation:ldr 1.1s ease-in-out infinite;}
+@keyframes ldr{0%{transform:translateX(-110%);}100%{transform:translateX(320%);}}
+#loader .ldr-tip{font-size:12px; color:var(--dim); letter-spacing:.2em;}
+
+/* ---------- A. 厅口 LED 通知条 ---------- */
+#ledbar{
+  position:fixed; top:0; left:0; right:0; z-index:40;
+  height:42px; background:#050308;
+  border-bottom:1px solid #2a2140;
+  display:flex; align-items:center;
+  overflow:hidden;
+  font-family:var(--mono);
+}
+#ledbar .led-cap{
+  flex:0 0 auto; display:flex; align-items:center; gap:8px;
+  padding:0 14px; height:100%;
+  border-right:1px solid #241d38;
+  font-size:11px; letter-spacing:.28em; color:var(--gold);
+  background:linear-gradient(180deg,#140e22,#0a0614);
+  white-space:nowrap;
+}
+#ledbar .led-cap i{
+  width:8px; height:8px; border-radius:50%; background:var(--green);
+  animation:ledDot 1.6s steps(2) infinite;
+}
+@keyframes ledDot{50%{opacity:.25;}}
+#ledbar .led-clip{flex:1 1 auto; overflow:hidden; height:100%; display:flex; align-items:center;}
+#ledbar .led-track{
+  display:flex; align-items:center; width:max-content;
+  animation:ledMove 90s linear infinite;
+  will-change:transform;
+}
+#ledbar:hover .led-track, #ledbar:focus-within .led-track{animation-play-state:paused;}
+@keyframes ledMove{to{transform:translateX(-50%);}}
+.led-item{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:0 26px; white-space:nowrap; font-size:13px; color:#cfc9e6;
+  text-decoration:none;
+}
+.led-item b{
+  font-weight:700; font-size:10px; letter-spacing:.2em;
+  padding:2px 7px; border-radius:2px; flex:0 0 auto;
+}
+.led-item.t-upd b{color:#0a1a10; background:var(--green);}
+.led-item.t-news b{color:#04121c; background:var(--cyan);}
+.led-item.t-pre b{color:#241a04; background:var(--gold);}
+.led-item .diamond{color:#3d3358; font-size:10px;}
+a.led-item:hover, a.led-item:focus-visible{color:#fff; text-decoration:underline; text-underline-offset:3px;}
+a.led-item .arr{color:var(--gold); font-family:var(--mono);}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed; z-index:20; inset:0; pointer-events:none;}
+#hud .brand{
+  position:absolute; top:56px; left:22px; pointer-events:auto;
+  font-family:var(--mono); line-height:1.25;
+}
+#hud .brand .b1{font-size:20px; font-weight:700; letter-spacing:.3em; color:#fff;}
+#hud .brand .b1 em{font-style:normal; color:var(--pink);}
+#hud .brand .b2{font-size:11px; letter-spacing:.24em; color:var(--dim); margin-top:4px;}
+#hud .brand .b3{
+  margin-top:10px; font-size:11px; color:var(--green); letter-spacing:.12em;
+  border:1px solid rgba(88,255,155,.35); padding:4px 10px; display:inline-block;
+  background:rgba(5,10,8,.45); border-radius:3px;
+}
+#hud .nav{
+  position:absolute; top:56px; right:22px; display:flex; gap:8px; pointer-events:auto;
+}
+.hbtn{
+  font-family:var(--mono); font-size:12px; letter-spacing:.14em;
+  color:#d9d4ee; background:rgba(10,7,20,.72);
+  border:1px solid #38305a; border-radius:4px;
+  padding:9px 14px; backdrop-filter:blur(4px);
+  transition:border-color .2s, color .2s, background .2s;
+}
+.hbtn:hover, .hbtn:focus-visible{border-color:var(--green); color:var(--green); outline:none;}
+.hbtn.hot{border-color:rgba(255,201,74,.5); color:var(--gold);}
+.hbtn.hot:hover{border-color:var(--gold);}
+/* 进度轨 */
+#rail{
+  position:absolute; right:26px; top:50%; transform:translateY(-50%);
+  height:min(300px,42vh); width:2px; background:#2c2545; border-radius:2px; pointer-events:auto;
+}
+#rail .thumb{
+  position:absolute; left:50%; width:10px; height:10px; border-radius:50%;
+  background:var(--gold); transform:translate(-50%,-50%);
+  box-shadow:0 0 8px rgba(255,201,74,.8); top:0;
+}
+#rail .zdot{
+  position:absolute; left:50%; transform:translate(-50%,-50%);
+  width:14px; height:14px; border-radius:50%; border:2px solid #4a4070; background:#171129;
+  padding:0; transition:border-color .2s;
+}
+#rail .zdot:hover, #rail .zdot:focus-visible{border-color:var(--gold); outline:none;}
+#rail .zdot span{
+  position:absolute; right:20px; top:50%; transform:translateY(-50%);
+  font-family:var(--mono); font-size:10px; letter-spacing:.18em; color:var(--dim);
+  white-space:nowrap; opacity:0; transition:opacity .2s; pointer-events:none;
+}
+#rail .zdot:hover span, #rail .zdot:focus-visible span{opacity:1;}
+#hint{
+  position:absolute; bottom:26px; left:50%; transform:translateX(-50%);
+  font-family:var(--mono); font-size:12px; letter-spacing:.2em; color:#b9b2d6;
+  background:rgba(8,5,16,.66); border:1px solid #322a52; border-radius:30px;
+  padding:9px 22px; pointer-events:none; white-space:nowrap;
+  transition:opacity .6s;
+}
+#hint.hide{opacity:0;}
+#hint b{color:var(--gold); font-weight:700;}
+@media (max-width:768px){ #hint{font-size:10px; padding:7px 12px; letter-spacing:.06em;} }
+
+/* ---------- B. 联系店长 ---------- */
+#dock{
+  position:fixed; right:22px; bottom:26px; z-index:30;
+  display:flex; align-items:center; gap:10px;
+}
+#dockBtn{
+  display:flex; align-items:center; gap:10px;
+  background:linear-gradient(180deg,#1b1233,#0e0920);
+  border:1px solid var(--pink); color:#ffd7ec;
+  border-radius:40px; padding:12px 22px 12px 14px;
+  font-size:14px; font-weight:700; letter-spacing:.14em;
+  box-shadow:0 0 18px rgba(255,79,160,.28), inset 0 0 12px rgba(255,79,160,.12);
+  transition:transform .2s, box-shadow .2s;
+}
+#dockBtn:hover, #dockBtn:focus-visible{transform:translateY(-2px); box-shadow:0 0 26px rgba(255,79,160,.5); outline:none;}
+#dockBtn .ava{
+  width:30px; height:30px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #ffd9a8, #b97a3e 70%, #6e421f);
+  border:2px solid var(--gold); position:relative; flex:0 0 auto;
+}
+#dockBtn .ava::after{
+  content:''; position:absolute; left:6px; top:9px; width:18px; height:7px;
+  border-bottom:2px solid #4a2a10; border-radius:0 0 8px 8px;
+}
+#dock .dock-tip{font-family:var(--mono); font-size:10px; color:var(--dim); letter-spacing:.12em; writing-mode:vertical-rl;}
+#contactPanel{z-index:66; display:none;}
+#contactPanel.open{display:block;}
+#contactPanel .panel{
+  position:absolute; right:22px; bottom:96px; width:min(400px, calc(100vw - 32px));
+  max-height:min(640px, calc(100vh - 140px)); overflow-y:auto;
+  background:linear-gradient(180deg,#191129,#0d0819);
+  border:1px solid #4a3d78; border-radius:14px;
+  padding:22px; box-shadow:0 24px 60px rgba(0,0,0,.7), 0 0 0 1px #000;
+  animation:popUp .25s ease-out;
+}
+@keyframes popUp{from{opacity:0; transform:translateY(14px);}to{opacity:1; transform:none;}}
+#contactPanel h3{font-family:var(--mono); letter-spacing:.2em; font-size:15px; color:var(--pink); display:flex; align-items:center; gap:10px;}
+#contactPanel h3::before{content:''; width:8px; height:8px; background:var(--pink); border-radius:2px;}
+#contactPanel .sig{margin-top:10px; font-size:13px; color:var(--dim); border-left:2px solid var(--pink); padding-left:10px;}
+.cp-row{display:flex; gap:14px; margin-top:16px; align-items:flex-start;}
+.cp-mail{flex:1 1 auto; min-width:0;}
+.cp-mail .lab, .cp-form .lab{font-family:var(--mono); font-size:10px; letter-spacing:.24em; color:var(--dim); display:block; margin-bottom:6px;}
+.cp-mail .val{
+  display:flex; align-items:center; gap:8px;
+  background:#0a0616; border:1px solid #372c5e; border-radius:6px; padding:8px 10px;
+  font-family:var(--mono); font-size:13px; color:var(--green);
+}
+.cp-mail .val span{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.mini{
+  font-family:var(--mono); font-size:11px; letter-spacing:.1em;
+  background:#141024; color:#d9d4ee; border:1px solid #453a72; border-radius:4px; padding:5px 9px;
+  text-decoration:none;
+}
+.mini:hover, .mini:focus-visible{border-color:var(--green); color:var(--green); outline:none;}
+.cp-social{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
+.cp-social a{
+  font-family:var(--mono); font-size:12px; text-decoration:none; color:#cfc9e6;
+  border:1px solid #372c5e; padding:6px 12px; border-radius:20px;
+}
+.cp-social a:hover, .cp-social a:focus-visible{border-color:var(--cyan); color:var(--cyan); outline:none;}
+.cp-qr{flex:0 0 auto; text-align:center;}
+.cp-qr .qr{width:92px; height:92px; background:#f4f1e8; border-radius:8px; padding:6px; display:block;}
+.cp-qr em{display:block; font-style:normal; font-size:10px; color:var(--dim); margin-top:6px; font-family:var(--mono); letter-spacing:.1em;}
+.cp-form{margin-top:18px; border-top:1px dashed #372c5e; padding-top:14px;}
+.cp-form input, .cp-form textarea{
+  width:100%; background:#0a0616; border:1px solid #372c5e; border-radius:6px;
+  color:var(--ink); font-family:var(--sans); font-size:13px; padding:9px 10px; margin-bottom:4px;
+}
+.cp-form input:focus, .cp-form textarea:focus{outline:none; border-color:var(--green);}
+.cp-form textarea{resize:vertical; min-height:84px;}
+.cp-form .err{font-size:11px; color:#ff7d7d; min-height:16px; display:block; margin-bottom:6px;}
+.cp-form .ok{font-size:12px; color:var(--green); margin-top:8px; display:none;}
+.cp-form .ok.show{display:block;}
+.cp-form .send{
+  width:100%; margin-top:6px; padding:11px; border-radius:6px; border:1px solid var(--gold);
+  background:rgba(255,201,74,.1); color:var(--gold); font-family:var(--mono);
+  letter-spacing:.3em; font-size:13px;
+}
+.cp-form .send:hover, .cp-form .send:focus-visible{background:var(--gold); color:#241a04; outline:none;}
+.x{
+  position:absolute; top:12px; right:12px; width:32px; height:32px;
+  background:#141024; border:1px solid #453a72; border-radius:6px; color:#cfc9e6;
+  font-family:var(--mono); font-size:15px; line-height:1;
+}
+.x:hover, .x:focus-visible{border-color:var(--pink); color:var(--pink); outline:none;}
+
+/* ---------- C. CRT 详情面板 ---------- */
+#crt{z-index:80; display:none; align-items:center; justify-content:center; padding:20px;}
+#crt.open{display:flex;}
+#crt .shade{background:rgba(2,1,6,.82);}
+.crt-box{
+  position:relative; width:min(880px, 96vw); max-height:92vh;
+  background:radial-gradient(120% 100% at 50% 0%, #101c14 0%, #0a120d 45%, #060a08 100%);
+  border-radius:26px; border:2px solid #1d3325;
+  box-shadow:0 0 0 6px #0b0b10, 0 0 60px rgba(88,255,155,.16), 0 40px 90px rgba(0,0,0,.85);
+  color:#cfe9d8; overflow:hidden; display:flex; flex-direction:column;
+}
+.crt-box::before{ /* 玻面曲率高光 */
+  content:''; position:absolute; inset:0; pointer-events:none; z-index:5;
+  background:radial-gradient(90% 60% at 30% 8%, rgba(210,255,225,.09), transparent 55%);
+}
+.crt-box::after{ /* CRT 扫描线 */
+  content:''; position:absolute; inset:0; pointer-events:none; z-index:6;
+  background:repeating-linear-gradient(0deg, rgba(160,255,195,.05) 0 1px, transparent 1px 4px);
+  mix-blend-mode:overlay;
+}
+.crt-head{
+  display:flex; align-items:center; gap:14px; padding:16px 22px;
+  border-bottom:1px solid #1d3325; flex:0 0 auto;
+  font-family:var(--mono);
+}
+.crt-head .lamp{width:10px; height:10px; border-radius:50%; background:var(--green); box-shadow:0 0 10px var(--green); animation:ledDot 2s steps(2) infinite;}
+.crt-head .ttl{flex:1; min-width:0;}
+.crt-head .ttl h2{font-size:19px; color:#eafff2; letter-spacing:.06em; font-family:var(--sans); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.crt-head .ttl p{font-size:11px; letter-spacing:.2em; color:#5f8a70; margin-top:2px;}
+.crt-body{overflow-y:auto; padding:20px 22px 26px; display:grid; grid-template-columns:minmax(260px, 46%) 1fr; gap:22px;}
+.crt-fig{position:relative;}
+.crt-fig canvas{
+  width:100%; display:block; border-radius:12px;
+  border:2px solid #1d3325; background:#000;
+  box-shadow:inset 0 0 40px rgba(0,0,0,.8), 0 0 24px rgba(88,255,155,.1);
+}
+.crt-fig figcaption{font-family:var(--mono); font-size:10px; letter-spacing:.2em; color:#5f8a70; margin-top:8px; text-align:center;}
+.crt-desc{font-size:14px; color:#c8e4d2; margin-top:14px; line-height:1.8;}
+.crt-tags{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;}
+.crt-tags i{font-style:normal; font-family:var(--mono); font-size:11px; color:var(--green); border:1px solid rgba(88,255,155,.4); padding:2px 9px; border-radius:12px;}
+.crt-btns{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+.crt-btns a{
+  flex:1 1 40%; text-align:center; text-decoration:none; font-family:var(--mono);
+  font-size:13px; letter-spacing:.18em; padding:12px 10px; border-radius:8px;
+  border:1px solid var(--green); color:#06130b; background:var(--green); font-weight:700;
+  transition:transform .15s;
+}
+.crt-btns a.video{background:transparent; color:var(--green);}
+.crt-btns a:hover, .crt-btns a:focus-visible{transform:translateY(-2px); outline:none;}
+.crt-btns a.video:hover{background:rgba(88,255,155,.12);}
+.crt-qa{grid-column:1 / -1; border-top:1px dashed #24422f; padding-top:16px;}
+.crt-qa h4{font-family:var(--mono); font-size:12px; letter-spacing:.3em; color:var(--gold); margin-bottom:10px;}
+.crt-qa details{
+  border:1px solid #1d3325; border-radius:8px; margin-bottom:8px; background:rgba(6,14,9,.6);
+}
+.crt-qa summary{
+  cursor:pointer; padding:11px 14px; font-size:13px; color:#eafff2; list-style:none;
+  display:flex; align-items:center; gap:10px; font-family:var(--mono);
+}
+.crt-qa summary::-webkit-details-marker{display:none;}
+.crt-qa summary::before{content:'?'; color:var(--gold); font-weight:700; flex:0 0 auto;}
+.crt-qa details[open] summary::before{content:'!'; color:var(--green);}
+.crt-qa details p{padding:0 14px 12px 34px; font-size:13px; color:#a9cdb6; line-height:1.8;}
+.crt-coin-tip{
+  grid-column:1/-1; text-align:center; font-family:var(--mono); font-size:10px;
+  letter-spacing:.3em; color:#3f6a50; margin-top:4px;
+}
+
+/* ---------- D. 博客本体 overlay ---------- */
+#blog{z-index:70; display:none;}
+#blog.open{display:block;}
+#blog .blog-scroll{position:absolute; inset:0; overflow-y:auto; background:rgba(6,3,12,.92); backdrop-filter:blur(8px);}
+.blog-page{max-width:860px; margin:0 auto; padding:12px 22px 40px;}
+.blog-closebar{position:sticky; top:0; z-index:5; display:flex; justify-content:space-between; align-items:center; padding:12px 4px; background:linear-gradient(180deg, rgba(6,3,12,.97), rgba(6,3,12,.78) 80%, transparent);}
+.blog-closebar .bc-brand{font-family:var(--mono); letter-spacing:.28em; font-size:13px; color:var(--green);}
+.poster-wall{
+  border:1px solid #322a52; border-radius:18px; overflow:hidden; position:relative;
+  background:linear-gradient(160deg,#191233 0%, #0d0819 70%);
+}
+.pw-posters{display:grid; grid-template-columns:repeat(4,1fr); gap:2px; background:#241d3a;}
+.pw-posters .pp{aspect-ratio:3/4.4; padding:14px 10px; position:relative; overflow:hidden; font-family:var(--mono);}
+.pw-posters .pp b{writing-mode:vertical-rl; font-size:15px; letter-spacing:.3em; font-weight:700; position:relative; z-index:2;}
+.pw-posters .pp i{position:absolute; left:10px; bottom:10px; font-style:normal; font-size:9px; letter-spacing:.2em; opacity:.75; z-index:2;}
+.pw-posters .pp::before{content:''; position:absolute; inset:0; opacity:.5;}
+.pp.c0{color:#cdd8ff;} .pp.c0::before{background:radial-gradient(80% 60% at 70% 20%, #4a5fd0, #131040 80%);}
+.pp.c1{color:#ffd3ea;} .pp.c1::before{background:radial-gradient(80% 60% at 30% 25%, #b0357c, #2a0d22 80%);}
+.pp.c2{color:#d2ffe4;} .pp.c2::before{background:radial-gradient(80% 60% at 65% 75%, #1f8a52, #07231a 80%);}
+.pp.c3{color:#ffe9bd;} .pp.c3::before{background:radial-gradient(80% 60% at 35% 70%, #b8862a, #241a06 80%);}
+.pw-motto{padding:34px 30px 30px;}
+.pw-motto h1{font-size:clamp(22px, 4.6vw, 34px); line-height:1.5; letter-spacing:.04em;}
+.pw-motto h1 em{font-style:normal; color:var(--green); text-decoration:underline; text-decoration-color:rgba(88,255,155,.4); text-underline-offset:8px;}
+.pw-motto .slog{margin-top:14px; font-family:var(--mono); color:var(--gold); font-size:13px; letter-spacing:.16em;}
+.pw-stats{display:flex; flex-wrap:wrap; gap:10px; margin-top:20px;}
+.pw-stats span{font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:var(--dim); border:1px solid #372c5e; padding:5px 12px; border-radius:16px;}
+.pw-stats span b{color:#fff;}
+.sec-title{
+  display:flex; align-items:baseline; gap:14px; margin:52px 0 18px;
+  font-family:var(--mono);
+}
+.sec-title b{font-size:17px; letter-spacing:.3em; color:#fff;}
+.sec-title i{font-style:normal; font-size:10px; letter-spacing:.26em; color:var(--dim);}
+.sec-title::after{content:''; flex:1; height:1px; background:linear-gradient(90deg,#3a3060, transparent);}
+.art-list{list-style:none;}
+.art-list li{border-bottom:1px dashed #2c2450;}
+.art-list button{
+  width:100%; text-align:left; background:none; border:none; color:var(--ink);
+  display:grid; grid-template-columns:88px 1fr auto; gap:14px; align-items:baseline;
+  padding:18px 6px; transition:background .2s;
+}
+.art-list button:hover, .art-list button:focus-visible{background:rgba(88,255,155,.05); outline:none;}
+.art-list .date{font-family:var(--mono); font-size:12px; color:var(--dim); letter-spacing:.06em;}
+.art-list .ti{font-size:16px; font-weight:600;}
+.art-list .ti small{display:block; font-weight:400; font-size:12px; color:var(--dim); margin-top:4px;}
+.art-list .cat{
+  font-family:var(--mono); font-size:10px; letter-spacing:.18em; padding:3px 9px;
+  border-radius:12px; border:1px solid #4a3d78; color:var(--violet); white-space:nowrap;
+}
+.about-card{
+  display:flex; gap:22px; align-items:flex-start; flex-wrap:wrap;
+  border:1px solid #322a52; border-radius:16px; padding:24px;
+  background:linear-gradient(150deg,#171030,#0c0818);
+}
+.about-card .idphoto{
+  width:96px; height:120px; border-radius:8px; flex:0 0 auto; position:relative;
+  background:radial-gradient(circle at 50% 34%, #ffd9a8 0 26%, #171030 27% 100%);
+  border:2px solid var(--gold);
+}
+.about-card .idphoto::after{
+  content:'SLOW CACHE 店长证'; position:absolute; bottom:6px; left:0; right:0;
+  font-family:var(--mono); font-size:8px; letter-spacing:.2em; color:var(--gold); text-align:center;
+}
+.about-card .idtxt{flex:1; min-width:240px;}
+.about-card h3{font-size:19px; letter-spacing:.1em;}
+.about-card h3 small{font-family:var(--mono); font-size:11px; color:var(--dim); letter-spacing:.2em; margin-left:10px;}
+.about-card p{margin-top:10px; font-size:14px; color:#cfc9e6; line-height:1.9;}
+.about-card .believe{margin-top:12px; font-family:var(--mono); font-size:12px; color:var(--green); letter-spacing:.14em;}
+/* 页脚 · 营业时间霓虹牌 */
+.blog-foot{
+  margin-top:64px; border:1px solid #322a52; border-radius:18px; padding:34px 26px;
+  text-align:center; position:relative; overflow:hidden;
+  background:radial-gradient(100% 130% at 50% 0%, #1a1233 0%, #0b0716 70%);
+}
+.neon-hours{
+  font-family:var(--mono); font-weight:700; letter-spacing:.3em;
+  font-size:clamp(15px, 3vw, 22px); color:#ffe6ad;
+  text-shadow:0 0 6px rgba(255,201,74,.7), 0 0 22px rgba(255,201,74,.4);
+  animation:neonBreath 4.2s ease-in-out infinite;
+}
+@keyframes neonBreath{50%{opacity:.62;}}
+.neon-hours.off{text-shadow:none; color:#7a6a45; animation:none;}
+.neon-sub{margin-top:10px; font-family:var(--mono); font-size:11px; letter-spacing:.24em; color:var(--dim);}
+.night-switch{
+  margin-top:18px; display:inline-flex; align-items:center; gap:10px;
+  font-family:var(--mono); font-size:11px; letter-spacing:.2em; color:var(--dim);
+  background:none; border:1px solid #3a3060; border-radius:20px; padding:7px 16px;
+}
+.night-switch i{width:30px; height:14px; border-radius:8px; background:#241d3a; position:relative; font-style:normal;}
+.night-switch i::after{content:''; position:absolute; left:2px; top:2px; width:10px; height:10px; border-radius:50%; background:var(--gold); transition:left .2s;}
+.night-switch.on i::after{left:18px; background:var(--green);}
+.blog-copy{margin-top:26px; font-family:var(--mono); font-size:11px; color:#655d85; letter-spacing:.14em; line-height:2;}
+/* 文章阅读视图（通关笔记排版） */
+#artView{display:none;}
+#artView.open{display:block;}
+.back-blog{
+  font-family:var(--mono); font-size:12px; letter-spacing:.2em; color:var(--gold);
+  background:none; border:1px solid rgba(255,201,74,.4); border-radius:6px; padding:8px 16px;
+}
+.back-blog:hover, .back-blog:focus-visible{background:rgba(255,201,74,.1); outline:none;}
+.article{font-size:15px; line-height:2; color:#d8d3ea;}
+.article .a-meta{font-family:var(--mono); font-size:12px; color:var(--dim); letter-spacing:.1em; margin:6px 0 26px;}
+.article h1{font-size:clamp(21px, 4vw, 30px); line-height:1.5; letter-spacing:.02em;}
+.article h2.level{
+  margin:42px 0 14px; font-family:var(--mono); font-size:15px; letter-spacing:.22em;
+  color:var(--green); display:flex; align-items:center; gap:12px;
+}
+.article h2.level::before{content:'▶'; font-size:10px; color:var(--gold);}
+.article p{margin:0 0 16px;}
+.article code{font-family:var(--mono); background:rgba(88,255,155,.08); padding:1px 6px; border-radius:4px; font-size:.9em; color:var(--green);}
+.article .cp{
+  border:1px solid rgba(88,255,155,.3); border-left:3px solid var(--green);
+  background:rgba(88,255,155,.05); border-radius:0 8px 8px 0;
+  padding:12px 16px; margin:6px 0 22px; font-size:13px; color:#b9e8ca;
+}
+.article .cp b{font-family:var(--mono); font-size:10px; letter-spacing:.3em; color:var(--green); display:block; margin-bottom:6px;}
+.article ul{margin:0 0 16px 20px;}
+.article li{margin-bottom:6px;}
+.article .stage-end{
+  text-align:center; font-family:var(--mono); font-size:11px; letter-spacing:.4em;
+  color:#4a4070; margin:30px 0;
+}
+.article .a-outline{border:1px dashed #372c5e; border-radius:10px; padding:16px 18px; margin-bottom:22px;}
+.article .a-outline b{font-family:var(--mono); font-size:11px; letter-spacing:.26em; color:var(--gold); display:block; margin-bottom:8px;}
+.article .a-outline li{font-size:13px; color:var(--dim);}
+
+/* ---------- 机台索引 / 降级网格 ---------- */
+#grid{z-index:65; display:none;}
+#grid.open{display:block;}
+#grid .g-scroll{position:absolute; inset:0; overflow-y:auto; background:rgba(5,3,10,.94); backdrop-filter:blur(6px);}
+.g-head{
+  position:sticky; top:0; z-index:4; display:flex; align-items:center; gap:16px;
+  padding:16px 22px; background:linear-gradient(180deg, rgba(5,3,10,.97), rgba(5,3,10,.8) 85%, transparent);
+  flex-wrap:wrap;
+}
+.g-head h2{font-family:var(--mono); font-size:15px; letter-spacing:.3em; color:var(--gold);}
+.g-head .g-note{font-family:var(--mono); font-size:11px; color:var(--dim); letter-spacing:.12em; flex:1;}
+.g-cats{max-width:1100px; margin:0 auto; padding:10px 18px 60px;}
+.g-cat{margin-bottom:38px;}
+.g-cat > h3{
+  font-family:var(--mono); font-size:13px; letter-spacing:.3em; margin-bottom:14px;
+  display:flex; align-items:center; gap:12px;
+}
+.g-cat > h3::before{content:''; width:10px; height:10px; border-radius:2px;}
+.g-cat.c0 > h3{color:var(--violet);} .g-cat.c0 > h3::before{background:var(--violet);}
+.g-cat.c1 > h3{color:var(--pink);}   .g-cat.c1 > h3::before{background:var(--pink);}
+.g-cat.c2 > h3{color:var(--green);}  .g-cat.c2 > h3::before{background:var(--green);}
+.g-cat.c3 > h3{color:var(--gold);}   .g-cat.c3 > h3::before{background:var(--gold);}
+.g-row{display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:16px;}
+.g-card{
+  position:relative; text-align:left; border:1px solid #322a52; border-radius:12px;
+  background:linear-gradient(180deg,#171030,#0b0716); color:var(--ink); overflow:hidden;
+  transition:transform .2s, border-color .2s, box-shadow .2s; padding:0; display:block; width:100%;
+}
+.g-card:hover, .g-card:focus-visible{transform:translateY(-4px); outline:none; border-color:var(--gc, var(--green)); box-shadow:0 12px 30px rgba(0,0,0,.6);}
+.g-card .g-screen{
+  position:relative; display:block; aspect-ratio:4/3; background:#000;
+  border-bottom:2px solid var(--gc, var(--green)); overflow:hidden;
+}
+.g-card .g-screen canvas{width:100%; height:100%; display:block;}
+.g-card .g-screen::after{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(0deg, rgba(180,255,210,.05) 0 1px, transparent 1px 3px);
+}
+.g-card .g-meta{padding:12px 14px 14px; display:block;}
+.g-card .g-meta b{font-size:14px; display:block;}
+.g-card .g-meta small{font-family:var(--mono); font-size:10px; letter-spacing:.14em; color:var(--dim); display:block; margin-top:3px;}
+.g-card .coin{
+  position:absolute; right:10px; top:10px; font-family:var(--mono); font-size:9px; letter-spacing:.2em;
+  background:rgba(0,0,0,.55); color:var(--gold); border:1px solid rgba(255,201,74,.4);
+  padding:2px 7px; border-radius:10px; z-index:2;
+}
+
+/* ---------- 降级 CSS 街机厅（no3d） ---------- */
+#no3dScene{position:fixed; inset:0; z-index:0; display:none; overflow:hidden; background:
+  radial-gradient(120% 90% at 50% 0%, #1c1233 0%, #120b1e 46%, #080510 100%);}
+body.no3d #no3dScene{display:block;}
+body.no3d canvas#stage, body.no3d #scroll-space, body.no3d #rail, body.no3d #hint{display:none;}
+#no3dScene .nd-floor{
+  position:absolute; left:0; right:0; bottom:0; height:34%;
+  background:linear-gradient(180deg, #17102a 0%, #0a0714 100%);
+  transform:perspective(420px) rotateX(48deg); transform-origin:top;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(136,110,255,.14) 0 2px, transparent 2px 90px),
+    repeating-linear-gradient(0deg, rgba(136,110,255,.12) 0 2px, transparent 2px 70px);
+}
+#no3dScene .nd-sign{
+  position:absolute; top:16%; left:50%; transform:translateX(-50%);
+  font-family:var(--mono); font-weight:700; letter-spacing:.4em; font-size:clamp(20px,5vw,42px);
+  color:#ffe6ad; text-shadow:0 0 10px rgba(255,201,74,.8), 0 0 34px rgba(255,201,74,.45);
+  animation:neonBreath 4s ease-in-out infinite; white-space:nowrap;
+}
+#no3dScene .nd-row{
+  position:absolute; left:0; right:0; bottom:20%; display:flex; justify-content:center; gap:3vw; padding:0 3vw;
+}
+#no3dScene .nd-cab{
+  flex:0 0 9vw; max-width:110px; min-width:52px; aspect-ratio:1/2;
+  background:linear-gradient(180deg,#2a35b0 0%, #171d6e 55%, #0d1038 100%);
+  border:1px solid #4a55e0; border-radius:6px 6px 2px 2px; position:relative;
+  box-shadow:0 0 22px rgba(58,70,220,.35);
+}
+#no3dScene .nd-cab::before{
+  content:''; position:absolute; left:14%; right:14%; top:10%; height:26%;
+  background:#02120a; border:1px solid #1d5c37; border-radius:4px;
+  box-shadow:inset 0 0 12px rgba(88,255,155,.25);
+  background-image:repeating-linear-gradient(0deg, rgba(88,255,155,.16) 0 1px, transparent 1px 4px);
+}
+#no3dScene .nd-cab::after{
+  content:''; position:absolute; left:30%; right:30%; bottom:14%; height:5px;
+  background:var(--gold); border-radius:2px; box-shadow:0 0 8px rgba(255,201,74,.8);
+}
+#no3dScene .nd-dust{position:absolute; inset:0; background-image:
+  radial-gradient(2px 2px at 12% 30%, rgba(255,255,255,.4), transparent 60%),
+  radial-gradient(1.6px 1.6px at 64% 18%, rgba(255,255,255,.32), transparent 60%),
+  radial-gradient(2.4px 2.4px at 84% 62%, rgba(180,160,255,.3), transparent 60%),
+  radial-gradient(1.6px 1.6px at 34% 74%, rgba(255,255,255,.24), transparent 60%);}
+
+/* ---------- responsive ---------- */
+@media (max-width:1200px){
+  .crt-body{grid-template-columns:1fr;}
+  #hud .brand .b1{font-size:17px;}
+}
+@media (max-width:768px){
+  #hud .brand{top:52px; left:14px;}
+  #hud .nav{top:52px; right:14px; flex-wrap:wrap; justify-content:flex-end; max-width:60vw;}
+  .hbtn{padding:7px 10px; font-size:11px;}
+  #rail{display:none;}
+  #dock{right:14px; bottom:16px;}
+  #dock .dock-tip{display:none;}
+  #dockBtn{padding:10px 16px 10px 12px; font-size:13px;}
+  .pw-posters{grid-template-columns:repeat(2,1fr);}
+  .art-list button{grid-template-columns:1fr; gap:4px;}
+  .art-list .cat{justify-self:start;}
+  #ledbar .led-cap span{display:none;}
+  #contactPanel .panel{right:16px; left:16px; width:auto; bottom:86px;}
+}
+@media (max-width:375px){
+  #hud .brand .b3{display:none;}
+  .hbtn{letter-spacing:.04em; padding:6px 8px;}
+  #hint{bottom:74px;}
+  .crt-btns a{flex:1 1 100%;}
+}
+/* 减动效 */
+@media (prefers-reduced-motion: reduce){
+  #ledbar .led-track{animation:none;}
+  #ledbar .led-clip{overflow-x:auto;}
+  #loader .ldr-bar i{animation:none; width:100%;}
+  .neon-hours, #ledbar .led-cap i, .crt-head .lamp{animation:none;}
+  .g-card, #dockBtn, .crt-btns a{transition:none;}
+  #contactPanel .panel{animation:none;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="stage" aria-label="深夜街机厅三维场景：滚动漫游，点击机台投币进入作品详情"></canvas>
+<div id="scroll-space" aria-hidden="true"></div>
+
+<!-- 降级 CSS 街机厅 -->
+<div id="no3dScene" aria-hidden="true">
+  <div class="nd-floor"></div>
+  <div class="nd-sign">SLOW CACHE ARCADE</div>
+  <div class="nd-row">
+    <div class="nd-cab"></div><div class="nd-cab"></div><div class="nd-cab"></div>
+    <div class="nd-cab"></div><div class="nd-cab"></div><div class="nd-cab"></div>
+    <div class="nd-cab"></div><div class="nd-cab"></div>
+  </div>
+  <div class="nd-dust"></div>
+</div>
+
+<!-- A. 厅口 LED 公告屏（滚动通知条） -->
+<div id="ledbar" role="marquee" aria-label="店内公告滚动屏（悬停暂停）">
+  <div class="led-cap"><i aria-hidden="true"></i><span>店 内 广 播</span></div>
+  <div class="led-clip"><div class="led-track" id="ledTrack"></div></div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="brand">
+    <div class="b1">SLOW<em>&nbsp;CACHE</em></div>
+    <div class="b2">深夜街机厅 · 慢速缓存</div>
+    <div class="b3">CREDITS: ∞ ｜ 慢速缓存，长期保鲜</div>
+  </div>
+  <div class="nav">
+    <button class="hbtn" id="btnGrid">机台索引</button>
+    <button class="hbtn hot" id="btnBlog">博客文章</button>
+    <button class="hbtn" id="btnAbout">关于店长</button>
+    <button class="hbtn" id="btnSnd" aria-pressed="false" title="投币音效（默认关闭）">SND OFF</button>
+  </div>
+  <div id="rail">
+    <div class="thumb" id="railThumb"></div>
+  </div>
+  <div id="hint">滚动 · 沿过道漫游 ｜ 拖拽 · 环视 ｜ <b>点击机台 · 投币开玩</b></div>
+</div>
+
+<!-- B. 联系店长 -->
+<div id="dock">
+  <span class="dock-tip">POWERED BY 沈知远</span>
+  <button id="dockBtn" aria-haspopup="dialog" aria-controls="contactPanel"><span class="ava" aria-hidden="true"></span>找店长</button>
+</div>
+<div id="contactPanel" class="overlay" role="dialog" aria-modal="true" aria-label="联系店长">
+  <div class="shade" data-close="contactPanel"></div>
+  <div class="panel">
+    <button class="x" data-close="contactPanel" aria-label="关闭联系面板">×</button>
+    <h3>店 长 柜 台</h3>
+    <p class="sig">「白天写组件，晚上写句子。信箱永远开着。」</p>
+    <div class="cp-row">
+      <div class="cp-mail">
+        <span class="lab">E-MAIL</span>
+        <div class="val"><span id="mailVal">hi@slowcache.example</span>
+          <button class="mini" id="btnCopy">复制</button>
+          <a class="mini" id="mailLink" href="mailto:hi@slowcache.example">写信</a>
+        </div>
+        <div class="cp-social" id="socialRow"></div>
+      </div>
+      <div class="cp-qr">
+        <span class="qr" id="qrBox" aria-hidden="true"></span>
+        <em>扫码回到首页</em>
+      </div>
+    </div>
+    <form class="cp-form" id="msgForm" novalidate>
+      <span class="lab">快 捷 留 言</span>
+      <input type="text" id="fName" placeholder="称呼（选填）" autocomplete="name">
+      <input type="email" id="fMail" placeholder="邮箱（选填）" autocomplete="email">
+      <textarea id="fBody" maxlength="500" placeholder="留言内容（必填，10-500 字）"></textarea>
+      <span class="err" id="fErr" role="alert"></span>
+      <button type="submit" class="send">投 进 邮 筒</button>
+      <p class="ok" id="fOk">已收到，48 小时内回复。慢速缓存，说到做到。</p>
+    </form>
+  </div>
+</div>
+
+<!-- C. CRT 详情面板（投币冲屏后的落点） -->
+<div id="crt" class="overlay" role="dialog" aria-modal="true" aria-label="作品详情">
+  <div class="shade" data-close="crt"></div>
+  <div class="crt-box" id="crtBox"></div>
+</div>
+
+<!-- D. 博客本体 -->
+<div id="blog" class="overlay" role="dialog" aria-modal="true" aria-label="博客本体">
+  <div class="blog-scroll" id="blogScroll">
+    <div class="blog-page">
+      <div class="blog-closebar">
+        <span class="bc-brand">SLOW CACHE · 慢速缓存</span>
+        <button class="x" data-close="blog" aria-label="关闭博客" style="position:static;">×</button>
+      </div>
+      <div id="blogHome">
+        <section class="poster-wall" aria-label="卷首语海报墙">
+          <div class="pw-posters" aria-hidden="true">
+            <div class="pp c0"><b>AI 工具</b><i>AI TOOLS</i></div>
+            <div class="pp c1"><b>网页设计</b><i>WEB DESIGN</i></div>
+            <div class="pp c2"><b>健康生活</b><i>HEALTH LIFE</i></div>
+            <div class="pp c3"><b>游戏娱乐</b><i>GAME ZONE</i></div>
+          </div>
+          <div class="pw-motto">
+            <h1>欢迎来到我的<em>公开笔记本</em>。这里记录我做的小工具、写下的长句，以及一些和生活有关的慢实验。更新不快，但每一篇都经过缓存。</h1>
+            <p class="slog">「把值得想的事，写在会呼吸的页面上。」</p>
+            <div class="pw-stats">
+              <span>营业机台 <b>17</b> 台</span>
+              <span>文章存档 <b>7</b> 篇</span>
+              <span>分区 <b>4</b> 个</span>
+              <span>店长 <b>沈知远</b></span>
+            </div>
+          </div>
+        </section>
+        <div class="sec-title"><b>文 章 存 档</b><i>BLOG POSTS</i></div>
+        <ul class="art-list" id="artList"></ul>
+        <div class="sec-title"><b>关 于 店 长</b><i>ABOUT</i></div>
+        <section class="about-card">
+          <div class="idphoto" aria-hidden="true"></div>
+          <div class="idtxt">
+            <h3>沈知远<small>SHEN ZHIYUAN · 店长兼唯一店员</small></h3>
+            <p>白天写组件，晚上写句子。我是沈知远，一个相信慢速缓存、长期保鲜的独立开发者。信箱永远开着，见右上角。</p>
+            <p class="believe">CREDIT：29 岁 · 杭州前端工程师 / 业余写作者 / 独立开发者</p>
+          </div>
+        </section>
+        <footer class="blog-foot">
+          <div class="neon-hours" id="hoursSign">营业时间 22:00 — 次日 04:00 · 全年无休</div>
+          <p class="neon-sub">SLOW CACHE ARCADE · 杭州虚拟地址 7 号过道尽头</p>
+          <button class="night-switch" id="nightSwitch" aria-pressed="false"><span>夜间模式</span><i aria-hidden="true"></i></button>
+          <p class="blog-copy">© 2026 慢速缓存 slowcache.example ｜ 把值得想的事，写在会呼吸的页面上。<br>本厅由 three.js 供电 · 所有像素均在本机烘焙 · RSS 见店内广播</p>
+        </footer>
+      </div>
+      <div id="artView"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 机台索引（3D 直达入口 / 减动效与降级模式的主界面） -->
+<div id="grid" class="overlay" role="dialog" aria-label="机台索引">
+  <div class="g-scroll" id="gScroll">
+    <div class="g-head">
+      <h2>机 台 索 引</h2>
+      <span class="g-note" id="gridNote">全部 17 台 · 点击任意机台直接打开详情</span>
+      <button class="x" data-close="grid" aria-label="关闭索引" style="position:static;">×</button>
+    </div>
+    <div class="g-cats" id="gridCats"></div>
+  </div>
+</div>
+
+<div id="toast" role="status"></div>
+<div id="loader"><div class="ldr-logo">SLOW CACHE</div><div class="ldr-bar"><i></i></div><div class="ldr-tip">正在点亮霓虹灯管 …</div></div>
+
+<script>
+/* ============================================================
+   JS 分区：[1]内容库 [2]工具 [3]程序化绘制 [4]纹理工厂 [5]场景构建
+           [6]交互 [7]DOM 模块 [8]主循环与启动 [9]降级
+   统一按 three.js r128 API 书写（BufferGeometry / sRGBEncoding）
+   ============================================================ */
+'use strict';
+
+/* ---------------- [1] 内容库（逐字取自统一内容库） ---------------- */
+var CATS = [
+  { key:'ai',     name:'AI 工具', en:'AI TOOLS',    color:0x8EA8FF, css:'#8EA8FF' },
+  { key:'web',    name:'网页设计', en:'WEB DESIGN', color:0xFF4FA0, css:'#FF4FA0' },
+  { key:'health', name:'健康生活', en:'HEALTH LIFE',color:0x58FF9B, css:'#58FF9B' },
+  { key:'game',   name:'游戏娱乐', en:'GAME ZONE',  color:0xFFC94A, css:'#FFC94A' }
+];
+
+var WORKS = [
+  { name:'墨问 Mowen', slug:'mowen', cat:0,
+    desc:'AI 中文写作 Copilot：把半生不熟的想法追问成干净段落。',
+    tags:['写作','大纲','改写'], tool:'https://mowen.example.com', video:'https://video.example.com/mowen' },
+  { name:'词嵌 Ciproc', slug:'ciproc', cat:0,
+    desc:'翻译润色：让机翻长句落回中文的语感。',
+    tags:['翻译','润色','术语表'], tool:'https://ciproc.example.com', video:'https://video.example.com/ciproc' },
+  { name:'拾光 Rememory', slug:'rememory', cat:0,
+    desc:'老照片修复上色：把像素噪声还给面孔和黄昏。',
+    tags:['修复','上色','老照片'], tool:'https://rememory.example.com', video:'https://video.example.com/rememory' },
+  { name:'速记 Scriptor', slug:'scriptor', cat:0,
+    desc:'会议转写摘要：一小时的会，两分钟拿到决议和待办。',
+    tags:['转写','摘要','待办'], tool:'https://scriptor.example.com', video:'https://video.example.com/scriptor' },
+  { name:'灵感匣 Ideabox', slug:'ideabox', cat:0,
+    desc:'头脑风暴卡片：一个人也能开的头脑风暴会。',
+    tags:['头脑风暴','卡片','内测'], tool:'https://ideabox.example.com', video:'https://video.example.com/ideabox' },
+  { name:'霓虹栅格 NeonGrid', slug:'neongrid', cat:1,
+    desc:'CSS 霓虹组件库：给暗色站点一整排会发光的零件。',
+    tags:['CSS','组件库','暗色'], tool:'https://neongrid.example.com', video:'https://video.example.com/neongrid' },
+  { name:'纸间 UI PaperUI', slug:'paperui', cat:1,
+    desc:'纸质质感设计系统：让屏幕学会纸张的呼吸。',
+    tags:['设计系统','拟物','排印'], tool:'https://paperui.example.com', video:'https://video.example.com/paperui' },
+  { name:'微动 MicroMove', slug:'micromove', cat:1,
+    desc:'微交互动效库：48 个小动作，让界面像被摸过一样。',
+    tags:['动效','缓动','开源'], tool:'https://micromove.example.com', video:'https://video.example.com/micromove' },
+  { name:'拾贝 Shellpick', slug:'shellpick', cat:1,
+    desc:'落地页模板集：把转化区块像贝壳一样捡起来拼好。',
+    tags:['落地页','模板','转化'], tool:'https://shellpick.example.com', video:'https://video.example.com/shellpick' },
+  { name:'息律 BreathRhythm', slug:'breathrhythm', cat:2,
+    desc:'呼吸训练：跟着一圈光，把呼吸放慢。',
+    tags:['呼吸','冥想','4-7-8'], tool:'https://breathrhythm.example.com', video:'https://video.example.com/breathrhythm' },
+  { name:'轻食记 LightBite', slug:'lightbite', cat:2,
+    desc:'饮食记录：两分钟记完一顿饭，不审判你。',
+    tags:['饮食','记录','营养'], tool:'https://lightbite.example.com', video:'https://video.example.com/lightbite' },
+  { name:'眠海 SleepSea', slug:'sleepsea', cat:2,
+    desc:'白噪音助眠：八轨海浪，混一杯属于你的夜。',
+    tags:['白噪音','助眠','混音'], tool:'https://sleepsea.example.com', video:'https://video.example.com/sleepsea' },
+  { name:'万步路线图 StepMap', slug:'stepmap', cat:2,
+    desc:'城市步行路线：给下班后的两万步画一条闭环。',
+    tags:['步行','城市','路线'], tool:'https://stepmap.example.com', video:'https://video.example.com/stepmap' },
+  { name:'字块 WordBlocks', slug:'wordblocks', cat:3,
+    desc:'中文填字：每天一局，和汉字较劲。',
+    tags:['填字','文字','每日一题'], tool:'https://wordblocks.example.com', video:'https://video.example.com/wordblocks' },
+  { name:'像素信使 PixelCourier', slug:'pixelcourier', cat:3,
+    desc:'像素跑酷：替人送信的信使，在屋顶上一路向前。',
+    tags:['跑酷','像素','单手玩'], tool:'https://pixelcourier.example.com', video:'https://video.example.com/pixelcourier' },
+  { name:'猫咪塔 CatTower', slug:'cattower', cat:3,
+    desc:'叠塔：把猫叠稳，是门手艺。',
+    tags:['休闲','物理','猫咪'], tool:'https://cattower.example.com', video:'https://video.example.com/cattower' },
+  { name:'谜题船 PuzzleShip', slug:'puzzleship', cat:3,
+    desc:'解谜：一艘纸船，六十道安静的海关。',
+    tags:['解谜','关卡','手绘'], tool:'https://puzzleship.example.com', video:'https://video.example.com/puzzleship' }
+];
+
+/* 每件作品 QA 攻略 3 条 */
+var QA = {
+  mowen:[
+    ['和通用聊天助手有何区别？','墨问只做中文长文：内置大纲树、段内改写与语气校准，不闲聊、不跑题。'],
+    ['我的稿子会被拿去训练吗？','不会，默认本地缓存草稿，云端处理即用即删，设置里可一键导出全部数据。'],
+    ['可以指定文风吗？','从「论文」「博客」「公文」三档起步，再用你已发布的文章微调出专属文风。']
+  ],
+  ciproc:[
+    ['支持哪些语言？','中英日韩四语互译，中译英与英译中两条主路线打磨最深。'],
+    ['术语表怎么用？','上传「原文,译文」两列 CSV 即全库生效，人名与产品名从此不再译飞。'],
+    ['润色会改专有名词吗？','不会，润色只动句法与连接词，术语按表原样保留。']
+  ],
+  rememory:[
+    ['划痕很重的照片能修吗？','先跑「重度修复」通道，再用手动笔触补细节，1990 年前的泛黄照实测成功率约八成。'],
+    ['上色会失真吗？','AI 只给建议色，可先锁定人物服色与背景色调再渲染，避免「染色感」。'],
+    ['支持批量吗？','3.0 正在做批量队列（见通知条预告），当前单张约 20 秒。']
+  ],
+  scriptor:[
+    ['录音质量差能转吗？','可以，8kHz 电话音质也能出稿，专业术语建议先加进词库。'],
+    ['摘要格式可定制吗？','内置「决议/待办/风险」三段式，也支持自定义 Markdown 模板。'],
+    ['说话人区分准吗？','会前 30 秒轮流自报姓名，区分准确率可到 95% 以上。']
+  ],
+  ideabox:[
+    ['一个人也能用吗？','能，「自我对抗」模式会让 AI 扮演反方连续追问五轮。'],
+    ['卡片能导出吗？','支持白板 PNG、思维导图 OPML 与纯文本大纲三种格式。'],
+    ['内测怎么加入？','首页留邮箱排号，每周五发 50 个邀请码（见通知条）。']
+  ],
+  neongrid:[
+    ['亮色站点能用吗？','可以，加 data-ng-theme="light" 变体，霓虹自动降为荧光细描边。'],
+    ['依赖框架吗？','零依赖纯 CSS 加少量 JS，复制类名即用，gzip 后约 12KB。'],
+    ['发光影响性能吗？','发光用分层 box-shadow 缓存，实测 200 个组件同屏仍 60fps。']
+  ],
+  paperui:[
+    ['纸质感是贴图吗？','全部由 SVG feTurbulence 程序化生成，无一张图片，可随主题换纸色。'],
+    ['和框架兼容吗？','提供 React/Vue/Svelte 三套封装，同时保留原味 CSS 版。'],
+    ['支持打印吗？','内置 print 样式层，网页直接打印即成手册排版。']
+  ],
+  micromove:[
+    ['一共多少种动效？','首版 48 个，覆盖按钮、表单、卡片、加载四大场景，每季新增一批。'],
+    ['支持 prefers-reduced-motion 吗？','每个动效都有降级变体，引入即自动生效。'],
+    ['怎么自定义缓动？','在线缓动编辑器拖出曲线，复制 cubic-bezier 即可。']
+  ],
+  shellpick:[
+    ['模板包含哪些区块？','每套 9-12 个区块：英雄区、社会证明、定价、FAQ 等，自由增删排序。'],
+    ['可以商用吗？','可以，MIT 授权，保留页脚一行 Built with Shellpick 即可。'],
+    ['如何换主题色？','改一个 CSS 变量全站生效，附赠 6 组配色预设。']
+  ],
+  breathrhythm:[
+    ['内置哪些呼吸法？','4-7-8、盒式呼吸、Coherent 三种，也可自定「吸-停-呼」节拍。'],
+    ['需要戴耳机吗？','不必须，视觉光圈与震动引导可单独使用，耳机只是加分项。'],
+    ['数据会上传吗？','默认只存本机、可导出 CSV，云同步在路线图上且默认关闭。']
+  ],
+  lightbite:[
+    ['必须拍照识别吗？','支持拍照，也支持纯文字，「两分钟一顿饭」是设计红线。'],
+    ['有食物数据库吗？','内置中文常见菜 6000+ 条，支持自建家常菜模板。'],
+    ['会劝我节食吗？','不会，只做记录与趋势，不设卡路里羞辱提醒。']
+  ],
+  sleepsea:[
+    ['音源能混搭吗？','雨、浪、风、柴火等八轨自由混音，并记忆你的配比。'],
+    ['整夜播放耗电吗？','开启渐弱定时后低于 2% 电量每小时，凌晨自动淡出。'],
+    ['可以下载离线听吗？','专业版可打包三种混音离线缓存，免费版仅在线播放。']
+  ],
+  stepmap:[
+    ['路线怎么生成？','输入时长与偏好（树荫/咖啡/少坡度），算法沿街巷拼出闭环路线。'],
+    ['支持哪些城市？','已覆盖 12 城步道路网，杭州与上海最细，欢迎提交城市申请。'],
+    ['能记录走过的路吗？','可导入步数生成「足迹墨水」，走过的街道会被染上颜色。']
+  ],
+  wordblocks:[
+    ['每天更新吗？','每天 0 点更新一局，周日是 13×13 大盘，历史局可随时回玩。'],
+    ['提示怎么计分？','揭示一字扣 10 分，无广告无内购，分数只和自己较劲。'],
+    ['能自己出题吗？','编辑器出题后生成题号分享，好题会收进精选题库。']
+  ],
+  pixelcourier:[
+    ['一局多长？','3 分钟一局，刚好一趟地铁，死亡即结算、退出不惩罚。'],
+    ['支持手柄吗？','支持，也保留单指触摸：按住蓄力跳，松手触发二段跳。'],
+    ['有剧情吗？','你是替人送信的像素信使，每封信是一段关卡引言，读不读随你。']
+  ],
+  cattower:[
+    ['规则是什么？','把下落的猫叠稳，歪 15° 内它会自己找姿势卧好，超过就溜走。'],
+    ['猫有区别吗？','12 种猫各有体重与弹性：橘猫稳、奶牛猫爱弹，开局三选一。'],
+    ['最高纪录多少层？','全球榜目前 47 层，突破 30 层解锁云端巨猫彩蛋。']
+  ],
+  puzzleship:[
+    ['卡关了怎么办？','每关三枚「漂流瓶」提示，从暗示到图解逐级展开，不用也不影响成就。'],
+    ['有多少关？','六章 60 关，每章引入一种新机制，通关后开放玩家自制海图。'],
+    ['需要什么配置？','一部能开浏览器的手机即可，无 3D 无强光效，电量友好。']
+  ]
+};
+
+/* A 模块：10 条通知（act: machine→走位到机台 / article→博客 / href→外链） */
+var NOTICES = [
+  { t:'更新', c:'upd',  txt:'新文章《把博客首屏压进 300ms》补全附录：完整 Lighthouse 数据表已上传。', act:'article', a:0 },
+  { t:'预告', c:'pre',  txt:'本周六 20:00 B 站直播「从 0 到 1 做一个独立小工具」，现在预约。', href:'https://live.example.com/slowcache' },
+  { t:'更新', c:'upd',  txt:'订阅数突破 10,000，写给你们的《第一万零一次缓存》已发出。', act:'article', a:0 },
+  { t:'资讯', c:'news', txt:'墨问 Mowen 2.4 发布：新增长文大纲模式与本地草稿缓存。', act:'machine', slug:'mowen' },
+  { t:'资讯', c:'news', txt:'《凌晨四点的杭州菜市场》被「独立开发者周刊」第 082 期转载。', href:'https://weekly.example.com/issue-82' },
+  { t:'预告', c:'pre',  txt:'灵感匣 Ideabox 内测招募 200 名用户，本周五发放邀请码。', act:'machine', slug:'ideabox' },
+  { t:'更新', c:'upd',  txt:'全站夜间模式上线，跟随系统自动切换，也可以在页脚手动拨一下。' },
+  { t:'资讯', c:'news', txt:'「慢速写作训练营」第三期开放报名，本期只收 30 人。', href:'https://camp.example.com/slowcache' },
+  { t:'资讯', c:'news', txt:'RSS 地址迁移至 feed.slowcache.example，旧地址保留 90 天。', href:'https://feed.slowcache.example' },
+  { t:'预告', c:'pre',  txt:'拾光 Rememory 3.0「批量修复」开发中，路线图已挂出，欢迎许愿。', act:'machine', slug:'rememory' }
+];
+
+/* D 模块：7 篇文章（前 2 篇完整正文，通关笔记排版） */
+var ARTICLES = [
+  { date:'2026-08-14', cat:'造轮子', title:'把博客首屏压进 300ms：一次性能考古',
+    sub:'Lighthouse 从 45 到 98 分：字体子集化、关键 CSS 内联与「删库」式瘦身实录。',
+    full:true,
+    html:[
+      '<h2 class="level">LEVEL 01 · 起点：一张 45 分的截屏</h2>',
+      '<p>事情开始于一张 Lighthouse 截屏：45 分，首屏 4.8 秒。我先是怪图片——可首页只有三张图；再怪服务器——TTFB 只有 180ms；最后怪自己：正文还没优化，先把「考古铲」对准了自己写的代码。性能优化最难的从来不是技术，是承认慢的那一层是自己铺的。</p>',
+      '<div class="cp"><b>CHECKPOINT</b>三次归因错位记录：图片（实际占比 9%）、服务器（6%）、字体与 JS（合计 71%）。先测量，再动手。</div>',
+      '<h2 class="level">LEVEL 02 · 字体：6 个请求砍到 2 个</h2>',
+      '<p>我把三套字体跑了一遍子集化工具对比：fonttools 的 pyftsubset 最稳，字蛛适合图标化场景，在线子集服务适合临时引用。最后选择「两切片」策略：标题字切出常用 3500 字，正文直接系统字兜底。</p>',
+      '<ul><li>标题字体：pyftsubset 保留常用汉字段，woff2 从 1.8MB 减到 96KB</li><li>unicode-range 切片：浏览器只下载真正命中的那一片</li><li>font-display: swap 加尺寸占位，杜绝布局抖动</li></ul>',
+      '<div class="cp"><b>CHECKPOINT</b>字体请求 6 → 2，字体阻塞时间 1.9s → 0.2s。</div>',
+      '<h2 class="level">LEVEL 03 · CSS：14KB 的关键路径</h2>',
+      '<p>关键 CSS 内联了 14KB：版式骨架、首屏排版、通知条。其余样式用一个老技巧延后——<code>media="print"</code> 加载非关键样式表，浏览器会在空闲时拉取，不阻塞首屏渲染。我不是第一个用这招的，但它是这场考古里性价比最高的铲子。</p>',
+      '<div class="cp"><b>CHECKPOINT</b>渲染阻塞 CSS 从 3 个文件 86KB → 内联 14KB + 异步 72KB。</div>',
+      '<h2 class="level">LEVEL 04 · 图片：首屏 0 图策略</h2>',
+      '<p>首屏一张图都不放。刊头是纯排版，海报墙用 CSS 渐变与程序化纹理。LCP 元素从「头图」变成了「刊头标题」，LCP 时间直接提前到 1.2s。首屏之下的插图全部懒加载，滚动到才请求。</p>',
+      '<div class="cp"><b>CHECKPOINT</b>LCP 4.8s → 1.2s。最好的图片优化是不放图片。</div>',
+      '<h2 class="level">LEVEL 05 · JS：删掉三个「以防万一」</h2>',
+      '<p>盘点后我删了三个「以防万一」的库：一个轮播（只有一处使用且从未自动播放）、一个日期库（我只用 format）、一个分析统计的历史包袱。剩下的事件绑定全部改成事件委托，document 上一个监听器管全站。</p>',
+      '<div class="cp"><b>CHECKPOINT</b>JS 传输体积 214KB → 47KB。删代码是最高级的优化。</div>',
+      '<h2 class="level">LEVEL 06 · 终局：98 分与未完清单</h2>',
+      '<p>最终截屏：98 分，首屏 300ms 出头。未完清单也留在这：Service Worker 离线阅读、字体按需再切片、以及把这篇的清单做成 CI 卡点。性能不是一次通关，是每周回来看一眼的存档。</p>',
+      '<div class="stage-end">— STAGE CLEAR · 未完待续：离线阅读篇 —</div>'
+    ].join('\n') },
+  { date:'2026-07-02', cat:'折腾录', title:'词嵌一年：从 0 个用户到 1000 个用户',
+    sub:'一个翻译润色小工具独立运营一整年的数据、差评与定价摇摆史。',
+    full:true,
+    html:[
+      '<h2 class="level">第一幕 · 动机</h2>',
+      '<p>被机翻长句折磨的第 N 次之后，我决定自己写。那天晚上我列了一张「机翻味」清单：连接词生硬、术语漂移、句子长度失控。词嵌的第一版只有一个按钮：把英文粘进去，吐出人话。</p>',
+      '<h2 class="level">第二幕 · 三个月没人用</h2>',
+      '<p>上线日记的数据谷底：第一周 11 个访客，其中 7 个是我自己。第三个月，日活稳定在 2——我和我妈妈。我把谷底截图设成了桌面壁纸，提醒自己：产品没有发布，只有持续发布。</p>',
+      '<div class="cp"><b>CHECKPOINT</b>前 90 天：UV 412，注册 3，其中 1 人是我。最大收获：把冷启动的羞耻感变成了耐心。</div>',
+      '<h2 class="level">第三幕 · 一条知乎回答</h2>',
+      '<p>转折来得毫无仪式感。我在「机器翻译为什么读起来像机翻」的问题下认真写了一篇回答，末尾附了词嵌链接。第二天，300 个用户进来了，服务器差点被这 300 人挤垮——那是我第一次因为流量而手忙脚乱，幸福的手忙脚乱。</p>',
+      '<h2 class="level">第四幕 · 定价摇摆史</h2>',
+      '<p>一年里改了三次价：免费 → 买断 68 元 → 订阅 12 元/月。每一次改价都伴随一封用户来信：有人夸、有人骂、有人帮我算成本。最后停在「免费额度 + 轻订阅」，我学会了定价不是数学题，是和用户互相确认诚意的仪式。</p>',
+      '<div class="cp"><b>CHECKPOINT</b>改价三次，转化率 0.4% → 2.1%。邮件里骂得最凶的用户，后来续费了两年。</div>',
+      '<h2 class="level">第五幕 · 最凶的差评</h2>',
+      '<p>最凶的一条差评只有八个字：「还不如机翻，退钱。」我忍着没回嘴，把它拆成了四个功能需求：术语表导入、语气档位、对照视图、快捷键。下个版本发出去，这位用户又来了一条差评：「勉强能用了。」——那是我听过最动听的表扬。</p>',
+      '<h2 class="level">通关结算 · 一年以后</h2>',
+      '<p>1000 个用户，收入刚够服务器钱，以及一个「不辞职」的决定。词嵌不需要养活我，它只需要保持活着——像一坛慢速缓存的酒，开盖的时间由我定。</p>',
+      '<div class="stage-end">— ONE YEAR CLEAR · 收入：服务器费 + 一顿火锅 —</div>'
+    ].join('\n') },
+  { date:'2026-05-21', cat:'城市漫步', title:'凌晨四点的杭州菜市场',
+    sub:'跟着送货三轮车走完一条街的城市漫步笔记，配 9 张手机摄影。',
+    full:false,
+    html:[
+      '<p>凌晨四点，城市换班。我跟着一辆送货三轮车走完了整条街：卷帘门的声音、冰块砸进泡沫箱的闷响、第一锅蒸汽。手机拍了 9 张照片，全部直出。</p>',
+      '<p>这一篇没有性能、没有组件，只有一条街醒来的顺序。城市漫步教会我的事：观察也是创作，慢速也是一种缓存。</p>',
+      '<div class="a-outline"><b>本章提纲（全文重制中）</b><ul><li>① 出发：为什么是凌晨四点</li><li>② 三轮车：一条街的物流中枢</li><li>③ 声音地图：卷帘门 / 冰块 / 第一锅蒸汽</li><li>④ 9 张手机摄影的取景笔记</li></ul></div>'
+    ].join('\n') },
+  { date:'2026-04-09', cat:'观展记', title:'滚动即叙事：拆解 3 个获奖网站的动效节奏',
+    sub:'逐帧分析获奖长文的 pinned 章节、节拍与留白。',
+    full:false,
+    html:[
+      '<p>把三个获奖长文逐帧拆开看，会发现它们的共同点不是特效多，而是「节拍准」：什么时候钉住画面、什么时候放手滚动、什么时候留一屏空白，全都像鼓点一样被设计过。</p>',
+      '<p>我把每屏的停留时长、位移曲线和文案切换点画成了三张「鼓谱」，这一篇就是鼓谱的注解。</p>',
+      '<div class="a-outline"><b>本章提纲（全文重制中）</b><ul><li>① pinned 章节：钉住不等于静止</li><li>② 节拍：滚动距离作为时间轴</li><li>③ 留白：一屏空白是一次换气</li><li>④ 三案对照鼓谱</li></ul></div>'
+    ].join('\n') },
+  { date:'2026-03-15', cat:'半成品', title:'数字花园第一年：种下 214 条笔记之后',
+    sub:'笔记成熟度统计、双链心得，与放弃完美主义的收获。',
+    full:false,
+    html:[
+      '<p>一年种下 214 条笔记：常青的 31 条、半枯的 88 条、还是种子的 95 条。统计完我笑了——原来我的数字花园和真花园一样，杂草永远比花多。</p>',
+      '<p>双链的心得只有一条：链接要在写下的时候就连，事后补的链接都会死。而最大的收获是放弃了完美主义：笔记允许半成品，花园允许荒芜。</p>',
+      '<div class="a-outline"><b>本章提纲（全文重制中）</b><ul><li>① 214 条笔记的成熟度普查</li><li>② 双链：写下时连，而非事后补</li><li>③ 放弃完美主义的三件工具</li></ul></div>'
+    ].join('\n') },
+  { date:'2026-02-08', cat:'折腾录', title:'给十年前的 Kindle 刷了个「慢读」系统',
+    sub:'越狱、换字体，把墨水屏改成只读文章的慢读终端。',
+    full:false,
+    html:[
+      '<p>十年前的 Kindle 越狱之后，我把它刷成了一个「只读文章」的慢读终端：同步我的博客与 RSS 存档，屏蔽一切购物入口，换上了思源宋体。</p>',
+      '<p>墨水屏没有刷新率，只有耐心。这台老设备现在是我睡前唯一的屏幕，也是「慢速缓存」这个名字的实体化。</p>',
+      '<div class="a-outline"><b>本章提纲（全文重制中）</b><ul><li>① 越狱与系统备份</li><li>② 字体替换与排版调校</li><li>③ 文章推送管线：RSS → EPUB → 设备</li></ul></div>'
+    ].join('\n') },
+  { date:'2026-01-12', cat:'健康实验', title:'呼吸训练 30 天实验报告',
+    sub:'用自己写的息律每天 10 分钟：睡眠、心率与情绪的笨办法记录。',
+    full:false,
+    html:[
+      '<p>用自己写的息律 BreathRhythm 做了 30 天实验：每天 10 分钟 4-7-8 呼吸，笨办法记录睡眠时长、晨起心率与情绪打分。</p>',
+      '<p>结论朴素得可疑：入睡时间平均提前 14 分钟，晨起心率降了 3 次/分，情绪均分高 0.6。样本量 1，但这位样本打算继续练。</p>',
+      '<div class="a-outline"><b>本章提纲（全文重制中）</b><ul><li>① 实验设计：n=1 的诚实与局限</li><li>② 30 天数据表</li><li>③ 呼吸法到底改变了什么</li></ul></div>'
+    ].join('\n') }
+];
+
+var CONTACT = {
+  mail:'hi@slowcache.example',
+  socials:[ ['GitHub','https://github.com/slowcache-example'], ['微博','https://weibo.com/slowcache'], ['B 站','https://space.bilibili.com/slowcache'], ['RSS','https://slowcache.example/feed.xml'] ]
+};
+
+/* ---------------- [2] 小工具 ---------------- */
+function $(s){ return document.querySelector(s); }
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function lerp(a,b,t){ return a+(b-a)*t; }
+function easeInOutCubic(t){ return t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2; }
+function easeOutCubic(t){ return 1-Math.pow(1-t,3); }
+function easeInQuad(t){ return t*t; }
+function nowMs(){ return performance.now(); }
+var toastT = 0;
+function toast(msg){
+  var el = $('#toast'); el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(function(){ el.classList.remove('show'); }, 1900);
+}
+var RM = false;
+try { RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){}
+var IS_MOBILE = /Android|iPhone|iPad|Mobi/i.test(navigator.userAgent) || (Math.min(screen.width, screen.height) < 620);
+var LOW = IS_MOBILE || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) || (navigator.deviceMemory && navigator.deviceMemory <= 4);
+var DYN_MAX = LOW ? 2 : (IS_MOBILE ? 3 : 6);   /* 动态 CanvasTexture 台数红线 */
+
+/* 单一 rAF tween 池（自写，不引库） */
+var tweens = [];
+function addTween(dur, onU, onC){
+  var tw = { t:0, dur:(RM ? 0 : dur), onU:onU, onC:onC, dead:false };
+  tweens.push(tw); return tw;
+}
+function stepTweens(dt){
+  for (var i = tweens.length - 1; i >= 0; i--){
+    var tw = tweens[i];
+    if (tw.dead){ tweens.splice(i,1); continue; }
+    tw.t += dt * 1000;
+    var k = tw.dur <= 0 ? 1 : clamp(tw.t / tw.dur, 0, 1);
+    tw.onU(k);
+    if (k >= 1){ tw.dead = true; if (tw.onC) tw.onC(); tweens.splice(i,1); }
+  }
+}
+
+/* ---------------- [3] 程序化绘制：17 件作品缩略图 + 屏幕状态 ---------------- */
+/* 全部在 256x192 逻辑坐标系绘制（外部先 scale） */
+function rr(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+}
+function txt(ctx,s,x,y,size,color,align,bold){
+  ctx.fillStyle = color; ctx.textAlign = align || 'left'; ctx.textBaseline = 'middle';
+  ctx.font = (bold===false?'':'bold ')+size+'px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.fillText(s,x,y);
+}
+function noiseFrame(ctx,w,h,seed){
+  ctx.fillStyle = '#05060a'; ctx.fillRect(0,0,w,h);
+  var s = (seed || 1) % 2147483647, i, v;
+  for (i=0;i<170;i++){
+    s = (s*16807+11) % 2147483647;
+    v = 20 + (s % 70);
+    ctx.fillStyle = 'rgba('+v+','+v+','+(v+8)+','+(0.25+(s%50)/100).toFixed(2)+')';
+    ctx.fillRect((s%16)*16, ((s>>4)%12)*16, 16, 16);
+  }
+  if (s % 3 === 0){ ctx.fillStyle='rgba(120,220,255,0.10)'; ctx.fillRect(0,(s%h),w,2); }
+}
+/* 17 件作品的主视觉（按内容库缩略图描述逐件绘制） */
+function drawArtwork(ctx, wi, W, H){
+  var w = WORKS[wi];
+  ctx.save();
+  ctx.scale(W/256, H/192);
+  var i;
+  if (wi===0){ /* 墨问：深蓝底钢笔尖线稿+发光字行+圆形印章 */
+    var g = ctx.createLinearGradient(0,0,0,192); g.addColorStop(0,'#0d1b3d'); g.addColorStop(1,'#070d20');
+    ctx.fillStyle=g; ctx.fillRect(0,0,256,192);
+    ctx.fillStyle='#f2eee2'; rr(ctx,58,96,140,76,4); ctx.fill();
+    ctx.strokeStyle='rgba(160,180,255,.6)'; ctx.lineWidth=2;
+    for (i=0;i<3;i++){ ctx.beginPath(); ctx.moveTo(74,112+i*20); ctx.lineTo(74+(i===2?58:96),112+i*20); ctx.stroke();
+      ctx.save(); ctx.shadowColor='#8EA8FF'; ctx.shadowBlur=8; ctx.stroke(); ctx.restore(); }
+    ctx.fillStyle='#fff'; ctx.beginPath();
+    ctx.moveTo(150,18); ctx.lineTo(168,52); ctx.lineTo(159,58); ctx.lineTo(158,44); ctx.lineTo(154,50); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#c8312a'; ctx.beginPath(); ctx.arc(206,158,13,0,7); ctx.fill();
+    txt(ctx,'墨',206,159,14,'#fff','center');
+  } else if (wi===1){ /* 词嵌：米白两栏对照+青色玉扣 */
+    ctx.fillStyle='#efe9da'; ctx.fillRect(0,0,256,192);
+    ctx.fillStyle='#b8b0a0';
+    for (i=0;i<7;i++){ ctx.fillRect(18,22+i*22,92,7); ctx.fillRect(146,22+i*22,92,7); }
+    ctx.save(); ctx.shadowColor='#4FC3F7'; ctx.shadowBlur=14;
+    ctx.strokeStyle='#2aa7c9'; ctx.lineWidth=9; ctx.beginPath(); ctx.arc(128,96,26,0,7); ctx.stroke(); ctx.restore();
+    ctx.fillStyle='#fff'; ctx.fillRect(118,60,20,72);
+  } else if (wi===2){ /* 拾光：微斜老照片 左黑白右暖橘+胶带 */
+    ctx.fillStyle='#241a12'; ctx.fillRect(0,0,256,192);
+    ctx.save(); ctx.translate(128,96); ctx.rotate(-0.07); ctx.translate(-118,-70);
+    var g2=ctx.createLinearGradient(0,0,236,140); g2.addColorStop(0,'#cfcfcf'); g2.addColorStop(0.5,'#d8cdbb'); g2.addColorStop(1,'#e8955c');
+    ctx.fillStyle=g2; ctx.fillRect(0,0,236,140);
+    ctx.fillStyle='rgba(60,50,45,.75)'; ctx.beginPath(); ctx.arc(76,66,26,0,7); ctx.fill();
+    ctx.fillStyle='rgba(255,160,90,.4)'; ctx.beginPath(); ctx.arc(170,70,30,0,7); ctx.fill();
+    ctx.fillStyle='rgba(240,240,230,.55)';
+    ctx.save(); ctx.translate(20,4); ctx.rotate(-0.3); ctx.fillRect(0,0,52,16); ctx.restore();
+    ctx.save(); ctx.translate(184,124); ctx.rotate(0.35); ctx.fillRect(0,0,52,16); ctx.restore();
+    ctx.restore();
+  } else if (wi===3){ /* 速记：声波折成回形针+三张便签 */
+    ctx.fillStyle='#101422'; ctx.fillRect(0,0,256,192);
+    ctx.strokeStyle='#58FF9B'; ctx.lineWidth=2; ctx.beginPath();
+    for (i=0;i<=40;i++){ var x0=34+i*4.6, y0=52+Math.sin(i*0.8)*13-Math.cos(i*0.35)*6; if(i===0)ctx.moveTo(x0,y0); else ctx.lineTo(x0,y0); }
+    ctx.stroke();
+    var notes=[['决议','#ffd23f',30],['待办','#6ec9ff',104],['风险','#ff8fb0',178]];
+    notes.forEach(function(n,idx){
+      ctx.save(); ctx.translate(n[2],96); ctx.rotate((idx-1)*0.06);
+      ctx.fillStyle=n[1]; ctx.fillRect(0,0,52,64);
+      txt(ctx,n[0],26,34,15,'#20242c','center');
+      ctx.restore();
+    });
+  } else if (wi===4){ /* 灵感匣：深紫丝绒+黄铜小匣+彩虹卡片飞出 */
+    var g3=ctx.createRadialGradient(128,80,10,128,96,190); g3.addColorStop(0,'#3b1d5e'); g3.addColorStop(1,'#140a24');
+    ctx.fillStyle=g3; ctx.fillRect(0,0,256,192);
+    ctx.fillStyle='#b98a2f'; rr(ctx,84,110,88,56,6); ctx.fill();
+    ctx.fillStyle='#d9a83e'; ctx.beginPath(); ctx.moveTo(84,110); ctx.lineTo(70,74); ctx.lineTo(186,74); ctx.lineTo(172,110); ctx.closePath(); ctx.fill();
+    var cols=['#ff5f7a','#ff9e3d','#ffe45f','#7ce07c','#6db9ff','#b58cff'];
+    cols.forEach(function(cc,i2){
+      var t=i2/5, cx=40+t*176, cy=96-Math.sin(t*Math.PI)*54;
+      ctx.save(); ctx.translate(cx,cy); ctx.rotate((t-0.5)*0.9);
+      ctx.fillStyle='#f5f2ff'; ctx.fillRect(-13,-18,26,36);
+      ctx.strokeStyle=cc; ctx.lineWidth=3; ctx.strokeRect(-13,-18,26,36); ctx.restore();
+    });
+  } else if (wi===5){ /* 霓虹栅格：暗夜网格+发光零件 */
+    ctx.fillStyle='#07070f'; ctx.fillRect(0,0,256,192);
+    ctx.strokeStyle='rgba(80,90,200,.28)'; ctx.lineWidth=1;
+    for (i=0;i<=16;i++){ ctx.beginPath(); ctx.moveTo(i*16,0); ctx.lineTo(i*16,192); ctx.stroke(); }
+    for (i=0;i<=12;i++){ ctx.beginPath(); ctx.moveTo(0,i*16); ctx.lineTo(256,i*16); ctx.stroke(); }
+    [['#22E4E0',30,60,70,26],['#FF4FA0',120,60,26,26],['#22E4E0',170,60,60,26],
+     ['#b58cff',30,116,70,26],['#22E4E0',120,116,26,26],['#FF4FA0',170,116,60,26]].forEach(function(o){
+      ctx.save(); ctx.shadowColor=o[0]; ctx.shadowBlur=10; ctx.strokeStyle=o[0]; ctx.lineWidth=2; rr(ctx,o[1],o[2],o[3],o[4],5); ctx.stroke();
+      if(o[3]<30){ ctx.fillStyle=o[0]; ctx.beginPath(); ctx.arc(o[1]+o[3]-11,o[2]+13,6,0,7); ctx.fill(); }
+      ctx.restore();
+    });
+  } else if (wi===6){ /* 纸间：奶油纸底卡片票据书签+撕纸毛边 */
+    ctx.fillStyle='#f4ecdc'; ctx.fillRect(0,0,256,192);
+    ctx.fillStyle='rgba(120,100,70,.05)';
+    for (i=0;i<40;i++) ctx.fillRect((i*37)%256,(i*53)%192,2,2);
+    ctx.strokeStyle='#c9b691'; ctx.lineWidth=2; rr(ctx,20,28,120,80,3); ctx.stroke();
+    ctx.strokeRect(30,44,100,6); ctx.strokeRect(30,58,72,6); ctx.strokeRect(30,72,88,6);
+    ctx.save(); ctx.setLineDash([4,3]); ctx.strokeStyle='#b08d54'; rr(ctx,158,24,76,52,2); ctx.stroke(); ctx.restore();
+    ctx.fillStyle='#a94438'; ctx.beginPath(); ctx.moveTo(196,92); ctx.lineTo(222,92); ctx.lineTo(222,140); ctx.lineTo(209,128); ctx.lineTo(196,140); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#d8cdb4'; ctx.beginPath(); ctx.moveTo(20,150); ctx.lineTo(236,142); ctx.stroke();
+  } else if (wi===7){ /* 微动：九宫格按钮中途帧+虚线轨迹 */
+    ctx.fillStyle='#12101e'; ctx.fillRect(0,0,256,192);
+    var cols2=['#FF4FA0','#4FC3F7','#FFC94A'];
+    for (var r=0;r<3;r++) for (var c2=0;c2<3;c2++){
+      var bx=34+c2*68, by=26+r*54, cc2=cols2[(r+c2)%3];
+      ctx.setLineDash([3,4]); ctx.strokeStyle='rgba(200,200,230,.35)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(bx+6,by+20); ctx.quadraticCurveTo(bx+26,by+2,bx+44,by+20); ctx.stroke(); ctx.setLineDash([]);
+      ctx.save(); ctx.translate(4,-7); ctx.fillStyle=cc2; rr(ctx,bx,by+8,44,24,12); ctx.fill(); ctx.restore();
+      ctx.fillStyle='rgba(255,255,255,.25)'; rr(ctx,bx,by+8,44,24,12); ctx.fill();
+      ctx.strokeStyle=cc2; ctx.lineWidth=2; rr(ctx,bx,by+8,44,24,12); ctx.stroke();
+    }
+  } else if (wi===8){ /* 拾贝：沙滩螺壳+迷你落地页线框+浪线分割 */
+    var g4=ctx.createLinearGradient(0,0,0,192); g4.addColorStop(0,'#ffe9c4'); g4.addColorStop(1,'#e8b87f');
+    ctx.fillStyle=g4; ctx.fillRect(0,0,256,192);
+    ctx.strokeStyle='#c9743a'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(96,120,52,Math.PI*0.9,Math.PI*2.1); ctx.stroke();
+    ctx.beginPath(); ctx.arc(96,120,34,Math.PI,Math.PI*2.2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(96,120,18,Math.PI*1.1,Math.PI*2.3); ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.9)'; rr(ctx,150,36,80,104,4); ctx.fill();
+    ctx.fillStyle='#c9743a'; ctx.fillRect(150,36,80,16);
+    ctx.strokeStyle='#b8b0a0'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(158,66); ctx.lineTo(222,66); ctx.moveTo(158,80); ctx.lineTo(210,80); ctx.stroke();
+    ctx.fillStyle='#e8d9c0'; for (i=0;i<3;i++) ctx.fillRect(158,92+i*14,64,8);
+    ctx.strokeStyle='#3d8ea8'; ctx.lineWidth=2;
+    for (i=0;i<3;i++){ ctx.beginPath(); ctx.moveTo(12+i*10,168+i*7); ctx.quadraticCurveTo(70,160+i*7,128,168+i*7); ctx.quadraticCurveTo(186,176+i*7,244,166+i*7); ctx.stroke(); }
+  } else if (wi===9){ /* 息律：深夜蓝呼吸光圈+4-7-8 刻度 */
+    var g5=ctx.createRadialGradient(128,96,8,128,96,120); g5.addColorStop(0,'#0e2b52'); g5.addColorStop(1,'#050d1c');
+    ctx.fillStyle=g5; ctx.fillRect(0,0,256,192);
+    ctx.save(); ctx.shadowColor='#4FC3F7'; ctx.shadowBlur=22;
+    ctx.strokeStyle='#4FC3F7'; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(128,92,44,0,7); ctx.stroke(); ctx.restore();
+    ctx.strokeStyle='rgba(79,195,247,.35)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(128,92,62,0,7); ctx.stroke();
+    for (i=0;i<19;i++){ var a=-Math.PI*0.75+i*(Math.PI*1.5/18);
+      ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=2; ctx.beginPath();
+      ctx.moveTo(128+Math.cos(a)*74,92+Math.sin(a)*74); ctx.lineTo(128+Math.cos(a)*80,92+Math.sin(a)*80); ctx.stroke(); }
+    txt(ctx,'4 - 7 - 8',128,168,15,'#9adcff','center');
+  } else if (wi===10){ /* 轻食记：白瓷碗俯视环形图+筷子 */
+    ctx.fillStyle='#f6f2e9'; ctx.fillRect(0,0,256,192);
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(128,98,66,0,7); ctx.fill();
+    ctx.strokeStyle='#d8d2c2'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(128,98,66,0,7); ctx.stroke();
+    var segs=[['#ff8f5c',0.42],['#7cc47f',0.33],['#6db9ff',0.25]], a0=-Math.PI/2;
+    segs.forEach(function(sg){ var a1=a0+sg[1]*Math.PI*2;
+      ctx.fillStyle=sg[0]; ctx.beginPath(); ctx.arc(128,98,48,a0+0.03,a1-0.03); ctx.closePath(); ctx.fill(); a0=a1; });
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(128,98,24,0,7); ctx.fill();
+    txt(ctx,'今日',128,98,13,'#6a6456','center');
+    ctx.strokeStyle='#8a5a30'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(196,30); ctx.lineTo(240,120); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(206,24); ctx.lineTo(244,108); ctx.stroke();
+  } else if (wi===11){ /* 眠海：墨绿海面月牙+声波涟漪 */
+    ctx.fillStyle='#0a1f18'; ctx.fillRect(0,0,256,192);
+    ctx.fillStyle='#f4e9b8'; ctx.beginPath(); ctx.arc(178,44,26,0,7); ctx.fill();
+    ctx.fillStyle='#0a1f18'; ctx.beginPath(); ctx.arc(168,38,24,0,7); ctx.fill();
+    ctx.strokeStyle='rgba(140,220,190,.5)'; ctx.lineWidth=1.5;
+    for (i=1;i<=6;i++){ ctx.beginPath(); ctx.arc(96,110,i*16,0,7); ctx.stroke(); }
+    ctx.fillStyle='rgba(140,220,190,.16)'; ctx.beginPath(); ctx.arc(96,110,10,0,7); ctx.fill();
+    ctx.strokeStyle='rgba(140,220,190,.3)';
+    for (i=0;i<3;i++){ ctx.beginPath(); ctx.moveTo(10+i*8,172+i*6); ctx.quadraticCurveTo(128,160+i*6,246,172+i*6); ctx.stroke(); }
+  } else if (wi===12){ /* 万步：牛皮纸地图+红色闭环虚线+脚印邮戳 */
+    ctx.fillStyle='#c9a36a'; ctx.fillRect(0,0,256,192);
+    ctx.fillStyle='rgba(90,60,20,.14)';
+    for (i=0;i<8;i++) ctx.fillRect(20+i*30,16,2,160);
+    for (i=0;i<5;i++) ctx.fillRect(16,24+i*34,224,2);
+    ctx.setLineDash([7,5]); ctx.strokeStyle='#c8312a'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(60,140); ctx.quadraticCurveTo(40,70,120,56); ctx.quadraticCurveTo(210,44,206,104);
+    ctx.quadraticCurveTo(202,158,120,152); ctx.quadraticCurveTo(86,150,60,140); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#c8312a'; ctx.beginPath(); ctx.arc(60,140,7,0,7); ctx.fill();
+    ctx.strokeStyle='#7a4a1a'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(180,80,20,0,7); ctx.stroke();
+    txt(ctx,'PASS',180,81,11,'#7a4a1a','center');
+  } else if (wi===13){ /* 字块：木纹棋盘黑白块+「慢」+铅笔橡皮 */
+    ctx.fillStyle='#8a6238'; ctx.fillRect(0,0,256,192);
+    ctx.fillStyle='rgba(60,36,12,.25)';
+    for (i=0;i<7;i++) ctx.fillRect(0,14+i*26,256,3);
+    for (var r2=0;r2<5;r2++) for (var c3=0;c3<7;c3++){
+      var on=(r2*7+c3)%3!==0;
+      ctx.fillStyle=on?'#f4ecd8':'#20242c';
+      ctx.fillRect(24+c3*30,26+r2*28,26,24);
+    }
+    ctx.fillStyle='#f4ecd8'; ctx.save(); ctx.translate(114,80); ctx.rotate(0.08);
+    ctx.fillRect(-14,-13,28,26); txt(ctx,'慢',0,1,17,'#20242c','center'); ctx.restore();
+    ctx.fillStyle='#ffd23f'; ctx.save(); ctx.translate(196,156); ctx.rotate(-0.3); ctx.fillRect(-26,-5,52,10); ctx.restore();
+    ctx.fillStyle='#e8e2d0'; ctx.save(); ctx.translate(60,162); ctx.rotate(0.2); ctx.fillRect(-16,-8,32,16); ctx.restore();
+  } else if (wi===14){ /* 像素信使：黄昏天际线+屋顶奔跑小人+星形残影 */
+    var g6=ctx.createLinearGradient(0,0,0,192); g6.addColorStop(0,'#2b1a4a'); g6.addColorStop(0.55,'#c85a3a'); g6.addColorStop(1,'#f0a24a');
+    ctx.fillStyle=g6; ctx.fillRect(0,0,256,192);
+    ctx.fillStyle='#1a1030';
+    [[0,120,44],[44,96,40],[84,132,52],[136,84,44],[180,116,76]].forEach(function(b){ ctx.fillRect(b[0],b[1],b[2],192-b[1]); });
+    ctx.fillStyle='#f4d03f'; for (i=0;i<14;i++) ctx.fillRect((i*37)%240,120+((i*29)%56),4,5);
+    ctx.fillStyle='#ffe9bd'; ctx.fillRect(136,84,44,6);
+    ctx.fillStyle='#fff';
+    [[100,72,5],[112,70,4],[124,68,3]].forEach(function(st){
+      ctx.save(); ctx.globalAlpha=0.5; ctx.translate(st[0],st[1]);
+      ctx.fillRect(-st[2],-1,st[2]*2,2); ctx.fillRect(-1,-st[2],2,st[2]*2); ctx.restore(); });
+    ctx.fillStyle='#20242c'; ctx.fillRect(136,66,8,12); ctx.fillRect(134,60,12,8);
+    ctx.fillStyle='#c8312a'; ctx.fillRect(146,64,10,8);
+    ctx.fillStyle='#20242c'; ctx.fillRect(140,78,4,6); ctx.fillRect(146,78,4,6);
+  } else if (wi===15){ /* 猫咪塔：六只花色猫歪斜摞塔，顶端打盹 */
+    ctx.fillStyle='#f6ead2'; ctx.fillRect(0,0,256,192);
+    var cats=[['#e8944a',128,160,0.05],['#f4ecd8',124,132,-0.09],['#3a3a46',132,104,0.12],['#e8944a',122,78,-0.06],['#c9a36a',130,52,0.07],['#8a6238',126,26,-0.04]];
+    cats.forEach(function(ct,ci){
+      ctx.save(); ctx.translate(ct[1],ct[2]); ctx.rotate(ct[3]);
+      ctx.fillStyle=ct[0]; rr(ctx,-30,-8,60,18,9); ctx.fill();
+      ctx.beginPath(); ctx.arc(-22,-14,10,0,7); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-29,-20); ctx.lineTo(-26,-28); ctx.lineTo(-21,-21); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-18,-21); ctx.lineTo(-14,-28); ctx.lineTo(-12,-20); ctx.closePath(); ctx.fill();
+      if (ci===5){ ctx.strokeStyle='#20242c'; ctx.lineWidth=1.6;
+        ctx.beginPath(); ctx.moveTo(-27,-15); ctx.lineTo(-23,-14); ctx.moveTo(-19,-15); ctx.lineTo(-15,-14); ctx.stroke(); }
+      else { ctx.fillStyle='#20242c'; ctx.fillRect(-26,-17,3,3); ctx.fillRect(-19,-17,3,3); }
+      ctx.restore();
+    });
+    txt(ctx,'47 层',224,176,12,'#8a6238','right');
+  } else { /* 谜题船：蓝墨水海面纸船+齿轮星号谜题 */
+    ctx.fillStyle='#dfe8f2'; ctx.fillRect(0,0,256,192);
+    ctx.strokeStyle='#274b7a'; ctx.lineWidth=2;
+    for (i=0;i<4;i++){ ctx.beginPath(); ctx.moveTo(0,120+i*18);
+      for (var x2=0;x2<=256;x2+=16) ctx.quadraticCurveTo(x2+8,120+i*18+(i%2?5:-5),x2+16,120+i*18);
+      ctx.stroke(); }
+    ctx.fillStyle='#fff';
+    ctx.save(); ctx.translate(128,104);
+    ctx.beginPath(); ctx.moveTo(-44,0); ctx.lineTo(44,0); ctx.lineTo(28,18); ctx.lineTo(-28,18); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,-44); ctx.lineTo(20,0); ctx.lineTo(-20,0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,-44); ctx.lineTo(6,-34); ctx.lineTo(-6,-34); ctx.closePath(); ctx.stroke();
+    ctx.restore();
+    ctx.strokeStyle='#274b7a';
+    ctx.beginPath(); ctx.arc(40,60,10,0.6,5.2); ctx.stroke();
+    for (i=0;i<8;i++){ var aa=i*Math.PI/4; ctx.beginPath(); ctx.moveTo(40+Math.cos(aa)*10,60+Math.sin(aa)*10); ctx.lineTo(40+Math.cos(aa)*16,60+Math.sin(aa)*16); ctx.stroke(); }
+    ctx.lineWidth=3;
+    [[214,52],[218,110],[36,150]].forEach(function(p){
+      ctx.beginPath();
+      for (var k=0;k<6;k++){ var b2=k*Math.PI/3; var px=p[0]+Math.cos(b2)*8, py=p[1]+Math.sin(b2)*8;
+        if(k===0)ctx.moveTo(px,py); else ctx.lineTo(px,py); }
+      ctx.closePath(); ctx.stroke(); });
+  }
+  ctx.restore();
+}
+
+/* 屏幕状态绘制（256x192 CanvasTexture） */
+function paintNoise(m){
+  noiseFrame(m.sctx, 256, 192, (m.seed + ((tGlobal*8)|0)) || 1);
+}
+function paintBoot(m, prog){ /* CRT 开机：水平亮线展开（配方 10 标志瞬间） */
+  var c = m.sctx;
+  c.fillStyle = '#02040a'; c.fillRect(0,0,256,192);
+  var hgt = Math.max(2, 192*prog);
+  c.save();
+  c.beginPath(); c.rect(0,(192-hgt)/2,256,hgt); c.clip();
+  drawArtwork(c, m.wi, 256, 192);
+  c.restore();
+  c.fillStyle = '#eaffff';
+  c.fillRect(0,(192-hgt)/2-2,256,3);
+  c.fillRect(0,(192+hgt)/2-1,256,3);
+}
+function paintDemo(m, tG){
+  var c = m.sctx, w = WORKS[m.wi], cat = CATS[w.cat], i, j;
+  c.fillStyle = '#04060a'; c.fillRect(0,0,256,192);
+  if (!m.baked){ /* 未烘焙：8-bit 吸引模式（程序化块面滚动） */
+    c.fillStyle = '#0a0f1c'; c.fillRect(0,0,256,192);
+    var off = (tG*26) % 32;
+    c.fillStyle = 'rgba(255,255,255,.05)';
+    for (i=-1;i<9;i++){
+      for (j=0;j<6;j++){
+        if (((i*7+j*13+m.wi*5)%9) < 3) c.fillRect(i*32+off-16, 14+j*28, 26, 22);
+      }
+    }
+    txt(c, w.name.toUpperCase().slice(0,18), 128, 74, 15, '#fff', 'center');
+    txt(c, '© SLOW CACHE ARCADE', 128, 98, 9, 'rgba(255,255,255,.45)', 'center');
+    if (Math.floor(tG*1.6)%2===0) txt(c, '- PRESS START -', 128, 130, 12, '#FFC94A', 'center');
+  } else { /* 已烘焙：作品画面横向滚动 marquee */
+    var scro = (tG*36) % 300;
+    c.save(); c.beginPath(); c.rect(0,0,256,160); c.clip();
+    c.translate(-scro,0);
+    drawArtwork(c, m.wi, 256, 160);
+    c.translate(300,0); drawArtwork(c, m.wi, 256, 160);
+    c.restore();
+    c.fillStyle='rgba(2,6,4,.88)'; c.fillRect(0,160,256,32);
+    txt(c, w.name, 10, 176, 12, '#fff', 'left');
+    txt(c, '1UP '+String(32000 + (((tG*97)|0)%8000)), 246, 176, 11, cat.css, 'right');
+  }
+  if (m.boot < 1){ /* 开机线叠加 */
+    var p2 = m.boot, hgt = Math.max(2, 192*p2);
+    c.fillStyle='rgba(200,255,230,.9)';
+    c.fillRect(0,(192-hgt)/2-1,256,2); c.fillRect(0,(192+hgt)/2-1,256,2);
+  }
+  c.fillStyle = 'rgba(0,0,0,.16)';
+  for (var y=0;y<192;y+=4) c.fillRect(0,y,256,1);
+}
+function paintInsertCoin(m, tG){
+  paintDemo(m, tG);
+  if (Math.floor(tG*2)%2===0){ /* <3Hz 防光敏 */
+    var c = m.sctx;
+    c.fillStyle='rgba(2,8,4,.78)'; c.fillRect(28,66,200,56);
+    c.strokeStyle='#FFC94A'; c.lineWidth=3; c.strokeRect(28,66,200,56);
+    txt(c,'INSERT COIN',128,88,18,'#FFC94A','center');
+    txt(c,'点击机台 投币开始',128,108,10,'#eafff2','center');
+  }
+}
+function paintStart(m){
+  var c = m.sctx;
+  c.fillStyle='#f2fff6'; c.fillRect(0,0,256,192);
+  txt(c,'GAME START',130,92,26,'rgba(255,60,140,.5)','center');
+  txt(c,'GAME START',128,90,26,'#0a3d22','center');
+  txt(c, WORKS[m.wi].name, 128, 124, 13, '#0a3d22', 'center');
+  c.fillStyle='rgba(0,0,0,.12)';
+  for (var y=0;y<192;y+=4) c.fillRect(0,y,256,1);
+}
+
+/* ---------------- [4] 纹理工厂 ---------------- */
+function mkCanvas(w,h){ var c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+function canvasTex(cv){
+  var t = new THREE.CanvasTexture(cv);
+  t.minFilter = THREE.LinearFilter; t.magFilter = THREE.LinearFilter;
+  return t;
+}
+var GLOW_TEX = null;
+function glowTexture(){
+  if (GLOW_TEX) return GLOW_TEX;
+  var cv = mkCanvas(128,128), c = cv.getContext('2d');
+  var g = c.createRadialGradient(64,64,2,64,64,62);
+  g.addColorStop(0,'rgba(255,255,255,1)');
+  g.addColorStop(0.25,'rgba(255,255,255,.55)');
+  g.addColorStop(0.6,'rgba(255,255,255,.14)');
+  g.addColorStop(1,'rgba(255,255,255,0)');
+  c.fillStyle = g; c.fillRect(0,0,128,128);
+  GLOW_TEX = new THREE.CanvasTexture(cv);
+  return GLOW_TEX;
+}
+function makeGlowSprite(color, scale){
+  var mat = new THREE.SpriteMaterial({ map:glowTexture(), color:color, blending:THREE.AdditiveBlending, depthWrite:false, transparent:true, opacity:0.85 });
+  var s = new THREE.Sprite(mat);
+  s.scale.set(scale, scale, 1);
+  return s;
+}
+/* 地面：马拉松花纹 */
+function floorTexture(){
+  var cv = mkCanvas(512,512), c = cv.getContext('2d');
+  c.fillStyle = '#16121f'; c.fillRect(0,0,512,512);
+  c.strokeStyle = 'rgba(0,0,0,.5)'; c.lineWidth = 3;
+  c.strokeRect(2,2,508,508);
+  c.beginPath(); c.moveTo(256,0); c.lineTo(256,512); c.moveTo(0,256); c.lineTo(512,256); c.stroke();
+  c.strokeStyle = 'rgba(88,255,155,.4)'; c.lineWidth = 5;
+  c.beginPath(); c.moveTo(56,0); c.lineTo(56,512); c.moveTo(456,0); c.lineTo(456,512); c.stroke();
+  c.strokeStyle = 'rgba(255,201,74,.16)'; c.lineWidth = 2;
+  c.beginPath(); c.moveTo(96,0); c.lineTo(96,512); c.moveTo(416,0); c.lineTo(416,512); c.stroke();
+  c.strokeStyle = 'rgba(140,220,255,.30)'; c.lineWidth = 8; c.lineCap = 'round';
+  [130, 382].forEach(function(x){
+    c.beginPath(); c.moveTo(x,388); c.lineTo(x,268); c.moveTo(x-26,300); c.lineTo(x,268); c.lineTo(x+26,300); c.stroke();
+  });
+  c.fillStyle = 'rgba(255,201,74,.5)';
+  c.font = 'bold 30px monospace'; c.textAlign='center';
+  c.fillText('K 09', 256, 60);
+  c.fillStyle = 'rgba(255,255,255,.05)';
+  c.font = 'bold 44px monospace';
+  c.fillText('SLOW CACHE', 256, 330);
+  for (var i=0;i<340;i++){ var v = (i*97)%255;
+    c.fillStyle = 'rgba('+v+','+v+','+(v+10)+',.045)';
+    c.fillRect((i*131)%512,(i*77)%512,3,3); }
+  return canvasTex(cv);
+}
+/* 区域霓虹灯牌 */
+function zoneSignTexture(cat, idx){
+  var cv = mkCanvas(512,128), c = cv.getContext('2d');
+  c.fillStyle = '#0a0616'; c.fillRect(0,0,512,128);
+  var col = '#' + ('00000'+cat.color.toString(16)).slice(-6);
+  c.strokeStyle = col; c.lineWidth = 6; c.strokeRect(8,8,496,112);
+  c.save(); c.shadowColor = col; c.shadowBlur = 18;
+  txt(c, '0'+(idx+1), 58, 66, 46, col, 'center');
+  txt(c, cat.name, 268, 56, 42, '#ffffff', 'center');
+  txt(c, cat.en, 268, 100, 17, col, 'center');
+  c.restore();
+  return canvasTex(cv);
+}
+/* 机台侧板贴纸：竖排艺术字 */
+function stickerTexture(work, cat){
+  var cv = mkCanvas(96,320), c = cv.getContext('2d');
+  var col = '#' + ('00000'+cat.color.toString(16)).slice(-6);
+  c.fillStyle = '#0d0a1c'; c.fillRect(0,0,96,320);
+  c.strokeStyle = col; c.lineWidth = 4; c.strokeRect(6,6,84,308);
+  c.fillStyle = 'rgba(255,255,255,.05)';
+  for (var i=0;i<40;i++) c.fillRect((i*41)%96,(i*67)%320,2,2);
+  var name = work.name.split(' ')[0];
+  c.save(); c.shadowColor = col; c.shadowBlur = 10;
+  for (i=0;i<name.length && i<8;i++){
+    txt(c, name[i], 48, 58+i*34, 26, '#ffffff', 'center');
+  }
+  c.restore();
+  txt(c, work.slug.toUpperCase(), 48, 296, 10, col, 'center');
+  return canvasTex(cv);
+}
+/* 顶部灯箱 */
+function marqueeTexture(work, cat){
+  var cv = mkCanvas(256,72), c = cv.getContext('2d');
+  var col = '#' + ('00000'+cat.color.toString(16)).slice(-6);
+  var g = c.createLinearGradient(0,0,256,0);
+  g.addColorStop(0, col); g.addColorStop(1, '#1a1233');
+  c.fillStyle = g; c.fillRect(0,0,256,72);
+  c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 3; c.strokeRect(4,4,248,64);
+  c.save(); c.shadowColor = '#fff'; c.shadowBlur = 8;
+  txt(c, work.name, 128, 30, 22, '#fff', 'center');
+  c.restore();
+  txt(c, work.slug.toUpperCase() + ' · 1 PLAY 1 CREDIT', 128, 54, 11, 'rgba(255,255,255,.75)', 'center');
+  return canvasTex(cv);
+}
+/* 墙面海报 */
+function posterTexture(i){
+  var cv = mkCanvas(256,384), c = cv.getContext('2d');
+  var cols = ['#8EA8FF','#FF4FA0','#58FF9B','#FFC94A'];
+  var col = cols[i%4];
+  var g = c.createLinearGradient(0,0,0,384);
+  g.addColorStop(0,'#141024'); g.addColorStop(1,'#0a0716');
+  c.fillStyle = g; c.fillRect(0,0,256,384);
+  c.strokeStyle = col; c.globalAlpha = 0.7; c.lineWidth = 3; c.strokeRect(12,12,232,360); c.globalAlpha = 1;
+  for (var k=0;k<5;k++){
+    c.globalAlpha = 0.16 + k*0.12;
+    c.strokeStyle = col;
+    c.beginPath(); c.arc(128, 130, 16+k*17, 0, 7); c.stroke();
+  }
+  c.globalAlpha = 1;
+  c.save(); c.shadowColor = col; c.shadowBlur = 12;
+  txt(c, '慢速缓存', 128, 300, 34, '#fff', 'center');
+  c.restore();
+  txt(c, 'SLOW CACHE · NO.0'+(i+1), 128, 336, 12, col, 'center');
+  return canvasTex(cv);
+}
+/* 假阴影 / 地面辉光贴片 */
+function blobShadowTexture(){
+  var cv = mkCanvas(128,128), c = cv.getContext('2d');
+  var g = c.createRadialGradient(64,64,4,64,64,62);
+  g.addColorStop(0,'rgba(0,0,0,.62)'); g.addColorStop(0.7,'rgba(0,0,0,.28)'); g.addColorStop(1,'rgba(0,0,0,0)');
+  c.fillStyle = g; c.fillRect(0,0,128,128);
+  return new THREE.CanvasTexture(cv);
+}
+/* 过道霓虹湿地反光长条 */
+function aisleStreakTexture(){
+  var cv = mkCanvas(128,512), c = cv.getContext('2d');
+  var g = c.createLinearGradient(0,0,0,512);
+  g.addColorStop(0,'rgba(120,220,255,0)');
+  g.addColorStop(0.5,'rgba(150,190,255,.20)');
+  g.addColorStop(1,'rgba(120,220,255,0)');
+  c.fillStyle = g; c.fillRect(34,0,60,512);
+  var g2 = c.createLinearGradient(0,0,0,512);
+  g2.addColorStop(0,'rgba(255,201,74,0)'); g2.addColorStop(0.5,'rgba(255,160,90,.12)'); g2.addColorStop(1,'rgba(255,201,74,0)');
+  c.fillStyle = g2; c.fillRect(6,0,16,512); c.fillRect(106,0,16,512);
+  return canvasTex(cv);
+}
+/* 伪二维码 SVG（三定位角+网格随机模块+中央印章） */
+function qrSVG(){
+  var n = 21, cells = '';
+  function finder(x,y){
+    cells += '<rect x="'+x+'" y="'+y+'" width="7" height="7" fill="#171129"/>';
+    cells += '<rect x="'+(x+1)+'" y="'+(y+1)+'" width="5" height="5" fill="#f4f1e8"/>';
+    cells += '<rect x="'+(x+2)+'" y="'+(y+2)+'" width="3" height="3" fill="#171129"/>';
+  }
+  for (var y=0;y<n;y++) for (var x=0;x<n;x++){
+    var inFinder = (x<8&&y<8)||(x>n-9&&y<8)||(x<8&&y>n-9);
+    var inMid = x>6&&x<14&&y>6&&y<14;
+    if (!inFinder && !inMid && ((x*7+y*13+x*y)%3<2 || (x*y)%5===0))
+      cells += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="#171129"/>';
+  }
+  finder(0,0); finder(n-7,0); finder(0,n-7);
+  cells += '<rect x="8" y="9" width="5" height="4" rx="1" fill="#c8312a"/>';
+  return '<svg viewBox="-1 -1 '+(n+2)+' '+(n+2)+'" width="100%" height="100%" shape-rendering="crispEdges">'+cells+'</svg>';
+}
+
+/* ---------------- [5] 场景构建（three.js r128 API） ---------------- */
+var renderer, scene, camera, clock, raf = 0;
+var camCurve, lookCurve, pathSamples = [];
+var machines = [];
+var tubes = [], dust = null;
+var curP = 0, targetP = 0;
+var yaw = 0, pitch = 0, tYaw = 0, tPitch = 0, yawVel = 0, pitchVel = 0;
+var focusMode = false;
+var hoverM = null;
+var coinMesh = null;
+var walkAnim = null;
+var introT = 1;
+var tGlobal = 0, frames = 0, fpsAcc = 0, degraded2 = false;
+var camSave = { pos:null, quat:null };
+var raycaster = null, ndc = null;
+var lastRayT = 0;
+var hitList = [];
+var railThumbEl = null;
+/* 复用临时对象（GC 红线：update 循环内禁止 new） */
+var _v1, _v2, _dummy, _q1;
+var HALL = { z0: 6.5, z1: -45.5, camY: 1.6 };
+var GEO = {}, MAT = {};
+
+function initThree(){
+  var canvas = $('#stage');
+  var gl = null;
+  try { gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl'); } catch(e){ gl = null; }
+  if (!gl) return false;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: !IS_MOBILE, powerPreference: 'high-performance' });
+  } catch(e){ return false; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, IS_MOBILE ? 1.5 : 2));
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.shadowMap.enabled = false;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x120b1e);
+  scene.fog = new THREE.FogExp2(0x120b1e, 0.030);
+
+  camera = new THREE.PerspectiveCamera(62, window.innerWidth/window.innerHeight, 0.1, 120);
+  camera.position.set(0, HALL.camY, HALL.z0);
+
+  clock = new THREE.Clock();
+  _v1 = new THREE.Vector3(); _v2 = new THREE.Vector3();
+  _dummy = new THREE.Object3D(); _q1 = new THREE.Quaternion();
+  raycaster = new THREE.Raycaster();
+  ndc = new THREE.Vector2();
+  return true;
+}
+
+function buildShared(){
+  GEO.body   = new THREE.BoxGeometry(0.92, 1.02, 0.68);
+  GEO.upper  = new THREE.BoxGeometry(0.92, 0.78, 0.60);
+  GEO.marq   = new THREE.BoxGeometry(0.80, 0.24, 0.18);
+  GEO.bezel  = new THREE.BoxGeometry(0.76, 0.64, 0.08);
+  GEO.screen = new THREE.PlaneGeometry(0.60, 0.45);
+  GEO.marqFace = new THREE.PlaneGeometry(0.74, 0.20);
+  GEO.deck   = new THREE.BoxGeometry(0.84, 0.08, 0.40);
+  GEO.joyBase= new THREE.CylinderGeometry(0.05, 0.065, 0.035, 10);
+  GEO.joyShaft = new THREE.CylinderGeometry(0.012, 0.012, 0.15, 6);
+  GEO.ball   = new THREE.SphereGeometry(0.045, 10, 8);
+  GEO.btn    = new THREE.CylinderGeometry(0.034, 0.034, 0.03, 10);
+  GEO.coinPlate = new THREE.BoxGeometry(0.18, 0.15, 0.03);
+  GEO.coinSlot  = new THREE.BoxGeometry(0.05, 0.014, 0.012);
+  GEO.strip  = new THREE.BoxGeometry(0.05, 1.9, 0.05);
+  GEO.sticker= new THREE.PlaneGeometry(0.5, 1.7);
+  GEO.tube   = new THREE.BoxGeometry(2.3, 0.07, 0.14);
+  GEO.sign   = new THREE.BoxGeometry(3.0, 0.66, 0.10);
+  GEO.blob   = new THREE.PlaneGeometry(1.9, 1.35);
+  GEO.silu   = new THREE.BoxGeometry(1, 1, 1);
+  GEO.cable  = new THREE.CylinderGeometry(0.012, 0.012, 1, 4);
+
+  MAT.deck  = new THREE.MeshStandardMaterial({ color: 0x14101f, roughness: 0.7, metalness: 0.3 });
+  MAT.dark  = new THREE.MeshStandardMaterial({ color: 0x0c0916, roughness: 0.85, metalness: 0.1 });
+  MAT.ball  = new THREE.MeshStandardMaterial({ color: 0xd5232f, roughness: 0.25, metalness: 0.15 });
+  MAT.btnP  = new THREE.MeshStandardMaterial({ color: 0xff4fa0, roughness: 0.35 });
+  MAT.btnG  = new THREE.MeshStandardMaterial({ color: 0xffc94a, roughness: 0.35 });
+  MAT.metal = new THREE.MeshStandardMaterial({ color: 0x2a2440, roughness: 0.4, metalness: 0.7 });
+  MAT.silu  = new THREE.MeshLambertMaterial({ color: 0x0a0714 });
+  MAT.blob  = new THREE.MeshBasicMaterial({ map: blobShadowTexture(), transparent: true, depthWrite: false, opacity: 0.75 });
+  CATS.forEach(function(c){
+    MAT['cab'+c.key] = new THREE.MeshStandardMaterial({ color: new THREE.Color(c.color).multiplyScalar(0.32), roughness: 0.55, metalness: 0.3 });
+    MAT['strip'+c.key] = new THREE.MeshBasicMaterial({ color: c.color });
+  });
+}
+
+function buildRoom(){
+  /* 地面：马拉松花纹 + 霓虹反光近似 */
+  var ftex = floorTexture();
+  ftex.wrapS = ftex.wrapT = THREE.RepeatWrapping;
+  ftex.repeat.set(3, 11);
+  var floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(20, 64),
+    new THREE.MeshStandardMaterial({ map: ftex, roughness: 0.42, metalness: 0.35 })
+  );
+  floor.rotation.x = -Math.PI/2;
+  floor.position.set(0, 0, (HALL.z0 + HALL.z1)/2);
+  scene.add(floor);
+  /* 过道湿地反光条（additive） */
+  var streak = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.7, 52),
+    new THREE.MeshBasicMaterial({ map: aisleStreakTexture(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.55 })
+  );
+  streak.rotation.x = -Math.PI/2;
+  streak.position.set(0, 0.012, -19);
+  scene.add(streak);
+
+  /* 天花板 + 灯管（发光长条+辉光 sprite，两根会闪烁） */
+  var ceil = new THREE.Mesh(new THREE.PlaneGeometry(20, 64), new THREE.MeshLambertMaterial({ color: 0x0a0714 }));
+  ceil.rotation.x = Math.PI/2;
+  ceil.position.set(0, 5.4, (HALL.z0 + HALL.z1)/2);
+  scene.add(ceil);
+  for (var z = 4; z >= -44; z -= 6){
+    var flicker = (z === -8 || z === -32);
+    var tubeMat = new THREE.MeshBasicMaterial({ color: flicker ? 0x8f9cc0 : 0xdfe8ff });
+    var tube = new THREE.Mesh(GEO.tube, tubeMat);
+    tube.position.set(0, 5.32, z);
+    scene.add(tube);
+    var glow = makeGlowSprite(flicker ? 0x9fb4e8 : 0xcfe0ff, 4.6);
+    glow.material.opacity = 0.5;
+    glow.position.set(0, 5.05, z);
+    scene.add(glow);
+    tubes.push({ mesh: tube, glow: glow, flicker: flicker, on: true, next: 0 });
+  }
+
+  /* 两侧墙 + 尽头/入口墙 */
+  var wallMat = new THREE.MeshLambertMaterial({ color: 0x171029 });
+  [-9.5, 9.5].forEach(function(wx){
+    var wall = new THREE.Mesh(new THREE.PlaneGeometry(64, 5.4), wallMat);
+    wall.rotation.y = wx > 0 ? -Math.PI/2 : Math.PI/2;
+    wall.position.set(wx, 2.7, -19);
+    scene.add(wall);
+  });
+  [HALL.z1 - 1.5, HALL.z0 + 3].forEach(function(wz){
+    var wall = new THREE.Mesh(new THREE.PlaneGeometry(20, 5.4), wallMat);
+    wall.position.set(0, 2.7, wz);
+    wall.rotation.y = wz < 0 ? 0 : Math.PI;
+    scene.add(wall);
+  });
+  /* 尽头霓虹大灯牌（页脚营业时间霓虹牌的 3D 对应） */
+  var endSign = mkCanvas(1024, 256), ec = endSign.getContext('2d');
+  ec.fillStyle = '#0a0616'; ec.fillRect(0,0,1024,256);
+  ec.save(); ec.shadowColor = '#FFC94A'; ec.shadowBlur = 30;
+  txt(ec, 'SLOW CACHE', 512, 92, 88, '#ffe6ad', 'center');
+  ec.restore();
+  txt(ec, '营业时间 22:00 — 次日 04:00 · 全年无休', 512, 178, 30, '#58FF9B', 'center');
+  txt(ec, '慢速缓存 · 长期保鲜', 512, 222, 20, 'rgba(255,255,255,.5)', 'center');
+  var endPlane = new THREE.Mesh(new THREE.PlaneGeometry(11, 2.75), new THREE.MeshBasicMaterial({ map: canvasTex(endSign) }));
+  endPlane.position.set(0, 3.1, HALL.z1 - 1.3);
+  scene.add(endPlane);
+  var endGlow = makeGlowSprite(0xffc94a, 9);
+  endGlow.material.opacity = 0.4;
+  endGlow.position.set(0, 3.1, HALL.z1 - 1.0);
+  scene.add(endGlow);
+
+  /* 墙面海报（程序化） */
+  [ -6.5, -17, -28, -38.5 ].forEach(function(pz, i){
+    [-9.42, 9.42].forEach(function(px, side){
+      var p = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 2.25),
+        new THREE.MeshBasicMaterial({ map: posterTexture(i + side), color: 0x9a95b8 }));
+      p.position.set(px, 2.4, pz);
+      p.rotation.y = px > 0 ? -Math.PI/2 : Math.PI/2;
+      scene.add(p);
+    });
+  });
+
+  /* 远处虚化机台剪影（InstancedMesh · 1 draw call） */
+  var silu = new THREE.InstancedMesh(GEO.silu, MAT.silu, 40);
+  for (var i = 0; i < 40; i++){
+    var sideX = i % 2 === 0 ? -1 : 1;
+    var sx = sideX * (5.6 + (i * 37 % 30) / 10);
+    var sz = 3 - (i * 61 % 46);
+    var hgt = 1.7 + (i * 29 % 9) / 10;
+    _dummy.position.set(sx, hgt/2, sz);
+    _dummy.rotation.set(0, (i%3-1)*0.3, 0);
+    _dummy.scale.set(0.9, hgt, 0.8);
+    _dummy.updateMatrix();
+    silu.setMatrixAt(i, _dummy.matrix);
+  }
+  silu.instanceMatrix.needsUpdate = true;
+  scene.add(silu);
+  /* 剪影群里的“屏幕光” */
+  var nGlow = LOW ? 4 : 9;
+  for (i = 0; i < nGlow; i++){
+    var sg = makeGlowSprite(i % 3 === 0 ? 0x58ff9b : (i % 3 === 1 ? 0x4fc3f7 : 0xff4fa0), 1.6 + (i*13)%10/6);
+    sg.material.opacity = 0.35;
+    sg.position.set((i%2===0?-1:1) * (5.2 + (i*31%20)/10), 1.3 + (i*17%10)/8, 1 - (i*53%44));
+    scene.add(sg);
+  }
+
+  /* 灯光 */
+  scene.add(new THREE.AmbientLight(0x2a2440, 1.05));
+  scene.add(new THREE.HemisphereLight(0x35305e, 0x0a0812, 0.5));
+  var zoneZ = [ -8, -18.8, -28.3, -37.8 ];
+  CATS.forEach(function(c, i){
+    var pl = new THREE.PointLight(c.color, 0.85, 13, 2);
+    pl.position.set(0, 3.6, zoneZ[i]);
+    scene.add(pl);
+    var gsp = makeGlowSprite(c.color, 5.5);
+    gsp.material.opacity = 0.28;
+    gsp.position.set(0, 3.6, zoneZ[i]);
+    scene.add(gsp);
+  });
+  var door = new THREE.PointLight(0xffe0b0, 0.9, 12, 2);
+  door.position.set(0, 3, HALL.z0 + 1.5);
+  scene.add(door);
+}
+
+function buildCabinet(m){
+  var cat = CATS[m.work.cat];
+  var g = new THREE.Group();
+  var cabMat = MAT['cab'+cat.key];
+  var stripMat = MAT['strip'+cat.key];
+
+  var body = new THREE.Mesh(GEO.body, cabMat); body.position.set(0, 0.51, 0.02);
+  var upper = new THREE.Mesh(GEO.upper, cabMat); upper.position.set(0, 1.40, -0.03);
+  var bezel = new THREE.Mesh(GEO.bezel, MAT.dark); bezel.position.set(0, 1.42, 0.27);
+  var deck = new THREE.Mesh(GEO.deck, MAT.deck); deck.rotation.x = -0.5; deck.position.set(0, 1.05, 0.42);
+  var marq = new THREE.Mesh(GEO.marq, MAT.dark); marq.position.set(0, 1.93, 0.06);
+  var stripL = new THREE.Mesh(GEO.strip, stripMat); stripL.position.set(-0.465, 1.0, 0.30);
+  var stripR = new THREE.Mesh(GEO.strip, stripMat); stripR.position.set(0.465, 1.0, 0.30);
+  var coinPlate = new THREE.Mesh(GEO.coinPlate, MAT.metal); coinPlate.position.set(0, 0.62, 0.36);
+  var coinSlot = new THREE.Mesh(GEO.coinSlot, MAT.btnG); coinSlot.position.set(0, 0.655, 0.378);
+
+  var jb = new THREE.Mesh(GEO.joyBase, MAT.dark); jb.position.set(-0.22, 1.10, 0.40);
+  var js = new THREE.Mesh(GEO.joyShaft, MAT.metal); js.position.set(-0.22, 1.18, 0.40);
+  var ball = new THREE.Mesh(GEO.ball, MAT.ball); ball.position.set(-0.22, 1.26, 0.40);
+  var b1 = new THREE.Mesh(GEO.btn, MAT.btnP); b1.rotation.x = -0.5; b1.position.set(0.13, 1.115, 0.40);
+  var b2 = new THREE.Mesh(GEO.btn, MAT.btnG); b2.rotation.x = -0.5; b2.position.set(0.28, 1.09, 0.375);
+
+  /* 屏幕：CanvasTexture（懒烘焙） */
+  m.scv = mkCanvas(256, 192);
+  m.sctx = m.scv.getContext('2d');
+  noiseFrame(m.sctx, 256, 192, m.seed);
+  m.tex = canvasTex(m.scv);
+  m.tex.encoding = THREE.sRGBEncoding;
+  var screen = new THREE.Mesh(GEO.screen, new THREE.MeshBasicMaterial({ map: m.tex }));
+  screen.position.set(0, 1.42, 0.316);
+  screen.rotation.x = -0.06;
+
+  /* 侧板贴纸 / 灯箱贴面：接近才烘焙 */
+  var stickerMat = new THREE.MeshBasicMaterial({ color: 0x1a1430 });
+  var stickL = new THREE.Mesh(GEO.sticker, stickerMat); stickL.position.set(-0.472, 1.0, 0.02); stickL.rotation.y = -Math.PI/2;
+  var stickR = new THREE.Mesh(GEO.sticker, stickerMat); stickR.position.set(0.472, 1.0, 0.02); stickR.rotation.y = Math.PI/2;
+  var marqMat = new THREE.MeshBasicMaterial({ color: 0x1a1430 });
+  var marqFace = new THREE.Mesh(GEO.marqFace, marqMat);
+  marqFace.position.set(0, 1.93, 0.155);
+
+  /* 假阴影（blob shadow，阴影红线） */
+  var blob = new THREE.Mesh(GEO.blob, MAT.blob);
+  blob.rotation.x = -Math.PI/2; blob.position.y = 0.012;
+
+  /* 轮廓描边（hover 高亮） */
+  var edgeMat = new THREE.LineBasicMaterial({ color: cat.color, transparent: true, opacity: 0.95 });
+  var edges = new THREE.Group();
+  [ [GEO.body, body.position], [GEO.upper, upper.position], [GEO.marq, marq.position] ].forEach(function(pair){
+    var eg = new THREE.LineSegments(new THREE.EdgesGeometry(pair[0]), edgeMat);
+    eg.position.copy(pair[1]);
+    edges.add(eg);
+  });
+  edges.visible = false;
+
+  g.add(body); g.add(upper); g.add(bezel); g.add(deck); g.add(marq);
+  g.add(stripL); g.add(stripR); g.add(coinPlate); g.add(coinSlot);
+  g.add(jb); g.add(js); g.add(ball); g.add(b1); g.add(b2);
+  g.add(screen); g.add(stickL); g.add(stickR); g.add(marqFace); g.add(blob); g.add(edges);
+
+  m.group = g; m.screen = screen; m.edges = edges;
+  m.stickerMat = stickerMat; m.marqMat = marqMat;
+  m.camLocal = new THREE.Vector3(0, 1.42, 0.60);   /* 冲屏相机落点（局部） */
+  m.lookLocal = new THREE.Vector3(0, 1.42, 0.316);
+  m.coinLocal = new THREE.Vector3(0, 0.9, 0.42);
+  m.baked = false; m.boot = 1; m.state = 'noise';
+  m.busy = false; m.lockCoin = false; m.forcedGlow = 0;
+
+  var hitMeshes = [body, upper, bezel, deck, marq, screen, coinPlate, marqFace];
+  hitMeshes.forEach(function(h){ h.userData.m = m; });
+  hitList.push.apply(hitList, hitMeshes);
+  return g;
+}
+
+function buildMachines(){
+  var zones = [ { z:-3.0, n:5 }, { z:-15.5, n:4 }, { z:-25.0, n:4 }, { z:-34.5, n:4 } ];
+  var zoneMeta = [];
+  for (var zi = 0; zi < 4; zi++){
+    var zStart = zones[zi].z;
+    for (var k = 0; k < zones[zi].n; k++){
+      var wi = zi === 0 ? k : (zi === 1 ? 5 + k : (zi === 2 ? 9 + k : 13 + k));
+      var side = k % 2 === 0 ? -1 : 1;   /* 左右交错，两列夹一镜 */
+      var m = {
+        wi: wi, work: WORKS[wi], cat: WORKS[wi].cat,
+        seed: 1 + wi * 7919,
+        side: side,
+        x: side * 2.15,
+        z: zStart - k * 2.35
+      };
+      var g = buildCabinet(m);
+      g.position.set(m.x, 0, m.z);
+      g.rotation.y = side === 1 ? -Math.PI/2 : Math.PI/2;  /* 屏幕面向过道 */
+      scene.add(g);
+      machines.push(m);
+    }
+    zoneMeta.push({ zi: zi, z: zStart - (zones[zi].n - 1) * 2.35 / 2, t: 0 });
+  }
+  /* 区顶霓虹灯牌 */
+  zoneMeta.forEach(function(zm){
+    var cat = CATS[zm.zi];
+    var sign = new THREE.Mesh(GEO.sign, new THREE.MeshBasicMaterial({ map: zoneSignTexture(cat, zm.zi) }));
+    sign.position.set(0, 3.35, zm.z - 1.2);
+    scene.add(sign);
+    var gl = makeGlowSprite(cat.color, 6.2);
+    gl.material.opacity = 0.3;
+    gl.position.set(0, 3.35, zm.z - 1.1);
+    scene.add(gl);
+    [-1.1, 1.1].forEach(function(cx){
+      var cable = new THREE.Mesh(GEO.cable, MAT.dark);
+      cable.scale.y = 1.75;
+      cable.position.set(cx, 4.5, zm.z - 1.2);
+      scene.add(cable);
+    });
+  });
+  machines.zoneMeta = zoneMeta;
+}
+
+function buildDust(){
+  var N = LOW ? 220 : 700;
+  var pos = new Float32Array(N*3), col = new Float32Array(N*3);
+  for (var i = 0; i < N; i++){
+    pos[i*3]   = (Math.random()-0.5) * 17;
+    pos[i*3+1] = Math.random() * 5;
+    pos[i*3+2] = HALL.z0 + 2 - Math.random() * 54;
+    var v = 0.35 + Math.random() * 0.65;
+    col[i*3] = v; col[i*3+1] = v * 0.96; col[i*3+2] = v;
+  }
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  dust = new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 0.045, vertexColors: true, transparent: true, opacity: 0.5,
+    depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true
+  }));
+  scene.add(dust);
+}
+
+function buildCoin(){
+  coinMesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.045, 0.045, 0.014, 14),
+    new THREE.MeshBasicMaterial({ color: 0xffc94a })
+  );
+  coinMesh.visible = false;
+  scene.add(coinMesh);
+}
+
+function buildCurves(){
+  var pts = [], lpts = [];
+  var zs = [ HALL.z0, -1, -8, -15, -22, -29, -36, -43 ];
+  for (var i = 0; i < zs.length; i++){
+    var sway = Math.sin(i * 1.7) * 0.42;
+    pts.push(new THREE.Vector3(sway, HALL.camY, zs[i]));
+    lpts.push(new THREE.Vector3(sway * 0.4, 1.5, zs[i] - 2.6));
+  }
+  camCurve = new THREE.CatmullRomCurve3(pts);
+  lookCurve = new THREE.CatmullRomCurve3(lpts);
+  pathSamples = [];
+  for (var s = 0; s <= 220; s++) pathSamples.push(camCurve.getPoint(s / 220));
+  machines.forEach(function(m){ m.pathT = nearestT(m.z + 0.6); });
+  machines.zoneMeta.forEach(function(zm){ zm.t = nearestT(zm.z + 1.2); });
+}
+function nearestT(zTarget){
+  var best = 0, bd = 1e9;
+  for (var i = 0; i < pathSamples.length; i++){
+    var d = Math.abs(pathSamples[i].z - zTarget);
+    if (d < bd){ bd = d; best = i / (pathSamples.length - 1); }
+  }
+  return best;
+}
+
+/* 懒烘焙：接近才烘焙 屏幕游戏画面/侧板贴纸/灯箱纹理 */
+function bakeArt(m){
+  if (m.baked) return;
+  m.baked = true;
+  m.boot = 0;   /* 触发 CRT 开机线动画 */
+  if (!m.group) return;   /* 降级模式无 3D 机身 */
+  if (!m.stickerMat.map){
+    m.stickerMat.map = stickerTexture(m.work, CATS[m.cat]);
+    m.stickerMat.color.set(0xffffff);
+    m.stickerMat.needsUpdate = true;
+    m.marqMat.map = marqueeTexture(m.work, CATS[m.cat]);
+    m.marqMat.color.set(0xffffff);
+    m.marqMat.needsUpdate = true;
+  }
+}
+function forceBake(m){ bakeArt(m); }
+
+/* 每帧临近检测（节流 120ms）：动态屏幕集合 ≤ DYN_MAX 台 */
+var dynTimer = 0, dynSet = [];
+function refreshDynSet(){
+  var camPos = camera.position, arr = [], i;
+  for (i = 0; i < machines.length; i++){
+    var m = machines[i];
+    var dx = m.x - camPos.x, dz = m.z - camPos.z;
+    var d2 = dx*dx + dz*dz;
+    if (d2 < 110) arr.push({ m: m, d2: d2 });
+  }
+  arr.sort(function(a,b){ return a.d2 - b.d2; });
+  dynSet = arr.slice(0, DYN_MAX).map(function(o){ return o.m; });
+  for (i = 0; i < arr.length; i++){
+    if (arr[i].d2 < 30) bakeArt(arr[i].m);   /* 5.5m 内烘焙真图 */
+  }
+}
+
+/* ---------------- [6] 交互 ---------------- */
+var dragging = false, dragMoved = 0, dragStart = 0, lx = 0, ly = 0;
+var scrollMax = 1;
+
+function bindPointer(){
+  var cv = $('#stage');
+  cv.addEventListener('pointerdown', function(e){
+    introT = 1;   /* 任意点击跳过入场 */
+    if (focusMode) return;
+    dragging = true; dragMoved = 0; dragStart = nowMs();
+    lx = e.clientX; ly = e.clientY;
+    yawVel = 0; pitchVel = 0;
+    cv.classList.add('dragging');
+  });
+  window.addEventListener('pointermove', function(e){
+    if (dragging && !focusMode){
+      var dx = e.clientX - lx, dy = e.clientY - ly;
+      lx = e.clientX; ly = e.clientY;
+      dragMoved += Math.abs(dx) + Math.abs(dy);
+      tYaw = clamp(tYaw - dx * 0.0032, -1.0, 1.0);
+      tPitch = clamp(tPitch - dy * 0.0022, -0.42, 0.42);
+      yawVel = -dx * 0.0032; pitchVel = -dy * 0.0022;
+    }
+    if (e.clientX !== undefined){ updateNDC(e); tryHover(true); }
+  });
+  window.addEventListener('pointerup', function(e){
+    if (!dragging) return;
+    dragging = false;
+    cv.classList.remove('dragging');
+    if (dragMoved < 8 && nowMs() - dragStart < 420 && !focusMode){
+      updateNDC(e);
+      pickMachine();
+    }
+  });
+  window.addEventListener('keydown', function(){ introT = 1; });
+  window.addEventListener('scroll', function(){
+    targetP = scrollMax > 0 ? clamp(window.scrollY / scrollMax, 0, 1) : 0;
+    var hint = $('#hint');
+    if (window.scrollY > 40 && hint && !hint.classList.contains('hide')) hint.classList.add('hide');
+  }, { passive: true });
+}
+function updateNDC(e){
+  if (!ndc) return;
+  ndc.x = (e.clientX / window.innerWidth) * 2 - 1;
+  ndc.y = -(e.clientY / window.innerHeight) * 2 + 1;
+}
+function tryHover(throttled){
+  if (!raycaster || focusMode || RM){ setHover(null); return; }
+  var t = nowMs();
+  if (throttled && t - lastRayT < 50) return;
+  lastRayT = t;
+  raycaster.setFromCamera(ndc, camera);
+  var hits = raycaster.intersectObjects(hitList, false);
+  if (hits.length){
+    var m = hits[0].object.userData.m;
+    if (m !== hoverM){ bakeArt(m); }
+    setHover(m);
+  } else setHover(null);
+}
+function setHover(m){
+  $('#stage').classList.toggle('coinable', !!m);
+  if (hoverM === m) return;
+  if (hoverM){
+    hoverM.edges.visible = false;
+    if (hoverM.state === 'coin' && !hoverM.lockCoin) hoverM.state = 'demo';
+  }
+  hoverM = m;
+  if (m){ m.edges.visible = true; m.state = 'coin'; }   /* 屏幕「INSERT COIN」+描边高亮 */
+}
+function pickMachine(){
+  raycaster.setFromCamera(ndc, camera);
+  var hits = raycaster.intersectObjects(hitList, false);
+  if (hits.length) startCoinSeq(hits[0].object.userData.m);
+}
+
+/* 标志性瞬间：投币 → GAME START 白闪 → 相机猛推冲屏 → CRT 详情面板 */
+function startCoinSeq(m){
+  if (focusMode || m.busy || !m.group) return;
+  m.busy = true; m.lockCoin = true;
+  bakeArt(m);
+  m.group.updateMatrixWorld(true);
+  _v1.copy(m.coinLocal); m.group.localToWorld(_v1);
+  coinMesh.visible = true;
+  coinMesh.position.set(_v1.x, _v1.y + 0.4, _v1.z);
+  coinMesh.rotation.set(0, 0, 0);
+  playBlip(880, 0.05);
+  var baseY = _v1.y;
+  addTween(320, function(k){
+    var e = easeInQuad(k);
+    coinMesh.position.y = baseY + 0.4 - 0.42 * e;   /* 硬币落入投币口 */
+    coinMesh.rotation.z = k * 7;
+  }, function(){
+    coinMesh.visible = false;
+    playBlip(1320, 0.09);
+    m.state = 'start';                               /* 屏幕白闪 GAME START */
+    addTween(520, function(k){
+      if (m.state === 'start'){ paintStart(m); m.tex.needsUpdate = true; }
+    }, function(){
+      m.state = 'demo';
+      dollyToScreen(m);                              /* 相机猛推冲向屏幕 */
+    });
+  });
+}
+function dollyToScreen(m){
+  focusMode = true;   /* 锁定滚动运镜与拖拽 */
+  setHover(null);
+  m.group.updateMatrixWorld(true);
+  _v1.copy(m.camLocal); m.group.localToWorld(_v1);
+  _v2.copy(m.lookLocal); m.group.localToWorld(_v2);
+  if (!camSave.pos){ camSave.pos = new THREE.Vector3(); camSave.quat = new THREE.Quaternion(); }
+  camSave.pos.copy(camera.position);
+  camSave.quat.copy(camera.quaternion);
+  _dummy.position.copy(_v1);
+  _dummy.lookAt(_v2);
+  _q1.copy(_dummy.quaternion);
+  var opened = false;
+  addTween(950, function(k){
+    var e = easeInOutCubic(k);
+    camera.position.lerpVectors(camSave.pos, _v1, e);
+    camera.quaternion.copy(camSave.quat).slerp(_q1, e);
+    if (!opened && k > 0.92){   /* 屏幕撑满视口的瞬间 */
+      opened = true;
+      openCRT(m);
+    }
+  });
+}
+function undolly(){
+  if (!camSave.pos){ focusMode = false; return; }
+  var p0 = new THREE.Vector3().copy(camera.position);
+  var q0 = new THREE.Quaternion().copy(camera.quaternion);
+  addTween(750, function(k){
+    var e = easeInOutCubic(k);
+    camera.position.lerpVectors(p0, camSave.pos, e);
+    camera.quaternion.copy(q0).slerp(camSave.quat, e);
+  }, function(){
+    focusMode = false;
+    if (crtMachine){
+      crtMachine.busy = false;
+      crtMachine.state = 'demo';
+    }
+  });
+}
+
+/* LED 通知 → 相机沿过道走到对应机台亮屏 */
+function walkToMachine(m){
+  closeAllLayers();
+  if (RM || !m.group){ openCRT(m); return; }
+  bakeArt(m);
+  m.state = 'demo'; m.forcedGlow = 3.4;
+  var from = window.scrollY || 0;
+  var to = m.pathT * scrollMax;
+  var dur = clamp(Math.abs(to - from) / scrollMax * 5200 + 600, 900, 4200);
+  walkAnim = { from: from, to: to, t: 0, dur: dur, m: m };
+  toast('正在走向机台：' + m.work.name);
+}
+function walkToT(t){
+  if (RM) return;
+  var from = window.scrollY || 0;
+  var to = t * scrollMax;
+  var dur = clamp(Math.abs(to - from) / scrollMax * 5200 + 500, 700, 4000);
+  walkAnim = { from: from, to: to, t: 0, dur: dur, m: null };
+}
+
+/* ---------------- [7] DOM 模块 ---------------- */
+var crtMachine = null;
+var domInited = false;
+
+function getMachineBySlug(slug){
+  for (var i = 0; i < machines.length; i++) if (machines[i].work.slug === slug) return machines[i];
+  for (var j = 0; j < WORKS.length; j++) if (WORKS[j].slug === slug) return stubMachine(j);
+  return stubMachine(0);
+}
+function stubMachine(wi){
+  var w = WORKS[wi];
+  return { wi: wi, work: w, cat: w.cat, baked: true, boot: 1, state: 'demo',
+           group: null, busy: false, lockCoin: false, forcedGlow: 0 };
+}
+
+/* A 模块：LED 通知条（≤768 只显示前 3 条；hover/focus 暂停） */
+var ledMode = null;
+function buildLED(){
+  ledMode = window.matchMedia('(max-width:768px)').matches ? 'mini' : 'full';
+  var track = $('#ledTrack');
+  var items = ledMode === 'mini' ? NOTICES.slice(0, 3) : NOTICES;
+  var html = '';
+  for (var rep = 0; rep < 2; rep++){
+    items.forEach(function(n, i){
+      var cls = n.c === 'upd' ? 't-upd' : (n.c === 'news' ? 't-news' : 't-pre');
+      var inner = '<b>' + n.t + '</b><span>' + n.txt + '</span>';
+      var dia = '<span class="diamond" aria-hidden="true">◆</span>';
+      if (n.href){
+        html += '<a class="led-item ' + cls + '" href="' + n.href + '" target="_blank" rel="noopener">' + inner + '<span class="arr">→</span></a>' + dia;
+      } else if (n.act){
+        html += '<a class="led-item ' + cls + '" href="#notice-' + i + '" data-notice="' + i + '">' + inner + '<span class="arr">→</span></a>' + dia;
+      } else {
+        html += '<span class="led-item ' + cls + '">' + inner + '</span>' + dia;
+      }
+    });
+  }
+  track.innerHTML = html;
+}
+function bindLEDClick(){
+  $('#ledTrack').addEventListener('click', function(e){
+    var a = e.target.closest ? e.target.closest('a[data-notice]') : null;
+    if (!a) return;
+    e.preventDefault();
+    var n = NOTICES[+a.getAttribute('data-notice')];
+    if (n.act === 'machine'){
+      var m = getMachineBySlug(n.slug);
+      walkToMachine(m);
+    } else if (n.act === 'article'){
+      openBlog(n.a);
+    }
+  });
+}
+
+/* C 模块落点：CRT 详情面板 */
+function openCRT(m){
+  crtMachine = m;
+  forceBake(m);
+  var w = m.work, cat = CATS[w.cat];
+  var box = $('#crtBox');
+  var qas = QA[w.slug] || [];
+  var qaHtml = qas.map(function(q, i){
+    return '<details' + (i === 0 ? ' open' : '') + '><summary>' + q[0] + '</summary><p>' + q[1] + '</p></details>';
+  }).join('');
+  box.innerHTML =
+    '<div class="crt-head"><span class="lamp" aria-hidden="true"></span>' +
+    '<div class="ttl"><h2>' + w.name + '</h2><p>' + w.slug.toUpperCase() + ' · ' + cat.name + ' ' + cat.en + '</p></div>' +
+    '<button class="x" data-close="crt" aria-label="关闭详情" style="position:static;">×</button></div>' +
+    '<div class="crt-body">' +
+    '<div><figure class="crt-fig"><canvas id="crtCanvas" width="768" height="576"></canvas>' +
+    '<figcaption>PROGRAM THUMBNAIL · BAKED ON DEVICE</figcaption></figure>' +
+    '<p class="crt-desc">' + w.desc + '</p>' +
+    '<div class="crt-tags">' + w.tags.map(function(t){ return '<i>' + t + '</i>'; }).join('') + '</div>' +
+    '<div class="crt-btns">' +
+    '<a href="' + w.tool + '" target="_blank" rel="noopener">▶ 打开工具</a>' +
+    '<a class="video" href="' + w.video + '" target="_blank" rel="noopener">▷ 视频教程</a></div></div>' +
+    '<div class="crt-qa"><h4>QA 攻略 · 通行证</h4>' + qaHtml + '</div>' +
+    '<div class="crt-coin-tip">CREDIT CLEAR · ESC 或点击遮罩返回大厅</div>' +
+    '</div>';
+  var cc = $('#crtCanvas').getContext('2d');
+  cc.fillStyle = '#000'; cc.fillRect(0,0,768,576);
+  drawArtwork(cc, m.wi, 768, 576);
+  cc.fillStyle = 'rgba(0,0,0,.14)';
+  for (var y = 0; y < 576; y += 4) cc.fillRect(0, y, 768, 1);
+  $('#crt').classList.add('open');
+  document.body.classList.add('locked');
+  var xb = box.querySelector('.x'); if (xb) xb.focus();
+}
+function closeCRT(){
+  if (!$('#crt').classList.contains('open')) return;
+  $('#crt').classList.remove('open');
+  document.body.classList.remove('locked');
+  undolly();
+}
+
+/* B 模块：联系店长 */
+function bindContact(){
+  $('#socialRow').innerHTML = CONTACT.socials.map(function(s){
+    return '<a href="' + s[1] + '" target="_blank" rel="noopener">' + s[0] + '</a>';
+  }).join('');
+  $('#qrBox').innerHTML = qrSVG();
+  $('#dockBtn').addEventListener('click', function(){ openLayer('contactPanel'); });
+  $('#btnCopy').addEventListener('click', function(){
+    var val = CONTACT.mail;
+    var done = function(){ toast('已复制，随时来信'); };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(val).then(done, function(){ fallbackCopy(); done(); });
+    } else { fallbackCopy(); done(); }
+  });
+  function fallbackCopy(){
+    var n = $('#mailVal');
+    var r = document.createRange();
+    r.selectNodeContents(n);
+    var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    try { document.execCommand('copy'); } catch(e){}
+    sel.removeAllRanges();
+  }
+  var form = $('#msgForm');
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var body = $('#fBody').value.trim();
+    var err = $('#fErr'), ok = $('#fOk');
+    err.textContent = '';
+    if (body.length < 10){ err.textContent = '留言太短了：至少写 10 个字。'; $('#fBody').focus(); return; }
+    if (body.length > 500){ err.textContent = '留言超长：请压到 500 字以内。'; $('#fBody').focus(); return; }
+    try {
+      var box = JSON.parse(localStorage.getItem('sc_messages') || '[]');
+      box.push({ name: $('#fName').value.trim(), mail: $('#fMail').value.trim(), body: body, at: new Date().toISOString() });
+      localStorage.setItem('sc_messages', JSON.stringify(box));
+    } catch(e2){}
+    form.reset();
+    ok.classList.add('show');
+    setTimeout(function(){ ok.classList.remove('show'); }, 4200);
+    toast('已投进邮筒');
+  });
+}
+
+/* 浮层管理（Esc / 遮罩 / 关闭钮 + 焦点圈闭） */
+var lastFocus = null;
+function openLayer(id){
+  var el = document.getElementById(id);
+  if (!el.classList.contains('open')){
+    lastFocus = document.activeElement;
+    el.classList.add('open');
+    document.body.classList.add('locked');
+    var f = el.querySelector('button, a, input, textarea');
+    if (f) f.focus();
+  }
+}
+function closeLayer(id){
+  var el = document.getElementById(id);
+  if (!el.classList.contains('open')) return;
+  el.classList.remove('open');
+  if (!anyLayerOpen()) document.body.classList.remove('locked');
+  if (lastFocus && lastFocus.focus){ lastFocus.focus(); lastFocus = null; }
+}
+function anyLayerOpen(){
+  return ['contactPanel','crt','blog','grid'].some(function(id){ return document.getElementById(id).classList.contains('open'); });
+}
+function closeAllLayers(){
+  ['contactPanel','blog','grid'].forEach(closeLayer);
+}
+document.addEventListener('click', function(e){
+  var t = e.target.closest ? e.target.closest('[data-close]') : null;
+  if (!t) return;
+  var id = t.getAttribute('data-close');
+  if (id === 'crt') closeCRT(); else closeLayer(id);
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape'){
+    if ($('#crt').classList.contains('open')){ closeCRT(); return; }
+    ['blog','grid','contactPanel'].forEach(function(id){
+      if (document.getElementById(id).classList.contains('open')) closeLayer(id);
+    });
+  }
+  if (e.key === 'Tab' && anyLayerOpen()){
+    var top = ['crt','blog','grid','contactPanel'].filter(function(id){ return document.getElementById(id).classList.contains('open'); })[0];
+    var el = document.getElementById(top);
+    var focusables = el.querySelectorAll('button, a[href], input, textarea, [tabindex]:not([tabindex="-1"])');
+    if (!focusables.length) return;
+    var first = focusables[0], last = focusables[focusables.length-1];
+    if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+  }
+});
+
+/* D 模块：博客本体 */
+function buildBlog(){
+  var list = $('#artList');
+  list.innerHTML = ARTICLES.map(function(a, i){
+    return '<li><button data-art="' + i + '">' +
+      '<span class="date">' + a.date + '</span>' +
+      '<span class="ti">' + a.title + '<small>' + a.sub + '</small></span>' +
+      '<span class="cat">' + a.cat + '</span></button></li>';
+  }).join('');
+  list.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('button[data-art]') : null;
+    if (b) openArticle(+b.getAttribute('data-art'));
+  });
+  $('#btnBlog').addEventListener('click', function(){ openBlog(-1); });
+  $('#btnAbout').addEventListener('click', function(){
+    openBlog(-1);
+    setTimeout(function(){
+      var sc = $('#blogScroll');
+      var card = document.querySelector('.about-card');
+      if (card && sc) sc.scrollTo({ top: card.offsetTop - 40, behavior: RM ? 'auto' : 'smooth' });
+    }, 60);
+  });
+  $('#nightSwitch').addEventListener('click', function(){
+    var b = this;
+    b.classList.toggle('on');
+    var on = b.classList.contains('on');
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    $('#hoursSign').classList.toggle('off', !on);
+    toast(on ? '夜间模式：跟随系统（本站本来就是夜的形状）' : '夜间模式已拨回');
+  });
+}
+function openBlog(artIndex){
+  closeAllLayers();
+  $('#artView').classList.remove('open');
+  $('#blogHome').style.display = 'block';
+  openLayer('blog');
+  $('#blogScroll').scrollTop = 0;
+  if (artIndex >= 0) setTimeout(function(){ openArticle(artIndex); }, 80);
+}
+function openArticle(i){
+  var a = ARTICLES[i];
+  var view = $('#artView');
+  view.innerHTML =
+    '<button class="back-blog" id="backBlog">← 返回存档列表</button>' +
+    '<article class="article" style="margin-top:20px;">' +
+    '<h1>' + a.title + '</h1>' +
+    '<p class="a-meta">' + a.date + ' · ' + a.cat + ' · SLOW CACHE 存档 NO.0' + (i+1) + '</p>' +
+    a.html + '</article>';
+  $('#blogHome').style.display = 'none';
+  view.classList.add('open');
+  $('#blogScroll').scrollTop = 0;
+  $('#backBlog').addEventListener('click', function(){
+    view.classList.remove('open');
+    $('#blogHome').style.display = 'block';
+  });
+}
+
+/* 机台索引（3D 直达入口 / 减动效与降级模式的主界面） */
+function buildGrid(){
+  var wrap = $('#gridCats');
+  var html = '';
+  CATS.forEach(function(cat, ci){
+    html += '<section class="g-cat c' + ci + '"><h3>0' + (ci+1) + ' · ' + cat.name + ' ' + cat.en + '</h3><div class="g-row">';
+    WORKS.forEach(function(w, wi){
+      if (w.cat !== ci) return;
+      html += '<button class="g-card" style="--gc:' + cat.css + '" data-wi="' + wi + '" aria-label="打开 ' + w.name + ' 详情">' +
+        '<span class="coin">1 CREDIT</span>' +
+        '<span class="g-screen"><canvas width="256" height="192" data-thumb="' + wi + '"></canvas></span>' +
+        '<span class="g-meta"><b>' + w.name + '</b><small>' + w.slug.toUpperCase() + '</small></span></button>';
+    });
+    html += '</div></section>';
+  });
+  wrap.innerHTML = html;
+  /* 缩略图懒烘焙：滚动进视口前 200px 才画 */
+  var io = null;
+  try {
+    io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (!en.isIntersecting) return;
+        var cv = en.target;
+        drawArtwork(cv.getContext('2d'), +cv.getAttribute('data-thumb'), 256, 192);
+        io.unobserve(cv);
+      });
+    }, { root: $('#gScroll'), rootMargin: '200px' });
+  } catch(e){ io = null; }
+  var cvs = wrap.querySelectorAll('canvas[data-thumb]');
+  Array.prototype.forEach.call(cvs, function(cv){
+    if (io) io.observe(cv);
+    else drawArtwork(cv.getContext('2d'), +cv.getAttribute('data-thumb'), 256, 192);
+  });
+  wrap.addEventListener('click', function(e){
+    var card = e.target.closest ? e.target.closest('.g-card') : null;
+    if (!card) return;
+    var wi = +card.getAttribute('data-wi');
+    var m = machines[wi] || stubMachine(wi);
+    if (renderer && m.group && !RM){ closeLayer('grid'); startCoinSeq(m); }
+    else openCRT(m);
+  });
+  $('#btnGrid').addEventListener('click', function(){
+    $('#gridNote').textContent = (renderer && !RM)
+      ? '全部 17 台 · 点击任意机台直接投币开玩'
+      : (renderer ? '减动效模式 · 相机漫游已关闭，点击机台直达详情' : '简约模式（WebGL 不可用）· CSS 街机厅待命中');
+    openLayer('grid');
+  });
+}
+/* 无 3D / 减动效：索引即主页（功能完整直选） */
+function exposeGridAsHome(){
+  $('#gridNote').textContent = !renderer
+    ? '简约模式（WebGL 不可用）· CSS 街机厅待命中，点击机台打开 CRT 详情'
+    : '减动效模式 · 相机漫游已关闭，点击机台直达详情';
+  openLayer('grid');
+}
+
+/* HUD / 声音（叮声默认关） */
+var sndOn = false, actx = null;
+function bindHUD(){
+  $('#btnSnd').addEventListener('click', function(){
+    sndOn = !sndOn;
+    this.textContent = sndOn ? 'SND ON' : 'SND OFF';
+    this.setAttribute('aria-pressed', sndOn ? 'true' : 'false');
+    if (sndOn) playBlip(660, 0.08);
+    toast(sndOn ? '投币音效：开' : '投币音效：关');
+  });
+  /* 分区进度轨：点击走位 */
+  var rail = $('#rail');
+  var zoneMeta = (machines.zoneMeta || []);
+  var names = ['01 AI 工具','02 网页设计','03 健康生活','04 游戏娱乐'];
+  zoneMeta.forEach(function(zm, i){
+    var b = document.createElement('button');
+    b.className = 'zdot';
+    b.style.top = (8 + zm.t * 84) + '%';
+    b.setAttribute('aria-label', '走向分区 ' + names[i]);
+    b.innerHTML = '<span>' + names[i] + '</span>';
+    b.addEventListener('click', function(){
+      var first = null;
+      for (var k = 0; k < machines.length; k++) if (machines[k].cat === i){ first = machines[k]; break; }
+      if (first) first.forcedGlow = 3;
+      walkToT(zm.t);
+    });
+    rail.appendChild(b);
+  });
+}
+function playBlip(freq, dur){
+  if (!sndOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    var o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'square'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.06, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur + 0.05);
+    o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime + dur + 0.06);
+  } catch(e){}
+}
+
+/* ---------------- [8] 主循环与启动 ---------------- */
+function maxScroll(){ return Math.max(1, document.documentElement.scrollHeight - window.innerHeight); }
+function onResize(){
+  if (renderer){
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+  }
+  scrollMax = maxScroll();
+  var want = window.matchMedia('(max-width:768px)').matches ? 'mini' : 'full';
+  if (want !== ledMode) buildLED();
+}
+function update(dt){
+  tGlobal += dt;
+  stepTweens(dt);
+  /* 首帧 FPS 探测：前 60 帧均值 <30fps → 运行时再降档 */
+  if (!degraded2 && frames < 60){
+    fpsAcc += dt; frames++;
+    if (frames === 60 && fpsAcc / 60 > 1/30){
+      degraded2 = true;
+      renderer.setPixelRatio(1);
+      if (dust) dust.visible = false;
+      DYN_MAX = 2;
+    }
+  }
+  /* LED 通知走位补间 */
+  if (walkAnim){
+    walkAnim.t += dt * 1000;
+    var k = clamp(walkAnim.t / walkAnim.dur, 0, 1);
+    window.scrollTo(0, lerp(walkAnim.from, walkAnim.to, easeInOutCubic(k)));
+    if (k >= 1){ var mm = walkAnim.m; walkAnim = null; if (mm) mm.forcedGlow = 2.4; }
+  }
+  /* 相机：滚动沿过道曲线 + 惯性环视 */
+  if (!RM && !focusMode){
+    targetP = scrollMax > 0 ? clamp((window.scrollY || 0) / scrollMax, 0, 1) : 0;
+    curP += (targetP - curP) * 0.07;
+    camCurve.getPoint(curP, _v1);
+    if (introT < 1){   /* 入场：从门口推近（可点击/按键跳过） */
+      introT = Math.min(1, introT + dt / 1.4);
+      var ie = easeOutCubic(introT);
+      camera.position.set(_v1.x, _v1.y + (1-ie) * 1.6, _v1.z + (1-ie) * 4.2);
+    } else {
+      camera.position.copy(_v1);
+    }
+    lookCurve.getPoint(clamp(curP + 0.03, 0, 1), _v2);
+    tYaw += yawVel; tPitch += pitchVel;
+    yawVel *= 0.90; pitchVel *= 0.90;
+    tYaw = clamp(tYaw, -1.0, 1.0); tPitch = clamp(tPitch, -0.42, 0.42);
+    yaw += (tYaw - yaw) * 0.085;
+    pitch += (tPitch - pitch) * 0.085;
+    camera.lookAt(_v2);
+    camera.rotateY(yaw);
+    camera.rotateX(pitch);
+    railThumbEl.style.top = (curP * 100) + '%';
+  } else if (RM && !focusMode){
+    camera.position.set(0, HALL.camY, HALL.z0 - 1);
+    camera.lookAt(0, 1.5, HALL.z0 - 12);
+  }
+  /* 灯管闪烁 */
+  for (var i = 0; i < tubes.length; i++){
+    var tb = tubes[i];
+    if (!tb.flicker) continue;
+    tb.next -= dt;
+    if (tb.next <= 0){
+      tb.on = Math.random() > 0.24;
+      tb.next = tb.on ? (0.06 + Math.random() * 0.5) : (0.04 + Math.random() * 0.16);
+      tb.mesh.material.color.setHex(tb.on ? 0xdfe8ff : 0x3c4462);
+      tb.glow.material.opacity = tb.on ? 0.5 : 0.1;
+    }
+  }
+  /* 漂浮尘埃 */
+  if (dust && dust.visible && !RM){
+    var pa = dust.geometry.attributes.position, arr = pa.array;
+    for (var d = 1; d < arr.length; d += 3){
+      arr[d] += dt * 0.06;
+      if (arr[d] > 5) arr[d] = 0.05;
+    }
+    pa.needsUpdate = true;
+  }
+  /* 屏幕动态纹理：120ms 一拍，台数 ≤ DYN_MAX（LRU 式按距离取舍） */
+  dynTimer -= dt;
+  if (dynTimer <= 0){
+    dynTimer = 0.12;
+    if (renderer && !RM) refreshDynSet();
+    for (var s = 0; s < dynSet.length; s++){
+      var m2 = dynSet[s];
+      if (m2.state === 'start') continue;
+      if (m2.boot < 1){
+        m2.boot = Math.min(1, m2.boot + 0.12 / 0.28);
+        paintBoot(m2, m2.boot);
+      } else if (m2.state === 'coin'){
+        paintInsertCoin(m2, tGlobal);
+      } else {
+        paintDemo(m2, tGlobal);
+      }
+      m2.tex.needsUpdate = true;
+    }
+    if (hoverM && dynSet.indexOf(hoverM) < 0){
+      paintInsertCoin(hoverM, tGlobal);
+      hoverM.tex.needsUpdate = true;
+    }
+    /* 通知走位到达：机台亮屏 + 描边闪烁 */
+    for (var f = 0; f < machines.length; f++){
+      var m3 = machines[f];
+      if (m3.forcedGlow > 0){
+        m3.forcedGlow -= 0.12;
+        m3.edges.visible = m3.forcedGlow > 0 && (Math.floor(tGlobal*2)%2===0);
+        if (m3.boot < 1){ m3.boot = Math.min(1, m3.boot + 0.2); paintBoot(m3, m3.boot); }
+        else { paintDemo(m3, tGlobal); }
+        m3.tex.needsUpdate = true;
+        if (m3.forcedGlow <= 0) m3.edges.visible = (hoverM === m3);
+      }
+    }
+  }
+}
+function loop(){
+  raf = requestAnimationFrame(loop);
+  var dt = Math.min(clock.getDelta(), 0.05);
+  update(dt);
+  renderer.render(scene, camera);
+}
+
+function initDOM(){
+  if (domInited) return;
+  domInited = true;
+  buildLED();
+  bindLEDClick();
+  bindContact();
+  buildBlog();
+  bindHUD();
+  buildGrid();
+}
+
+function boot(){
+  if (!initThree()){ degrade(); return; }
+  introT = RM ? 1 : 0;
+  buildShared();
+  buildRoom();
+  buildMachines();
+  buildCurves();
+  buildDust();
+  buildCoin();
+  scrollMax = maxScroll();
+  bindPointer();
+  initDOM();
+  railThumbEl = $('#railThumb');
+  var rzT;
+  window.addEventListener('resize', function(){ clearTimeout(rzT); rzT = setTimeout(onResize, 150); });
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden){ cancelAnimationFrame(raf); raf = 0; }
+    else if (!raf){ clock.getDelta(); loop(); }
+  });
+  $('#loader').classList.add('hide');
+  if (RM){
+    exposeGridAsHome();   /* 减动效：机台网格直选，功能完整 */
+  }
+  loop();
+  if (!RM) setTimeout(function(){ $('#hint').classList.add('hide'); }, 14000);
+}
+
+/* ---------------- [9] 降级（WebGL 不可用 → CSS 街机厅，功能 100% 保留） ---------------- */
+function degrade(){
+  document.body.classList.add('no3d');
+  var cv = $('#stage');
+  if (cv && cv.parentNode) cv.parentNode.removeChild(cv);
+  var hint = $('#hint'); if (hint) hint.style.display = 'none';
+  initDOM();
+  var loader = $('#loader'); if (loader) loader.classList.add('hide');
+  exposeGridAsHome();
+  toast('简约模式：街机厅已切换为 CSS 版');
+}
+
+/* CDN 多级兜底（cdnjs r128 → jsdelivr 0.149.0 → unpkg 0.149.0） */
+function loadScript(src){
+  return new Promise(function(ok, no){
+    var s = document.createElement('script');
+    s.src = src; s.onload = ok; s.onerror = no;
+    document.head.appendChild(s);
+  });
+}
+(function(){
+  var cdns = [
+    'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+    'https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js',
+    'https://unpkg.com/three@0.149.0/build/three.min.js'
+  ];
+  var i = 0;
+  function next(){
+    if (i >= cdns.length){ degrade(); return; }
+    loadScript(cdns[i++]).then(function(){
+      if (window.THREE){
+        try { boot(); } catch(err){ degrade(); }
+      } else next();
+    }, next);
+  }
+  next();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="玄穹卦宫 · 星盘蓍草——把六十四卦挂上夜空的 3D 星环占卜体验">
+<title>玄穹卦宫 · 星盘蓍草 ｜ 周易六十四卦 3D 星环</title>
+<style>
+/* ==========================================================
+   玄穹卦宫 · 星盘蓍草
+   深空蓝黑 #060A16 ｜ 紫垣 #241B45 ｜ 星银白 #EAF0FF
+   荧金 #E9C46A ｜ 赤星 #D4553F ｜ 青荧蓝 #4FA3D1
+   ========================================================== */
+:root{
+  --space:#060A16;
+  --space-2:#0A1024;
+  --ziyuan:#241B45;
+  --silver:#EAF0FF;
+  --gold:#E9C46A;
+  --gold-dim:#8a6f3a;
+  --red:#D4553F;
+  --cyan:#4FA3D1;
+  --ink:#C7D2EC;
+  --ink-dim:#8FA0C4;
+  --panel:rgba(10,16,38,.86);
+  --line:rgba(233,196,106,.22);
+  --serif:"Noto Serif SC","Source Han Serif SC","STKaiti","KaiTi","SimSun",serif;
+  --sans:"Noto Sans SC","Source Han Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --mono:"Rajdhani","JetBrains Mono",ui-monospace,"Consolas",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{
+  background:var(--space);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-weight:300;
+  line-height:1.75;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:rgba(233,196,106,.32);color:#fff}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+input,textarea{font-family:inherit}
+
+/* ---------- 滚动条 ---------- */
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:#070c1c}
+::-webkit-scrollbar-thumb{background:#2a2350;border-radius:9px}
+::-webkit-scrollbar-thumb:hover{background:#3d3374}
+
+/* ---------- 载入幕帘 ---------- */
+#loader{
+  position:fixed;inset:0;z-index:200;
+  background:radial-gradient(120% 120% at 50% 42%,#0d1330 0%,#060A16 62%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;
+  transition:opacity .8s ease,visibility .8s;
+}
+#loader.hide{opacity:0;visibility:hidden;pointer-events:none}
+.loader-brand{
+  font-family:var(--serif);font-weight:700;font-size:clamp(30px,5vw,46px);
+  letter-spacing:.42em;text-indent:.42em;color:var(--gold);
+  text-shadow:0 0 28px rgba(233,196,106,.45);
+}
+.loader-yao{display:flex;flex-direction:column;gap:9px;width:132px}
+.loader-yao .ly{height:7px;border-radius:4px;background:rgba(233,196,106,.16);position:relative;overflow:hidden}
+.loader-yao .ly::after{
+  content:"";position:absolute;inset:0;border-radius:4px;background:var(--gold);
+  box-shadow:0 0 12px rgba(233,196,106,.9);
+  transform:scaleX(0);transform-origin:center;
+  animation:lyFill 1.5s ease-in-out infinite;
+}
+.loader-yao .ly:nth-child(1)::after{animation-delay:.75s}
+.loader-yao .ly:nth-child(2)::after{animation-delay:.60s}
+.loader-yao .ly:nth-child(3)::after{animation-delay:.45s}
+.loader-yao .ly:nth-child(4)::after{animation-delay:.30s}
+.loader-yao .ly:nth-child(5)::after{animation-delay:.15s}
+.loader-yao .ly:nth-child(6)::after{animation-delay:0s}
+@keyframes lyFill{0%{transform:scaleX(0);opacity:.2}45%{transform:scaleX(1);opacity:1}80%{transform:scaleX(1);opacity:.9}100%{transform:scaleX(0);opacity:.2}}
+.loader-tip{font-size:13px;letter-spacing:.5em;text-indent:.5em;color:var(--ink-dim)}
+
+/* ---------- 顶栏 ---------- */
+#topbar{
+  position:fixed;top:0;left:0;right:0;z-index:90;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px clamp(18px,4vw,52px);
+  transition:background .45s,box-shadow .45s,padding .45s;
+}
+#topbar.solid{
+  background:rgba(6,10,22,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  padding-top:12px;padding-bottom:12px;
+  box-shadow:0 1px 0 rgba(233,196,106,.14),0 12px 40px rgba(0,0,0,.45);
+}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{
+  width:38px;height:38px;flex:none;border:1px solid var(--line);border-radius:9px;
+  display:grid;place-items:center;position:relative;
+  background:linear-gradient(160deg,rgba(36,27,69,.9),rgba(6,10,22,.9));
+  box-shadow:inset 0 0 18px rgba(233,196,106,.12);
+}
+.brand-mark::before,.brand-mark::after{content:"";position:absolute;left:8px;right:8px;height:3px;border-radius:2px;background:var(--gold);box-shadow:0 0 8px rgba(233,196,106,.8)}
+.brand-mark::before{top:12px}
+.brand-mark::after{top:21px;right:16px;left:16px;background:var(--cyan);box-shadow:0 0 8px rgba(79,163,209,.8)}
+.brand-name{font-family:var(--serif);font-weight:700;font-size:19px;letter-spacing:.34em;color:var(--silver)}
+.brand-name em{font-style:normal;color:var(--gold)}
+#topbar nav{display:flex;gap:clamp(14px,2.4vw,34px)}
+#topbar nav a{
+  font-size:14px;letter-spacing:.24em;color:var(--ink-dim);position:relative;padding:6px 2px;
+  transition:color .3s;
+}
+#topbar nav a::after{
+  content:"";position:absolute;left:50%;bottom:0;width:0;height:1px;background:var(--gold);
+  box-shadow:0 0 8px var(--gold);transition:width .35s,left .35s;
+}
+#topbar nav a:hover{color:var(--silver)}
+#topbar nav a:hover::after{width:100%;left:0}
+
+/* ---------- 首屏 · 星环 ---------- */
+#xh{
+  position:relative;height:100vh;min-height:620px;overflow:hidden;
+  background:radial-gradient(130% 100% at 50% 0%,#0b1230 0%,var(--space) 55%);
+}
+#skyCanvas{
+  position:absolute;inset:0;width:100%;height:100%;display:block;
+  touch-action:pan-y;cursor:grab;
+}
+#skyCanvas.dragging{cursor:grabbing}
+/* 2D 降级星空（无 WebGL 时启用） */
+.starfield2d{position:absolute;inset:0;display:none;pointer-events:none}
+html.no3d .starfield2d{display:block}
+html.no3d #skyCanvas{display:none}
+.starfield2d::before,.starfield2d::after{
+  content:"";position:absolute;inset:0;
+  background-image:
+    radial-gradient(1.6px 1.6px at 12% 22%,rgba(234,240,255,.9) 45%,transparent 55%),
+    radial-gradient(1.2px 1.2px at 78% 12%,rgba(233,196,106,.85) 45%,transparent 55%),
+    radial-gradient(1.8px 1.8px at 33% 68%,rgba(79,163,209,.8) 45%,transparent 55%),
+    radial-gradient(1.1px 1.1px at 62% 44%,rgba(234,240,255,.75) 45%,transparent 55%),
+    radial-gradient(1.5px 1.5px at 88% 74%,rgba(234,240,255,.7) 45%,transparent 55%),
+    radial-gradient(1.2px 1.2px at 22% 88%,rgba(233,196,106,.7) 45%,transparent 55%),
+    radial-gradient(1.9px 1.9px at 48% 8%,rgba(234,240,255,.85) 45%,transparent 55%),
+    radial-gradient(1.2px 1.2px at 92% 32%,rgba(79,163,209,.7) 45%,transparent 55%);
+  background-size:520px 520px;
+  animation:starDrift 90s linear infinite;
+  opacity:.85;
+}
+.starfield2d::after{background-size:340px 340px;animation-duration:140s;opacity:.5;transform:rotate(180deg)}
+@keyframes starDrift{to{background-position:520px 260px}}
+html.no3d #xh{height:auto;min-height:100vh;padding-bottom:40px}
+
+.hero-copy{
+  position:relative;z-index:3;height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:90px 20px 40px;pointer-events:none;
+}
+.hero-copy>*{pointer-events:none}
+.hero-copy .btn{pointer-events:auto}
+.hero-eyebrow{
+  font-size:13px;letter-spacing:.62em;text-indent:.62em;color:var(--gold);
+  opacity:0;margin-bottom:22px;
+}
+body.ready .hero-eyebrow{animation:fadeUp 1s ease .15s forwards}
+.hero-title{
+  font-family:var(--serif);font-weight:700;
+  font-size:clamp(52px,9vw,104px);
+  letter-spacing:.18em;text-indent:.18em;line-height:1.15;
+  background:linear-gradient(180deg,#F6EFD8 8%,var(--gold) 52%,#9a7a33 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 26px rgba(233,196,106,.35));
+  opacity:0;
+}
+body.ready .hero-title{animation:fadeUp 1.1s ease .35s forwards}
+.hero-sub{
+  max-width:620px;margin-top:22px;color:var(--ink);font-size:clamp(14px,1.6vw,16.5px);
+  opacity:0;
+}
+body.ready .hero-sub{animation:fadeUp 1.1s ease .6s forwards}
+.hero-sub b{color:var(--gold);font-weight:400}
+.hero-cta{display:flex;gap:16px;margin-top:36px;flex-wrap:wrap;justify-content:center;opacity:0}
+body.ready .hero-cta{animation:fadeUp 1s ease .85s forwards}
+.btn{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:13px 30px;border-radius:999px;font-size:15px;letter-spacing:.22em;text-indent:.1em;
+  border:1px solid var(--line);color:var(--silver);
+  background:linear-gradient(160deg,rgba(36,27,69,.72),rgba(10,16,38,.72));
+  transition:transform .3s,box-shadow .3s,border-color .3s,color .3s,background .3s;
+}
+.btn:hover{transform:translateY(-3px);border-color:rgba(233,196,106,.65);box-shadow:0 10px 34px rgba(233,196,106,.18),0 0 0 1px rgba(233,196,106,.2)}
+.btn.primary{
+  color:#120d04;background:linear-gradient(160deg,#f3d98c,var(--gold) 58%,#c99f3f);
+  border-color:transparent;font-weight:500;
+  box-shadow:0 8px 30px rgba(233,196,106,.32);
+}
+.btn.primary:hover{box-shadow:0 14px 44px rgba(233,196,106,.45)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.hero-hint{
+  margin-top:30px;font-size:12.5px;letter-spacing:.34em;color:var(--ink-dim);
+  display:flex;align-items:center;gap:14px;opacity:0;
+}
+body.ready .hero-hint{animation:fadeUp 1s ease 1.1s forwards}
+.hero-hint i{width:26px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim));display:inline-block}
+.hero-hint i:last-child{transform:scaleX(-1)}
+.scrollcue{
+  position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:4;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  color:var(--ink-dim);font-size:12px;letter-spacing:.5em;text-indent:.5em;
+  opacity:0;
+}
+body.ready .scrollcue{animation:fadeUp 1s ease 1.4s forwards}
+.scrollcue .line{width:1px;height:44px;background:linear-gradient(180deg,var(--gold),transparent);position:relative;overflow:hidden}
+.scrollcue .line::after{content:"";position:absolute;left:0;top:-40%;width:100%;height:40%;background:var(--silver);animation:cueDrop 1.8s ease-in-out infinite}
+@keyframes cueDrop{to{top:110%}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+
+/* 星环悬停浮签 */
+#ringTip{
+  position:fixed;z-index:40;pointer-events:none;opacity:0;transform:translate(-50%,-128%) scale(.86);
+  padding:10px 16px;border-radius:12px;border:1px solid rgba(233,196,106,.4);
+  background:rgba(8,12,28,.92);backdrop-filter:blur(8px);
+  box-shadow:0 8px 30px rgba(0,0,0,.5),0 0 22px rgba(233,196,106,.14);
+  transition:opacity .18s;text-align:center;white-space:nowrap;
+}
+#ringTip.show{opacity:1}
+#ringTip .rt-name{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--gold);letter-spacing:.14em}
+#ringTip .rt-sub{font-size:11px;letter-spacing:.3em;color:var(--ink-dim);margin-top:2px}
+#ringTip::after{
+  content:"";position:absolute;left:50%;bottom:-6px;width:10px;height:10px;transform:translateX(-50%) rotate(45deg);
+  background:rgba(8,12,28,.95);border-right:1px solid rgba(233,196,106,.4);border-bottom:1px solid rgba(233,196,106,.4);
+}
+
+/* 无 3D 降级：CSS 卦环横向带 */
+#fallbackStrip{display:none;padding:24px clamp(16px,4vw,52px) 8px}
+html.no3d #fallbackStrip{display:block}
+.strip-head{font-size:12.5px;letter-spacing:.4em;color:var(--gold);margin-bottom:16px;text-align:center}
+.strip-row{
+  display:flex;gap:14px;overflow-x:auto;padding:14px 6px 22px;
+  scroll-snap-type:x mandatory;
+}
+.strip-card{
+  flex:0 0 118px;scroll-snap-align:center;text-align:center;
+  border:1px solid rgba(233,196,106,.18);border-radius:14px;padding:16px 10px 12px;
+  background:linear-gradient(170deg,rgba(36,27,69,.5),rgba(8,12,28,.7));
+  transition:transform .3s,box-shadow .3s,border-color .3s;cursor:pointer;
+}
+.strip-card:hover{transform:translateY(-5px);border-color:rgba(233,196,106,.6);box-shadow:0 14px 34px rgba(233,196,106,.14)}
+.strip-card .sc-name{font-family:var(--serif);font-weight:700;font-size:17px;color:var(--silver);margin-top:10px;letter-spacing:.2em}
+.strip-card .sc-no{font-family:var(--mono);font-size:11px;color:var(--ink-dim);letter-spacing:.2em;margin-top:2px}
+
+/* ---------- 通用区块 ---------- */
+.sec{position:relative;padding:110px clamp(18px,4.5vw,64px)}
+.sec::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,var(--space) 0%,#0A0F22 45%,var(--space) 100%);
+}
+.sec>*{position:relative;z-index:1}
+.sec-head{text-align:center;max-width:760px;margin:0 auto 56px}
+.sec-eyebrow{font-size:12.5px;letter-spacing:.56em;text-indent:.56em;color:var(--gold);margin-bottom:14px}
+.sec-title{
+  font-family:var(--serif);font-weight:700;font-size:clamp(30px,4.4vw,46px);
+  letter-spacing:.2em;text-indent:.2em;color:var(--silver);
+}
+.sec-title span{color:var(--gold)}
+.sec-desc{margin-top:16px;color:var(--ink-dim);font-size:15px}
+.sec-desc b{color:var(--ink);font-weight:400}
+
+/* 滚动显现 */
+.reveal{opacity:0;transform:translateY(34px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.65,.25,1)}
+.reveal.on{opacity:1;transform:none}
+.reveal.d1{transition-delay:.12s}.reveal.d2{transition-delay:.24s}.reveal.d3{transition-delay:.36s}
+
+/* ---------- 2D 卦画（CSS 发光爻线） ---------- */
+.hexwrap{position:relative;width:100%}
+.hex2d{display:flex;flex-direction:column;width:100%;height:100%;gap:6px}
+.hex2d .hrow{flex:1;display:flex;justify-content:center;gap:12%;min-height:4px}
+.hex2d .hrow .hb{
+  display:block;height:100%;min-height:4px;border-radius:2.5px;width:100%;
+  background:var(--gold);box-shadow:0 0 8px rgba(233,196,106,.55),0 0 2px rgba(233,196,106,.9);
+}
+.hex2d .hrow.yin .hb{width:38%;background:var(--cyan);box-shadow:0 0 8px rgba(79,163,209,.5),0 0 2px rgba(79,163,209,.9)}
+.hex2d .hrow.moving .hb{
+  background:var(--red)!important;
+  box-shadow:0 0 12px rgba(212,85,63,.8)!important;
+  animation:yaoBreathe 1.7s ease-in-out infinite;
+}
+@keyframes yaoBreathe{0%,100%{opacity:1}50%{opacity:.45}}
+/* 2D 逐爻点亮（观卦厅 / 起卦降级用） */
+.hex2d.sequential .hrow{opacity:.14;transform:scaleX(.4);transition:opacity .5s ease,transform .6s cubic-bezier(.2,.9,.3,1.2)}
+.hex2d.sequential .hrow.lit{opacity:1;transform:scaleX(1)}
+
+/* ---------- 星光起卦 ---------- */
+#qg{padding-top:130px}
+.ritual-quote{
+  text-align:center;color:var(--ink-dim);font-size:15px;max-width:560px;margin:0 auto 54px;
+  font-family:var(--serif);letter-spacing:.1em;
+}
+.ritual-grid{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:clamp(24px,3.4vw,52px);align-items:start;max-width:1240px;margin:0 auto}
+.ritual-card{
+  border:1px solid rgba(233,196,106,.16);border-radius:20px;padding:30px 28px;
+  background:linear-gradient(165deg,rgba(36,27,69,.42),rgba(8,12,28,.72));
+  box-shadow:0 24px 60px rgba(0,0,0,.35);
+}
+.ritual-card label{display:block;font-size:12.5px;letter-spacing:.4em;color:var(--gold);margin-bottom:12px}
+#wishInput{
+  width:100%;height:86px;resize:none;border-radius:12px;padding:14px 16px;font-size:14.5px;
+  color:var(--silver);background:rgba(6,10,22,.75);border:1px solid rgba(143,160,196,.25);
+  transition:border-color .3s,box-shadow .3s;line-height:1.7;
+}
+#wishInput:focus{outline:none;border-color:rgba(233,196,106,.6);box-shadow:0 0 0 3px rgba(233,196,106,.12)}
+#wishInput::placeholder{color:#5d6c92}
+.steps{margin:26px 0 28px;list-style:none;counter-reset:st}
+.steps li{
+  counter-increment:st;position:relative;padding:10px 0 10px 46px;font-size:14px;color:var(--ink);
+  border-bottom:1px dashed rgba(143,160,196,.16);
+}
+.steps li:last-child{border-bottom:none}
+.steps li::before{
+  content:counter(st,cjk-ideographic);position:absolute;left:0;top:12px;
+  width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--serif);font-size:14px;color:var(--gold);
+  border:1px solid rgba(233,196,106,.4);box-shadow:0 0 12px rgba(233,196,106,.14) inset;
+}
+.steps li b{color:var(--gold);font-weight:400}
+.ritual-actions{display:flex;gap:14px;flex-wrap:wrap}
+#castBtn{flex:1;justify-content:center}
+.cast-note{margin-top:16px;font-size:12px;color:var(--ink-dim);letter-spacing:.12em}
+
+.divstage{
+  position:relative;border-radius:22px;overflow:hidden;
+  border:1px solid rgba(233,196,106,.16);
+  background:
+    radial-gradient(90% 90% at 50% 50%,rgba(36,27,69,.5) 0%,rgba(6,10,22,.9) 70%),
+    #060A16;
+  height:470px;
+  box-shadow:0 24px 70px rgba(0,0,0,.45);
+}
+#divCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+html.no3d #divCanvas{display:none}
+.divstage2d{
+  position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+}
+html.no3d .divstage2d{display:flex}
+.divstage2d .hexwrap{width:min(240px,52%);height:78%}
+.div-hint{
+  position:absolute;left:50%;bottom:16px;transform:translateX(-50%);
+  font-size:11.5px;letter-spacing:.5em;text-indent:.5em;color:var(--ink-dim);
+  transition:opacity .5s;white-space:nowrap;
+}
+.ritual-name{
+  position:absolute;left:0;right:0;top:9%;text-align:center;
+  font-family:var(--serif);font-weight:700;font-size:clamp(30px,4vw,44px);
+  letter-spacing:.3em;text-indent:.3em;color:var(--gold);
+  text-shadow:0 0 30px rgba(233,196,106,.55);
+  opacity:0;transform:translateY(14px) scale(.94);
+  transition:opacity .9s ease,transform .9s cubic-bezier(.2,.8,.3,1.15);
+  pointer-events:none;
+}
+.ritual-name.show{opacity:1;transform:none}
+.ritual-name small{display:block;font-family:var(--mono);font-size:12px;letter-spacing:.5em;color:var(--ink-dim);margin-top:8px;text-shadow:none}
+
+.ritual-result{margin-top:26px;opacity:0;transform:translateY(18px);transition:opacity .9s ease,transform .9s ease}
+.ritual-result.show{opacity:1;transform:none}
+.rr-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.rr-wish{font-size:13.5px;color:var(--ink-dim)}
+.rr-wish b{color:var(--silver);font-weight:400;font-family:var(--serif);letter-spacing:.08em}
+.rr-cards{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:stretch}
+.rr-card{
+  border:1px solid rgba(233,196,106,.18);border-radius:16px;padding:20px 18px;text-align:center;
+  background:rgba(8,12,28,.6);
+}
+.rr-card.change{border-color:rgba(79,163,209,.3)}
+.rr-tag{font-size:11px;letter-spacing:.44em;text-indent:.44em;color:var(--ink-dim);margin-bottom:12px}
+.rr-cardname{font-family:var(--serif);font-weight:700;font-size:24px;color:var(--gold);letter-spacing:.16em;margin-top:12px}
+.rr-cardname small{display:block;font-size:11.5px;color:var(--ink-dim);font-family:var(--mono);letter-spacing:.3em;margin-top:4px;font-weight:400}
+.rr-card .hexwrap{width:84px;height:104px;margin:0 auto}
+.rr-arrow{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-width:96px}
+.rr-arrow .chips{display:flex;flex-direction:column;gap:6px}
+.rr-chip{
+  font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--red);
+  border:1px solid rgba(212,85,63,.5);border-radius:999px;padding:3px 12px;
+  background:rgba(212,85,63,.08);white-space:nowrap;
+  animation:yaoBreathe 2.2s ease-in-out infinite;
+}
+.rr-arrow .arr{color:var(--gold);font-size:18px}
+.rr-advice{
+  margin-top:18px;border-radius:14px;padding:16px 20px;font-size:14px;color:var(--ink);
+  border:1px dashed rgba(233,196,106,.35);background:rgba(233,196,106,.05);
+}
+.rr-advice b{font-weight:400;color:var(--gold)}
+.rr-luck{
+  display:inline-grid;place-items:center;width:52px;height:52px;border-radius:12px;flex:none;
+  font-family:var(--serif);font-weight:700;font-size:22px;color:#160f02;
+  background:linear-gradient(160deg,#f3d98c,var(--gold));
+  box-shadow:0 6px 22px rgba(233,196,106,.35);
+}
+.rr-luck.bad{background:linear-gradient(160deg,#e08a76,var(--red));color:#1c0602;box-shadow:0 6px 22px rgba(212,85,63,.35)}
+.rr-luck.mid{background:linear-gradient(160deg,#9fc6e8,var(--cyan));color:#04141f;box-shadow:0 6px 22px rgba(79,163,209,.35)}
+.rr-advice-row{display:flex;gap:16px;align-items:center}
+.rr-foot{margin-top:16px;font-size:12.5px;color:var(--ink-dim);text-align:center;font-family:var(--serif);letter-spacing:.16em}
+.rr-actions{display:flex;gap:14px;margin-top:18px;flex-wrap:wrap}
+.rr-actions .btn{padding:11px 24px;font-size:13.5px}
+
+/* ---------- 六十四卦检索 · 8×8 矩阵 ---------- */
+#ss{padding-top:130px}
+.searchbar{
+  position:relative;max-width:620px;margin:0 auto 20px;display:flex;gap:12px;
+}
+.searchbar input{
+  flex:1;height:52px;border-radius:999px;padding:0 26px;font-size:15px;letter-spacing:.1em;
+  color:var(--silver);background:rgba(6,10,22,.8);border:1px solid rgba(143,160,196,.28);
+  transition:border-color .3s,box-shadow .3s;
+}
+.searchbar input:focus{outline:none;border-color:rgba(233,196,106,.65);box-shadow:0 0 0 4px rgba(233,196,106,.1)}
+.searchbar input::placeholder{color:#5d6c92}
+#searchDrop{
+  position:absolute;top:calc(100% + 10px);left:0;right:0;z-index:30;
+  border-radius:16px;border:1px solid rgba(233,196,106,.3);overflow:hidden;
+  background:rgba(9,14,32,.97);backdrop-filter:blur(12px);
+  box-shadow:0 24px 60px rgba(0,0,0,.55);
+  display:none;
+}
+#searchDrop.show{display:block}
+.sd-item{
+  display:flex;align-items:center;gap:14px;padding:12px 20px;cursor:pointer;
+  transition:background .25s;border-bottom:1px solid rgba(143,160,196,.08);
+}
+.sd-item:last-child{border-bottom:none}
+.sd-item:hover,.sd-item.hot{background:rgba(233,196,106,.1)}
+.sd-item .no{font-family:var(--mono);font-size:12px;color:var(--ink-dim);width:34px}
+.sd-item .nm{font-family:var(--serif);font-size:17px;font-weight:700;color:var(--silver);letter-spacing:.16em}
+.sd-item .go{margin-left:auto;font-size:12px;letter-spacing:.24em;color:var(--gold)}
+.matrix{
+  max-width:980px;margin:34px auto 0;border:1px solid rgba(233,196,106,.14);border-radius:20px;
+  padding:clamp(12px,2vw,22px);background:rgba(8,12,28,.55);
+  overflow-x:auto;
+}
+.matrix table{border-collapse:separate;border-spacing:7px;width:100%;min-width:640px}
+.matrix th{
+  font-family:var(--serif);font-weight:700;font-size:14px;color:var(--gold);
+  letter-spacing:.1em;padding:6px 2px;text-align:center;white-space:nowrap;
+}
+.matrix th small{display:block;font-family:var(--sans);font-weight:300;font-size:10px;color:var(--ink-dim);letter-spacing:.24em}
+.mx-cell{
+  width:74px;height:92px;border-radius:12px;border:1px solid rgba(143,160,196,.16);
+  background:rgba(6,10,22,.7);padding:10px 6px 8px;text-align:center;cursor:pointer;
+  transition:transform .28s,border-color .28s,box-shadow .28s,background .28s;
+}
+.mx-cell:hover{transform:translateY(-4px) scale(1.04);border-color:rgba(233,196,106,.6);box-shadow:0 10px 26px rgba(233,196,106,.14);background:rgba(12,18,40,.9)}
+.mx-cell .hexwrap{width:40px;height:46px;margin:0 auto;opacity:.85}
+.mx-cell .nm{font-family:var(--serif);font-weight:700;font-size:13px;color:var(--silver);margin-top:7px;letter-spacing:.1em;line-height:1.2}
+.mx-cell.flash{animation:cellFlash 1.6s ease 2}
+@keyframes cellFlash{
+  0%,100%{box-shadow:none;border-color:rgba(143,160,196,.16)}
+  50%{box-shadow:0 0 0 3px rgba(233,196,106,.4),0 0 34px rgba(233,196,106,.5);border-color:var(--gold)}
+}
+.matrix-note{text-align:center;margin-top:22px;font-size:12.5px;letter-spacing:.3em;color:var(--ink-dim)}
+.matrix-note b{color:var(--gold);font-weight:400}
+
+/* ---------- 观象 · 知识 ---------- */
+#zs{padding-top:130px;padding-bottom:120px}
+.know-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:1080px;margin:0 auto}
+.know-card{
+  border:1px solid rgba(233,196,106,.14);border-radius:20px;padding:34px 28px;
+  background:linear-gradient(165deg,rgba(36,27,69,.38),rgba(8,12,28,.7));
+  transition:transform .35s,box-shadow .35s,border-color .35s;
+}
+.know-card:hover{transform:translateY(-7px);border-color:rgba(233,196,106,.45);box-shadow:0 22px 54px rgba(233,196,106,.1)}
+.know-card h3{font-family:var(--serif);font-size:21px;font-weight:700;color:var(--gold);letter-spacing:.22em;margin-bottom:14px}
+.know-card p{font-size:14px;color:var(--ink)}
+.know-quote{
+  max-width:760px;margin:52px auto 0;text-align:center;
+  font-family:var(--serif);font-size:clamp(16px,2vw,19px);color:var(--ink-dim);letter-spacing:.2em;line-height:2.1;
+}
+.know-quote b{color:var(--gold);font-weight:400}
+
+/* ---------- 观卦厅覆层 ---------- */
+#hall{
+  position:fixed;inset:0;z-index:100;display:flex;
+  opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s;
+}
+#hall.open{opacity:1;visibility:visible}
+.hall-back{
+  position:absolute;inset:0;
+  background:radial-gradient(72% 72% at 40% 48%,rgba(4,7,16,.28) 0%,rgba(4,7,16,.9) 72%);
+}
+.hall-big{
+  position:absolute;left:0;right:26vw;top:9vh;text-align:center;pointer-events:none;
+  opacity:0;transform:translateY(-16px);transition:opacity 1s ease .2s,transform 1s ease .2s;
+}
+#hall.open .hall-big.show{opacity:1;transform:none}
+.hall-big .bn{
+  display:block;font-family:var(--serif);font-weight:700;font-size:clamp(64px,10vw,120px);
+  letter-spacing:.26em;text-indent:.26em;line-height:1.1;
+  background:linear-gradient(180deg,#F6EFD8 10%,var(--gold) 60%,#a8823a);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 34px rgba(233,196,106,.4));
+}
+.hall-big .bm{display:block;margin-top:10px;font-size:14px;letter-spacing:.3em;color:var(--silver);text-shadow:0 2px 14px #000}
+html.no3d .hall-big{right:0;top:6vh}
+html.no3d .hall-big .bn{font-size:clamp(40px,7vw,64px)}
+.hallhex2d{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);
+  width:min(270px,54vw);height:min(340px,60vh);
+  display:none;
+  filter:drop-shadow(0 0 30px rgba(233,196,106,.18));
+}
+html.no3d .hallhex2d{display:block}
+.hall-panel{
+  position:absolute;right:clamp(14px,3vw,44px);top:50%;transform:translateY(-50%) translateX(30px);
+  width:min(400px,92vw);max-height:86vh;overflow-y:auto;
+  border-radius:22px;border:1px solid rgba(233,196,106,.28);
+  background:var(--panel);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 30px 90px rgba(0,0,0,.6),0 0 0 1px rgba(233,196,106,.06) inset;
+  padding:30px 30px 24px;
+  opacity:0;transition:opacity .6s ease .25s,transform .6s cubic-bezier(.2,.7,.3,1) .25s;
+}
+#hall.open .hall-panel{opacity:1;transform:translateY(-50%)}
+html.no3d .hall-panel{position:absolute;right:50%;transform:translate(50%,-50%) translateY(16vh);width:min(430px,92vw)}
+html.no3d #hall.open .hall-panel{transform:translate(50%,-50%)}
+.hp-eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.34em;color:var(--ink-dim)}
+.hp-name{
+  font-family:var(--serif);font-weight:700;font-size:52px;letter-spacing:.14em;color:var(--silver);
+  line-height:1.2;margin:6px 0 4px;
+}
+.hp-name span{color:var(--gold)}
+.hp-badges{display:flex;gap:9px;flex-wrap:wrap;margin:10px 0 18px}
+.hp-badge{
+  font-size:12px;letter-spacing:.24em;text-indent:.12em;color:var(--gold);
+  border:1px solid rgba(233,196,106,.4);border-radius:999px;padding:4px 14px;
+  background:rgba(233,196,106,.07);
+}
+.hp-badge.cy{color:var(--cyan);border-color:rgba(79,163,209,.45);background:rgba(79,163,209,.08)}
+.hp-badge.lk{color:#160f02;background:linear-gradient(160deg,#f3d98c,var(--gold));border-color:transparent;font-weight:500}
+.hp-badge.lk.bad{background:linear-gradient(160deg,#e08a76,var(--red));color:#1c0602}
+.hp-badge.lk.mid{background:linear-gradient(160deg,#9fc6e8,var(--cyan));color:#04141f}
+.hp-row{display:flex;gap:20px;align-items:flex-start}
+.hp-mini{flex:0 0 86px;height:106px;padding:6px;border-radius:12px;border:1px solid rgba(233,196,106,.2);background:rgba(6,10,22,.6)}
+.hp-motto{
+  font-family:var(--serif);font-size:15.5px;color:var(--ink);letter-spacing:.06em;line-height:2;
+}
+.hp-motto::before{content:"「";color:var(--gold)}
+.hp-motto::after{content:"」";color:var(--gold)}
+.hp-adv{margin-top:16px;font-size:13.5px;color:var(--ink-dim);line-height:1.9;border-top:1px dashed rgba(143,160,196,.2);padding-top:14px}
+.hp-adv b{color:var(--gold);font-weight:400}
+.hp-note{margin-top:10px;font-size:12.5px;color:var(--red);letter-spacing:.1em}
+.hp-nav{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.hp-nav .btn{padding:9px 16px;font-size:12.5px;letter-spacing:.14em;flex:1;justify-content:center;text-indent:0}
+.hall-close{
+  position:absolute;left:clamp(14px,3vw,44px);top:26px;z-index:5;
+  display:inline-flex;align-items:center;gap:10px;
+  padding:10px 20px;border-radius:999px;font-size:13px;letter-spacing:.3em;text-indent:.15em;
+  color:var(--silver);border:1px solid rgba(233,196,106,.35);
+  background:rgba(8,12,28,.7);backdrop-filter:blur(8px);
+  transition:background .3s,color .3s,box-shadow .3s;
+}
+.hall-close:hover{background:rgba(233,196,106,.16);color:var(--gold);box-shadow:0 0 24px rgba(233,196,106,.2)}
+body.hall-open #topbar{opacity:0;pointer-events:none}
+body.hall-open{overflow:hidden}
+
+/* ---------- 页脚 ---------- */
+footer{
+  position:relative;border-top:1px solid rgba(233,196,106,.14);
+  background:linear-gradient(180deg,#070C1C,#04060F);
+  padding:70px clamp(18px,4.5vw,64px) 34px;
+}
+.foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1.2fr;gap:44px;max-width:1180px;margin:0 auto}
+.foot-brand{font-family:var(--serif);font-weight:700;font-size:24px;letter-spacing:.3em;color:var(--gold)}
+.foot-blurb{margin-top:16px;font-size:13.5px;color:var(--ink-dim);max-width:340px}
+.foot-h{font-size:13px;letter-spacing:.44em;color:var(--silver);margin-bottom:18px}
+.foot-col a,.foot-col span{display:block;font-size:13.5px;color:var(--ink-dim);padding:5px 0;transition:color .3s}
+.foot-col a:hover{color:var(--gold)}
+.foot-dis{font-size:13px;color:var(--ink-dim);line-height:2}
+.foot-bottom{
+  max-width:1180px;margin:46px auto 0;padding-top:22px;border-top:1px solid rgba(143,160,196,.12);
+  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  font-size:12px;letter-spacing:.2em;color:#5d6c92;
+}
+.foot-bottom b{color:var(--gold-dim);font-weight:400}
+
+/* ---------- 轻提示 ---------- */
+#toast{
+  position:fixed;left:50%;bottom:38px;transform:translate(-50%,20px);z-index:150;
+  padding:12px 26px;border-radius:999px;font-size:13.5px;letter-spacing:.2em;
+  color:var(--gold);border:1px solid rgba(233,196,106,.4);
+  background:rgba(8,12,28,.94);box-shadow:0 12px 40px rgba(0,0,0,.5),0 0 26px rgba(233,196,106,.12);
+  opacity:0;pointer-events:none;transition:opacity .4s,transform .4s;white-space:nowrap;max-width:92vw;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+noscript .ns-tip{
+  display:block;margin:100px auto;max-width:480px;text-align:center;color:var(--ink-dim);
+  border:1px dashed rgba(233,196,106,.4);border-radius:16px;padding:28px;
+}
+
+/* ---------- 响应式 ≥1200 / 768 / 375 ---------- */
+@media (min-width:1200px){
+  .ritual-grid{grid-template-columns:400px 1fr}
+}
+@media (max-width:1199px){
+  .know-grid{grid-template-columns:1fr;max-width:620px}
+  .foot-grid{grid-template-columns:1fr 1fr}
+  .hall-big{right:0}
+  .rr-cards{gap:12px}
+}
+@media (max-width:767px){
+  html{scroll-padding-top:64px}
+  #topbar{padding:14px 18px}
+  #topbar nav{gap:14px}
+  #topbar nav a{font-size:12px;letter-spacing:.14em}
+  .brand-name{font-size:16px;letter-spacing:.2em}
+  .brand-mark{width:32px;height:32px}
+  .brand-mark::before{top:10px}.brand-mark::after{top:18px}
+  .sec{padding:84px 18px}
+  #qg,#ss,#zs{padding-top:96px}
+  .ritual-grid{grid-template-columns:1fr}
+  .divstage{height:360px}
+  .rr-cards{grid-template-columns:1fr 1fr}
+  .rr-arrow{grid-column:1 / -1;flex-direction:row;justify-content:center;padding:6px 0}
+  .rr-arrow .chips{flex-direction:row;flex-wrap:wrap;justify-content:center}
+  .rr-luck{width:44px;height:44px;font-size:18px}
+  .hp-name{font-size:40px}
+  .hall-panel{
+    right:10px;left:10px;width:auto;top:auto;bottom:10px;max-height:60vh;
+    transform:translateY(24px);padding:22px 20px 18px;
+  }
+  #hall.open .hall-panel{transform:none}
+  html.no3d .hall-panel{position:absolute;right:10px;left:10px;top:auto;bottom:10px;transform:none;width:auto}
+  html.no3d #hall.open .hall-panel{transform:none}
+  .hall-big{top:5vh}
+  .hallhex2d{width:min(190px,46vw);height:min(240px,38vh)}
+  .foot-grid{grid-template-columns:1fr;gap:30px}
+  .hero-hint{letter-spacing:.18em;gap:8px;font-size:11px}
+}
+@media (max-width:375px){
+  .hero-title{letter-spacing:.1em;text-indent:.1em}
+  .hero-sub{font-size:13.5px}
+  .btn{padding:11px 20px;font-size:13px;letter-spacing:.14em}
+  .divstage{height:300px}
+  .rr-cards{grid-template-columns:1fr}
+  .rr-card .hexwrap{width:70px;height:86px}
+  .mx-cell{width:64px;height:84px}
+  .hp-motto{font-size:14px}
+  .know-card{padding:24px 20px}
+  #topbar nav a{font-size:11px;letter-spacing:.06em}
+  .ritual-card{padding:22px 18px}
+}
+
+/* ---------- 动效减免 ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important;scroll-behavior:auto!important;
+  }
+  .reveal{opacity:1;transform:none}
+  .hex2d.sequential .hrow{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ 载入幕帘 ============ -->
+<div id="loader" role="status" aria-label="加载中">
+  <div class="loader-brand">玄穹卦宫</div>
+  <div class="loader-yao"><i class="ly"></i><i class="ly"></i><i class="ly"></i><i class="ly"></i><i class="ly"></i><i class="ly"></i></div>
+  <div class="loader-tip">正在点亮紫微垣</div>
+</div>
+
+<!-- ============ 顶栏 ============ -->
+<header id="topbar">
+  <a class="brand" href="#xh" aria-label="玄穹卦宫 首页">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-name">玄穹<em>卦宫</em></span>
+  </a>
+  <nav aria-label="主导航">
+    <a href="#xh">星环</a>
+    <a href="#qg">星光起卦</a>
+    <a href="#ss">六十四卦</a>
+    <a href="#zs">观象</a>
+  </nav>
+</header>
+
+<main>
+  <!-- ============ 首屏 · 64 卦星环 ============ -->
+  <section id="xh" aria-label="六十四卦星环">
+    <canvas id="skyCanvas" aria-label="拖拽旋转星环，滚轮缩放，点击卦牌进入观卦厅"></canvas>
+    <div class="starfield2d" aria-hidden="true"></div>
+
+    <div class="hero-copy">
+      <p class="hero-eyebrow">周 易 · 六 十 四 卦 · 紫 微 垣</p>
+      <h1 class="hero-title">玄穹卦宫</h1>
+      <p class="hero-sub">星盘<b>蓍草</b>——六十四座星宫环列夜空。拖拽星盘、滚轮推移、点击卦牌，镜头俯冲飞入<b>观卦之厅</b>，六条星光爻梁自下而上悬空成卦。</p>
+      <div class="hero-cta">
+        <a class="btn primary" href="#qg">✦ 星光起卦</a>
+        <a class="btn" href="#ss">☰ 六十四卦检索</a>
+      </div>
+      <p class="hero-hint"><i></i>拖拽旋转 · 滚轮缩放 · 点击卦牌入厅<i></i></p>
+    </div>
+
+    <div class="scrollcue" aria-hidden="true"><span>下 滑 观 象</span><span class="line"></span></div>
+
+    <!-- 无 3D 降级：CSS 网格卦宫横向带 -->
+    <div id="fallbackStrip">
+      <p class="strip-head">星环降级 · 卦宫横览（点击卦牌入厅）</p>
+      <div class="strip-row" id="stripRow"></div>
+    </div>
+  </section>
+
+  <!-- ============ 星光起卦 ============ -->
+  <section id="qg" class="sec" aria-label="星光起卦">
+    <div class="sec-head reveal">
+      <p class="sec-eyebrow">蓍 草 · 星 光 仪 式</p>
+      <h2 class="sec-title">星光<span>起卦</span></h2>
+      <p class="sec-desc">一日一卦，不为问吉凶，只为停三秒。静心默想今日之事，让六爻替你把局面摆开。<br>古法蓍草「分二挂一揲四归奇」，此处化简为<b>星光六掷</b>——三枚铜钱之数，光点聚茎而成爻。</p>
+    </div>
+
+    <div class="ritual-grid">
+      <div class="ritual-card reveal">
+        <label for="wishInput">所问何事 · 可留白</label>
+        <textarea id="wishInput" maxlength="40" placeholder="一事一占，默念于心……（如：此事当进当守？）"></textarea>
+        <ol class="steps">
+          <li><b>默念所问之事</b>——一事一占，心诚则明</li>
+          <li><b>凝神按落按钮</b>——星光自穹宇应召而来</li>
+          <li><b>光点六掷聚茎</b>——自下而上，积爻成卦</li>
+          <li><b>观象参读断语</b>——卦辞为镜，照见本心</li>
+        </ol>
+        <div class="ritual-actions">
+          <button class="btn primary" id="castBtn">✦ 凝神起卦 · 六掷成卦</button>
+        </div>
+        <p class="cast-note">三枚铜钱之法：背计三、面计二，三枚求和——六为老阴、七为少阳、八为少阴、九为老阳，六掷自下而上成卦。</p>
+      </div>
+
+      <div class="reveal d1">
+        <div class="divstage">
+          <canvas id="divCanvas" aria-label="星光聚合成卦的演示区"></canvas>
+          <div class="divstage2d" id="divStage2d" aria-hidden="true"></div>
+          <div class="ritual-name" id="ritualName" aria-live="polite"></div>
+          <p class="div-hint" id="divHint">星 光 六 掷 · 自 下 而 上</p>
+        </div>
+        <div class="ritual-result" id="ritualResult" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 六十四卦检索 ============ -->
+  <section id="ss" class="sec" aria-label="六十四卦检索">
+    <div class="sec-head reveal">
+      <p class="sec-eyebrow">八 宫 相 重 · 六 十 四 卦</p>
+      <h2 class="sec-title">六十四卦<span>检索</span></h2>
+      <p class="sec-desc">输入卦名，星环即刻旋 transferring 至该卦并为你点亮；亦可点选下方 <b>8×8 卦宫矩阵</b>，上卦为行、下卦为列，任意卦格皆可入厅细观。</p>
+    </div>
+
+    <div class="searchbar reveal">
+      <input id="searchInput" type="text" placeholder="输入卦名，如：既济 / 谦 / 咸 / 剥" aria-label="卦名搜索" autocomplete="off">
+      <button class="btn" id="searchBtn">星环定位</button>
+      <div id="searchDrop" role="listbox" aria-label="搜索结果"></div>
+    </div>
+
+    <div class="matrix reveal d1" id="matrixWrap">
+      <table id="matrix" aria-label="六十四卦矩阵"></table>
+    </div>
+    <p class="matrix-note reveal d2">上卦为<b>行</b> · 下卦为<b>列</b> · 点击任意卦格即入观卦厅</p>
+  </section>
+
+  <!-- ============ 观象 · 周易知识 ============ -->
+  <section id="zs" class="sec" aria-label="观象知识">
+    <div class="sec-head reveal">
+      <p class="sec-eyebrow">仰 观 天 文 · 俯 察 地 理</p>
+      <h2 class="sec-title">观象<span>三则</span></h2>
+    </div>
+    <div class="know-grid">
+      <article class="know-card reveal">
+        <h3>阴阳二爻</h3>
+        <p>阳爻一长横「▬▬▬」，象天、象刚、象动；阴爻两短横「▬ ▬」，象地、象柔、象静。三爻叠成经卦，六爻叠成别卦——六十四卦，皆自阴阳二画生生而来。</p>
+      </article>
+      <article class="know-card reveal d1">
+        <h3>八卦经卦</h3>
+        <p>乾天、兑泽、离火、震雷、巽风、坎水、艮山、坤地，是为八卦。八卦相荡、相重而成六十四卦：上卦为外为客，下卦为内为主，内外相遇，即是一件事的局面。</p>
+      </article>
+      <article class="know-card reveal d2">
+        <h3>六爻与动爻</h3>
+        <p>爻位自下而上，阳爻称九、阴爻称六，故有「初九」「六五」「上九」之名。掷得老阳○、老阴✕者为动爻——物极必反，动则变，变则另成一卦，是为变卦。</p>
+      </article>
+    </div>
+    <p class="know-quote reveal">「<b>仰观天文，俯察地理</b>，是故知幽明之故。」——《周易 · 系辞》</p>
+  </section>
+</main>
+
+<!-- ============ 页脚 ============ -->
+<footer>
+  <div class="foot-grid">
+    <div>
+      <p class="foot-brand">玄穹卦宫</p>
+      <p class="foot-blurb">星盘蓍草——把六十四卦挂上夜空，让每一次占问，都始于一次仰望。</p>
+    </div>
+    <div class="foot-col">
+      <p class="foot-h">星 图 导 航</p>
+      <a href="#xh">64 卦星环</a>
+      <a href="#qg">星光起卦</a>
+      <a href="#ss">六十四卦检索</a>
+      <a href="#zs">观象三则</a>
+    </div>
+    <div class="foot-col">
+      <p class="foot-h">观 象 之 心</p>
+      <p class="foot-dis">卦辞是镜子，照见的是你心里已有的答案。<br>本站内容仅供传统文化研究与娱乐参考，重大决策请理性判断。</p>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2026 玄穹卦宫 · 星盘蓍草</span>
+    <span>深空 <b>#060A16</b> · 荧金 <b>#E9C46A</b> · Three.js 星环</span>
+  </div>
+</footer>
+
+<!-- ============ 观卦厅覆层 ============ -->
+<div id="hall" aria-hidden="true" role="dialog" aria-label="观卦厅">
+  <div class="hall-back" id="hallBack"></div>
+  <div class="hall-big" id="hallBig">
+    <span class="bn" id="hallBigName"></span>
+    <span class="bm" id="hallBigMotto"></span>
+  </div>
+  <div class="hallhex2d hexwrap" id="hallHex2d"></div>
+  <button class="hall-close" id="hallClose" aria-label="返回星环">✕ 返航星环</button>
+  <aside class="hall-panel" aria-label="卦象详解">
+    <p class="hp-eyebrow" id="hpEyebrow">第 01 卦 · 乾上乾下</p>
+    <h3 class="hp-name" id="hpName">乾</h3>
+    <div class="hp-badges" id="hpBadges"></div>
+    <div class="hp-row">
+      <div class="hp-mini hexwrap" id="hpMini"></div>
+      <p class="hp-motto" id="hpMotto"></p>
+    </div>
+    <p class="hp-adv" id="hpAdv"></p>
+    <p class="hp-note" id="hpNote" hidden></p>
+    <div class="hp-nav">
+      <button class="btn" id="hpPrev">‹ 前一卦</button>
+      <button class="btn" id="hpNext">后一卦 ›</button>
+      <button class="btn" id="hpReplay">重观爻亮</button>
+      <button class="btn" id="hpLocate">星环定位</button>
+    </div>
+  </aside>
+</div>
+
+<div id="ringTip" aria-hidden="true">
+  <div class="rt-name"></div>
+  <div class="rt-sub"></div>
+</div>
+<div id="toast" role="status"></div>
+
+<noscript>
+  <span class="ns-tip">玄穹卦宫需要启用 JavaScript 才能点亮星环与起卦仪式。本站所有卦象均以代码绘制，无任何外部图片。</span>
+</noscript>
+
+<script>
+'use strict';
+/* ==========================================================
+   玄穹卦宫 · 星盘蓍草 —— 主脚本
+   1) 六十四卦数据（卦画二进制自下而上，1=阳 0=阴）
+   2) Three.js 多级 CDN 兜底加载 + WebGL 降级
+   3) 星环 / 观卦厅 / 星光起卦 / 检索定位
+   ========================================================== */
+(function(){
+
+/* ---------------- 工具 ---------------- */
+var $  = function(s){ return document.querySelector(s); };
+var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+var TAU = Math.PI * 2;
+var clamp = function(v,a,b){ return v<a?a:(v>b?b:v); };
+var lerp = function(a,b,t){ return a+(b-a)*t; };
+var shortAngle = function(d){ return Math.atan2(Math.sin(d),Math.cos(d)); };
+var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var IS_TOUCH = ('ontouchstart' in window) || (navigator.maxTouchPoints>0);
+var IS_SMALL = function(){ return window.innerWidth < 768; };
+
+function toast(msg){
+  var t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._tm);
+  toast._tm = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+}
+
+/* ---------------- 八卦与六十四卦数据 ----------------
+   b 字段：六爻自下而上的二进制卦画，1=阳爻，0=阴爻
+   l：吉凶倾向  m：卦辞一句话  a：断语（宜｜忌） */
+var TRIG = {
+  '111':{n:'乾',x:'天',s:'☰'}, '110':{n:'兑',x:'泽',s:'☱'},
+  '101':{n:'离',x:'火',s:'☲'}, '100':{n:'震',x:'雷',s:'☳'},
+  '011':{n:'巽',x:'风',s:'☴'}, '010':{n:'坎',x:'水',s:'☵'},
+  '001':{n:'艮',x:'山',s:'☶'}, '000':{n:'坤',x:'地',s:'☷'}
+};
+var TRIG_ORDER = ['乾','兑','离','震','巽','坎','艮','坤'];
+var TRIG_BIN = {'乾':'111','兑':'110','离':'101','震':'100','巽':'011','坎':'010','艮':'001','坤':'000'};
+
+var HEX = [
+  {i:1, n:'乾', b:'111111', l:'吉', m:'元亨利贞——天行健，君子以自强不息', a:'宜：自强不息，进德修业｜忌：骄亢过刚，孤行独断'},
+  {i:2, n:'坤', b:'000000', l:'吉', m:'元亨，利牝马之贞——地势坤，厚德载物', a:'宜：厚德载物，柔顺承接｜忌：抢先争首，操之过急'},
+  {i:3, n:'屯', b:'100010', l:'平', m:'万物初生多艰——宜蓄力，勿冒进', a:'宜：蓄粮结伴，蓄力待时｜忌：冒进开疆，轻率决策'},
+  {i:4, n:'蒙', b:'010001', l:'平', m:'蒙昧待启——虚心求教则亨', a:'宜：虚心求教，尊师问道｜忌：自以为是，屡问不敬'},
+  {i:5, n:'需', b:'111010', l:'吉', m:'云上于天，待时而动——缓则亨，急则败', a:'宜：等待时机，饮食宴乐｜忌：躁动涉险，急于求成'},
+  {i:6, n:'讼', b:'010111', l:'凶', m:'有孚窒惕——争讼宜和解，强争终凶', a:'宜：息讼和解，从中正之人｜忌：纠缠争胜，恃强兴讼'},
+  {i:7, n:'师', b:'010000', l:'平', m:'行险而顺——兵众之事，师出有名则有功', a:'宜：师出有名，严明纪律｜忌：穷兵黩武，无序妄动'},
+  {i:8, n:'比', b:'000010', l:'吉', m:'水地相亲——择善而从，亲附则吉', a:'宜：亲附贤者，择善而从｜忌：迟疑不附，亲近小人'},
+  {i:9, n:'小畜', b:'111011', l:'平', m:'密云不雨——力量尚小，宜蓄势待发', a:'宜：积蓄力量，修炼内功｜忌：强行突破，显露锋芒'},
+  {i:10, n:'履', b:'110111', l:'平', m:'履虎尾，不咥人——如踩虎尾，谨慎则无咎', a:'宜：循礼慎行，如临深渊｜忌：轻忽大意，逞强犯难'},
+  {i:11, n:'泰', b:'111000', l:'大吉', m:'小往大来，吉亨——天地交泰，上下相通', a:'宜：通达协作，上下沟通｜忌：安而忘危，骄奢懈怠'},
+  {i:12, n:'否', b:'000111', l:'凶', m:'天地不交——宜守正静待，不宜妄动', a:'宜：守正静待，收敛退避｜忌：妄动强求，同流合污'},
+  {i:13, n:'同人', b:'101111', l:'吉', m:'同人于野，亨——志同道合，协力涉川', a:'宜：开诚布公，志同道合｜忌：结党营私，狭隘排他'},
+  {i:14, n:'大有', b:'111101', l:'大吉', m:'元亨——火在天上，盛大丰有，顺天休命', a:'宜：盛而不骄，顺天休命｜忌：骄奢僭越，独占其功'},
+  {i:15, n:'谦', b:'001000', l:'吉', m:'亨，君子有终——谦受益，满招损', a:'宜：谦卑自处，功成不居｜忌：自满自矜，锋芒毕露'},
+  {i:16, n:'豫', b:'000100', l:'吉', m:'雷出地奋——顺以动，喜乐有度则吉', a:'宜：顺势而动，居安思危｜忌：纵乐无度，耽于安逸'},
+  {i:17, n:'随', b:'100110', l:'吉', m:'元亨利贞——随时而动，择善而从', a:'宜：随时变通，择善而随｜忌：固执己见，随波逐流'},
+  {i:18, n:'蛊', b:'011001', l:'平', m:'山下风滞——积弊当治，整饬革新则亨', a:'宜：整饬积弊，锐意革新｜忌：因循守旧，讳疾忌医'},
+  {i:19, n:'临', b:'110000', l:'吉', m:'泽上有地——以刚临柔，大事可图', a:'宜：亲临督导，宽严相济｜忌：高位自傲，临事而惧'},
+  {i:20, n:'观', b:'000011', l:'平', m:'风行地上——观仰大道，宜静观省身', a:'宜：静观省身，瞻仰大道｜忌：浅见短视，轻率表态'},
+  {i:21, n:'噬嗑', b:'100101', l:'平', m:'颐中有物——咬合除梗，明刑敕法则吉', a:'宜：明断除障，执法公允｜忌：优柔寡断，用刑过酷'},
+  {i:22, n:'贲', b:'101001', l:'平', m:'山下有火——文饰之道，质胜于文，小利攸往', a:'宜：文质相辅，修饰有度｜忌：华而不实，粉饰太平'},
+  {i:23, n:'剥', b:'000001', l:'凶', m:'山附于地——阴盛剥阳，宜厚下安宅，静待复生', a:'宜：厚下安宅，静待复生｜忌：逆势强为，远贤亲小人'},
+  {i:24, n:'复', b:'100000', l:'吉', m:'一阳来复——出入无疾，否极泰来之始', a:'宜：迷途知返，养阳蓄锐｜忌：执迷不悟，反复无常'},
+  {i:25, n:'无妄', b:'100111', l:'平', m:'物与无妄——守正则吉，妄动有灾', a:'宜：守正安分，顺应自然｜忌：妄念妄行，投机侥幸'},
+  {i:26, n:'大畜', b:'111001', l:'平', m:'山中藏天——厚积薄发，利涉大川', a:'宜：厚积薄发，养贤蓄德｜忌：恃才冒进，急功近利'},
+  {i:27, n:'颐', b:'100001', l:'平', m:'山雷养正——慎言节食，自养养人则吉', a:'宜：慎言节食，自养养人｜忌：贪口腹之欲，出言无度'},
+  {i:28, n:'大过', b:'011110', l:'平', m:'泽灭木——栋桡之象，非常之时行非常之事', a:'宜：非常之举，力挽狂澜｜忌：拘泥常法，独立无援'},
+  {i:29, n:'坎', b:'010010', l:'凶', m:'重险叠陷——水流不盈，守中不懈可脱险', a:'宜：守中不懈，习险历险｜忌：履险犯难，心存侥幸'},
+  {i:30, n:'离', b:'101101', l:'平', m:'明两作离——附丽光明，柔顺守正则吉', a:'宜：附丽光明，柔顺守正｜忌：火急躁进，依附邪僻'},
+  {i:31, n:'咸', b:'001110', l:'吉', m:'二气交感——以诚相应则吉', a:'宜：以诚感人，虚心相待｜忌：矜持作态，情感用事'},
+  {i:32, n:'恒', b:'011100', l:'吉', m:'亨，无咎，利贞——持恒守常，久于其道', a:'宜：持恒守常，久于其道｜忌：朝令夕改，三心二意'},
+  {i:33, n:'遁', b:'001111', l:'平', m:'天下有山——远小人之道，宜退避以保身', a:'宜：退避保身，疏远小人｜忌：恋栈不去，正面相抗'},
+  {i:34, n:'大壮', b:'111100', l:'吉', m:'雷在天上——刚健盛大，非礼勿履则吉', a:'宜：刚正守礼，乘势而进｜忌：恃强凌弱，莽撞用壮'},
+  {i:35, n:'晋', b:'000101', l:'吉', m:'明出地上——日出而升，柔进上行，宜进取', a:'宜：柔进上行，进取图升｜忌：急躁求宠，行险侥幸'},
+  {i:36, n:'明夷', b:'101000', l:'凶', m:'明入地中——光明受抑，宜晦藏守拙', a:'宜：晦藏守拙，用晦而明｜忌：锋芒外露，强行犯难'},
+  {i:37, n:'家人', b:'101011', l:'吉', m:'风自火出——正家之道，内外正位则吉', a:'宜：正家守位，内外有序｜忌：治家不严，阴阳失位'},
+  {i:38, n:'睽', b:'110101', l:'平', m:'火泽相背——同中有异，小事吉，大事慎', a:'宜：异中求同，小事着手｜忌：猜疑对立，大事强合'},
+  {i:39, n:'蹇', b:'001010', l:'凶', m:'水在山上——行路艰难，宜反身修德待时', a:'宜：反身修德，求助贤者｜忌：冒险前行，孤军深入'},
+  {i:40, n:'解', b:'010100', l:'吉', m:'雷雨作解——险散难解，宜速行则吉', a:'宜：速解速决，赦过宥罪｜忌：久拖不决，恋战不休'},
+  {i:41, n:'损', b:'110001', l:'吉', m:'有孚，元吉——惩忿窒欲，损己利人', a:'宜：惩忿窒欲，损己利人｜忌：贪多务得，损人利己'},
+  {i:42, n:'益', b:'100011', l:'吉', m:'利涉大川——损上益下，厚施得众', a:'宜：厚施得众，损上益下｜忌：吝啬自肥，见善不迁'},
+  {i:43, n:'夬', b:'111110', l:'吉', m:'扬于王庭——刚决柔去，宜果决而戒躁进', a:'宜：果决除弊，光明正大｜忌：刚愎躁进，暗中行事'},
+  {i:44, n:'姤', b:'011111', l:'平', m:'天下有风——不期而遇，阴长之始，宜防微杜渐', a:'宜：防微杜渐，遇而不溺｜忌：放纵亲近，姑息养奸'},
+  {i:45, n:'萃', b:'000110', l:'大吉', m:'泽上于地——聚人以正，亨通利见大人', a:'宜：聚人以正，共襄大事｜忌：貌合神离，聚而无信'},
+  {i:46, n:'升', b:'011000', l:'吉', m:'地中生木——积小成高，柔以时升，宜南征吉', a:'宜：积小成高，循序渐进｜忌：逾越冒进，虚浮求升'},
+  {i:47, n:'困', b:'010110', l:'平', m:'亨，贞，大人吉——身处困顿，守正自亨', a:'宜：守正自亨，少言多忍｜忌：怨天尤人，困而变节'},
+  {i:48, n:'井', b:'011010', l:'吉', m:'改邑不改井——养人不穷，守位不废', a:'宜：养人不穷，守位不废｜忌：半途废井，汲引不修'},
+  {i:49, n:'革', b:'101110', l:'大吉', m:'巳日乃孚——顺天应人，去故取新', a:'宜：顺天应人，去故取新｜忌：革之无据，朝令夕改'},
+  {i:50, n:'鼎', b:'011101', l:'大吉', m:'木上有火——鼎新革故，凝命养贤，大吉', a:'宜：鼎新凝命，礼贤养士｜忌：颠倒是非，任用非人'},
+  {i:51, n:'震', b:'100100', l:'平', m:'洊雷震——震惊百里，镇定自持则吉', a:'宜：临危镇定，省身修德｜忌：惊慌失措，麻木不仁'},
+  {i:52, n:'艮', b:'001001', l:'平', m:'兼山艮止——当止则止，笃静守正无咎', a:'宜：当止则止，笃静守正｜忌：妄动不止，心猿意马'},
+  {i:53, n:'渐', b:'001011', l:'吉', m:'山上有木——鸿渐于陆，循序渐进则吉', a:'宜：循序渐进，婚配以礼｜忌：躐等躁进，急功近名'},
+  {i:54, n:'归妹', b:'110100', l:'平', m:'泽上有雷——少女从长，守礼慎行则吉', a:'宜：守礼慎行，正位以待｜忌：越礼苟合，轻诺妄从'},
+  {i:55, n:'丰', b:'101100', l:'大吉', m:'雷电皆至——明动相资，日中则昃，盛时当守', a:'宜：明动相资，盛时守正｜忌：骄盈自大，穷极奢华'},
+  {i:56, n:'旅', b:'001101', l:'平', m:'山上有火——羁旅之道，柔顺谨慎则小吉', a:'宜：柔顺谨慎，入境随俗｜忌：喧宾夺主，居所不宁'},
+  {i:57, n:'巽', b:'011011', l:'平', m:'随风巽入——谦逊随顺，申命行事，利有攸往', a:'宜：谦逊随顺，申命行事｜忌：优柔寡断，卑屈失志'},
+  {i:58, n:'兑', b:'110110', l:'吉', m:'丽泽兑——朋友讲习，和悦以处则吉', a:'宜：和悦以处，朋友讲习｜忌：谄媚取悦，溺于逸乐'},
+  {i:59, n:'涣', b:'010011', l:'吉', m:'风行水上——涣散险阻，宜聚人心济大川', a:'宜：聚拢人心，济险涉川｜忌：涣散离析，各自为政'},
+  {i:60, n:'节', b:'110010', l:'吉', m:'泽上有水——节制有度，苦节不可贞', a:'宜：节制有度，量入为出｜忌：苦节过度，奢侈无度'},
+  {i:61, n:'中孚', b:'110011', l:'吉', m:'泽上有风——诚信感通，豚鱼可孚，大吉', a:'宜：诚信立身，以诚感物｜忌：虚诈失信，轻诺寡信'},
+  {i:62, n:'小过', b:'001100', l:'平', m:'山上有雷——小事可过，大事宜守柔', a:'宜：小事可为，柔谨自守｜忌：大事强为，好高骛远'},
+  {i:63, n:'既济', b:'101010', l:'吉', m:'亨小，利贞——功德初成，慎终如始', a:'宜：慎终如始，防患未然｜忌：功成懈怠，坐享其成'},
+  {i:64, n:'未济', b:'010101', l:'平', m:'事未竟成——慎择所行，终得济', a:'宜：慎择所行，徐图后举｜忌：仓促收尾，强求速成'}
+];
+
+var BY_BIN = {}, BIN2IDX = {};
+HEX.forEach(function(h,i){ BY_BIN[h.b]=h; BIN2IDX[h.b]=i; });
+
+function upperOf(bin){ return TRIG[bin.slice(3)]; }   /* 上三爻 */
+function lowerOf(bin){ return TRIG[bin.slice(0,3)]; } /* 下三爻 */
+function yaoName(pos, yang){ /* pos 0..5 自下而上 */
+  if(pos===0) return yang?'初九':'初六';
+  if(pos===5) return yang?'上九':'上六';
+  return (yang?'九':'六') + ['','二','三','四','五'][pos];
+}
+
+/* ---------------- 2D 卦画构建（CSS 发光爻线） ---------------- */
+function hex2d(bin, moving, sequential){
+  var d = document.createElement('div');
+  d.className = 'hex2d' + (sequential ? ' sequential' : '');
+  for(var j=5;j>=0;j--){
+    var row = document.createElement('span');
+    row.className = 'hrow ' + (bin[j]==='1' ? 'yang' : 'yin');
+    if(moving && moving.indexOf(j)>=0) row.className += ' moving';
+    row.appendChild(document.createElement('i')).className = 'hb';
+    if(bin[j]==='0') row.appendChild(document.createElement('i')).className = 'hb';
+    d.appendChild(row);
+  }
+  return d;
+}
+/* 2D 逐爻点亮动画（降级观卦厅 / 降级起卦共用） */
+function lightUp2d(container, bin, moving, stagger){
+  container.innerHTML = '';
+  var h = hex2d(bin, moving, true);
+  container.appendChild(h);
+  var rows = h.children;
+  var delays = [];
+  for(var r=0;r<6;r++){
+    (function(rr){
+      delays.push(setTimeout(function(){ rows[rr].classList.add('lit'); }, REDUCED?0:rr*stagger));
+    })(r);
+  }
+  return delays;
+}
+
+/* ---------------- Three.js 多级 CDN 兜底 ---------------- */
+var THREE_CDNS = [
+  'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
+  'https://unpkg.com/three@0.128.0/build/three.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+  'https://cdn.bootcdn.net/ajax/libs/three.js/r128/three.min.js',
+  'https://cdn.staticfile.org/three.js/r128/three.min.js'
+];
+function loadScript(src){
+  return new Promise(function(resolve,reject){
+    var s = document.createElement('script');
+    s.src = src; s.async = true;
+    var to = setTimeout(function(){ s.onload=s.onerror=null; reject(new Error('timeout')); }, 9000);
+    s.onload  = function(){ clearTimeout(to); resolve(); };
+    s.onerror = function(){ clearTimeout(to); reject(new Error('error')); };
+    document.head.appendChild(s);
+  });
+}
+
+var HAS3D = false;
+var app = {}; /* 3D 应用状态容器 */
+
+/* ---------------- 载入幕帘 & 入场 ---------------- */
+function ready(){
+  $('#loader').classList.add('hide');
+  document.body.classList.add('ready');
+}
+setTimeout(function(){ /* 网络极慢时的幕帘兜底提示 */
+  if(!document.body.classList.contains('ready')){
+    var tip = $('.loader-tip');
+    if(tip) tip.textContent = '星光穿行于云海之间 · 请稍候';
+  }
+}, 4200);
+
+/* ---------------- 主入口：尝试 3D ---------------- */
+(function boot(){
+  var chain = Promise.reject();
+  THREE_CDNS.forEach(function(url){
+    chain = chain.catch(function(){ return loadScript(url); });
+  });
+  chain.then(function(){
+    if(window.THREE){
+      try{ init3D(); }
+      catch(err){ console.warn('[玄穹] 3D 初始化异常，转入 2D 卦宫：', err); fallback2D(); }
+    }else{
+      fallback2D();
+    }
+  }).catch(function(){
+    fallback2D();
+  });
+})();
+
+/* ==========================================================
+   降级模式：CSS 星空 + CSS 网格卦宫 + CSS 发光爻线
+   ========================================================== */
+function fallback2D(){
+  if(document.documentElement.classList.contains('no3d')) return;
+  document.documentElement.classList.add('no3d');
+  ready();
+  buildStrip();
+  toast('星环已切换为 2D 卦宫模式 · 全部卦象仍可查阅');
+}
+
+function buildStrip(){
+  var row = $('#stripRow');
+  if(row.children.length) return;
+  HEX.forEach(function(h){
+    var up = upperOf(h.b), low = lowerOf(h.b);
+    var card = document.createElement('div');
+    card.className = 'strip-card';
+    card.setAttribute('role','button');
+    card.setAttribute('tabindex','0');
+    var w = document.createElement('div'); w.className='hexwrap'; w.style.height='62px';
+    w.appendChild(hex2d(h.b, null, false));
+    card.appendChild(w);
+    var nm = document.createElement('p'); nm.className='sc-name'; nm.textContent = h.n;
+    var no = document.createElement('p'); no.className='sc-no';
+    no.textContent = '第'+String(h.i).padStart(2,'0')+'卦 · '+up.n+low.n;
+    card.appendChild(nm); card.appendChild(no);
+    card.addEventListener('click', function(){ openHall(BIN2IDX[h.b]); });
+    card.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openHall(BIN2IDX[h.b]); } });
+    row.appendChild(card);
+  });
+}
+
+/* ==========================================================
+   3D 模式
+   ========================================================== */
+function init3D(){
+  var T = window.THREE;
+  var canvas = $('#skyCanvas');
+  var renderer = new T.WebGLRenderer({canvas:canvas, antialias:true});
+  renderer.setPixelRatio(clamp(window.devicePixelRatio||1, 1, IS_SMALL()?1.5:2)); /* DPR 钳制 */
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x060A16, 1);
+  renderer.domElement.addEventListener('webglcontextlost', function(e){
+    e.preventDefault(); console.warn('[玄穹] WebGL 上下文丢失，转入 2D 卦宫'); fallback2D();
+  });
+
+  var scene = new T.Scene();
+  scene.fog = new T.FogExp2(0x060A16, 0.0065);
+  var camera = new T.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 500);
+
+  /* ---------- 程序化辉光贴图（零外部图片） ---------- */
+  function glowTexture(){
+    var c = document.createElement('canvas'); c.width = c.height = 128;
+    var g = c.getContext('2d');
+    var grd = g.createRadialGradient(64,64,0,64,64,64);
+    grd.addColorStop(0,'rgba(255,255,255,1)');
+    grd.addColorStop(0.28,'rgba(255,255,255,.5)');
+    grd.addColorStop(0.62,'rgba(255,255,255,.14)');
+    grd.addColorStop(1,'rgba(255,255,255,0)');
+    g.fillStyle = grd; g.fillRect(0,0,128,128);
+    var tx = new T.CanvasTexture(c);
+    tx.minFilter = T.LinearFilter;
+    return tx;
+  }
+  var glowTex = glowTexture();
+
+  /* ---------- 卦名文字贴图 ---------- */
+  function nameTexture(name){
+    var c = document.createElement('canvas'); c.width = c.height = 192;
+    var g = c.getContext('2d');
+    var size = name.length>=2 ? 62 : 108;
+    g.font = '700 '+size+'px "Noto Serif SC","KaiTi","SimSun",serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.shadowColor = 'rgba(233,196,106,.85)'; g.shadowBlur = 18;
+    g.fillStyle = '#EAF0FF';
+    g.fillText(name, 96, 100);
+    var tx = new T.CanvasTexture(c);
+    tx.minFilter = T.LinearFilter;
+    return tx;
+  }
+
+  /* ---------- 星空 ---------- */
+  var starCount = IS_SMALL() ? 700 : 1500;
+  function makeStars(n, rMin, rMax, size, color, opacity){
+    var pos = new Float32Array(n*3);
+    for(var i=0;i<n;i++){
+      var r = rMin + Math.random()*(rMax-rMin);
+      var th = Math.random()*TAU, ph = Math.acos(2*Math.random()-1);
+      pos[i*3]   = r*Math.sin(ph)*Math.cos(th);
+      pos[i*3+1] = r*Math.cos(ph)*0.6;
+      pos[i*3+2] = r*Math.sin(ph)*Math.sin(th);
+    }
+    var geo = new T.BufferGeometry();
+    geo.setAttribute('position', new T.BufferAttribute(pos,3));
+    var mat = new T.PointsMaterial({
+      size:size, color:color, transparent:true, opacity:opacity,
+      blending:T.AdditiveBlending, depthWrite:false, sizeAttenuation:true
+    });
+    return new T.Points(geo, mat);
+  }
+  var starsFar  = makeStars(starCount, 90, 190, 1.1, 0xEAF0FF, 0.85);
+  var starsNear = makeStars(Math.floor(starCount*0.25), 30, 80, 0.7, 0xE9C46A, 0.5);
+  scene.add(starsFar, starsNear);
+
+  /* ---------- 中央太极星核 ---------- */
+  var coreMat1 = new T.SpriteMaterial({map:glowTex, color:0x4A3E8C, transparent:true, opacity:0.55, blending:T.AdditiveBlending, depthWrite:false});
+  var core1 = new T.Sprite(coreMat1); core1.scale.set(26,26,1); scene.add(core1);
+  var coreMat2 = new T.SpriteMaterial({map:glowTex, color:0xE9C46A, transparent:true, opacity:0.22, blending:T.AdditiveBlending, depthWrite:false});
+  var core2 = new T.Sprite(coreMat2); core2.scale.set(9,9,1); scene.add(core2);
+
+  /* ---------- 64 卦星环 ---------- */
+  var R = 26;
+  var ringGroup = new T.Group();
+  scene.add(ringGroup);
+
+  var baseGeo  = new T.BoxGeometry(3.3, 4.5, 0.14);
+  var edgeGeo  = new T.EdgesGeometry(baseGeo);
+  var hitGeo   = new T.PlaneGeometry(4.3, 5.5);
+  var yangGeo  = new T.BoxGeometry(2.3, 0.17, 0.06);
+  var yinGeo   = new T.BoxGeometry(0.95, 0.17, 0.06);
+  var labelGeo = new T.PlaneGeometry(2.1, 2.1);
+  var baseMat  = new T.MeshBasicMaterial({color:0x0C1130, transparent:true, opacity:0.88});
+  var edgeMat  = new T.LineBasicMaterial({color:0xE9C46A, transparent:true, opacity:0.5});
+  var yangMat  = new T.MeshBasicMaterial({color:0xE9C46A});
+  var yinMat   = new T.MeshBasicMaterial({color:0x4FA3D1});
+
+  var plates = [];
+  var hitMeshes = [];
+  for(var i=0;i<64;i++){
+    var h = HEX[i];
+    var g = new T.Group();
+    var ang = i/64*TAU;
+    g.position.set(R*Math.sin(ang), 0, R*Math.cos(ang));
+    g.rotation.y = ang;
+
+    var base = new T.Mesh(baseGeo, baseMat);
+    var edge = new T.LineSegments(edgeGeo, edgeMat);
+    g.add(base, edge);
+
+    /* 六爻：BoxGeometry 细长发光条，自下而上 */
+    for(var j=0;j<6;j++){
+      var yy = (j-2.5)*0.58;
+      if(h.b[j]==='1'){
+        var bar = new T.Mesh(yangGeo, yangMat);
+        bar.position.set(0, yy, 0.11);
+        g.add(bar);
+      }else{
+        var b1 = new T.Mesh(yinGeo, yinMat); b1.position.set(-0.66, yy, 0.11);
+        var b2 = new T.Mesh(yinGeo, yinMat); b2.position.set( 0.66, yy, 0.11);
+        g.add(b1, b2);
+      }
+    }
+
+    /* 卦名光匾 */
+    var label = new T.Mesh(labelGeo, new T.MeshBasicMaterial({map:nameTexture(h.n), transparent:true, opacity:0.92, depthWrite:false}));
+    label.position.set(0, -3.1, 0.02);
+    g.add(label);
+
+    /* 辉光灵晕 */
+    var haloMat = new T.SpriteMaterial({map:glowTex, color:0xE9C46A, transparent:true, opacity:0.16, blending:T.AdditiveBlending, depthWrite:false});
+    var halo = new T.Sprite(haloMat);
+    halo.scale.set(6.6, 8.2, 1); halo.position.z = -0.5;
+    g.add(halo);
+
+    /* 射线命中面（不可见） */
+    var hit = new T.Mesh(hitGeo, new T.MeshBasicMaterial({visible:false}));
+    hit.position.z = 0.3;
+    hit.userData.idx = i;
+    g.add(hit);
+    hitMeshes.push(hit);
+
+    g.scale.setScalar(0.001); /* 入场前隐藏 */
+    ringGroup.add(g);
+    plates.push({
+      group:g, halo:haloMat, label:label,
+      angle:ang, appear:i*0.032, scaleT:0.001, pulse:0, bob:Math.random()*TAU
+    });
+  }
+
+  /* 环带双轨光线 */
+  function ringLine(radius, opacity){
+    var pts = [];
+    for(var k=0;k<=128;k++){
+      var a = k/128*TAU;
+      pts.push(new T.Vector3(Math.sin(a)*radius, 0, Math.cos(a)*radius));
+    }
+    var geo = new T.BufferGeometry().setFromPoints(pts);
+    var mat = new T.LineBasicMaterial({color:0x8a6f3a, transparent:true, opacity:opacity});
+    return new T.Line(geo, mat);
+  }
+  var rail1 = ringLine(R-2.6, 0.28), rail2 = ringLine(R+2.6, 0.2);
+  ringGroup.add(rail1, rail2);
+
+  /* ---------- 观卦厅：悬空爻梁组 ---------- */
+  var hallGroup = new T.Group();
+  hallGroup.position.set(0, 0.6, 0);
+  hallGroup.visible = false;
+  scene.add(hallGroup);
+
+  var BEAM = {
+    yang: new T.BoxGeometry(11, 0.5, 1.15),
+    yin:  new T.BoxGeometry(4.5, 0.5, 1.15)
+  };
+  var HALL_STEP = 1.52;
+
+  function clearHall(){
+    while(hallGroup.children.length){
+      var c = hallGroup.children[0];
+      hallGroup.remove(c);
+      if(c.traverse){
+        c.traverse(function(o){ if(o.material && o.material.dispose) o.material.dispose(); });
+      }else if(c.material && c.material.dispose){
+        c.material.dispose();
+      }
+    }
+    hallGroup.units = null;
+  }
+
+  function buildHall(hex, moving, t0){
+    clearHall();
+    hallGroup.visible = true;
+    var units = [];
+    var stagger = REDUCED ? 0.02 : 0.34;
+    for(var j=0;j<6;j++){
+      var yang = hex.b[j]==='1';
+      var isMoving = moving && moving.indexOf(j)>=0;
+      var color = isMoving ? 0xD4553F : (yang ? 0xE9C46A : 0x4FA3D1);
+      var mat = new T.MeshBasicMaterial({color:color, transparent:true, opacity:0});
+      var unit = new T.Group();
+      unit.position.y = (j-2.5)*HALL_STEP;
+      if(yang){
+        var bm = new T.Mesh(BEAM.yang, mat);
+        unit.add(bm);
+      }else{
+        var m1 = new T.Mesh(BEAM.yin, mat); m1.position.x = -3.1;
+        var m2 = new T.Mesh(BEAM.yin, mat); m2.position.x =  3.1;
+        unit.add(m1, m2);
+      }
+      /* 爻梁辉光 */
+      var hm = new T.SpriteMaterial({map:glowTex, color:color, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false});
+      var hs = new T.Sprite(hm); hs.scale.set(17, 3.2, 1);
+      unit.add(hs);
+      /* 动爻赤星 */
+      if(isMoving){
+        var dm = new T.SpriteMaterial({map:glowTex, color:0xFF6A4D, transparent:true, opacity:0.9, blending:T.AdditiveBlending, depthWrite:false});
+        var dot = new T.Sprite(dm); dot.scale.set(2.4,2.4,1);
+        dot.position.set(yang ? 6.3 : 5.4, 0, 0);
+        unit.add(dot);
+        unit.dotMat = dm;
+      }
+      unit.userData = {start: t0 + 0.25 + j*stagger, mat:mat, halo:hm, appear:0};
+      unit.scale.x = 0.001;
+      hallGroup.add(unit);
+      units.push(unit);
+    }
+    hallGroup.units = units;
+    return t0 + 0.25 + 5*stagger + 0.65; /* 全部点亮时刻 */
+  }
+
+  /* ---------- 相机轨道（自制，免外部控件） ---------- */
+  var ORBIT = {
+    theta:0, phi:1.16, dist:IS_SMALL()?58:46,
+    thetaVel:0,
+    tFly:null,
+    overview:{theta:0, phi:1.16, dist:IS_SMALL()?58:46, ty:2},
+    hallView:{theta:0, phi:1.36, dist:24, ty:0.6}
+  };
+  var TARGET = new T.Vector3(0,2,0);
+  function applyCamera(){
+    var p = ORBIT.phi, th = ORBIT.theta, d = ORBIT.dist;
+    camera.position.set(
+      TARGET.x + d*Math.sin(p)*Math.sin(th),
+      TARGET.y + d*Math.cos(p),
+      TARGET.z + d*Math.sin(p)*Math.cos(th)
+    );
+    camera.lookAt(TARGET);
+  }
+  function flyTo(view, dur){
+    if(REDUCED || dur<=0){
+      ORBIT.theta=view.theta; ORBIT.phi=view.phi; ORBIT.dist=view.dist;
+      TARGET.set(0,view.ty,0);
+      ORBIT.tFly = null;
+      return;
+    }
+    ORBIT.tFly = {
+      t0: performance.now(), dur: dur,
+      from:{theta:ORBIT.theta, phi:ORBIT.phi, dist:ORBIT.dist, ty:TARGET.y},
+      to: view
+    };
+  }
+  function easeInOut(t){ return t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2; }
+  function easeOutBack(t){ var c1=1.70158,c3=c1+1; return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2); }
+
+  /* ---------- 交互：拖拽 / 滚轮 / 悬停 / 点击 ---------- */
+  var raycaster = new T.Raycaster();
+  var ndc = new T.Vector2(-2,-2);
+  var hovered = -1;
+  var drag = {on:false, x:0, y:0, moved:0, t0:0};
+  var ringFly = null; /* {from,to,t0,dur} */
+  var heroVis = true;
+  var hallOpen = false;
+  var entranceT0 = performance.now() + 350;
+
+  function setNDC(e){
+    var r = canvas.getBoundingClientRect();
+    ndc.x = ((e.clientX - r.left)/r.width)*2 - 1;
+    ndc.y = -((e.clientY - r.top)/r.height)*2 + 1;
+  }
+
+  canvas.addEventListener('pointerdown', function(e){
+    if(hallOpen) return;
+    drag.on = true; drag.x = e.clientX; drag.y = e.clientY; drag.moved = 0; drag.t0 = performance.now();
+    ORBIT.thetaVel = 0; ringFly = null;
+    canvas.classList.add('dragging');
+    try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  canvas.addEventListener('pointermove', function(e){
+    setNDC(e);
+    if(drag.on && !hallOpen){
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      drag.x = e.clientX; drag.y = e.clientY;
+      drag.moved += Math.abs(dx)+Math.abs(dy);
+      ORBIT.theta -= dx*0.0052;
+      ORBIT.thetaVel = -dx*0.0052;
+      if(e.pointerType === 'mouse'){ /* 触屏纵向让位给页面滚动 */
+        ORBIT.phi = clamp(ORBIT.phi - dy*0.0035, 0.62, 1.42);
+      }
+    }
+  });
+  window.addEventListener('pointerup', function(e){
+    if(!drag.on) return;
+    drag.on = false;
+    canvas.classList.remove('dragging');
+    if(drag.moved < 8 && performance.now()-drag.t0 < 500 && hovered>=0 && !hallOpen){
+      openHall(hovered);
+    }
+  });
+  canvas.addEventListener('wheel', function(e){
+    if(hallOpen) return;
+    e.preventDefault();
+    ORBIT.dist = clamp(ORBIT.dist + e.deltaY*0.032, 27, 95);
+  }, {passive:false});
+  canvas.addEventListener('pointerleave', function(){ ndc.set(-2,-2); });
+
+  /* 悬停浮签 */
+  var tip = $('#ringTip');
+  function updateTip(h){
+    if(h<0){ tip.classList.remove('show'); return; }
+    var wp = new T.Vector3();
+    plates[h].group.getWorldPosition(wp);
+    wp.y += 3.4;
+    wp.project(camera);
+    var sx = (wp.x*0.5+0.5)*window.innerWidth;
+    var sy = (-wp.y*0.5+0.5)*window.innerHeight;
+    tip.querySelector('.rt-name').textContent = HEX[h].n;
+    tip.querySelector('.rt-sub').textContent = '第'+String(HEX[h].i).padStart(2,'0')+'卦 · 点击入厅';
+    tip.style.left = sx+'px';
+    tip.style.top  = sy+'px';
+    tip.classList.add('show');
+  }
+
+  /* ---------- 渲染循环（页签隐藏自动暂停） ---------- */
+  var rafId = 0, lastT = 0, running = true, frames = 0, fpsT = 0, lowPerf = false;
+  var tmpV = new T.Vector3();
+
+  function loop(t){
+    rafId = requestAnimationFrame(loop);
+    var dt = Math.min((t - lastT)/1000 || 0.016, 0.05);
+    lastT = t;
+
+    /* 性能自适应 */
+    frames++; fpsT += dt;
+    if(fpsT >= 1){
+      if(fpsT && frames/fpsT < 30 && t - entranceT0 > 6000 && !lowPerf){
+        lowPerf = true;
+        starsNear.visible = false;
+        plates.forEach(function(p){ p.halo.opacity = 0.08; });
+        renderer.setPixelRatio(1);
+      }
+      frames = 0; fpsT = 0;
+    }
+
+    /* 星空恒动 */
+    if(!REDUCED){
+      starsFar.rotation.y += dt*0.004;
+      starsNear.rotation.y -= dt*0.006;
+      core2.scale.setScalar(9 + Math.sin(t*0.0016)*1.4);
+      core1.material.opacity = 0.45 + Math.sin(t*0.0011)*0.12;
+    }
+
+    /* 星环自转（入场后缓缓亮起旋转；reduced-motion 停转） */
+    if(ringFly){
+      var k = clamp((t - ringFly.t0)/ringFly.dur, 0, 1);
+      var e = easeInOut(k);
+      ringGroup.rotation.y = lerp(ringFly.from, ringFly.to, e);
+      if(k>=1) ringFly = null;
+    }else if(!hallOpen && !REDUCED){
+      var ramp = clamp((t - entranceT0)/3000, 0, 1);
+      ringGroup.rotation.y += dt*0.05*ramp;
+    }
+
+    /* 相机飞行 */
+    if(ORBIT.tFly){
+      var f = ORBIT.tFly;
+      var kk = clamp((t - f.t0)/f.dur, 0, 1);
+      var ee = easeInOut(kk);
+      ORBIT.theta = lerp(f.from.theta, f.to.theta, ee);
+      ORBIT.phi   = lerp(f.from.phi,   f.to.phi,   ee);
+      ORBIT.dist  = lerp(f.from.dist,  f.to.dist,  ee);
+      TARGET.y    = lerp(f.from.ty,    f.to.ty,    ee);
+      if(kk>=1) ORBIT.tFly = null;
+    }else{
+      if(!drag.on){
+        ORBIT.theta += ORBIT.thetaVel;
+        ORBIT.thetaVel *= 0.94;
+      }
+    }
+    applyCamera();
+
+    /* 入场 + 悬停 + 脉冲 */
+    var allIn = true;
+    for(var i=0;i<64;i++){
+      var p = plates[i];
+      if(p.scaleT < 0.999){
+        var kt = (t - entranceT0)/1000 - p.appear;
+        if(kt > 0){
+          var kk2 = clamp(kt/0.85, 0, 1);
+          var target = REDUCED ? 1 : easeOutBack(kk2);
+          p.scaleT = Math.max(0.001, target);
+          if(kk2<1) allIn = false;
+        }else allIn = false;
+      }
+      var hoverS = (i===hovered && !hallOpen) ? 1.2 : 1;
+      var pulseS = 1 + p.pulse*0.3*Math.max(0, Math.sin(p.pulse*10));
+      var s = p.scaleT * lerp(p.group.scale.x/Math.max(p.scaleT,0.001), hoverS, 0.14) * pulseS;
+      if(!isFinite(s) || s<=0) s = 0.001;
+      p.group.scale.setScalar(clamp(s, 0.001, 1.6));
+      p.pulse = Math.max(0, p.pulse - dt*1.2);
+      if(!REDUCED && allIn){
+        p.bob += dt;
+        p.group.position.y = Math.sin(p.bob*0.9 + i)*0.22;
+      }
+      var hovOp = (i===hovered && !hallOpen) ? 0.4 : (lowPerf?0.08:0.16);
+      p.halo.opacity = lerp(p.halo.opacity, hovOp, 0.1);
+    }
+
+    /* 射线悬停（拖拽中不检） */
+    if(!drag.on && !hallOpen && ndc.x > -1.5 && heroVis){
+      raycaster.setFromCamera(ndc, camera);
+      var hits = raycaster.intersectObjects(hitMeshes, false);
+      var idx = hits.length ? hits[0].object.userData.idx : -1;
+      if(idx !== hovered){
+        hovered = idx;
+        canvas.style.cursor = idx>=0 ? 'pointer' : 'grab';
+        if(idx>=0) updateTip(idx); else tip.classList.remove('show');
+      }else if(idx>=0){
+        updateTip(idx);
+      }
+    }else{
+      if(hovered>=0 && hallOpen){ hovered=-1; tip.classList.remove('show'); }
+    }
+
+    /* 观卦厅爻梁动画 */
+    if(hallGroup.visible && hallGroup.units){
+      for(var u=0;u<hallGroup.units.length;u++){
+        var un = hallGroup.units[u];
+        var ud = un.userData;
+        var at = (t - ud.start)/600;
+        if(at > 0){
+          var au = REDUCED ? 1 : clamp(at, 0, 1);
+          var sc = REDUCED ? 1 : easeOutBack(au);
+          un.scale.x = Math.max(0.001, sc);
+          ud.mat.opacity = au*0.95;
+          ud.halo.opacity = au*(ud.dotMat?0.4:0.26);
+          if(ud.dotMat) ud.dotMat.opacity = 0.55 + Math.sin(t*0.004)*0.4;
+        }
+      }
+    }
+
+    if(heroVis || hallOpen) renderer.render(scene, camera);
+  }
+
+  /* ---------- 可见性与尺寸 ---------- */
+  var heroIO = new IntersectionObserver(function(es){
+    es.forEach(function(en){ heroVis = en.isIntersecting; });
+  }, {threshold:0.02});
+  heroIO.observe($('#xh'));
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden){
+      running = false;
+      cancelAnimationFrame(rafId);
+    }else if(!running){
+      running = true; lastT = performance.now();
+      rafId = requestAnimationFrame(loop);
+    }
+  });
+
+  window.addEventListener('resize', function(){
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setPixelRatio(clamp(window.devicePixelRatio||1, 1, IS_SMALL()?1.5:2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  /* ---------- 对外接口挂载 ---------- */
+  app = {
+    T:T, scene:scene, camera:camera, renderer:renderer,
+    ringGroup:ringGroup, plates:plates, ORBIT:ORBIT,
+    flyTo:flyTo, hallGroup:hallGroup, buildHall:buildHall, clearHall:clearHall,
+    glowTex:glowTex,
+    focusRingOn:function(idx){
+      var target = -plates[idx].angle;
+      var cur = ringGroup.rotation.y;
+      var delta = shortAngle(target - cur);
+      ringFly = {from:cur, to:cur+delta, t0:performance.now(), dur:REDUCED?1:1100};
+      plates[idx].pulse = 3;
+      plates[idx].halo.opacity = 0.65;
+    },
+    setHallSpeed:function(on){ /* 厅内减速自转 */ hallOpen = on; }
+  };
+
+  /* ---------- 启动渲染 ---------- */
+  HAS3D = true;
+  document.body.classList.add('has3d');
+  ready();
+  lastT = performance.now();
+  rafId = requestAnimationFrame(loop);
+  initRitual3D();
+}
+
+/* ==========================================================
+   观卦厅（3D / 2D 通用壳）
+   ========================================================== */
+var hallState = {open:false, idx:0, moving:[], litTimers:[]};
+
+function populateHallPanel(h, moving){
+  var up = upperOf(h.b), low = lowerOf(h.b);
+  $('#hpEyebrow').textContent = '第 '+String(h.i).padStart(2,'0')+' 卦 · '+up.n+'上'+low.n+'下';
+  $('#hpName').innerHTML = '';
+  $('#hpName').appendChild(document.createTextNode(h.n));
+  var bd = $('#hpBadges');
+  bd.innerHTML = '';
+  var lk = document.createElement('span');
+  lk.className = 'hp-badge lk ' + (h.l==='凶'?'bad':(h.l==='平'?'mid':''));
+  lk.textContent = h.l;
+  bd.appendChild(lk);
+  [up, low].forEach(function(t,ix){
+    var s = document.createElement('span');
+    s.className = 'hp-badge' + (ix?' cy':'');
+    s.textContent = (ix?'下卦 ':'上卦 ') + t.s + t.n + '（'+t.x+'）';
+    bd.appendChild(s);
+  });
+  var mini = $('#hpMini');
+  mini.innerHTML = '';
+  mini.appendChild(hex2d(h.b, moving, false));
+  $('#hpMotto').textContent = h.m;
+  $('#hpAdv').innerHTML = '';
+  var parts = h.a.split('｜');
+  parts.forEach(function(pp){
+    var line = document.createElement('span');
+    line.style.display = 'block';
+    var seg = pp.split('：');
+    var b = document.createElement('b'); b.textContent = seg[0]+'：';
+    line.appendChild(b);
+    line.appendChild(document.createTextNode(seg.slice(1).join('：')));
+    $('#hpAdv').appendChild(line);
+  });
+  var note = $('#hpNote');
+  if(moving && moving.length){
+    note.hidden = false;
+    note.textContent = '动爻：' + moving.map(function(p){ return yaoName(p, h.b[p]==='1') + (h.b[p]==='1'?' ○':' ✕'); }).join('　') + '——动则变，变卦另参。';
+  }else{
+    note.hidden = true;
+  }
+}
+
+function openHall(idx, moving){
+  var h = HEX[idx];
+  hallState.open = true;
+  hallState.idx = idx;
+  hallState.moving = (moving && moving.slice()) || [];
+  document.body.classList.add('hall-open');
+  var hall = $('#hall');
+  hall.setAttribute('aria-hidden','false');
+  hall.classList.add('open');
+  populateHallPanel(h, hallState.moving);
+
+  /* 卦名大字 */
+  $('#hallBigName').textContent = h.n;
+  $('#hallBigMotto').textContent = '第'+String(h.i).padStart(2,'0')+'卦 · '+h.m.split('——')[0];
+  var big = $('#hallBig');
+  big.classList.remove('show');
+
+  if(HAS3D){
+    window.scrollTo(0, 0);
+    app.setHallSpeed(true);
+    var t0 = performance.now();
+    app.buildHall(h, hallState.moving, t0);
+    app.flyTo(app.ORBIT.hallView, REDUCED?0:1600); /* 标志性瞬间：镜头穿越飞入 */
+    var litDelay = REDUCED ? 60 : (250 + 5*340 + 300);
+    setTimeout(function(){ big.classList.add('show'); }, litDelay);
+  }else{
+    window.scrollTo(0, 0);
+    hallState.litTimers.forEach(clearTimeout);
+    hallState.litTimers = lightUp2d($('#hallHex2d'), h.b, hallState.moving, 300);
+    setTimeout(function(){ big.classList.add('show'); }, REDUCED?60:300+5*300);
+  }
+}
+
+function closeHall(){
+  if(!hallState.open) return;
+  hallState.open = false;
+  document.body.classList.remove('hall-open');
+  $('#hall').classList.remove('open');
+  $('#hall').setAttribute('aria-hidden','true');
+  $('#hallBig').classList.remove('show');
+  if(HAS3D){
+    app.setHallSpeed(false);
+    app.clearHall();
+    app.ORBIT.overview.theta = app.ORBIT.theta; /* 从当前方位平滑返航 */
+    app.flyTo(app.ORBIT.overview, REDUCED?0:1250);
+  }
+}
+
+function hallStep(delta){
+  var idx = (hallState.idx + delta + 64) % 64;
+  openHall(idx, null);
+}
+
+$('#hallClose').addEventListener('click', closeHall);
+$('#hallBack').addEventListener('click', closeHall);
+$('#hpPrev').addEventListener('click', function(){ hallStep(-1); });
+$('#hpNext').addEventListener('click', function(){ hallStep(1); });
+$('#hpReplay').addEventListener('click', function(){
+  var h = HEX[hallState.idx];
+  if(HAS3D){
+    app.buildHall(h, hallState.moving, performance.now());
+  }else{
+    hallState.litTimers.forEach(clearTimeout);
+    hallState.litTimers = lightUp2d($('#hallHex2d'), h.b, hallState.moving, 300);
+  }
+  $('#hallBig').classList.remove('show');
+  setTimeout(function(){ $('#hallBig').classList.add('show'); }, REDUCED?60:250+5*340);
+});
+$('#hpLocate').addEventListener('click', function(){
+  var idx = hallState.idx;
+  closeHall();
+  setTimeout(function(){
+    if(HAS3D){
+      app.focusRingOn(idx);
+      toast('星环已旋至《'+HEX[idx].n+'》· 点击卦牌可再入厅');
+    }else{
+      toast('《'+HEX[idx].n+'》位于卦宫横览第 '+HEX[idx].i+' 卦');
+      $('#stripRow').children[idx] && $('#stripRow').children[idx].scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+    }
+  }, REDUCED?50:900);
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeHall();
+  if(hallState.open){
+    if(e.key === 'ArrowLeft') hallStep(-1);
+    if(e.key === 'ArrowRight') hallStep(1);
+  }
+});
+
+/* ==========================================================
+   8×8 卦宫矩阵 + 检索定位
+   ========================================================== */
+(function buildMatrix(){
+  var table = $('#matrix');
+  var thead = document.createElement('thead');
+  var hr = document.createElement('tr');
+  var corner = document.createElement('th');
+  corner.innerHTML = '上↧行<br>下↧列';
+  hr.appendChild(corner);
+  TRIG_ORDER.forEach(function(name){
+    var th = document.createElement('th');
+    th.innerHTML = TRIG_BIN[name].split('').map(function(b){ return b==='1'?'▬':'▬▬'; }).join('<br>') ;
+    var tn = document.createElement('span');
+    tn.style.cssText = 'display:block;margin-top:4px;font-family:"Noto Sans SC",sans-serif;font-weight:400;font-size:11px;color:#8FA0C4;letter-spacing:.3em';
+    tn.textContent = name;
+    th.appendChild(tn);
+    hr.appendChild(th);
+  });
+  thead.appendChild(hr);
+  table.appendChild(thead);
+
+  var tbody = document.createElement('tbody');
+  TRIG_ORDER.forEach(function(upName){
+    var tr = document.createElement('tr');
+    var th = document.createElement('th');
+    th.innerHTML = TRIG_BIN[upName].split('').map(function(b){ return b==='1'?'▬':'▬▬'; }).join('<br>');
+    var tn = document.createElement('span');
+    tn.style.cssText = 'display:block;margin-top:4px;font-family:"Noto Sans SC",sans-serif;font-weight:400;font-size:11px;color:#8FA0C4;letter-spacing:.3em';
+    tn.textContent = upName;
+    th.appendChild(tn);
+    tr.appendChild(th);
+    TRIG_ORDER.forEach(function(lowName){
+      var bin = TRIG_BIN[lowName] + TRIG_BIN[upName];
+      var h = BY_BIN[bin];
+      var td = document.createElement('td');
+      td.className = 'mx-cell';
+      td.setAttribute('role','button');
+      td.setAttribute('tabindex','0');
+      td.title = '第'+h.i+'卦 · '+h.n+'（'+upName+'上'+lowName+'下）· '+h.l;
+      var w = document.createElement('div'); w.className='hexwrap';
+      w.appendChild(hex2d(bin, null, false));
+      td.appendChild(w);
+      var nm = document.createElement('p'); nm.className='nm'; nm.textContent = h.n;
+      td.appendChild(nm);
+      td.addEventListener('click', function(){ openHall(BIN2IDX[bin]); });
+      td.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openHall(BIN2IDX[bin]); } });
+      td.dataset.bin = bin;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+})();
+
+(function initSearch(){
+  var input = $('#searchInput'), drop = $('#searchDrop');
+  function matches(q){
+    q = q.trim();
+    if(!q) return [];
+    return HEX.filter(function(h){
+      return h.n === q || h.n.indexOf(q) >= 0 || ('第'+h.i+'卦').indexOf(q) >= 0;
+    }).slice(0, 8);
+  }
+  function renderDrop(list){
+    drop.innerHTML = '';
+    if(!list.length){ drop.classList.remove('show'); return; }
+    list.forEach(function(h){
+      var item = document.createElement('div');
+      item.className = 'sd-item';
+      item.setAttribute('role','option');
+      var no = document.createElement('span'); no.className='no'; no.textContent = String(h.i).padStart(2,'0');
+      var nm = document.createElement('span'); nm.className='nm'; nm.textContent = h.n;
+      var go = document.createElement('span'); go.className='go'; go.textContent = '入厅观览';
+      item.appendChild(no); item.appendChild(nm); item.appendChild(go);
+      item.addEventListener('click', function(){
+        drop.classList.remove('show');
+        openHall(BIN2IDX[h.b]);
+      });
+      drop.appendChild(item);
+    });
+    drop.classList.add('show');
+  }
+  input.addEventListener('input', function(){ renderDrop(matches(input.value)); });
+  input.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); locate(input.value); }
+    if(e.key === 'Escape'){ drop.classList.remove('show'); }
+  });
+  $('#searchBtn').addEventListener('click', function(){ locate(input.value); });
+  document.addEventListener('click', function(e){
+    if(!drop.contains(e.target) && e.target !== input) drop.classList.remove('show');
+  });
+
+  function locate(q){
+    q = (q||'').trim();
+    if(!q){ toast('请先输入卦名 · 如：既济'); input.focus(); return; }
+    var exact = null, part = null;
+    HEX.forEach(function(h){
+      if(h.n === q) exact = h;
+      else if(!part && h.n.indexOf(q) >= 0) part = h;
+    });
+    var h = exact || part;
+    if(!h){ toast('未检得「'+q+'」· 请核对卦名'); return; }
+    drop.classList.remove('show');
+    var idx = BIN2IDX[h.b];
+    /* 矩阵格闪烁定位 */
+    var cell = document.querySelector('.mx-cell[data-bin="'+h.b+'"]');
+    if(cell){
+      cell.scrollIntoView({behavior:REDUCED?'auto':'smooth', block:'center'});
+      cell.classList.remove('flash');
+      void cell.offsetWidth;
+      cell.classList.add('flash');
+    }
+    if(HAS3D){
+      var hero = $('#xh');
+      hero.scrollIntoView({behavior:REDUCED?'auto':'smooth'});
+      setTimeout(function(){
+        app.focusRingOn(idx);
+        toast('星环已旋至《'+h.n+'》· 点击卦牌可入厅');
+      }, REDUCED?50:650);
+    }else{
+      var card = $('#stripRow').children[idx];
+      if(card){
+        card.scrollIntoView({behavior:REDUCED?'auto':'smooth', inline:'center', block:'nearest'});
+        card.classList.remove('flash');
+        card.style.boxShadow = '0 0 0 2px rgba(233,196,106,.7), 0 14px 34px rgba(233,196,106,.2)';
+        setTimeout(function(){ card.style.boxShadow = ''; }, 2600);
+      }
+      toast('已定位《'+h.n+'》· 点击卦牌可入厅');
+    }
+    input.value = h.n;
+  }
+})();
+
+/* ==========================================================
+   星光起卦：三枚铜钱法 + 光点聚合动画
+   ========================================================== */
+function castCoins(){
+  var vals = [];
+  for(var r=0;r<6;r++){
+    var sum = 0;
+    for(var c=0;c<3;c++) sum += Math.random()<0.5 ? 3 : 2;
+    vals.push(sum); /* 6 老阴 7 少阳 8 少阴 9 老阳 */
+  }
+  var bin = vals.map(function(v){ return (v===7||v===9) ? '1' : '0'; }).join('');
+  var moving = [];
+  vals.forEach(function(v,i){ if(v===6||v===9) moving.push(i); });
+  var changed = bin.split('');
+  moving.forEach(function(i){ changed[i] = changed[i]==='1' ? '0' : '1'; });
+  var changedBin = changed.join('');
+  return {vals:vals, bin:bin, moving:moving, changedBin:changedBin};
+}
+
+var ritual = {running:false, res:null};
+
+function renderRitualResult(res, wish){
+  var h = BY_BIN[res.bin];
+  var ch = BY_BIN[res.changedBin];
+  var box = $('#ritualResult');
+  box.innerHTML = '';
+  box.hidden = false;
+
+  var head = document.createElement('div'); head.className = 'rr-head';
+  head.innerHTML = '<p class="rr-wish">所问：<b>'+(wish ? wish.replace(/</g,'&lt;') : '心事无名')+'</b></p>';
+  box.appendChild(head);
+
+  var cards = document.createElement('div'); cards.className = 'rr-cards';
+
+  function cardOf(hx, tag, cls){
+    var card = document.createElement('div'); card.className = 'rr-card ' + (cls||'');
+    var t = document.createElement('p'); t.className='rr-tag'; t.textContent = tag;
+    var w = document.createElement('div'); w.className='hexwrap';
+    w.appendChild(hex2d(hx.b, tag==='本卦' ? res.moving : null, false));
+    var nm = document.createElement('p'); nm.className='rr-cardname';
+    nm.appendChild(document.createTextNode(hx.n));
+    var sm = document.createElement('small');
+    sm.textContent = '第'+String(hx.i).padStart(2,'0')+'卦 · '+upperOf(hx.b).n+lowerOf(hx.b).n;
+    nm.appendChild(sm);
+    card.appendChild(t); card.appendChild(w); card.appendChild(nm);
+    return card;
+  }
+  cards.appendChild(cardOf(h, '本 卦', ''));
+  var arrow = document.createElement('div'); arrow.className = 'rr-arrow';
+  var arr = document.createElement('span'); arr.className='arr'; arr.textContent = '⇢';
+  var chips = document.createElement('div'); chips.className='chips';
+  if(res.moving.length){
+    res.moving.forEach(function(p){
+      var chip = document.createElement('span'); chip.className='rr-chip';
+      chip.textContent = yaoName(p, res.bin[p]==='1') + (res.bin[p]==='1' ? ' ○' : ' ✕');
+      chips.appendChild(chip);
+    });
+  }else{
+    var chip = document.createElement('span'); chip.className='rr-chip';
+    chip.textContent = '六爻安静';
+    chip.style.animation = 'none';
+    chips.appendChild(chip);
+  }
+  arrow.appendChild(arr); arrow.appendChild(chips);
+  cards.appendChild(arrow);
+  cards.appendChild(cardOf(ch, '变 卦', 'change'));
+  box.appendChild(cards);
+
+  var adv = document.createElement('div'); adv.className = 'rr-advice';
+  var row = document.createElement('div'); row.className='rr-advice-row';
+  var luck = document.createElement('div');
+  luck.className = 'rr-luck' + (h.l==='凶'?' bad':(h.l==='平'?' mid':''));
+  luck.textContent = h.l.charAt(0)==='大' ? h.l.charAt(1) : h.l.charAt(0);
+  var txt = document.createElement('div');
+  txt.innerHTML = '<b>'+h.n+' · '+h.m+'</b><br>'+h.a;
+  row.appendChild(luck); row.appendChild(txt);
+  adv.appendChild(row);
+  if(!res.moving.length){
+    var nn = document.createElement('p'); nn.style.cssText='margin-top:8px;font-size:12.5px;color:#8FA0C4';
+    nn.textContent = '六爻安静，无动爻——以本卦卦辞断之。';
+    adv.appendChild(nn);
+  }else if(res.moving.length>1){
+    var mn = document.createElement('p'); mn.style.cssText='margin-top:8px;font-size:12.5px;color:#8FA0C4';
+    mn.textContent = '多爻齐动——参以居上之动爻爻辞为主断。';
+    adv.appendChild(mn);
+  }
+  box.appendChild(adv);
+
+  var foot = document.createElement('p'); foot.className='rr-foot';
+  foot.textContent = '卦辞是镜子，照见的是你心里已有的答案。';
+  box.appendChild(foot);
+
+  var acts = document.createElement('div'); acts.className='rr-actions';
+  var again = document.createElement('button'); again.className='btn'; again.textContent = '↺ 再占一卦';
+  again.addEventListener('click', function(){ startRitual(); });
+  var see = document.createElement('button'); see.className='btn primary'; see.textContent = '☰ 入观卦厅细观';
+  see.addEventListener('click', function(){ openHall(BIN2IDX[res.bin], res.moving); });
+  acts.appendChild(again); acts.appendChild(see);
+  box.appendChild(acts);
+
+  requestAnimationFrame(function(){ box.classList.add('show'); });
+}
+
+function startRitual(){
+  if(ritual.running) return;
+  var btn = $('#castBtn');
+  ritual.running = true;
+  btn.disabled = true;
+  var wish = $('#wishInput').value.trim();
+  var res = castCoins();
+  ritual.res = res;
+  $('#ritualResult').classList.remove('show');
+  $('#ritualResult').hidden = true;
+  var rn = $('#ritualName');
+  rn.classList.remove('show');
+  rn.innerHTML = '';
+  $('#divHint').style.opacity = '0.35';
+  $('#divHint').textContent = '星 光 六 掷 · 自 下 而 上';
+
+  var h = BY_BIN[res.bin];
+  if(HAS3D){
+    ritual3DStart(res, function(){
+      rn.innerHTML = '';
+      rn.appendChild(document.createTextNode('第'+String(h.i).padStart(2,'0')+'卦 · '+h.n));
+      var sm = document.createElement('small');
+      sm.textContent = h.m.split('——')[0];
+      rn.appendChild(sm);
+      rn.classList.add('show');
+      renderRitualResult(res, wish);
+      ritual.running = false;
+      btn.disabled = false;
+      btn.textContent = '↺ 再占一卦';
+    });
+  }else{
+    /* 2D 降级仪式 */
+    var stage = $('#divStage2d');
+    stage.innerHTML = '';
+    var wrap = document.createElement('div'); wrap.className='hexwrap'; wrap.style.height='100%';
+    stage.appendChild(wrap);
+    var hd = hex2d(res.bin, null, true);
+    wrap.appendChild(hd);
+    var lit = [];
+    for(var j=0;j<6;j++){
+      (function(jj){
+        lit.push(setTimeout(function(){
+          hd.children[jj].classList.add('lit');
+          $('#divHint').textContent = '第 '+(jj+1)+' 掷 · '+(res.bin[jj]==='1'?'阳爻 ▬▬▬':'阴爻 ▬ ▬');
+        }, REDUCED?0:600+j*820));
+      })(j);
+    }
+    lit.push(setTimeout(function(){
+      /* 动爻标记补上 */
+      wrap.innerHTML = '';
+      var hd2 = hex2d(res.bin, res.moving, false);
+      wrap.appendChild(hd2);
+      $('#divHint').textContent = '成 卦';
+      rn.appendChild(document.createTextNode('第'+String(h.i).padStart(2,'0')+'卦 · '+h.n));
+      var sm = document.createElement('small');
+      sm.textContent = h.m.split('——')[0];
+      rn.appendChild(sm);
+      rn.classList.add('show');
+      renderRitualResult(res, wish);
+      ritual.running = false;
+      btn.disabled = false;
+      btn.textContent = '↺ 再占一卦';
+    }, REDUCED?100:600+6*820+300));
+  }
+}
+$('#castBtn').addEventListener('click', startRitual);
+
+/* ---------------- 起卦 3D：星光粒子聚合成六爻 ---------------- */
+function initRitual3D(){
+  var T = window.THREE;
+  var stageEl = document.querySelector('.divstage');
+  var canvas = $('#divCanvas');
+  var r = new T.WebGLRenderer({canvas:canvas, antialias:true, alpha:true});
+  r.setPixelRatio(clamp(window.devicePixelRatio||1, 1, IS_SMALL()?1.5:2));
+  var scene = new T.Scene();
+  var camera = new T.PerspectiveCamera(50, 1, 0.1, 200);
+  camera.position.set(0, 0, 18);
+  camera.lookAt(0,0,0);
+
+  function glowTexture(){
+    var c = document.createElement('canvas'); c.width=c.height=64;
+    var g = c.getContext('2d');
+    var grd = g.createRadialGradient(32,32,0,32,32,32);
+    grd.addColorStop(0,'rgba(255,255,255,1)');
+    grd.addColorStop(0.4,'rgba(255,255,255,.4)');
+    grd.addColorStop(1,'rgba(255,255,255,0)');
+    g.fillStyle = grd; g.fillRect(0,0,64,64);
+    var tx = new T.CanvasTexture(c); tx.minFilter = T.LinearFilter;
+    return tx;
+  }
+  var gt = glowTexture();
+
+  /* 背景微星 */
+  var ambN = IS_SMALL() ? 160 : 300;
+  var ambPos = new Float32Array(ambN*3);
+  for(var i=0;i<ambN;i++){
+    ambPos[i*3]   = (Math.random()-0.5)*30;
+    ambPos[i*3+1] = (Math.random()-0.5)*18;
+    ambPos[i*3+2] = (Math.random()-0.5)*12 - 4;
+  }
+  var ambGeo = new T.BufferGeometry();
+  ambGeo.setAttribute('position', new T.BufferAttribute(ambPos,3));
+  var amb = new T.Points(ambGeo, new T.PointsMaterial({size:0.07, color:0xEAF0FF, transparent:true, opacity:0.5, blending:T.AdditiveBlending, depthWrite:false}));
+  scene.add(amb);
+
+  /* 聚合粒子 */
+  var PN = IS_SMALL() ? 260 : 520;
+  var pPos = new Float32Array(PN*3);
+  var pStart = [], pTarget = [], pSwirl = [], pSide = [];
+  for(var p=0;p<PN;p++){
+    pStart.push(new T.Vector3());
+    pTarget.push(new T.Vector3());
+    pSwirl.push((Math.random()-0.5)*5);
+    pSide.push(Math.random()<0.5?-1:1);
+    pPos[p*3+2] = (Math.random()-0.5)*4;
+  }
+  var pGeo = new T.BufferGeometry();
+  pGeo.setAttribute('position', new T.BufferAttribute(pPos,3));
+  var pMat = new T.PointsMaterial({size:0.14, color:0xE9C46A, transparent:true, opacity:0.55, blending:T.AdditiveBlending, depthWrite:false});
+  var pts = new T.Points(pGeo, pMat);
+  scene.add(pts);
+
+  var beamGroup = new T.Group();
+  scene.add(beamGroup);
+  var BEAM_G = {yang:new T.BoxGeometry(9.4,0.42,0.9), yin:new T.BoxGeometry(3.9,0.42,0.9)};
+  var STEP = 1.34;
+
+  function scatter(seed){
+    for(var k=0;k<PN;k++){
+      var rr = 6.5 + Math.random()*4;
+      var th = Math.random()*TAU, ph = Math.acos(2*Math.random()-1);
+      pStart[k].set(rr*Math.sin(ph)*Math.cos(th), rr*Math.cos(ph)*0.7, rr*Math.sin(ph)*Math.sin(th)*0.5);
+      if(seed) pPos[k*3]=pStart[k].x, pPos[k*3+1]=pStart[k].y, pPos[k*3+2]=pStart[k].z;
+    }
+  }
+  function setTargets(roundIdx, bin){
+    var y = (roundIdx-2.5)*STEP;
+    var yang = bin[roundIdx]==='1';
+    for(var k=0;k<PN;k++){
+      if(yang){
+        pTarget[k].set((Math.random()-0.5)*9.0, y+(Math.random()-0.5)*0.35, (Math.random()-0.5)*0.5);
+      }else{
+        var x = pSide[k]*(1.1+Math.random()*3.4);
+        pTarget[k].set(x, y+(Math.random()-0.5)*0.35, (Math.random()-0.5)*0.5);
+      }
+    }
+  }
+  function spawnBeam(roundIdx, bin, moving){
+    var yang = bin[roundIdx]==='1';
+    var isM = moving.indexOf(roundIdx)>=0;
+    var color = isM ? 0xD4553F : (yang ? 0xE9C46A : 0x4FA3D1);
+    var mat = new T.MeshBasicMaterial({color:color, transparent:true, opacity:0});
+    var unit = new T.Group();
+    unit.position.y = (roundIdx-2.5)*STEP;
+    if(yang) unit.add(new T.Mesh(BEAM_G.yang, mat));
+    else{
+      var m1 = new T.Mesh(BEAM_G.yin, mat); m1.position.x = -2.75;
+      var m2 = new T.Mesh(BEAM_G.yin, mat); m2.position.x =  2.75;
+      unit.add(m1, m2);
+    }
+    var hm = new T.SpriteMaterial({map:gt, color:color, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false});
+    var hs = new T.Sprite(hm); hs.scale.set(14,2.6,1);
+    unit.add(hs);
+    unit.userData = {mat:mat, halo:hm, born:performance.now()};
+    unit.scale.x = 0.001;
+    beamGroup.add(unit);
+  }
+  function clearBeams(){
+    while(beamGroup.children.length){
+      var c = beamGroup.children[0];
+      beamGroup.remove(c);
+      if(c.traverse){
+        c.traverse(function(o){
+          if(o.material && o.material.dispose) o.material.dispose(); /* 共享几何体不释放 */
+        });
+      }
+    }
+  }
+
+  /* 状态机 */
+  var st = {phase:'idle', round:0, t0:0, res:null, done:null, GATHER:REDUCED?1:760, HOLD:REDUCED?1:430};
+  function resizeDiv(){
+    var w = stageEl.clientWidth, h2 = stageEl.clientHeight;
+    r.setSize(w, h2, false);
+    camera.aspect = w/h2;
+    camera.updateProjectionMatrix();
+  }
+  resizeDiv();
+  window.addEventListener('resize', resizeDiv);
+
+  var divVis = false;
+  new IntersectionObserver(function(es){
+    es.forEach(function(en){ divVis = en.isIntersecting; });
+  }, {threshold:0.05}).observe(stageEl);
+
+  scatter(true);
+
+  var rl = 0, rlT = 0;
+  function loopDiv(t){
+    requestAnimationFrame(loopDiv);
+    if(document.hidden || !divVis) return;
+    var dt = Math.min((t-rlT)/1000 || 0.016, 0.05);
+    rlT = t;
+    amb.rotation.y += dt*0.02;
+
+    if(st.phase === 'gather'){
+      var k = clamp((t - st.t0)/st.GATHER, 0, 1);
+      var e = 1-Math.pow(1-k,3);
+      for(var k2=0;k2<PN;k2++){
+        var px = lerp(pStart[k2].x, pTarget[k2].x, e);
+        var py = lerp(pStart[k2].y, pTarget[k2].y, e) + Math.sin(e*Math.PI)*pSwirl[k2]*0.5;
+        var pz = lerp(pStart[k2].z, pTarget[k2].z, e);
+        pPos[k2*3]=px; pPos[k2*3+1]=py; pPos[k2*3+2]=pz;
+      }
+      pGeo.attributes.position.needsUpdate = true;
+      pMat.opacity = 0.5 + 0.4*Math.sin(k*Math.PI);
+      if(k>=1){
+        spawnBeam(st.round, st.res.bin, st.res.moving);
+        st.phase='hold'; st.t0 = t;
+      }
+    }else if(st.phase === 'hold'){
+      for(var k3=0;k3<PN;k3++){
+        var qx = lerp(pPos[k3*3], pTarget[k3].x, 0.2);
+        var qy = lerp(pPos[k3*3+1], pTarget[k3].y, 0.2);
+        pPos[k3*3]=qx; pPos[k3*3+1]=qy;
+      }
+      pGeo.attributes.position.needsUpdate = true;
+      pMat.opacity = lerp(pMat.opacity, 0.32, 0.08);
+      if(t - st.t0 >= st.HOLD){
+        st.round++;
+        if(st.round >= 6){
+          st.phase='done'; st.t0 = t;
+          $('#divHint').textContent = '六 爻 既 成';
+        }else{
+          setTargets(st.round, st.res.bin);
+          scatter(false);
+          st.phase='gather'; st.t0 = t;
+          $('#divHint').textContent = '第 '+(st.round+1)+' 掷 · 光点聚茎';
+        }
+      }
+    }else if(st.phase === 'done'){
+      pMat.opacity = lerp(pMat.opacity, 0.15, 0.03);
+      for(var k4=0;k4<PN;k4++){
+        pPos[k4*3+1] += dt*0.5;
+        if(pPos[k4*3+1] > 9) pPos[k4*3+1] = -9;
+      }
+      pGeo.attributes.position.needsUpdate = true;
+      var allLit = true;
+      for(var b=0;b<beamGroup.children.length;b++){
+        var un = beamGroup.children[b];
+        var bk = clamp((t - un.userData.born)/480, 0, 1);
+        var sc2 = 1;
+        if(!REDUCED && bk < 1){
+          var c1 = 1.70158, c3 = c1 + 1;
+          sc2 = Math.max(0.001, 1 + c3*Math.pow(bk-1,3) + c1*Math.pow(bk-1,2));
+          allLit = false;
+        }
+        un.scale.x = sc2;
+        un.userData.mat.opacity = bk*0.95;
+        un.userData.halo.opacity = bk*0.3;
+      }
+      if(allLit && st.done){
+        var cb = st.done; st.done = null;
+        setTimeout(cb, REDUCED?30:520);
+        st.phase = 'rest';
+      }
+    }else if(st.phase === 'rest'){
+      pMat.opacity = lerp(pMat.opacity, 0.28, 0.02);
+    }
+
+    r.render(scene, camera);
+  }
+  requestAnimationFrame(loopDiv);
+
+  window.ritual3DStart = function(res, done){
+    clearBeams();
+    scatter(true);
+    st.res = res; st.done = done;
+    st.round = 0;
+    setTargets(0, res.bin);
+    st.phase = REDUCED ? 'hold' : 'gather';
+    st.t0 = performance.now();
+    if(REDUCED){
+      for(var rr=0;rr<6;rr++) spawnBeam(rr, res.bin, res.moving);
+      st.phase = 'done'; st.t0 = performance.now();
+    }
+  };
+  app.ritual3DStart = window.ritual3DStart;
+}
+
+/* 兼容：3D 未初始化时 ritual3DStart 指向 2D 流程由 startRitual 内部分流 */
+
+/* ==========================================================
+   滚动显现 & 顶栏
+   ========================================================== */
+(function initReveal(){
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(en){
+      if(en.isIntersecting){
+        en.target.classList.add('on');
+        io.unobserve(en.target);
+      }
+    });
+  }, {threshold:0.12});
+  $$('.reveal').forEach(function(el){ io.observe(el); });
+})();
+
+(function initTopbar(){
+  var bar = $('#topbar');
+  var onScroll = function(){
+    if(window.scrollY > 40) bar.classList.add('solid');
+    else bar.classList.remove('solid');
+  };
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+})();
+
+})();
+</script>
+</body>
+</html>

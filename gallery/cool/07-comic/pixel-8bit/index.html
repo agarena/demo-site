@@ -1,0 +1,2379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>漫屿 MANYU · 像素漫画主机 | 8-BIT COMIC CONSOLE</title>
+<meta name="description" content="漫屿 MANYU —— 像素 8-bit 风漫画平台：Sweetie-16 限色、CRT 扫描线、十盘卡带插入即读。">
+<style>
+/* ==========================================================
+   漫屿 MANYU · 像素 8-bit 漫画主机
+   调色板：Sweetie-16（+1px 描边墨色 #191019，共 17 色严格限色）
+   ========================================================== */
+:root{
+  --bg:#1A1C2C;        /* 屏底 */
+  --panel:#333C57;     /* 面板 */
+  --ink:#191019;       /* 描边墨 */
+  --white:#F4F4F4;
+  --lgray:#94B0C2;
+  --gray:#566C86;
+  --navy:#29366F;
+  --dblue:#3B5DC9;
+  --blue:#41A6F6;
+  --cyan:#73EFF7;
+  --teal:#257179;
+  --green:#38B764;
+  --lgreen:#A7F070;
+  --yellow:#FFCD75;
+  --orange:#EF7D57;
+  --red:#B13E53;
+  --purple:#5D275D;
+  --mono:"Courier New","Consolas","Courier",monospace;
+  --cn:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:#0B0C14;scroll-behavior:smooth}
+body{
+  background:#0B0C14;
+  color:var(--white);
+  font:16px/1.75 var(--cn);
+  -webkit-font-smoothing:antialiased;
+}
+body.locked{overflow:hidden}
+::selection{background:var(--yellow);color:var(--ink)}
+[hidden]{display:none !important}
+canvas{image-rendering:crisp-edges;image-rendering:pixelated}
+img{image-rendering:pixelated}
+a{color:inherit}
+button{font-family:inherit}
+
+/* ---------- 弧面屏（整机外壳 + 内暗角） ---------- */
+.screen{
+  position:relative;
+  min-height:100vh;
+  margin:10px;
+  border-radius:18px;
+  overflow:hidden;
+  background:var(--bg);
+  box-shadow:
+    inset 0 0 140px rgba(11,8,16,.55),
+    0 0 0 3px #0B0C14,
+    0 0 0 7px #1F2338;
+}
+
+/* ---------- CRT 扫描线 + 暗角（可关闭） ---------- */
+.crt{
+  position:fixed;inset:0;z-index:90;
+  pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent 0 2px,
+    rgba(10,8,16,.20) 2px 4px
+  );
+}
+.crt::after{
+  content:"";
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at center,transparent 58%,rgba(10,8,16,.42) 100%);
+}
+body.crt-off .crt{display:none}
+
+/* ---------- 像素星星背景（steps 闪烁） ---------- */
+#bgstars{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#bgstars b{
+  position:absolute;
+  width:2px;height:2px;
+  background:var(--white);
+  animation:tw 1.6s steps(1,end) infinite;
+}
+@keyframes tw{
+  0%,58%{opacity:.15}
+  59%,100%{opacity:1}
+}
+
+/* ---------- 顶栏 ---------- */
+#topbar{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;gap:18px;
+  padding:10px 22px;
+  background:rgba(26,28,44,.96);
+  border-bottom:3px solid var(--panel);
+}
+.logo{
+  display:flex;align-items:center;gap:10px;
+  text-decoration:none;
+}
+.logo canvas{width:28px;height:28px;display:block}
+.logo-cn{
+  font:700 22px/1 var(--cn);
+  letter-spacing:.18em;
+  color:var(--white);
+  text-shadow:2px 2px 0 var(--ink);
+}
+.logo-en{
+  font:700 11px/1 var(--mono);
+  letter-spacing:.22em;
+  color:var(--yellow);
+}
+.mainnav{display:flex;gap:4px;margin-left:8px}
+.navlink{
+  display:inline-block;
+  padding:7px 14px;
+  font:700 14px/1.2 var(--cn);
+  letter-spacing:.1em;
+  text-decoration:none;
+  color:var(--lgray);
+  border:2px solid transparent;
+}
+.navlink:hover{
+  color:var(--ink);
+  background:var(--lgray);
+  border-color:var(--ink);
+}
+.sysbtns{margin-left:auto;display:flex;gap:8px}
+
+/* ---------- 像素按钮 ---------- */
+.pbtn{
+  display:inline-block;
+  padding:10px 20px;
+  background:var(--panel);
+  color:var(--white);
+  border:3px solid var(--white);
+  box-shadow:4px 4px 0 var(--ink);
+  font:700 15px/1.2 var(--cn);
+  letter-spacing:.1em;
+  text-decoration:none;
+  cursor:pointer;
+  user-select:none;
+}
+.pbtn:hover{background:var(--yellow);color:var(--ink);border-color:var(--ink)}
+.pbtn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.pbtn:focus-visible,.fbtn:focus-visible,.cart:focus-visible,.navlink:focus-visible{
+  outline:3px solid var(--cyan);
+  outline-offset:2px;
+}
+.pbtn.primary{background:var(--red);border-color:var(--white);color:var(--white)}
+.pbtn.primary:hover{background:var(--yellow);color:var(--ink);border-color:var(--ink)}
+.pbtn.small{padding:6px 12px;font-size:13px;box-shadow:3px 3px 0 var(--ink)}
+.pbtn.small:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+
+/* ---------- Hero ---------- */
+.hero{
+  position:relative;z-index:1;
+  max-width:1200px;margin:0 auto;
+  padding:72px 24px 64px;
+  display:flex;align-items:center;gap:48px;
+}
+.hero-txt{flex:1 1 52%;min-width:0}
+.hero-kicker{
+  font:700 13px/1.6 var(--mono);
+  letter-spacing:.24em;
+  color:var(--cyan);
+  margin-bottom:18px;
+}
+.hero-title{
+  font:900 64px/1.15 var(--cn);
+  letter-spacing:.14em;
+  color:var(--white);
+  text-shadow:5px 5px 0 var(--red),10px 10px 0 var(--ink);
+  margin-bottom:6px;
+}
+.hero-en{
+  display:block;
+  font:700 20px/1.4 var(--mono);
+  letter-spacing:.3em;
+  color:var(--yellow);
+  text-shadow:2px 2px 0 var(--ink);
+}
+.hero-slogan{
+  margin-top:22px;
+  font-size:18px;
+  color:var(--lgray);
+}
+.hero-news{
+  margin-top:16px;
+  display:inline-block;
+  padding:8px 14px;
+  border:2px solid var(--teal);
+  background:rgba(37,113,121,.35);
+  color:var(--lgreen);
+  font-size:14px;
+}
+.hero-btns{margin-top:28px;display:flex;gap:16px;flex-wrap:wrap}
+.hero-scr{
+  margin-top:34px;
+  font:700 12px/1 var(--mono);
+  letter-spacing:.3em;
+  color:var(--gray);
+  animation:blink 1.4s steps(1) infinite;
+}
+.hero-art{flex:1 1 48%;min-width:0;text-align:center}
+.hero-art canvas{
+  width:100%;max-width:520px;
+  display:block;margin:0 auto;
+  border:3px solid var(--panel);
+  background:var(--ink);
+}
+.hero-cap{
+  margin-top:10px;
+  font:700 12px/1.6 var(--mono);
+  letter-spacing:.18em;
+  color:var(--gray);
+}
+
+/* ---------- 分区通用 ---------- */
+.dither{
+  height:10px;max-width:1200px;margin:0 auto;
+  background:conic-gradient(var(--panel) 25%,transparent 0 50%,var(--panel) 0 75%,transparent 0);
+  background-size:10px 10px;
+  opacity:.6;
+}
+.sec{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:64px 24px}
+.sec-head{margin-bottom:30px}
+.sec-en{
+  font:700 13px/1.6 var(--mono);
+  letter-spacing:.26em;
+  color:var(--yellow);
+}
+.sec-cn{
+  font:900 30px/1.4 var(--cn);
+  letter-spacing:.14em;
+  color:var(--white);
+  text-shadow:3px 3px 0 var(--ink);
+  margin:4px 0 8px;
+}
+.sec-desc{color:var(--lgray);font-size:15px;max-width:720px}
+
+/* ---------- 卡带封面架 ---------- */
+.filterbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.fbtn{padding:8px 16px;font-size:14px;background:var(--bg);border-color:var(--panel);color:var(--lgray)}
+.fbtn:hover{background:var(--panel);color:var(--white);border-color:var(--white)}
+.fbtn.is-on{background:var(--yellow);color:var(--ink);border-color:var(--ink)}
+.filter-count{
+  font:700 12px/1.6 var(--mono);
+  letter-spacing:.16em;
+  color:var(--gray);
+  margin-bottom:26px;
+}
+#shelfGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:26px 22px;
+}
+.cart{
+  position:relative;
+  display:block;
+  border:0;background:none;padding:0;
+  text-align:left;
+  cursor:pointer;
+  color:inherit;
+}
+.cart .ridges{
+  display:block;
+  height:16px;
+  margin:0 14px;
+  background:repeating-linear-gradient(90deg,var(--gray) 0 6px,var(--panel) 6px 12px);
+  border:3px solid var(--ink);
+  border-bottom:0;
+  border-radius:10px 10px 0 0;
+}
+.cart .label{
+  display:block;
+  border:3px solid var(--ink);
+  background:var(--panel);
+  padding:10px 10px 12px;
+  box-shadow:4px 4px 0 rgba(11,12,20,.7);
+}
+.cart canvas{
+  display:block;
+  width:100%;aspect-ratio:1/1;
+  border:2px solid var(--ink);
+  background:var(--ink);
+}
+.cart-title{
+  display:block;
+  margin-top:10px;
+  font:700 16px/1.35 var(--cn);
+  letter-spacing:.06em;
+  color:var(--white);
+}
+.cart-author{
+  display:block;
+  font-size:12px;
+  color:var(--lgray);
+  margin-top:2px;
+}
+.cart-tags{
+  display:block;
+  font-size:12px;
+  color:var(--cyan);
+  margin-top:6px;
+}
+.cart-status{
+  display:block;
+  margin-top:6px;
+  font-size:12px;
+  color:var(--lgray);
+}
+.cart-status.st-run::before{
+  content:"";
+  display:inline-block;
+  width:8px;height:8px;
+  background:var(--lgreen);
+  margin-right:6px;
+  animation:blink 1s steps(1) infinite;
+}
+.cart-status.st-end::before{
+  content:"";
+  display:inline-block;
+  width:8px;height:8px;
+  background:var(--gray);
+  margin-right:6px;
+}
+.cart-cta{
+  display:none;
+  margin-top:10px;
+  padding:4px 8px;
+  font:700 12px/1.4 var(--mono);
+  letter-spacing:.14em;
+  background:var(--red);
+  color:var(--white);
+}
+.cart:hover{animation:jit .24s steps(2) infinite}
+.cart:hover .label,
+.cart:focus-visible .label{background:var(--yellow)}
+.cart:hover .cart-title,
+.cart:focus-visible .cart-title{color:var(--ink)}
+.cart:hover .cart-author,
+.cart:focus-visible .cart-author{color:var(--teal)}
+.cart:hover .cart-tags,
+.cart:focus-visible .cart-tags{color:var(--purple)}
+.cart:hover .cart-status,
+.cart:focus-visible .cart-status{color:var(--ink)}
+.cart:hover .cart-cta,
+.cart:focus-visible .cart-cta{display:inline-block}
+@keyframes jit{
+  0%{transform:translate(0,0)}
+  25%{transform:translate(-1px,0)}
+  50%{transform:translate(1px,1px)}
+  75%{transform:translate(0,-1px)}
+  100%{transform:translate(0,0)}
+}
+.shelf-note{
+  margin-top:24px;
+  font-size:13px;
+  color:var(--gray);
+}
+.shelf-note b{color:var(--lgreen);font-weight:700}
+
+/* ---------- 追更日历 ---------- */
+#weekScroll{overflow-x:auto;padding-bottom:6px}
+.week{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(120px,1fr));
+  gap:10px;
+  min-width:880px;
+}
+.day{
+  border:3px solid var(--panel);
+  background:rgba(51,60,87,.35);
+  padding:10px 10px 12px;
+  min-height:150px;
+}
+.day-en{
+  font:700 11px/1 var(--mono);
+  letter-spacing:.24em;
+  color:var(--gray);
+}
+.day-cn{
+  font:700 18px/1.5 var(--cn);
+  letter-spacing:.1em;
+  color:var(--lgray);
+}
+.day ul{list-style:none;margin-top:10px}
+.day li{
+  font-size:13px;
+  line-height:1.9;
+  color:var(--white);
+}
+.day li::before{content:"▸ ";color:var(--blue)}
+.day.today{
+  border-color:var(--yellow);
+  background:rgba(255,205,117,.08);
+}
+.day.today .day-cn{color:var(--yellow)}
+.today-badge{
+  display:inline-block;
+  margin-left:6px;
+  padding:1px 6px;
+  font:700 10px/1.6 var(--mono);
+  letter-spacing:.16em;
+  background:var(--yellow);
+  color:var(--ink);
+  animation:blink 1.2s steps(1) infinite;
+}
+@keyframes blink{
+  0%,49%{opacity:1}
+  50%,100%{opacity:0}
+}
+.week-note{margin-top:14px;font-size:13px;color:var(--gray)}
+
+/* ---------- 高分榜 ---------- */
+.rank-list{list-style:none;display:grid;gap:12px;max-width:980px}
+.rank-row{
+  display:grid;
+  grid-template-columns:70px minmax(0,1fr) auto 150px;
+  gap:14px;
+  align-items:center;
+  border:3px solid var(--panel);
+  background:rgba(26,28,44,.7);
+  padding:12px 16px;
+}
+.rank-row.r1{border-color:var(--yellow);background:rgba(255,205,117,.07)}
+.rank-row.r2{border-color:var(--cyan);background:rgba(115,239,247,.06)}
+.rank-row.r3{border-color:var(--orange);background:rgba(239,125,87,.07)}
+.rk{
+  font:700 18px/1 var(--mono);
+  letter-spacing:.06em;
+  color:var(--lgray);
+  text-align:center;
+}
+.r1 .rk{background:var(--yellow);color:var(--ink);padding:6px 0}
+.r2 .rk{background:var(--cyan);color:var(--ink);padding:6px 0}
+.r3 .rk{background:var(--orange);color:var(--ink);padding:6px 0}
+.rmain{min-width:0}
+.rtitle{
+  font:700 17px/1.4 var(--cn);
+  letter-spacing:.04em;
+  color:var(--white);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.rauthor{font-size:12px;color:var(--lgray)}
+.rflag{
+  display:inline-block;
+  margin-left:10px;
+  padding:1px 6px;
+  font:700 10px/1.6 var(--mono);
+  letter-spacing:.1em;
+}
+.rflag.up{color:var(--ink);background:var(--lgreen)}
+.rflag.new{color:var(--ink);background:var(--cyan);animation:blink 1.1s steps(1) infinite}
+.rflag.down{color:var(--lgray);background:var(--panel)}
+.rflag.hold{color:var(--gray)}
+.rscore{
+  font:700 22px/1 var(--mono);
+  letter-spacing:.06em;
+  font-variant-numeric:tabular-nums;
+  text-align:right;
+  color:var(--yellow);
+}
+.r2 .rscore{color:var(--cyan)}
+.r3 .rscore{color:var(--orange)}
+.rank-note{margin-top:16px;font-size:13px;color:var(--gray)}
+
+/* ---------- 页脚状态栏 ---------- */
+#statusbar{
+  position:relative;z-index:1;
+  border-top:3px solid var(--panel);
+  background:rgba(26,28,44,.92);
+  padding:18px 24px 22px;
+}
+.hp-line{
+  max-width:1200px;margin:0 auto 12px;
+  display:flex;align-items:center;gap:14px;
+}
+.hp-label{
+  font:700 14px/1 var(--mono);
+  letter-spacing:.2em;
+  color:var(--red);
+}
+.hp-bar{
+  position:relative;
+  flex:1;
+  height:18px;
+  border:3px solid var(--white);
+  background:var(--ink);
+  padding:2px;
+}
+.hp-bar i{
+  display:block;
+  height:100%;
+  width:0%;
+  background:repeating-linear-gradient(90deg,var(--lgreen) 0 10px,var(--green) 10px 12px);
+}
+.hp-bar i::after{
+  content:"";
+  position:absolute;inset:2px;
+  background:repeating-linear-gradient(90deg,transparent 0 10px,rgba(25,16,25,.55) 10px 12px);
+  pointer-events:none;
+}
+.hp-pct{
+  font:700 13px/1 var(--mono);
+  letter-spacing:.1em;
+  font-variant-numeric:tabular-nums;
+  color:var(--lgray);
+  min-width:48px;
+}
+.foot-row{
+  max-width:1200px;margin:0 auto;
+  display:flex;flex-wrap:wrap;gap:8px 26px;
+  align-items:baseline;
+  font-size:13px;
+  color:var(--gray);
+}
+.foot-meta b{color:var(--lgray);font-weight:700}
+.coin{
+  font:700 12px/1.6 var(--mono);
+  letter-spacing:.22em;
+  color:var(--yellow);
+  animation:blink 1.6s steps(1) infinite;
+}
+
+/* ---------- 开机画面 ---------- */
+#boot{
+  position:fixed;inset:0;z-index:120;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg);
+  cursor:pointer;
+}
+#boot.hide{animation:bootout .5s steps(4) forwards}
+@keyframes bootout{
+  to{opacity:0;visibility:hidden}
+}
+.boot-box{text-align:center;padding:24px}
+#bootStar{
+  width:72px;height:72px;
+  animation:bob 1.2s steps(2) infinite;
+}
+@keyframes bob{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-5px)}
+}
+.boot-title{
+  font:900 72px/1.2 var(--cn);
+  letter-spacing:.24em;
+  text-indent:.24em;
+  color:var(--white);
+  text-shadow:5px 5px 0 var(--red);
+  margin-top:8px;
+}
+.boot-sub{
+  font:700 14px/1.6 var(--mono);
+  letter-spacing:.34em;
+  color:var(--yellow);
+  margin-top:10px;
+}
+.boot-gamestart{
+  margin-top:56px;
+  font:700 30px/1.4 var(--mono);
+  letter-spacing:.3em;
+  color:var(--lgreen);
+  text-shadow:3px 3px 0 var(--ink);
+  animation:blink 1.1s steps(1) infinite;
+}
+.boot-press{
+  margin-top:22px;
+  font-size:15px;
+  color:var(--lgray);
+  animation:blink 1.6s steps(1) infinite;
+}
+.boot-copy{
+  margin-top:44px;
+  font:700 11px/1.8 var(--mono);
+  letter-spacing:.2em;
+  color:var(--gray);
+}
+.boot-loading{
+  font:700 18px/1.6 var(--mono);
+  letter-spacing:.24em;
+  color:var(--white);
+  margin-bottom:18px;
+}
+.boot-loading span{color:var(--yellow)}
+.ldbar{
+  width:min(440px,78vw);
+  height:24px;
+  margin:0 auto;
+  border:3px solid var(--white);
+  background:var(--ink);
+  padding:3px;
+}
+.ldbar i{
+  display:block;
+  height:100%;
+  width:0%;
+  background:repeating-linear-gradient(90deg,var(--lgray) 0 12px,transparent 12px 15px);
+}
+.boot-tip{
+  margin-top:20px;
+  font-size:13px;
+  color:var(--gray);
+  min-height:24px;
+}
+
+/* ---------- 卡带插入动画 ---------- */
+#cartOverlay{
+  position:fixed;inset:0;z-index:110;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:40px;
+  background:rgba(13,14,22,.94);
+}
+.cart-scene{position:relative;width:240px;height:340px}
+.cart-fly{
+  position:absolute;
+  left:50%;top:0;
+  width:132px;
+  margin-left:-66px;
+  text-align:center;
+}
+#cartOverlay.play .cart-fly{animation:cartin .65s steps(6) forwards}
+@keyframes cartin{
+  from{transform:translateY(-270px)}
+  to{transform:translateY(196px)}
+}
+#cartArt{
+  display:block;
+  width:100%;aspect-ratio:1/1;
+  border:3px solid var(--ink);
+  background:var(--ink);
+}
+.cart-flyname{
+  display:block;
+  margin-top:6px;
+  padding:3px 6px;
+  font:700 13px/1.5 var(--cn);
+  background:var(--panel);
+  color:var(--white);
+  border:2px solid var(--ink);
+}
+.cart-slot{
+  position:absolute;
+  left:50%;bottom:0;
+  width:220px;height:44px;
+  margin-left:-110px;
+  border:3px solid var(--gray);
+  background:var(--panel);
+  display:flex;align-items:center;justify-content:center;
+}
+.cart-slot span{
+  font:700 10px/1 var(--mono);
+  letter-spacing:.3em;
+  color:var(--gray);
+}
+.slot-mouth{
+  position:absolute;
+  left:12px;right:12px;top:8px;
+  height:10px;
+  background:var(--ink);
+}
+#cartOverlay.loaded .cart-slot{border-color:var(--white)}
+#cartOverlay.loaded .cart-slot span{color:var(--white)}
+.cart-hint{
+  font:700 15px/1.6 var(--mono);
+  letter-spacing:.3em;
+  color:var(--yellow);
+  animation:blink 1s steps(1) infinite;
+}
+
+/* ---------- 阅读器（游戏关卡式条漫） ---------- */
+#reader{position:fixed;inset:0;z-index:80}
+.rwin{
+  height:100%;
+  max-width:900px;
+  margin:0 auto;
+  display:flex;flex-direction:column;
+  background:var(--bg);
+  border-left:3px solid var(--panel);
+  border-right:3px solid var(--panel);
+}
+#reader.open .rwin{animation:rise .45s steps(8) both}
+@keyframes rise{
+  from{transform:translateY(64vh)}
+  to{transform:translateY(0)}
+}
+.rhead{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;
+  padding:12px 16px;
+  border-bottom:3px solid var(--panel);
+  background:rgba(26,28,44,.98);
+}
+.rstage{
+  font:700 13px/1 var(--mono);
+  letter-spacing:.2em;
+  color:var(--ink);
+  background:var(--yellow);
+  padding:5px 8px;
+}
+.rtitle{
+  font:700 16px/1.5 var(--cn);
+  letter-spacing:.05em;
+  color:var(--white);
+}
+.rhead-r{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rgrid{
+  font:700 12px/1 var(--mono);
+  letter-spacing:.14em;
+  font-variant-numeric:tabular-nums;
+  color:var(--cyan);
+}
+.rhp{
+  display:flex;align-items:center;gap:12px;
+  padding:8px 16px;
+  border-bottom:3px solid var(--panel);
+}
+.rhp .hp-label{font-size:12px}
+.rhp .hp-pct{min-width:44px}
+.rbody{
+  flex:1;
+  overflow-y:auto;
+  padding:28px 16px 70px;
+  scrollbar-width:thin;
+  scrollbar-color:var(--panel) var(--bg);
+}
+.rbody::-webkit-scrollbar{width:12px}
+.rbody::-webkit-scrollbar-track{background:var(--bg)}
+.rbody::-webkit-scrollbar-thumb{background:var(--panel);border:2px solid var(--bg)}
+.panel-col{max-width:640px;margin:0 auto;display:grid;gap:36px}
+.panel{
+  opacity:0;
+  transform:translateY(14px);
+}
+.panel.in{
+  opacity:1;
+  transform:none;
+  transition:transform .25s steps(4),opacity .25s steps(4);
+}
+.panel canvas{
+  display:block;
+  width:100%;
+  border:3px solid var(--lgray);
+  background:var(--ink);
+}
+.dbox{
+  position:relative;
+  margin-top:-3px;
+  border:3px solid var(--white);
+  background:var(--bg);
+  padding:20px 16px 22px;
+}
+.dbox-name{
+  position:absolute;
+  top:-14px;left:12px;
+  padding:2px 10px;
+  font:700 13px/1.6 var(--cn);
+  letter-spacing:.1em;
+  background:var(--red);
+  color:var(--white);
+  border:2px solid var(--white);
+}
+.dbox.n .dbox-name{background:var(--navy)}
+.dbox-text{
+  font-size:16px;
+  line-height:1.8;
+  color:var(--white);
+  min-height:58px;
+  cursor:pointer;
+}
+.tcur{
+  display:inline-block;
+  width:9px;
+  font-style:normal;
+  color:var(--yellow);
+  animation:blink .8s steps(1) infinite;
+}
+.dbox-next{
+  position:absolute;
+  right:12px;bottom:6px;
+  font-size:13px;
+  color:var(--yellow);
+  visibility:hidden;
+}
+.dbox.done .dbox-next{visibility:visible;animation:blink 1s steps(1) infinite}
+.dbox-hint{
+  display:block;
+  margin-top:8px;
+  font-size:12px;
+  color:var(--gray);
+}
+.clearbox{
+  text-align:center;
+  border:3px solid var(--yellow);
+  background:rgba(255,205,117,.06);
+  padding:30px 20px 26px;
+  opacity:0;
+  transform:translateY(10px);
+}
+.clearbox.on{
+  opacity:1;
+  transform:none;
+  transition:transform .3s steps(4),opacity .3s steps(4);
+}
+.clear-big{
+  font:700 34px/1.3 var(--mono);
+  letter-spacing:.18em;
+  color:var(--yellow);
+  text-shadow:3px 3px 0 var(--ink);
+  animation:blink 1.2s steps(1) infinite;
+}
+.clear-sub{
+  margin-top:10px;
+  color:var(--lgray);
+  font-size:15px;
+}
+.clear-btns{
+  margin-top:22px;
+  display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+}
+
+/* ---------- Toast ---------- */
+#toast{
+  position:fixed;
+  left:50%;bottom:36px;
+  transform:translateX(-50%) translateY(8px);
+  z-index:130;
+  padding:10px 18px;
+  background:var(--panel);
+  border:3px solid var(--white);
+  color:var(--white);
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  max-width:88vw;
+}
+#toast.show{opacity:1;transform:translateX(-50%);transition:opacity .2s steps(2)}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1199px){
+  .hero{gap:32px;padding-top:56px}
+  .hero-title{font-size:52px}
+  .panel-col{max-width:560px}
+}
+@media (max-width:767px){
+  .screen{margin:4px;border-radius:10px}
+  #topbar{padding:10px 14px;gap:10px;flex-wrap:wrap}
+  .mainnav{order:3;width:100%;margin-left:0}
+  .navlink{padding:8px 12px}
+  .hero{flex-direction:column;padding:44px 18px 48px;text-align:center}
+  .hero-btns,.hero-txt{justify-content:center}
+  .hero-title{font-size:42px;text-shadow:4px 4px 0 var(--red),8px 8px 0 var(--ink)}
+  .hero-art{width:100%}
+  .sec{padding:48px 16px}
+  .sec-cn{font-size:24px}
+  #shelfGrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:22px 14px}
+  .rank-row{grid-template-columns:56px minmax(0,1fr) 110px;padding:10px 12px}
+  .rank-row .rauthor{display:none}
+  .rscore{font-size:17px}
+  .boot-title{font-size:52px}
+}
+@media (max-width:479px){
+  body{font-size:15px}
+  #shelfGrid{grid-template-columns:repeat(2,1fr)}
+  .cart-title{font-size:14px}
+  .hero-title{font-size:34px;letter-spacing:.1em}
+  .rank-row{grid-template-columns:46px minmax(0,1fr) 92px;gap:8px}
+  .rk{font-size:14px}
+  .rhead-r{margin-left:0}
+  .clear-big{font-size:24px}
+  .boot-title{font-size:40px}
+  .cart-fly{width:112px;margin-left:-56px}
+}
+
+/* ---------- 降级：prefers-reduced-motion ---------- */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  #bgstars b,.hero-scr,.cart-status.st-run::before,.today-badge,
+  .boot-gamestart,.boot-press,#bootStar,.rflag.new,
+  .clear-big,.coin,.tcur,.dbox.done .dbox-next,.cart-hint{animation:none !important}
+  .cart:hover{animation:none}
+  .panel{opacity:1;transform:none;transition:none}
+  .clearbox{opacity:1;transform:none;transition:none}
+  #reader.open .rwin{animation:none}
+  #boot.hide{animation:none;opacity:0;visibility:hidden}
+  #cartOverlay.play .cart-fly{animation:none}
+}
+</style>
+</head>
+<body class="locked">
+
+<noscript>
+  <style>#boot,#cartOverlay,#reader{display:none}</style>
+  <p style="padding:20px;text-align:center">本主机需要启用 JavaScript 才能插入卡带。请开启后刷新页面。</p>
+</noscript>
+
+<div class="screen" id="screen">
+  <div id="bgstars" aria-hidden="true"></div>
+
+  <!-- ===== 顶栏 ===== -->
+  <header id="topbar">
+    <a class="logo" href="#hero" aria-label="漫屿 MANYU 首页">
+      <canvas id="logoArt" width="16" height="16" aria-hidden="true"></canvas>
+      <span class="logo-cn">漫屿</span>
+      <span class="logo-en">MANYU</span>
+    </a>
+    <nav class="mainnav" aria-label="站内导航">
+      <a class="navlink" href="#shelf">卡带架</a>
+      <a class="navlink" href="#weekly">追更日历</a>
+      <a class="navlink" href="#rank">高分榜</a>
+    </nav>
+    <div class="sysbtns">
+      <button class="pbtn small" id="soundBtn" aria-pressed="false">♪ SOUND OFF</button>
+      <button class="pbtn small" id="crtBtn" aria-pressed="true">CRT ON</button>
+    </div>
+  </header>
+
+  <main id="hero">
+    <!-- ===== HERO ===== -->
+    <section class="hero" aria-label="首页横幅">
+      <div class="hero-txt">
+        <p class="hero-kicker">// COMIC CONSOLE · EST.1999 · SWEETIE-16</p>
+        <h1 class="hero-title">漫屿<span class="hero-en">MANYU 8-BIT</span></h1>
+        <p class="hero-slogan">每座孤岛，都有格子靠岸。<br>十盘像素卡带，插入即读。</p>
+        <p class="hero-news">▶ 预告：周五 20:00《蒸汽长安》第 40 话 准时开闸</p>
+        <div class="hero-btns">
+          <a class="pbtn primary" href="#shelf">▶ 开始冒险</a>
+          <a class="pbtn" href="#rank">高分榜</a>
+        </div>
+        <p class="hero-scr" aria-hidden="true">▼ SCROLL</p>
+      </div>
+      <div class="hero-art">
+        <canvas id="heroArt" aria-hidden="true"></canvas>
+        <p class="hero-cap">FIG.1 漫屿星 · 全景像素图</p>
+      </div>
+    </section>
+
+    <div class="dither" aria-hidden="true"></div>
+
+    <!-- ===== 卡带封面架 ===== -->
+    <section class="sec" id="shelf" aria-label="卡带封面架">
+      <header class="sec-head">
+        <p class="sec-en">CARTRIDGE SHELF · SELECT STAGE</p>
+        <h2 class="sec-cn">卡带封面架</h2>
+        <p class="sec-desc">十盘虚构漫画卡带，点击即可插入主机。《星屑信使》已内置完整 EP.01 关卡（8 格像素分格 + 打字机对话框），其余卡带为试玩版。</p>
+      </header>
+      <div class="filterbar" id="filterBar" role="group" aria-label="分类筛选"></div>
+      <p class="filter-count" id="filterCount">CARTRIDGES 10 / 10</p>
+      <div id="shelfGrid"></div>
+      <p class="shelf-note">提示：点击卡带把它插进主机 ▼ · 卡带均由像素矩阵逐格绘制，无一张外部图片。</p>
+    </section>
+
+    <div class="dither" aria-hidden="true"></div>
+
+    <!-- ===== 追更日历 ===== -->
+    <section class="sec" id="weekly" aria-label="追更日历">
+      <header class="sec-head">
+        <p class="sec-en">WEEKLY SCHEDULE · DAILY QUEST</p>
+        <h2 class="sec-cn">追更日历</h2>
+        <p class="sec-desc">红点即新话 · 每天来岛上打卡一次，别让格子等你太久。</p>
+      </header>
+      <div id="weekScroll">
+        <div class="week" id="weekGrid"></div>
+      </div>
+      <p class="week-note" id="weekNote"></p>
+    </section>
+
+    <div class="dither" aria-hidden="true"></div>
+
+    <!-- ===== 高分榜 ===== -->
+    <section class="sec" id="rank" aria-label="高分榜">
+      <header class="sec-head">
+        <p class="sec-en">HI-SCORE RANKING · WEEKLY</p>
+        <h2 class="sec-cn">本周黑马榜</h2>
+        <p class="sec-desc">人气值即分数 · 每周一 0:00 结算，上榜作品将获得全岛灯牌展示。</p>
+      </header>
+      <ol class="rank-list" id="rankList"></ol>
+      <p class="rank-note">※ 分数为虚构演示数据 · ▲UP = 上升 · ▼DOWN = 下降 · ★NEW = 新上榜</p>
+    </section>
+  </main>
+
+  <!-- ===== 页脚状态栏 ===== -->
+  <footer id="statusbar">
+    <div class="hp-line">
+      <span class="hp-label" aria-hidden="true">HP</span>
+      <div class="hp-bar" role="progressbar" aria-label="全页阅读进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="pageBar">
+        <i id="pageFill"></i>
+      </div>
+      <span class="hp-pct" id="pagePct">0%</span>
+    </div>
+    <div class="foot-row">
+      <span class="foot-meta"><b>© 2026 漫屿 MANYU</b> · 每座孤岛，都有格子靠岸</span>
+      <span class="foot-meta">8-BIT EDITION · VER 1.0 · SWEETIE-16 PALETTE</span>
+      <span class="foot-meta">本站全部封面 / 角色 / 图标均为像素矩阵绘制 · 虚构作品演示</span>
+      <span class="coin" aria-hidden="true">INSERT COIN ♪</span>
+    </div>
+  </footer>
+</div>
+
+<!-- ===== CRT 覆盖层 ===== -->
+<div class="crt" id="crtLayer" aria-hidden="true"></div>
+
+<!-- ===== 卡带插入动画 ===== -->
+<div id="cartOverlay" hidden>
+  <div class="cart-scene" aria-hidden="true">
+    <div class="cart-fly">
+      <canvas id="cartArt" width="24" height="24"></canvas>
+      <span class="cart-flyname" id="cartName">……</span>
+    </div>
+    <div class="cart-slot" id="cartSlot">
+      <span>★ MANYU CONSOLE ★</span>
+      <i class="slot-mouth"></i>
+    </div>
+  </div>
+  <p class="cart-hint" id="cartHint">正在插入卡带……</p>
+</div>
+
+<!-- ===== 开机画面 ===== -->
+<div id="boot" role="dialog" aria-label="开机画面">
+  <div class="boot-box">
+    <div class="boot-logo">
+      <canvas id="bootStar" width="16" height="16" aria-hidden="true"></canvas>
+      <p class="boot-title">漫屿</p>
+      <p class="boot-sub">MANYU · 8-BIT COMIC CONSOLE</p>
+    </div>
+    <div id="bootStart">
+      <p class="boot-gamestart">GAME START</p>
+      <p class="boot-press">— 按任意键 · 或点击屏幕开始 —</p>
+      <p class="boot-copy">© 2026 MANYU SOFT · LICENSED COMIC CARTRIDGE</p>
+    </div>
+    <div id="bootLoad" hidden>
+      <p class="boot-loading">NOW LOADING <span id="bootPct">0%</span></p>
+      <div class="ldbar" role="progressbar" aria-label="加载进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="bootFill"></i></div>
+      <p class="boot-tip" id="bootTip">提示：格子搬运中……</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 阅读器 ===== -->
+<div id="reader" hidden role="dialog" aria-modal="true" aria-label="漫画阅读器">
+  <div class="rwin">
+    <header class="rhead">
+      <span class="rstage" id="rStage">STAGE 01</span>
+      <span class="rtitle" id="rTitle">……</span>
+      <div class="rhead-r">
+        <span class="rgrid" id="rGrid">GRID 00/08</span>
+        <button class="pbtn small" id="skipBtn">▶ 跳过打字机</button>
+        <button class="pbtn small" id="closeBtn" aria-label="关闭阅读器">✕ 退出关卡</button>
+      </div>
+    </header>
+    <div class="rhp">
+      <span class="hp-label" aria-hidden="true">HP</span>
+      <div class="hp-bar" role="progressbar" aria-label="本话阅读进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="rBar">
+        <i id="rFill"></i>
+      </div>
+      <span class="hp-pct" id="rPct">0%</span>
+    </div>
+    <div class="rbody" id="rBody"></div>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ==========================================================
+   0. 基础工具
+   ========================================================== */
+var RM = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function $(id){ return document.getElementById(id); }
+function el(tag, cls, parent){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (parent) parent.appendChild(n);
+  return n;
+}
+
+/* Sweetie-16 调色板（+ 描边墨 #191019） */
+var PAL = {
+  'K':'#191019', /* 描边墨 */
+  'W':'#F4F4F4',
+  'P':'#94B0C2',
+  'S':'#566C86',
+  'D':'#333C57',
+  'N':'#29366F',
+  'b':'#3B5DC9',
+  'B':'#41A6F6',
+  'C':'#73EFF7',
+  'T':'#257179',
+  'V':'#5D275D',
+  'R':'#B13E53',
+  'O':'#EF7D57',
+  'Y':'#FFCD75',
+  'G':'#38B764',
+  'L':'#A7F070'
+};
+
+/* ==========================================================
+   1. 8-bit 音效（Web Audio 方波，默认关闭）
+   ========================================================== */
+var soundOn = false;
+var actx = null;
+function ac(){
+  if (!actx) {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) actx = new AC();
+  }
+  if (actx && actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function beep(freq, dur, vol, slide){
+  if (!soundOn) return;
+  var a = ac();
+  if (!a) return;
+  try {
+    var o = a.createOscillator();
+    var g = a.createGain();
+    o.type = 'square';
+    o.frequency.setValueAtTime(freq, a.currentTime);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(60, freq * 0.25), a.currentTime + dur);
+    g.gain.setValueAtTime(vol || 0.035, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur);
+    o.connect(g);
+    g.connect(a.destination);
+    o.start();
+    o.stop(a.currentTime + dur + 0.02);
+  } catch (e) { /* 音频不可用时静默 */ }
+}
+var Snd = {
+  hover:  function(){ beep(760, 0.04, 0.018); },
+  click:  function(){ beep(620, 0.06, 0.03); setTimeout(function(){ beep(930, 0.07, 0.03); }, 55); },
+  tick:   function(){ beep(1180, 0.02, 0.012); },
+  insert: function(){ beep(520, 0.28, 0.05, true); },
+  clear:  function(){
+    var seq = [523, 659, 784, 1046];
+    for (var i = 0; i < seq.length; i++) {
+      (function(f, i){
+        setTimeout(function(){ beep(f, 0.09, 0.04); }, i * 95);
+      })(seq[i], i);
+    }
+  }
+};
+
+/* ==========================================================
+   2. 像素精灵（16x16 字符矩阵，'.' 为透明）
+   ========================================================== */
+var SPR = {
+
+STAR: [
+"................",
+".......KK.......",
+".......KYK......",
+".......KYK......",
+".......KYK......",
+"....KKKKYKKKK...",
+"....KYYYYYYYK...",
+"..KKYYYYYYYYKK..",
+"..KYYYYYYYYYYK..",
+"..KKYYYYYYYYKK..",
+"....KYYYYYYYK...",
+"....KKKKYKKKK...",
+".......KYK......",
+".......KYK......",
+".......KYK......",
+".......KK......."
+],
+
+NOODLE: [
+"................",
+"...K...K...K....",
+"....K...K...K...",
+"...K...K...K....",
+"..............K.",
+".............K..",
+"............K...",
+"..KKKKKKKKKKKK..",
+".KYWYWWYWWYWWYK.",
+".KRRRRRRRRRRRRK.",
+".KRRRWWWWWWRRRK.",
+"..KRRRRRRRRRRK..",
+"...KKKKKKKKKK...",
+"......KKKK......",
+"................",
+"................"
+],
+
+SWORD: [
+"......KKKK......",
+"......KWWK......",
+"......KWPK......",
+"......KWPK......",
+"......KWPK......",
+"......KWPK......",
+"......KWPK......",
+"....KKYYYYKK....",
+"....KYYYYYYK....",
+"......KRK.......",
+"......KRK.......",
+"......KRK.......",
+".....KKKKK......",
+"......KK........",
+"................",
+"................"
+],
+
+DEVIL: [
+"..KK........KK..",
+".KOOK......KOOK.",
+".KOOKVVVVVVKOOK.",
+"KKVVVVVVVVVVVVKK",
+"KVVVVVVVVVVVVVVK",
+"KVVWWKVVVVVKWWVK",
+"KVVVVVVVVVVVVVVK",
+"KVVVKKKKKKKKVVVK",
+"KVVVKWVWVWVKVVVK",
+"KVVVVVVVVVVVVVVK",
+".KVVVVVVVVVVVVK.",
+"..KVVVVVVVVVVK..",
+"...KKVVVVVVKK...",
+".....KKKKKK.....",
+"................",
+"................"
+],
+
+TRAIN: [
+"..KKKKKKKKKKKK..",
+".KDDDDDDDDDDDDK.",
+".KDDDDDDDDDDDDK.",
+".KKKKKKKKKKKKKK.",
+".KCCCCCCCCCCCCK.",
+".KCCKYYYYYYKCCK.",
+".KCCCCCCCCCCCCK.",
+".KKKKKKKKKKKKKK.",
+".KDDDDDDDDDDDDK.",
+".KOOKKDDDDKKOOK.",
+".KDDDDDDDDDDDDK.",
+"..KKKKKKKKKKKK..",
+".KK..KK..KK..KK.",
+"................",
+"................",
+"................"
+],
+
+PENGUIN: [
+"................",
+"......KKKK......",
+".....KDDDDK.....",
+"....KDDDDDDK....",
+"....KWWWWWWK....",
+"....KWKWWKWK....",
+"....KWWOOWWK....",
+"...KDDWWWWDDK...",
+"...KDDWWWWDDK...",
+"...KDDWWWWDDK...",
+"...KDDWWWWDDK...",
+"..KDDWWWWWWDDK..",
+".KDDDWWWWWWDDDK.",
+".KKKKKKKKKKKKKK.",
+"..OOO....OOO....",
+"................"
+],
+
+GEAR: [
+"..KK...KK...KK..",
+"..KKKKKKKKKKKK..",
+".KSSSSSSSSSSSSK.",
+".KSSSSSSSSSSSSK.",
+"KKSSSSSSSSSSSSKK",
+"KSSSSKKKKKKSSSSK",
+"KSSSKK....KKSSSK",
+"KSSSK......KSSSK",
+"KSSSK......KSSSK",
+"KSSSKK....KKSSSK",
+"KSSSSKKKKKKSSSSK",
+"KKSSSSSSSSSSSSKK",
+".KSSSSSSSSSSSSK.",
+".KSSSSSSSSSSSSK.",
+"..KKKKKKKKKKKK..",
+"..KK...KK...KK.."
+],
+
+HEART: [
+"....W....W......",
+"...C......C.....",
+".C.KKK..KKK..C..",
+"C.KRRRKKRRRK..C.",
+"W.KRRRRRRRRK..W.",
+"..KRWRRRRRRK....",
+".C.KRRRRRRK...C.",
+"..C.KRRRRK.C....",
+".C...KRRK...C...",
+"......KK........",
+".....C....C.....",
+"................",
+"................",
+"................",
+"................",
+"................"
+],
+
+SHOP: [
+"................",
+".KKKKKKKKKKKKKK.",
+".KRWRWRWRWRWRWK.",
+".KKKKKKKKKKKKKK.",
+".KDDDDDDDDDDDDK.",
+".KDYYYYYYKDDDDK.",
+".KDYYYYYYKDOODK.",
+".KDYYYYYYKDOODK.",
+".KDDDDDDDKDOODK.",
+".KDDDDDDDKDOODK.",
+".KKKKKKKKKKKKKK.",
+"..KKKKKKKKKKKK..",
+"................",
+"................",
+"................",
+"................"
+],
+
+GLOVE: [
+"...KK...........",
+"..KWWK..........",
+".KWYYWK.........",
+".KWYYWK.........",
+"..KWWK..........",
+"................",
+"......KKKKK.....",
+".....KRRRRRK....",
+"....KRRRRRRRK...",
+"..KKKRRRRRRRK...",
+".KRRKRRRRRRRK...",
+".KRWWKRRRRRK....",
+"..KKKRRRRRK.....",
+"....KWWWWWK.....",
+"....KKKKKKK.....",
+"................"
+],
+
+ROCKET: [
+".......KK.......",
+"......KWWK......",
+"......KWWK......",
+".....KWWWWK.....",
+".....KWCCWK.....",
+".....KWCCWK.....",
+".....KWWWWK.....",
+"....KKWWWWKK....",
+"...KRRKWWKRRK...",
+"...KRRKWWKRRK...",
+"..KRRRKWWKRRRK..",
+"..KKKKKWWKKKKK..",
+"......KWWK......",
+"................",
+"................",
+"................"
+],
+
+POSTMAN: [
+".......K........",
+"......KYK.......",
+".....KKKKK......",
+"....KWWWWWK.....",
+"....KWCCCWK.....",
+"....KWCCCWK.....",
+"....KWWWWWK.....",
+".....KKKKK......",
+"....KBBBBBK.....",
+"...KBBYYYBBK....",
+"...KBBYYYBBK....",
+"...KBBBBBBBK....",
+"....KBKKBK......",
+"....KK..KK......",
+"................",
+"................"
+],
+
+MAILBOX: [
+"................",
+"..KKKKKKKKK.....",
+".KBBBBBBBBBK....",
+".KBWWWWWWWBK....",
+".KBBBBBBBBBK....",
+".KBBBBBBBBBK....",
+".KKKKKKKKKKK....",
+"......KSK.......",
+"......KSK.......",
+"......KSK.......",
+"....KKKKKKK.....",
+"................",
+"................",
+"................",
+"................",
+"................"
+],
+
+LETTER: [
+"................",
+".KKKKKKKKKKKKKK.",
+".KKWWWWWWWWWWKK.",
+".KWKWWWWWWWWKWK.",
+".KWWKWWWWWWKWWK.",
+".KWWWKWWWWKWWWK.",
+".KWWWWKKKKWWWWK.",
+".KWWWWWKKWWWWWK.",
+".KWWWWWWWWWWWWK.",
+".KWWWWWKOOKWWWWK",
+".KKKKKKKKKKKKKK.",
+"................",
+"................",
+"................",
+"................",
+"................"
+],
+
+MINILETTER: [
+".KKKKKK.",
+"KKWWWWKK",
+"KWKWWKWK",
+"KWWKKWWK",
+"KWWWWWWK",
+"KKKKKKKK"
+],
+
+SPARK: [
+"..W..",
+"..W..",
+"WWYWW",
+"..W..",
+"..W.."
+]
+};
+
+/* ==========================================================
+   3. 像素绘制工具
+   ========================================================== */
+function ctxOf(c){
+  var x = c.getContext('2d');
+  x.imageSmoothingEnabled = false;
+  return x;
+}
+function stamp(x, grid, ox, oy, scale){
+  scale = scale || 1;
+  for (var r = 0; r < grid.length; r++) {
+    var row = grid[r];
+    for (var c = 0; c < row.length; c++) {
+      var ch = row.charAt(c);
+      if (PAL[ch]) {
+        x.fillStyle = PAL[ch];
+        x.fillRect(ox + c * scale, oy + r * scale, scale, scale);
+      }
+    }
+  }
+}
+function drawGrid(c, grid){
+  c.width = grid[0].length;
+  c.height = grid.length;
+  var x = ctxOf(c);
+  x.clearRect(0, 0, c.width, c.height);
+  stamp(x, grid, 0, 0, 1);
+}
+function bgFill(x, w, h, col){ x.fillStyle = col; x.fillRect(0, 0, w, h); }
+function rect(x, px, py, w, h, col){ x.fillStyle = col; x.fillRect(px, py, w, h); }
+function circle(x, cx, cy, r, col){
+  x.fillStyle = col;
+  for (var dy = -r; dy <= r; dy++) {
+    for (var dx = -r; dx <= r; dx++) {
+      if (dx * dx + dy * dy <= r * r) x.fillRect(cx + dx, cy + dy, 1, 1);
+    }
+  }
+}
+/* 简单可复现伪随机（同一画面每次渲染一致） */
+function rng(seed){
+  var s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return function(){
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+function starfield(x, seed, n, w, maxY){
+  var f = rng(seed);
+  var cols = [PAL.W, PAL.P, PAL.C];
+  for (var i = 0; i < n; i++) {
+    x.fillStyle = cols[Math.floor(f() * cols.length)];
+    x.fillRect(Math.floor(f() * w), Math.floor(f() * maxY), 1, 1);
+  }
+}
+function dither(x, seed, px, py, w, h, col){
+  var f = rng(seed);
+  x.fillStyle = col;
+  for (var i = 0; i < w * h * 0.22; i++) {
+    x.fillRect(px + Math.floor(f() * w), py + Math.floor(f() * h), 1, 1);
+  }
+}
+function scene(w, h){
+  var c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  c._x = ctxOf(c);
+  return c;
+}
+
+/* ==========================================================
+   4. 内容数据（平台与 10 部虚构漫画）
+   ========================================================== */
+var COMICS = [
+  { t:'星屑信使', a:'白鹿原上', tags:'科幻 · 治愈', cats:['科幻'], st:'end', stTxt:'已完结 · 全 36 话', bg:'#29366F', motif:'STAR',    day:0 },
+  { t:'深夜面馆', a:'陈一勺',   tags:'美食 · 都市', cats:['都市'], st:'run', stTxt:'连载中 · 每周三更新', bg:'#1A1C2C', motif:'NOODLE', day:3 },
+  { t:'剑客不下班', a:'老猫头', tags:'玄幻 · 搞笑', cats:['搞笑'], st:'run', stTxt:'连载中 · 每周一更新', bg:'#5D275D', motif:'SWORD',  day:1 },
+  { t:'我在高三当魔王', a:'阿蔓', tags:'校园 · 奇幻 · 恋爱', cats:['恋爱'], st:'run', stTxt:'连载中 · 每周六更新', bg:'#257179', motif:'DEVIL', day:6 },
+  { t:'午夜列车14号', a:'双子星', tags:'悬疑 · 惊悚', cats:['悬疑'], st:'run', stTxt:'连载中 · 每周五更新', bg:'#1A1C2C', motif:'TRAIN', day:5 },
+  { t:'企鹅事务所', a:'南极洲代表', tags:'日常 · 萌宠 · 四格', cats:['日常'], st:'run', stTxt:'连载中 · 每周日更新', bg:'#73EFF7', motif:'PENGUIN', day:0 },
+  { t:'蒸汽长安', a:'墨小仟',   tags:'蒸汽朋克 · 历史 · 热血', cats:['热血'], st:'run', stTxt:'连载中 · 每周五 20:00', bg:'#EF7D57', motif:'GEAR', day:5 },
+  { t:'量子恋爱观察报告', a:'薛定谔的猫窝', tags:'科幻 · 恋爱 · 轻喜剧', cats:['恋爱','科幻'], st:'run', stTxt:'连载中 · 每周二更新', bg:'#F4F4F4', motif:'HEART', day:2 },
+  { t:'山海便利店', a:'山海君', tags:'奇幻 · 温情', cats:['奇幻'], st:'run', stTxt:'连载中 · 每周四更新', bg:'#29366F', motif:'SHOP', day:4 },
+  { t:'拳与花', a:'一根葱',     tags:'格斗 · 少女 · 热血', cats:['热血'], st:'run', stTxt:'连载中 · 每周六更新', bg:'#A7F070', motif:'GLOVE', day:6 }
+];
+var LIGHT_BG = { '#F4F4F4':1, '#A7F070':1, '#73EFF7':1, '#EF7D57':1 };
+
+var RANK = [
+  { i:6, score:1204600, flag:'up'   },
+  { i:0, score:1088920, flag:'hold' },
+  { i:4, score:966340,  flag:'new'  },
+  { i:9, score:852010,  flag:'up'   },
+  { i:8, score:777450,  flag:'hold' },
+  { i:3, score:643980,  flag:'new'  },
+  { i:1, score:588120,  flag:'down' },
+  { i:7, score:422760,  flag:'new'  },
+  { i:2, score:351040,  flag:'down' },
+  { i:5, score:289630,  flag:'hold' }
+];
+var FLAG_TXT = { up:'▲UP', down:'▼DOWN', new:'★NEW', hold:'—' };
+
+/* EP.01 剧本（8 格） */
+var EP1 = [
+  { art:'p1', name:'旁白', n:true, text:'宇宙历 214 年。跨星邮政航线上，只剩最后一班邮船还在飞行。' },
+  { art:'p2', name:'小星', text:'今日投递：一百二十封信。坐标已锁定——目的地，漫屿星。' },
+  { art:'p3', name:'旁白', n:true, text:'漫屿星，读取中。每座孤岛，都有格子靠岸。' },
+  { art:'p4', name:'小星', text:'咦？邮筒旁边还躺着一件事包裹……不对，是一件包裹！收件人：全人类。' },
+  { art:'p5', name:'旁白', n:true, text:'信封上没有邮票，只盖着一枚旧旧的邮戳——1999。' },
+  { art:'p6', name:'小星', text:'信上只有一句话：“谢谢你们，曾经愿意等一封信。”' },
+  { art:'p7', name:'旁白', n:true, text:'小星把信轻轻投进邮筒。今天的最后一格，投递完成。' },
+  { art:'p8', name:'小星', text:'收工！下一站是雨夜与站台。EP.02《午夜来电》，再见！' }
+];
+
+/* ==========================================================
+   5. 场景绘制器（48x32 关卡画面 / 48x28 主视觉）
+   ========================================================== */
+var FLAME_A = ['KYYK', 'KOYK', '.KK.'];
+var FLAME_B = ['.KK.', 'KYYK', 'KOYK'];
+
+function flame(x, px, py, frame){
+  stamp(x, frame ? FLAME_A : FLAME_B, px, py, 1);
+}
+var BUILD = {
+
+  p1: function(x, frame, w, h){
+    bgFill(x, w, h, '#1A1C2C');
+    starfield(x, 11, 46, w, 26);
+    /* 星屑行星（紫） */
+    circle(x, 36, 24, 9, PAL.V);
+    circle(x, 32, 20, 6, '#1A1C2C');
+    circle(x, 36, 24, 9, PAL.V);
+    rect(x, 33, 20, 2, 2, PAL.S);
+    rect(x, 38, 26, 2, 2, PAL.S);
+    rect(x, 31, 26, 2, 2, PAL.S);
+    /* 流星轨迹 */
+    rect(x, 6, 4, 5, 1, PAL.W);
+    rect(x, 4, 5, 3, 1, PAL.P);
+    psetStar(x, 11, 3, PAL.W);
+  },
+
+  p2: function(x, frame, w, h){
+    bgFill(x, w, h, '#1A1C2C');
+    starfield(x, 22, 30, w, h);
+    /* 速度线 */
+    var dashes = [[2,6,7],[9,13,5],[30,8,6],[38,4,4],[5,20,6],[33,19,7],[12,27,5],[40,24,4]];
+    for (var i = 0; i < dashes.length; i++) {
+      rect(x, dashes[i][0], dashes[i][1], dashes[i][2], 1, PAL.S);
+    }
+    stamp(x, SPR.ROCKET, 16, 8, 1);
+    flame(x, 22, 21, frame);
+  },
+
+  p3: function(x, frame, w, h){
+    bgFill(x, w, h, PAL.N);
+    starfield(x, 33, 26, w, h);
+    /* 漫屿星（绿）+ 新月高光 */
+    circle(x, 14, 22, 9, PAL.G);
+    circle(x, 10, 17, 6, PAL.N);
+    circle(x, 14, 22, 9, PAL.G);
+    circle(x, 11, 19, 5, PAL.L);
+    circle(x, 10, 18, 4, PAL.G);
+    /* 岛上棕榈 */
+    rect(x, 14, 7, 1, 6, PAL.T);
+    rect(x, 11, 6, 3, 1, PAL.L);
+    rect(x, 15, 6, 3, 1, PAL.L);
+    rect(x, 14, 5, 1, 1, PAL.L);
+    rect(x, 14, 8, 1, 1, PAL.O);
+    /* 邮船接近 */
+    stamp(x, SPR.ROCKET, 36, 8, 1);
+    flame(x, 42, 21, frame);
+  },
+
+  p4: function(x, frame, w, h){
+    bgFill(x, w, h, '#1A1C2C');
+    starfield(x, 44, 22, w, 16);
+    circle(x, 42, 5, 2, PAL.W);
+    /* 月面 */
+    rect(x, 0, 23, w, 1, PAL.K);
+    rect(x, 0, 24, w, 8, PAL.D);
+    dither(x, 55, 0, 25, w, 7, PAL.S);
+    stamp(x, SPR.MAILBOX, 30, 14, 1);
+    stamp(x, SPR.POSTMAN, 8, 10, 1);
+    /* 包裹 */
+    rect(x, 24, 21, 4, 3, PAL.O);
+    rect(x, 24, 22, 4, 1, PAL.K);
+    rect(x, 25, 21, 1, 3, PAL.K);
+  },
+
+  p5: function(x, frame, w, h){
+    bgFill(x, w, h, PAL.D);
+    dither(x, 66, 0, 0, w, h, PAL.N);
+    stamp(x, SPR.LETTER, 16, 11, 1);
+    stamp(x, SPR.SPARK, 4, 4, 1);
+    stamp(x, SPR.SPARK, 38, 7, 1);
+    stamp(x, SPR.SPARK, 8, 22, 1);
+    stamp(x, SPR.SPARK, 37, 21, 1);
+  },
+
+  p6: function(x, frame, w, h){
+    bgFill(x, w, h, '#1A1C2C');
+    starfield(x, 77, 26, w, h);
+    stamp(x, SPR.STAR, 16, 1, 1);
+    stamp(x, SPR.POSTMAN, 16, 18, 1);
+    stamp(x, SPR.MINILETTER, 30, 24, 1);
+  },
+
+  p7: function(x, frame, w, h){
+    bgFill(x, w, h, '#1A1C2C');
+    starfield(x, 88, 18, w, h);
+    /* 垂直坠落的光痕 */
+    var streaks = [[6,2,9],[15,6,11],[25,1,7],[33,8,13],[42,3,9],[20,12,6]];
+    for (var i = 0; i < streaks.length; i++) {
+      var s = streaks[i];
+      rect(x, s[0], s[1], 1, s[2], PAL.C);
+      rect(x, s[0], s[1], 1, 2, PAL.W);
+    }
+    stamp(x, SPR.ROCKET, 20, 12, 1);
+    var len = frame ? 4 : 6;
+    rect(x, 22, 25, 2, len, PAL.Y);
+    rect(x, 22, 25 + len - 2, 2, 2, PAL.O);
+  },
+
+  p8: function(x, frame, w, h){
+    bgFill(x, w, h, PAL.N);
+    starfield(x, 99, 40, w, h);
+    stamp(x, SPR.STAR, 8, 2, 2);
+    /* 星座连线 */
+    var dots = [[6,25],[13,28],[21,26],[29,28],[37,25],[43,27]];
+    for (var i = 0; i < dots.length; i++) {
+      rect(x, dots[i][0], dots[i][1], 1, 1, PAL.W);
+      if (i > 0) {
+        var a = dots[i - 1], b = dots[i];
+        var steps = Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]));
+        for (var k = 1; k < steps; k++) {
+          var px = Math.round(a[0] + (b[0] - a[0]) * k / steps);
+          var py = Math.round(a[1] + (b[1] - a[1]) * k / steps);
+          x.fillStyle = PAL.P;
+          x.fillRect(px, py, 1, 1);
+        }
+      }
+    }
+  },
+
+  soon: function(x, frame, w, h){
+    bgFill(x, w, h, PAL.D);
+    dither(x, 12, 0, 0, w, h, PAL.S);
+    stamp(x, SPR.STAR, 16, 8, 1);
+    stamp(x, SPR.SPARK, 6, 4, 1);
+    stamp(x, SPR.SPARK, 38, 22, 1);
+  },
+
+  hero: function(x, frame, w, h){
+    bgFill(x, w, h, '#1A1C2C');
+    starfield(x, 7, 26, w, 14);
+    /* 月牙 */
+    circle(x, 40, 5, 3, PAL.W);
+    circle(x, 39, 4, 2, '#1A1C2C');
+    /* 岛屿 */
+    circle(x, 14, 23, 7, PAL.G);
+    /* 海面 */
+    rect(x, 0, 22, w, 6, PAL.b);
+    rect(x, 0, 22, w, 1, PAL.C);
+    dither(x, 21, 0, 23, w, 5, PAL.C);
+    dither(x, 22, 0, 24, w, 4, PAL.W);
+    /* 棕榈 */
+    rect(x, 14, 10, 1, 7, PAL.T);
+    rect(x, 11, 9, 3, 1, PAL.L);
+    rect(x, 15, 9, 3, 1, PAL.L);
+    rect(x, 14, 8, 1, 1, PAL.L);
+    rect(x, 14, 11, 1, 1, PAL.O);
+    /* 小邮船 */
+    stamp(x, SPR.ROCKET, 34, 9, 1);
+    flame(x, 40, 22, frame);
+  }
+};
+function psetStar(x, px, py, col){ x.fillStyle = col; x.fillRect(px, py, 1, 1); }
+
+/* ==========================================================
+   6. 逐帧动画登记（火箭尾焰，steps 感逐帧）
+   ========================================================== */
+var ANIM = [];
+var animTimer = null;
+function registerAnim(c, key){
+  ANIM.push({ c:c, key:key, frame:0 });
+  if (!animTimer && !RM) {
+    animTimer = setInterval(function(){
+      for (var i = 0; i < ANIM.length; i++) {
+        var a = ANIM[i];
+        a.frame = a.frame ? 0 : 1;
+        a.c._x.clearRect(0, 0, a.c.width, a.c.height);
+        BUILD[a.key](a.c._x, a.frame, a.c.width, a.c.height);
+      }
+    }, 380);
+  }
+}
+function clearAnim(){
+  ANIM = [];
+  if (animTimer) { clearInterval(animTimer); animTimer = null; }
+}
+
+/* ==========================================================
+   7. 封面 / 主视觉渲染
+   ========================================================== */
+function drawCover(canvas, comic, idx){
+  canvas.width = 24; canvas.height = 24;
+  var x = ctxOf(canvas);
+  bgFill(x, 24, 24, comic.bg);
+  /* 外框 */
+  x.fillStyle = PAL.K;
+  x.fillRect(0, 0, 24, 1); x.fillRect(0, 23, 24, 1);
+  x.fillRect(0, 0, 1, 24); x.fillRect(23, 0, 1, 24);
+  /* 背景点缀星 */
+  var deco = [[3,3],[20,2],[2,20],[21,20],[12,2]];
+  x.fillStyle = LIGHT_BG[comic.bg] ? PAL.S : PAL.W;
+  for (var i = 0; i < deco.length; i++) x.fillRect(deco[i][0], deco[i][1], 1, 1);
+  /* 主图案 */
+  stamp(x, SPR[comic.motif], 4, 4, 1);
+}
+
+function renderStaticArt(){
+  drawGrid($('logoArt'), SPR.STAR);
+  drawGrid($('bootStar'), SPR.STAR);
+  var heroCv = $('heroArt');
+  heroCv.width = 48; heroCv.height = 28;
+  heroCv._x = ctxOf(heroCv);
+  BUILD.hero(heroCv._x, 0, 48, 28);
+  if (!RM) {
+    ANIM.push({ c:heroCv, key:'hero', frame:0 });
+    animTimer = setInterval(function(){
+      for (var i = 0; i < ANIM.length; i++) {
+        var a = ANIM[i];
+        if (a.key !== 'hero') continue;
+        a.frame = a.frame ? 0 : 1;
+        a.c._x.clearRect(0, 0, a.c.width, a.c.height);
+        BUILD.hero(a.c._x, a.frame, 48, 28);
+      }
+    }, 380);
+  }
+}
+
+/* ==========================================================
+   8. 背景星星
+   ========================================================== */
+function buildBgStars(){
+  var wrap = $('bgstars');
+  var f = rng(42);
+  var frag = document.createDocumentFragment();
+  for (var i = 0; i < 44; i++) {
+    var b = document.createElement('b');
+    b.style.left = (f() * 100).toFixed(2) + '%';
+    b.style.top = (f() * 100).toFixed(2) + '%';
+    b.style.animationDuration = (0.9 + f() * 1.6).toFixed(2) + 's';
+    b.style.animationDelay = (f() * 1.4).toFixed(2) + 's';
+    if (f() > 0.8) { b.style.background = PAL.C; }
+    frag.appendChild(b);
+  }
+  wrap.appendChild(frag);
+}
+
+/* ==========================================================
+   9. 卡带封面架 + 分类筛选
+   ========================================================== */
+var CATS = ['all', '科幻', '热血', '恋爱', '悬疑', '搞笑', '日常', '奇幻', '都市'];
+var cardEls = [];
+
+function buildShelf(){
+  var grid = $('shelfGrid');
+  var frag = document.createDocumentFragment();
+  COMICS.forEach(function(c, i){
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cart';
+    btn.setAttribute('aria-label', '插入卡带：《' + c.t + '》');
+    btn.innerHTML =
+      '<span class="ridges" aria-hidden="true"></span>' +
+      '<span class="label">' +
+        '<canvas class="cart-art" aria-hidden="true"></canvas>' +
+        '<strong class="cart-title">' + c.t + '</strong>' +
+        '<span class="cart-author">作者 · ' + c.a + '</span>' +
+        '<span class="cart-tags">' + c.tags + '</span>' +
+        '<span class="cart-status ' + (c.st === 'run' ? 'st-run' : 'st-end') + '">' + c.stTxt + '</span>' +
+        '<span class="cart-cta">▶ PUSH START</span>' +
+      '</span>';
+    var cv = btn.querySelector('canvas');
+    drawCover(cv, c, i);
+    btn.addEventListener('click', function(){ pickComic(i, btn); });
+    cardEls.push({ el:btn, cats:c.cats });
+    frag.appendChild(btn);
+  });
+  grid.appendChild(frag);
+
+  /* 分类按钮 */
+  var bar = $('filterBar');
+  CATS.forEach(function(cat, i){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pbtn small fbtn' + (i === 0 ? ' is-on' : '');
+    b.textContent = cat === 'all' ? '全部' : cat;
+    b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
+    b.addEventListener('click', function(){ applyFilter(cat, b); });
+    bar.appendChild(b);
+  });
+}
+
+function applyFilter(cat, btn){
+  var btns = document.querySelectorAll('.fbtn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle('is-on', btns[i] === btn);
+    btns[i].setAttribute('aria-pressed', btns[i] === btn ? 'true' : 'false');
+  }
+  var shown = 0;
+  for (var j = 0; j < cardEls.length; j++) {
+    var ok = cat === 'all' || cardEls[j].cats.indexOf(cat) !== -1;
+    cardEls[j].el.style.display = ok ? '' : 'none';
+    if (ok) shown++;
+  }
+  $('filterCount').textContent = 'CARTRIDGES ' + shown + ' / ' + COMICS.length;
+  Snd.click();
+  showToast('分类：' + (cat === 'all' ? '全部' : cat) + ' · ' + shown + ' 盘卡带');
+}
+
+/* ==========================================================
+   10. Toast
+   ========================================================== */
+var toastTimer = null;
+function showToast(msg){
+  var t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+}
+
+/* ==========================================================
+   11. 追更日历
+   ========================================================== */
+function buildWeekly(){
+  var order = [1, 2, 3, 4, 5, 6, 0];
+  var CN = ['周日','周一','周二','周三','周四','周五','周六'];
+  var EN = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  var today = new Date().getDay();
+  var grid = $('weekGrid');
+  var frag = document.createDocumentFragment();
+  order.forEach(function(d){
+    var cell = el('div', 'day' + (d === today ? ' today' : ''), frag);
+    cell.innerHTML =
+      '<span class="day-en">' + EN[d] + '</span>' +
+      '<span class="day-cn">' + CN[d] + (d === today ? '<span class="today-badge">TODAY</span>' : '') + '</span>' +
+      '<ul></ul>';
+    var ul = cell.querySelector('ul');
+    var list = [];
+    COMICS.forEach(function(c){
+      if (c.day === d) list.push(c.t);
+    });
+    if (!list.length) {
+      var li = el('li', '', ul);
+      li.textContent = '休刊日 · 岛上休息';
+      li.style.color = PAL.S;
+      li.style.color = '#566C86';
+    } else {
+      list.forEach(function(t){ el('li', '', ul).textContent = t; });
+    }
+  });
+  grid.appendChild(frag);
+  $('weekNote').textContent = '今天是' + CN[today] + ' · 今日上岛：' +
+    (COMICS.filter(function(c){ return c.day === today; }).map(function(c){ return '《' + c.t + '》'; }).join('、') || '无更新，放心玩') ;
+}
+
+/* ==========================================================
+   12. 高分榜（HI-SCORE）
+   ========================================================== */
+var RK = ['1ST','2ND','3RD','4TH','5TH','6TH','7TH','8TH','9TH','10TH'];
+var rankDone = false;
+
+function buildRank(){
+  var list = $('rankList');
+  var frag = document.createDocumentFragment();
+  RANK.forEach(function(r, i){
+    var c = COMICS[r.i];
+    var li = el('li', 'rank-row r' + (i + 1), frag);
+    li.innerHTML =
+      '<span class="rk" aria-hidden="true">' + RK[i] + '</span>' +
+      '<div class="rmain">' +
+        '<span class="rtitle">' + c.t +
+          '<span class="rflag ' + r.flag + '">' + FLAG_TXT[r.flag] + '</span>' +
+        '</span>' +
+        '<span class="rauthor">' + c.a + ' · ' + c.tags + '</span>' +
+      '</div>' +
+      '<span class="rscore" data-score="' + r.score + '">0000000</span>';
+  });
+  list.appendChild(frag);
+
+  if (!('IntersectionObserver' in window)) { fillScores(); return; }
+  var io = new IntersectionObserver(function(entries){
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].isIntersecting && !rankDone) {
+        rankDone = true;
+        if (RM) fillScores();
+        else countUp();
+        io.disconnect();
+      }
+    }
+  }, { threshold: 0.25 });
+  io.observe(list);
+}
+function fillScores(){
+  var cells = document.querySelectorAll('.rscore');
+  for (var i = 0; i < cells.length; i++) {
+    cells[i].textContent = String(cells[i].getAttribute('data-score'));
+  }
+}
+function countUp(){
+  var cells = document.querySelectorAll('.rscore');
+  var t0 = null;
+  function step(ts){
+    if (!t0) t0 = ts;
+    var p = Math.min(1, (ts - t0) / 900);
+    for (var i = 0; i < cells.length; i++) {
+      var target = parseInt(cells[i].getAttribute('data-score'), 10);
+      cells[i].textContent = String(Math.floor(target * p));
+    }
+    if (p < 1) requestAnimationFrame(step);
+    else fillScores();
+  }
+  requestAnimationFrame(step);
+}
+
+/* ==========================================================
+   13. 开机序列
+   ========================================================== */
+var bootPhase = 0; /* 0 待机 1 加载 2 完成 */
+var TIPS = [
+  '提示：对话框文字可点击一键全显',
+  '提示：右上角可关闭 CRT 扫描线',
+  '提示：卡带要插稳，阅读才不会卡壳',
+  '警告：拔卡带前请先存档（虽然本机不能存档）',
+  '提示：周五 20:00，长安钟楼准时开闸',
+  '提示：周三凌晨的深夜面馆只招待有故事的食客'
+];
+
+function bootKey(e){
+  if (bootPhase === 0) {
+    e.preventDefault();
+    startLoading();
+  }
+}
+function startLoading(){
+  if (bootPhase !== 0) return;
+  bootPhase = 1;
+  Snd.click();
+  $('bootStart').hidden = true;
+  $('bootLoad').hidden = false;
+  var fill = $('bootFill');
+  var pct = $('bootPct');
+  var tip = $('bootTip');
+  var bar = $('boot').querySelector('.ldbar');
+  var steps = 16;
+  if (RM) {
+    fill.style.width = '100%';
+    pct.textContent = '100%';
+    bar.setAttribute('aria-valuenow', '100');
+    finishBoot();
+    return;
+  }
+  var cur = 0;
+  var tipIdx = Math.floor(Math.random() * TIPS.length);
+  tip.textContent = TIPS[tipIdx];
+  var tipTimer = setInterval(function(){
+    tipIdx = (tipIdx + 1) % TIPS.length;
+    tip.textContent = TIPS[tipIdx];
+  }, 620);
+  var timer = setInterval(function(){
+    cur++;
+    var p = Math.round(cur / steps * 100);
+    fill.style.width = p + '%';
+    pct.textContent = p + '%';
+    bar.setAttribute('aria-valuenow', String(p));
+    beep(300 + cur * 40, 0.03, 0.02);
+    if (cur >= steps) {
+      clearInterval(timer);
+      clearInterval(tipTimer);
+      setTimeout(finishBoot, 220);
+    }
+  }, 68);
+}
+function finishBoot(){
+  if (bootPhase === 2) return;
+  bootPhase = 2;
+  var boot = $('boot');
+  boot.classList.add('hide');
+  document.body.classList.remove('locked');
+  Snd.clear();
+  setTimeout(function(){ boot.hidden = true; }, RM ? 50 : 520);
+}
+
+/* ==========================================================
+   14. 卡带插入动画 + 阅读器
+   ========================================================== */
+var picking = false;
+var lastCard = null;
+var lockCount = 0;
+function lockScroll(){ lockCount++; document.body.classList.add('locked'); }
+function unlockScroll(){
+  lockCount = Math.max(0, lockCount - 1);
+  if (!lockCount) document.body.classList.remove('locked');
+}
+
+function pickComic(i, cardEl){
+  if (picking) return;
+  picking = true;
+  lastCard = cardEl || null;
+  Snd.click();
+  var c = COMICS[i];
+  var ov = $('cartOverlay');
+  drawCover($('cartArt'), c, i);
+  $('cartName').textContent = '《' + c.t + '》';
+  $('cartHint').textContent = '正在插入卡带……';
+  ov.classList.remove('loaded');
+  ov.hidden = false;
+  lockScroll();
+  if (RM) {
+    ov.hidden = true;
+    picking = false;
+    openReader(i);
+    return;
+  }
+  Snd.insert();
+  /* 强制重启动画 */
+  ov.classList.remove('play');
+  void ov.offsetWidth;
+  ov.classList.add('play');
+  setTimeout(function(){
+    ov.classList.add('loaded');
+    $('cartHint').textContent = 'NOW LOADING……';
+  }, 700);
+  setTimeout(function(){
+    ov.classList.add('play-done');
+    ov.hidden = true;
+    ov.classList.remove('play', 'loaded', 'play-done');
+    picking = false;
+    openReader(i);
+  }, 1450);
+}
+
+/* ---------- 阅读器 ---------- */
+var readerIO = null;
+var typers = [];
+var skipAll = false;
+var panelTotal = 0;
+
+function makePanelCanvas(key){
+  var c = scene(48, 32);
+  BUILD[key](c._x, 0, 48, 32);
+  return c;
+}
+function openReader(i){
+  var c = COMICS[i];
+  var full = (i === 0);
+  var script = full ? EP1 : [
+    { art:'soon', name:'系统', n:true, text:'《' + c.t + '》为试玩卡带：完整关卡制作中。先去《星屑信使》EP.01 冒险吧！' }
+  ];
+  $('rStage').textContent = full ? 'STAGE 01' : 'STAGE ??';
+  $('rTitle').textContent = '《' + c.t + '》' + (full ? ' · EP.01 最后一封手写信' : ' · 试玩版');
+  $('reader').setAttribute('aria-label', '阅读器：' + c.t);
+  var body = $('rBody');
+  body.innerHTML = '';
+  typers = [];
+  skipAll = false;
+  panelTotal = script.length;
+
+  var col = el('div', 'panel-col', body);
+  script.forEach(function(p, idx){
+    var fig = el('figure', 'panel', col);
+    var cv = makePanelCanvas(p.art);
+    if (p.art === 'p2' || p.art === 'p3' || p.art === 'p7') registerAnim(cv, p.art);
+    fig.appendChild(cv);
+    var cap = el('figcaption', 'dbox' + (p.n ? ' n' : ''), fig);
+    cap.innerHTML =
+      '<span class="dbox-name">' + p.name + '</span>' +
+      '<p class="dbox-text" title="点击一键全显"></p>' +
+      '<span class="dbox-next" aria-hidden="true">▼</span>' +
+      '<span class="dbox-hint">GRID ' + pad2(idx + 1) + '/' + pad2(panelTotal) + ' · 点击文字可跳过打字机</span>';
+    var textEl = cap.querySelector('.dbox-text');
+    var cur = el('i', 'tcur', textEl);
+    cur.textContent = '▌';
+    typers.push({ box:cap, textEl:textEl, cur:cur, full:p.text, pos:0, timer:null, started:false, done:false });
+    textEl.addEventListener('click', function(){ finishTyper(typers[idx]); });
+    fig.dataset.idx = String(idx);
+  });
+
+  /* CHAPTER CLEAR 横幅 */
+  var clear = el('div', 'clearbox', col);
+  clear.id = 'clearBox';
+  clear.innerHTML =
+    '<p class="clear-big">CHAPTER CLEAR!</p>' +
+    '<p class="clear-sub">' + (full ? 'EP.01 完 · 全 8 格投递完成 · HP 100%' : '试玩版结束 · 完整关卡制作中') + '</p>' +
+    '<div class="clear-btns">' +
+      '<button class="pbtn primary" data-act="next">▶ 下一话：' + (full ? 'EP.02 午夜来电' : '敬请期待') + '</button>' +
+      (full ? '' : '<button class="pbtn" data-act="goto">▶ 前往《星屑信使》EP.01</button>') +
+      '<button class="pbtn" data-act="back">返回卡带架</button>' +
+    '</div>';
+
+  var rd = $('reader');
+  rd.hidden = false;
+  rd.classList.add('open');
+  lockScroll();
+  body.scrollTop = 0;
+  updateReaderProgress();
+
+  /* 分格揭示 + 打字机 */
+  var panels = col.querySelectorAll('.panel');
+  if (RM) {
+    for (var k = 0; k < panels.length; k++) panels[k].classList.add('in');
+    finishAllTypers();
+  } else if ('IntersectionObserver' in window) {
+    readerIO = new IntersectionObserver(function(entries){
+      for (var j = 0; j < entries.length; j++) {
+        var en = entries[j];
+        if (!en.isIntersecting) continue;
+        en.target.classList.add('in');
+        var idx = parseInt(en.target.dataset.idx, 10);
+        if (!isNaN(idx)) startTyper(typers[idx]);
+        readerIO.unobserve(en.target);
+      }
+    }, { root: body, threshold: 0.18 });
+    for (var m = 0; m < panels.length; m++) readerIO.observe(panels[m]);
+  } else {
+    for (var n = 0; n < panels.length; n++) {
+      panels[n].classList.add('in');
+      startTyper(typers[n]);
+    }
+  }
+  /* CLEAR 横幅入场 + 通关音效 */
+  var clearBox = $('clearBox');
+  if ('IntersectionObserver' in window && !RM) {
+    var io2 = new IntersectionObserver(function(entries){
+      for (var q = 0; q < entries.length; q++) {
+        if (entries[q].isIntersecting) {
+          clearBox.classList.add('on');
+          Snd.clear();
+          io2.disconnect();
+        }
+      }
+    }, { root: body, threshold: 0.3 });
+    io2.observe(clearBox);
+  } else {
+    clearBox.classList.add('on');
+  }
+
+  $('closeBtn').focus();
+}
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+
+function startTyper(t){
+  if (!t || t.started) return;
+  t.started = true;
+  if (skipAll) { finishTyper(t); return; }
+  typeStep(t);
+}
+function typeStep(t){
+  if (t.done) return;
+  t.pos++;
+  var show = t.full.slice(0, t.pos);
+  t.textEl.textContent = show;
+  t.textEl.appendChild(t.cur);
+  if (t.pos % 2 === 0) Snd.tick();
+  if (t.pos >= t.full.length) { finishTyper(t); return; }
+  t.timer = setTimeout(function(){ typeStep(t); }, 30);
+}
+function finishTyper(t){
+  if (!t || t.done) return;
+  if (t.timer) clearTimeout(t.timer);
+  t.done = true;
+  t.pos = t.full.length;
+  t.textEl.textContent = t.full;
+  t.box.classList.add('done');
+}
+function finishAllTypers(){
+  for (var i = 0; i < typers.length; i++) finishTyper(typers[i]);
+}
+function closeReader(){
+  var rd = $('reader');
+  if (rd.hidden) return;
+  rd.hidden = true;
+  rd.classList.remove('open');
+  if (readerIO) { readerIO.disconnect(); readerIO = null; }
+  finishAllTypers();
+  clearAnim();
+  unlockScroll();
+  if (lastCard && lastCard.focus) lastCard.focus();
+}
+function updateReaderProgress(){
+  var body = $('rBody');
+  var max = body.scrollHeight - body.clientHeight;
+  var p = max > 0 ? Math.min(1, Math.max(0, body.scrollTop / max)) : 1;
+  var pct = Math.round(p * 100);
+  $('rFill').style.width = pct + '%';
+  $('rPct').textContent = pct + '%';
+  $('rBar').setAttribute('aria-valuenow', String(pct));
+  /* 当前格数：按已揭示面板位置估算（相对 rBody 视口） */
+  var panels = body.querySelectorAll('.panel');
+  var active = 0;
+  var bodyRect = body.getBoundingClientRect();
+  var line = body.clientHeight * 0.55;
+  for (var i = 0; i < panels.length; i++) {
+    if (panels[i].getBoundingClientRect().top - bodyRect.top <= line) active = i + 1;
+  }
+  $('rGrid').textContent = 'GRID ' + pad2(Math.max(1, active)) + '/' + pad2(panelTotal);
+}
+
+/* ==========================================================
+   15. 页脚 HP（全页阅读进度）
+   ========================================================== */
+function updatePageProgress(){
+  var doc = document.documentElement;
+  var max = doc.scrollHeight - window.innerHeight;
+  var p = max > 0 ? Math.min(1, Math.max(0, (window.pageYOffset || doc.scrollTop) / max)) : 0;
+  var pct = Math.round(p * 100);
+  $('pageFill').style.width = pct + '%';
+  $('pagePct').textContent = pct + '%';
+  $('pageBar').setAttribute('aria-valuenow', String(pct));
+}
+
+/* ==========================================================
+   16. 开关（声音 / CRT）与事件绑定
+   ========================================================== */
+function store(key, val){
+  try { localStorage.setItem(key, val); } catch (e) { /* 忽略 */ }
+}
+function load(key){
+  try { return localStorage.getItem(key); } catch (e) { return null; }
+}
+function initSwitches(){
+  var sBtn = $('soundBtn');
+  var cBtn = $('crtBtn');
+  if (load('manyu-crt') === 'off') {
+    document.body.classList.add('crt-off');
+    cBtn.textContent = 'CRT OFF';
+    cBtn.setAttribute('aria-pressed', 'false');
+  }
+  cBtn.addEventListener('click', function(){
+    var off = document.body.classList.toggle('crt-off');
+    cBtn.textContent = off ? 'CRT OFF' : 'CRT ON';
+    cBtn.setAttribute('aria-pressed', off ? 'false' : 'true');
+    store('manyu-crt', off ? 'off' : 'on');
+    Snd.click();
+    showToast(off ? 'CRT 扫描线：OFF' : 'CRT 扫描线：ON');
+  });
+  sBtn.addEventListener('click', function(){
+    soundOn = !soundOn;
+    sBtn.textContent = soundOn ? '♪ SOUND ON' : '♪ SOUND OFF';
+    sBtn.setAttribute('aria-pressed', soundOn ? 'true' : 'false');
+    store('manyu-sound', soundOn ? 'on' : 'off');
+    if (soundOn) Snd.clear();
+    showToast(soundOn ? '8-bit 音效：ON' : '8-bit 音效：OFF');
+  });
+  if (load('manyu-sound') === 'on') {
+    /* 记住了开启，但浏览器手势策略要求用户点击后才真正出声 */
+    soundOn = true;
+    sBtn.textContent = '♪ SOUND ON';
+    sBtn.setAttribute('aria-pressed', 'true');
+  }
+}
+
+function bindEvents(){
+  /* 开机 */
+  window.addEventListener('keydown', bootKey);
+  $('boot').addEventListener('click', function(){ if (bootPhase === 0) startLoading(); });
+
+  /* 阅读器进度 */
+  $('rBody').addEventListener('scroll', updateReaderProgress, { passive:true });
+
+  /* 阅读器内部按钮（事件委托） */
+  $('rBody').addEventListener('click', function(e){
+    var t = e.target.closest ? e.target.closest('[data-act]') : null;
+    if (!t) return;
+    var act = t.getAttribute('data-act');
+    if (act === 'back') { Snd.click(); closeReader(); }
+    else if (act === 'next') { Snd.click(); showToast('EP.02 正在赶工：作者小星去雨夜站台取材了'); }
+    else if (act === 'goto') {
+      Snd.click();
+      closeReader();
+      openReader(0);
+    }
+  });
+
+  /* 关闭 / 跳过 */
+  $('closeBtn').addEventListener('click', function(){ Snd.click(); closeReader(); });
+  $('skipBtn').addEventListener('click', function(){
+    Snd.click();
+    skipAll = true;
+    finishAllTypers();
+    showToast('已一键全显全部对话');
+  });
+  window.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && !$('reader').hidden) { closeReader(); }
+    else if (e.key === 'Escape' && !$('cartOverlay').hidden && !picking) {
+      $('cartOverlay').hidden = true;
+      unlockScroll();
+    }
+  });
+
+  /* 页脚 HP */
+  window.addEventListener('scroll', updatePageProgress, { passive:true });
+  window.addEventListener('resize', function(){
+    updatePageProgress();
+    if (!$('reader').hidden) updateReaderProgress();
+  });
+
+  /* 悬停音效（委托，去重防刷屏） */
+  var lastHover = null;
+  document.addEventListener('mouseover', function(e){
+    var t = e.target.closest ? e.target.closest('.pbtn,.cart,.navlink') : null;
+    if (t && t !== lastHover) { lastHover = t; Snd.hover(); }
+    if (!t) lastHover = null;
+  });
+}
+
+/* ==========================================================
+   17. 启动
+   ========================================================== */
+function init(){
+  buildBgStars();
+  renderStaticArt();
+  buildShelf();
+  buildWeekly();
+  buildRank();
+  initSwitches();
+  bindEvents();
+  updatePageProgress();
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+})();
+</script>
+</body>
+</html>

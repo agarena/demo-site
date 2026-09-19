@@ -1,0 +1,2770 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="慢速缓存 Slow Cache · 全息投影台 HOLOGRAM DECK：沈知远的个人博客与独立作品全息投影舱。四座投影基座，17 件作品线框重建，滚动巡航指挥台。">
+<title>慢速缓存 Slow Cache · 全息投影台 HOLOGRAM DECK</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23050A12'/%3E%3Crect x='6' y='6' width='20' height='20' fill='none' stroke='%2337E6FF' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%2337E6FF'/%3E%3C/svg%3E">
+<style>
+/* ==================================================================
+   01 · 令牌与重置 —— 风格皮肤：全息投影台 Hologram Deck
+   舱底黑 #050A12 | 全息青 #37E6FF | 深蓝描线 #1B4B7A
+   警示橙 #FF9F45 | 冷白 #E8F6FF
+   ================================================================== */
+:root{
+  --bg:#050A12;
+  --bg2:#081120;
+  --holo:#37E6FF;
+  --line:#1B4B7A;
+  --warn:#FF9F45;
+  --ink:#E8F6FF;
+  --dim:#9FC2DA;
+  --mut:#7292AB;
+  --panel:rgba(8,17,29,.94);
+  --panel2:rgba(11,23,38,.97);
+  --edge:rgba(55,230,255,.24);
+  --edge2:rgba(55,230,255,.1);
+  --c-ai:#37E6FF;
+  --c-web:#5EA0FF;
+  --c-health:#4DFFC4;
+  --c-game:#FFB454;
+  --c-info:#8EA8FF;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,"Courier New",monospace;
+  --sans:"PingFang SC","Microsoft YaHei","Source Han Sans SC",system-ui,-apple-system,sans-serif;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+html,body{background:var(--bg)}
+body{
+  font-family:var(--sans);
+  color:var(--ink);
+  line-height:1.7;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+body.locked{overflow:hidden}
+::selection{background:rgba(55,230,255,.35);color:#fff}
+a{color:var(--holo);text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+img,svg{display:block;max-width:100%}
+:focus-visible{outline:2px solid var(--holo);outline-offset:2px;border-radius:2px}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:#060c16}
+::-webkit-scrollbar-thumb{background:#173a56;border-radius:5px;border:2px solid #060c16}
+::-webkit-scrollbar-thumb:hover{background:#1f527a}
+
+/* ==================================================================
+   02 · 舞台分层：canvas 是舞台，UI 浮于其上
+   ================================================================== */
+#stage{
+  position:fixed;inset:0;z-index:0;
+  width:100%;height:100%;
+  display:block;
+  touch-action:pan-y;          /* 触屏：竖向滚动留给页面，横向拖拽旋转 */
+  cursor:grab;
+}
+#stage.dragging{cursor:grabbing}
+#stage.pointing{cursor:pointer}
+#no3d-bg{display:none}
+body.no3d #stage{display:none}
+body.no3d #no3d-bg{
+  display:block;position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(60% 50% at 20% 12%, rgba(55,230,255,.10), transparent 60%),
+    radial-gradient(50% 45% at 82% 78%, rgba(94,160,255,.09), transparent 60%),
+    radial-gradient(38% 36% at 60% 30%, rgba(77,255,196,.05), transparent 60%),
+    radial-gradient(1.5px 1.5px at 12% 22%, #9fd7ff 40%, transparent 41%),
+    radial-gradient(1.5px 1.5px at 34% 64%, #9fd7ff 40%, transparent 41%),
+    radial-gradient(1.5px 1.5px at 58% 18%, #bfe9ff 40%, transparent 41%),
+    radial-gradient(1.5px 1.5px at 76% 42%, #9fd7ff 40%, transparent 41%),
+    radial-gradient(1.5px 1.5px at 88% 82%, #bfe9ff 40%, transparent 41%),
+    radial-gradient(1.5px 1.5px at 22% 88%, #9fd7ff 40%, transparent 41%),
+    linear-gradient(180deg,#050A12 0%,#071223 55%,#050A12 100%);
+}
+#fx-vignette{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 42%, transparent 55%, rgba(2,5,10,.55) 100%);
+}
+#fx-scan{
+  position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(0deg, rgba(55,230,255,.028) 0 1px, transparent 1px 4px);
+  mix-blend-mode:screen;
+}
+main{position:relative;z-index:5}
+#space{height:520vh;pointer-events:none}
+#blog{pointer-events:auto;position:relative}
+#ui{position:fixed;inset:0;z-index:10;pointer-events:none}
+#ui a,#ui button,#ui input,#ui textarea,#ui select{pointer-events:auto}
+
+/* ==================================================================
+   03 · 加载幕（开机序列第一步）
+   ================================================================== */
+#curtain{
+  position:fixed;inset:0;z-index:100;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+  background:
+    radial-gradient(70% 55% at 50% 40%, rgba(55,230,255,.07), transparent 70%),
+    var(--bg);
+  transition:opacity .6s var(--ease),visibility .6s;
+  cursor:pointer;
+}
+#curtain.off{opacity:0;visibility:hidden;pointer-events:none}
+#curtain .cu-logo{
+  font-family:var(--mono);font-size:clamp(15px,2.6vw,22px);letter-spacing:.42em;
+  color:var(--holo);text-indent:.42em;
+  text-shadow:0 0 18px rgba(55,230,255,.65);
+  animation:cuPulse 1.6s ease-in-out infinite;
+}
+#curtain .cu-sub{font-family:var(--mono);font-size:12px;color:var(--mut);letter-spacing:.3em;text-indent:.3em}
+#curtain .cu-bar{
+  width:min(320px,70vw);height:3px;background:rgba(55,230,255,.14);
+  position:relative;overflow:hidden;border-radius:2px;
+}
+#curtain .cu-bar::after{
+  content:"";position:absolute;inset:0;transform-origin:left;
+  background:linear-gradient(90deg,transparent,var(--holo) 70%,#fff);
+  animation:cuBar 1.15s var(--ease) forwards;
+}
+#curtain .cu-skip{font-family:var(--mono);font-size:11px;color:var(--mut);letter-spacing:.2em}
+@keyframes cuBar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes cuPulse{0%,100%{opacity:.72}50%{opacity:1}}
+
+/* ==================================================================
+   04 · A 滚动通知条：三色辉光标 · 无缝滚动 · 悬停暂停
+   ================================================================== */
+#ticker{
+  position:fixed;top:0;left:0;right:0;z-index:30;
+  height:38px;display:flex;align-items:stretch;
+  background:linear-gradient(180deg,rgba(5,10,18,.96),rgba(5,10,18,.82));
+  border-bottom:1px solid rgba(55,230,255,.16);
+  overflow:hidden;
+  pointer-events:auto;
+}
+#ticker::after{
+  content:"";position:absolute;left:0;right:0;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--holo) 30%,var(--holo) 70%,transparent);
+  opacity:.5;
+}
+.tk-track{display:flex;width:max-content;align-items:center;animation:tkMove 72s linear infinite}
+#ticker:hover .tk-track,#ticker:focus-within .tk-track{animation-play-state:paused}
+@keyframes tkMove{to{transform:translateX(-50%)}}
+.tkset{display:flex;align-items:center}
+.tk{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:0 26px;white-space:nowrap;
+  font-size:13px;color:var(--dim);
+}
+a.tk{transition:text-shadow .2s,color .2s}
+a.tk:hover,a.tk:focus-visible{color:var(--ink);text-shadow:0 0 10px rgba(55,230,255,.6)}
+a.tk .tx{border-bottom:1px dashed rgba(55,230,255,.35);padding-bottom:1px}
+.bd{
+  font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-indent:.18em;
+  padding:2px 7px 1px;border-radius:2px;border:1px solid;flex:none;
+}
+.bd-upd{color:var(--c-ai);border-color:rgba(55,230,255,.55);background:rgba(55,230,255,.08);box-shadow:0 0 8px rgba(55,230,255,.35),inset 0 0 6px rgba(55,230,255,.12)}
+.bd-info{color:var(--c-info);border-color:rgba(142,168,255,.55);background:rgba(142,168,255,.08);box-shadow:0 0 8px rgba(142,168,255,.35),inset 0 0 6px rgba(142,168,255,.12)}
+.bd-pre{color:var(--warn);border-color:rgba(255,159,69,.55);background:rgba(255,159,69,.08);box-shadow:0 0 8px rgba(255,159,69,.35),inset 0 0 6px rgba(255,159,69,.12)}
+.tk .arr{font-family:var(--mono);color:var(--holo);opacity:.8}
+
+/* ==================================================================
+   05 · 刊头 topbar
+   ================================================================== */
+#topbar{
+  position:fixed;left:0;right:0;top:38px;z-index:20;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px clamp(16px,4vw,44px);
+  pointer-events:none;
+}
+#topbar .brand{display:flex;flex-direction:column;gap:2px;pointer-events:auto}
+#topbar .brand b{
+  font-size:clamp(17px,2.2vw,23px);letter-spacing:.14em;font-weight:700;color:var(--ink);
+  text-shadow:0 0 16px rgba(55,230,255,.4);
+}
+#topbar .brand b em{font-style:normal;color:var(--holo)}
+#topbar .brand span{font-family:var(--mono);font-size:10px;letter-spacing:.32em;color:var(--mut)}
+#topbar nav{display:flex;gap:8px;pointer-events:auto;align-items:center}
+#topbar nav a,#topbar nav button{
+  font-family:var(--mono);font-size:12px;letter-spacing:.16em;
+  color:var(--dim);background:rgba(8,17,29,.6);
+  border:1px solid rgba(55,230,255,.2);
+  padding:7px 14px;border-radius:3px;
+  transition:all .22s var(--ease);
+}
+#topbar nav a:hover,#topbar nav button:hover{
+  color:var(--ink);border-color:var(--holo);
+  box-shadow:0 0 14px rgba(55,230,255,.3),inset 0 0 10px rgba(55,230,255,.08);
+  text-shadow:0 0 8px rgba(55,230,255,.6);
+}
+#topbar nav .nav-contact{color:var(--warn);border-color:rgba(255,159,69,.35)}
+#topbar nav .nav-contact:hover{border-color:var(--warn);box-shadow:0 0 14px rgba(255,159,69,.3)}
+
+/* ==================================================================
+   06 · 左侧基座索引 deck-index
+   ================================================================== */
+#deck-index{
+  position:fixed;left:clamp(12px,2.6vw,34px);top:50%;z-index:20;
+  transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:10px;
+  pointer-events:none;
+  transition:opacity .5s,visibility .5s;
+}
+#deck-index.away{opacity:0;visibility:hidden}
+#deck-index .di-cap{
+  font-family:var(--mono);font-size:10px;letter-spacing:.3em;color:var(--mut);
+  margin-bottom:4px;pointer-events:auto;
+}
+.di-btn{
+  pointer-events:auto;
+  display:flex;align-items:center;gap:10px;
+  min-width:172px;padding:9px 13px;
+  background:linear-gradient(90deg,rgba(8,17,29,.78),rgba(8,17,29,.35));
+  border:1px solid rgba(55,230,255,.16);border-left:2px solid var(--cat,#37E6FF);
+  border-radius:3px;color:var(--dim);text-align:left;
+  transition:all .25s var(--ease);
+}
+.di-btn:hover,.di-btn:focus-visible{
+  transform:translateX(5px);color:var(--ink);
+  border-color:var(--cat,#37E6FF);
+  box-shadow:-6px 0 18px -6px var(--cat,#37E6FF),inset 0 0 14px rgba(55,230,255,.05);
+}
+.di-btn .no{font-family:var(--mono);font-size:11px;color:var(--cat,#37E6FF);opacity:.9}
+.di-btn .nm{font-size:13px;letter-spacing:.1em;flex:1}
+.di-btn .st{
+  font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--mut);
+  display:flex;align-items:center;gap:5px;
+}
+.di-btn .st::before{
+  content:"";width:5px;height:5px;border-radius:50%;
+  background:var(--mut);box-shadow:0 0 6px var(--mut);
+}
+.di-btn .st.on{color:var(--cat,#37E6FF)}
+.di-btn .st.on::before{background:var(--cat,#37E6FF);box-shadow:0 0 7px var(--cat,#37E6FF);animation:dotPulse 1.8s ease-in-out infinite}
+.di-btn .st.re{color:var(--warn)}
+.di-btn .st.re::before{background:var(--warn);box-shadow:0 0 7px var(--warn);animation:dotPulse .5s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+/* ==================================================================
+   07 · 左下读数 readout + 底部提示 hint
+   ================================================================== */
+#readout{
+  position:fixed;left:clamp(14px,3vw,40px);bottom:18px;z-index:20;
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em;
+  color:var(--mut);pointer-events:none;
+  text-shadow:0 0 8px rgba(55,230,255,.25);
+  display:flex;gap:18px;
+}
+#readout b{color:var(--holo);font-weight:400}
+#hint{
+  position:fixed;left:50%;bottom:20px;z-index:20;transform:translateX(-50%);
+  font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-indent:.24em;
+  color:var(--dim);white-space:nowrap;pointer-events:none;
+  padding:8px 18px;border:1px solid rgba(55,230,255,.16);border-radius:20px;
+  background:rgba(5,10,18,.55);backdrop-filter:blur(4px);
+  transition:opacity .8s,visibility .8s;
+  animation:hintFloat 3s ease-in-out infinite;
+}
+#hint.off{opacity:0;visibility:hidden}
+@keyframes hintFloat{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-5px)}}
+
+/* ==================================================================
+   08 · B 联系作者：悬浮全息信标 + 投影面板
+   ================================================================== */
+#beacon{
+  position:fixed;right:clamp(14px,3vw,36px);bottom:clamp(16px,3vh,30px);z-index:26;
+  width:58px;height:58px;border-radius:50%;
+  background:radial-gradient(circle at 38% 32%,rgba(55,230,255,.35),rgba(8,20,34,.9) 65%);
+  border:1px solid rgba(55,230,255,.5);
+  color:var(--holo);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;
+  box-shadow:0 0 18px rgba(55,230,255,.35),inset 0 0 14px rgba(55,230,255,.15);
+  transition:transform .25s var(--ease),box-shadow .25s;
+  font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-indent:.14em;
+}
+#beacon svg{width:18px;height:18px}
+#beacon::before,#beacon::after{
+  content:"";position:absolute;inset:-1px;border-radius:50%;
+  border:1px solid rgba(55,230,255,.5);
+  animation:bcRipple 2.6s ease-out infinite;
+}
+#beacon::after{animation-delay:1.3s}
+#beacon:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 0 26px rgba(55,230,255,.55),inset 0 0 16px rgba(55,230,255,.25)}
+@keyframes bcRipple{from{transform:scale(1);opacity:.8}to{transform:scale(1.75);opacity:0}}
+
+.layer{position:fixed;inset:0;z-index:50;visibility:hidden;pointer-events:none}
+.layer.open{visibility:visible;pointer-events:auto}
+.layer .mask{
+  position:absolute;inset:0;
+  background:rgba(3,7,13,.62);backdrop-filter:blur(3px);
+  opacity:0;transition:opacity .28s var(--ease);
+}
+.layer.open .mask{opacity:1}
+.layer .panel-box{
+  position:absolute;background:var(--panel2);
+  border:1px solid var(--edge);border-radius:6px;
+  box-shadow:0 0 0 1px rgba(55,230,255,.06),0 24px 70px rgba(0,0,0,.6),0 0 34px rgba(55,230,255,.08);
+  overflow:hidden;
+  transition:transform .28s var(--ease),opacity .28s var(--ease);
+}
+.layer .panel-box::before{ /* 顶部辉光描线 */
+  content:"";position:absolute;top:0;left:0;right:0;height:1px;z-index:1;
+  background:linear-gradient(90deg,transparent,var(--holo) 40%,var(--holo) 60%,transparent);
+  opacity:.7;
+}
+.layer .panel-box::after{ /* 全息扫描线纹理 */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(55,230,255,.024) 0 1px,transparent 1px 5px);
+}
+#contact .panel-box{
+  right:clamp(12px,3vw,40px);bottom:clamp(88px,12vh,120px);
+  width:min(420px,calc(100vw - 24px));max-height:min(78vh,640px);
+  transform:translateY(26px) scale(.97);opacity:0;
+  display:flex;flex-direction:column;
+}
+#contact.open .panel-box{transform:none;opacity:1}
+.pb-head{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 18px 12px;border-bottom:1px solid rgba(55,230,255,.14);
+  flex:none;position:relative;z-index:2;
+}
+.pb-head .pb-ico{
+  width:34px;height:34px;flex:none;border-radius:4px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--edge);color:var(--holo);
+  background:rgba(55,230,255,.06);
+}
+.pb-head h3{font-size:15px;letter-spacing:.14em}
+.pb-head .pb-sub{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--mut)}
+.pb-x{
+  margin-left:auto;width:30px;height:30px;flex:none;border-radius:3px;
+  border:1px solid rgba(55,230,255,.25);background:transparent;color:var(--dim);
+  font-family:var(--mono);font-size:14px;line-height:1;
+  transition:all .2s;
+}
+.pb-x:hover{color:var(--warn);border-color:var(--warn);box-shadow:0 0 10px rgba(255,159,69,.3)}
+.pb-body{padding:16px 18px 18px;overflow-y:auto;position:relative;z-index:2}
+.ct-sign{
+  font-size:13px;color:var(--dim);border-left:2px solid var(--holo);
+  padding:2px 0 2px 12px;margin-bottom:14px;
+}
+.ct-mail{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.ct-mail .addr{font-family:var(--mono);font-size:13px;color:var(--holo);word-break:break-all}
+.ct-mail .addr::selection{background:rgba(55,230,255,.4)}
+.mini-btn{
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+  padding:5px 12px;border-radius:3px;
+  border:1px solid rgba(55,230,255,.4);color:var(--holo);background:rgba(55,230,255,.06);
+  transition:all .2s;
+}
+.mini-btn:hover{background:rgba(55,230,255,.14);box-shadow:0 0 12px rgba(55,230,255,.3)}
+.mini-btn.warm{color:var(--warn);border-color:rgba(255,159,69,.4);background:rgba(255,159,69,.05)}
+.mini-btn.warm:hover{background:rgba(255,159,69,.12);box-shadow:0 0 12px rgba(255,159,69,.3)}
+.ct-grid{display:flex;gap:14px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap}
+.ct-soc{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;min-width:180px}
+.ct-soc a{
+  display:flex;align-items:center;gap:7px;
+  font-family:var(--mono);font-size:11.5px;color:var(--dim);
+  border:1px solid rgba(55,230,255,.16);border-radius:3px;padding:7px 10px;
+  transition:all .2s;
+}
+.ct-soc a:hover{color:var(--ink);border-color:var(--holo);box-shadow:0 0 10px rgba(55,230,255,.2)}
+.ct-soc a i{width:7px;height:7px;flex:none;border-radius:50%;background:var(--holo);box-shadow:0 0 6px var(--holo)}
+.ct-qr{flex:none;text-align:center}
+.ct-qr .qrbox{
+  width:104px;height:104px;padding:7px;background:#eaf6ff;border-radius:4px;
+  box-shadow:0 0 16px rgba(55,230,255,.4);
+  animation:qrGlow 3s ease-in-out infinite;
+}
+@keyframes qrGlow{0%,100%{box-shadow:0 0 10px rgba(55,230,255,.3)}50%{box-shadow:0 0 24px rgba(55,230,255,.55)}}
+.ct-qr p{font-family:var(--mono);font-size:10px;color:var(--mut);margin-top:6px;letter-spacing:.14em}
+.ct-form label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;color:var(--mut);margin:10px 0 5px}
+.ct-form input,.ct-form textarea{
+  width:100%;background:rgba(5,12,22,.8);color:var(--ink);
+  border:1px solid rgba(55,230,255,.2);border-radius:3px;
+  padding:9px 11px;font-family:var(--sans);font-size:13px;
+  transition:border-color .2s,box-shadow .2s;
+}
+.ct-form textarea{min-height:88px;resize:vertical}
+.ct-form input:focus,.ct-form textarea:focus{
+  outline:none;border-color:var(--holo);box-shadow:0 0 0 2px rgba(55,230,255,.14),0 0 14px rgba(55,230,255,.15);
+}
+.ct-form .err{display:none;font-size:11.5px;color:#FFB454;margin-top:4px}
+.ct-form .bad input,.ct-form .bad textarea{border-color:var(--warn);box-shadow:0 0 10px rgba(255,159,69,.2)}
+.ct-form .bad .err{display:block}
+.ct-form .row2{display:flex;gap:10px}
+.ct-form .row2>div{flex:1;min-width:0}
+.ct-send{
+  margin-top:14px;width:100%;padding:11px;
+  font-size:14px;letter-spacing:.3em;text-indent:.3em;color:#04121e;font-weight:700;
+  background:linear-gradient(90deg,var(--holo),#7ff0ff);
+  border:none;border-radius:3px;
+  box-shadow:0 0 18px rgba(55,230,255,.35);
+  transition:all .22s var(--ease);
+}
+.ct-send:hover{box-shadow:0 0 28px rgba(55,230,255,.6);transform:translateY(-1px)}
+.ct-ok{display:none;text-align:center;padding:26px 8px 14px}
+.ct-ok .ok-ico{font-size:30px;color:var(--c-health);text-shadow:0 0 16px rgba(77,255,196,.6)}
+.ct-ok p{margin-top:10px;font-size:13.5px;color:var(--dim)}
+.ct-done .ct-form{display:none}
+.ct-done .ct-ok{display:block}
+
+/* ==================================================================
+   09 · C 作品区：分类投影面板（点击基座浮现）
+   ================================================================== */
+#cat-panel .panel-box{
+  top:0;right:0;bottom:0;
+  width:min(480px,100vw);
+  border-radius:0;border-top:none;border-bottom:none;border-right:none;
+  transform:translateX(40px);opacity:0;
+  display:flex;flex-direction:column;
+  background:linear-gradient(270deg,rgba(9,19,33,.97),rgba(7,14,25,.97));
+}
+#cat-panel.open .panel-box{transform:none;opacity:1}
+.cp-body{display:flex;flex-direction:column;min-height:0;flex:1;position:relative;z-index:2}
+.cp-list{flex:1;overflow-y:auto;padding:12px 16px 22px;display:flex;flex-direction:column;gap:12px}
+.cp-count{font-family:var(--mono);font-size:10px;letter-spacing:.24em;color:var(--mut);padding:2px 2px 8px}
+.wk-card{
+  display:flex;gap:13px;align-items:stretch;text-align:left;width:100%;
+  background:rgba(10,20,34,.6);
+  border:1px solid rgba(55,230,255,.14);border-radius:5px;
+  padding:11px;color:var(--ink);
+  transition:all .22s var(--ease);
+  position:relative;overflow:hidden;
+}
+.wk-card::after{
+  content:"";position:absolute;top:0;bottom:0;left:0;width:2px;
+  background:var(--cat,#37E6FF);opacity:0;transition:opacity .22s;
+  box-shadow:0 0 10px var(--cat,#37E6FF);
+}
+.wk-card:hover,.wk-card:focus-visible{
+  border-color:var(--cat,#37E6FF);
+  background:rgba(14,28,46,.85);
+  transform:translateX(-4px);
+  box-shadow:-8px 0 22px -10px var(--cat,#37E6FF);
+}
+.wk-card:hover::after{opacity:1}
+.wk-thumb{
+  width:104px;height:66px;flex:none;border-radius:3px;overflow:hidden;
+  border:1px solid rgba(55,230,255,.18);position:relative;background:#081120;
+}
+.wk-thumb svg{width:100%;height:100%}
+.wk-thumb::after{ /* 全息扫描线遮罩 */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(55,230,255,.05) 0 1px,transparent 1px 4px);
+}
+.wk-meta{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.wk-meta h4{font-size:14.5px;letter-spacing:.06em;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.wk-meta h4 .slug{font-family:var(--mono);font-size:10px;color:var(--mut);letter-spacing:.08em;font-weight:400}
+.wk-meta p{font-size:12px;color:var(--dim);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.wk-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:3px}
+.wk-tags span{
+  font-family:var(--mono);font-size:9.5px;color:var(--cat,#37E6FF);
+  border:1px solid;padding:1px 7px;border-radius:2px;opacity:.85;
+}
+/* 懒加载骨架屏 shimmer（≥1 帧后再替换真实缩略图） */
+.skel{position:relative;overflow:hidden;background:#0a1524}
+.skel::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 30%,rgba(55,230,255,.14) 50%,transparent 70%);
+  animation:skShimmer 1.1s linear infinite;
+}
+@keyframes skShimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.cp-tip{
+  flex:none;padding:10px 18px;border-top:1px solid rgba(55,230,255,.12);
+  font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--mut);
+  display:flex;justify-content:space-between;
+}
+.cp-tip b{color:var(--cat,#37E6FF);font-weight:400}
+
+/* ==================================================================
+   10 · C 详情弹层（固化投影）
+   ================================================================== */
+#detail .panel-box{
+  left:50%;top:50%;
+  width:min(680px,calc(100vw - 28px));max-height:min(88vh,780px);
+  transform:translate(-50%,-46%) scale(.94);opacity:0;
+  display:flex;flex-direction:column;
+}
+#detail.open .panel-box{transform:translate(-50%,-50%) scale(1);opacity:1}
+.dl-body{overflow-y:auto;padding:18px 22px 24px;position:relative;z-index:2}
+.dl-hero{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.dl-thumb{
+  width:min(300px,100%);flex:1 1 240px;aspect-ratio:16/10;
+  border-radius:5px;overflow:hidden;position:relative;
+  border:1px solid rgba(55,230,255,.3);
+  box-shadow:0 0 24px rgba(55,230,255,.14),inset 0 0 30px rgba(55,230,255,.05);
+}
+.dl-thumb svg{width:100%;height:100%}
+.dl-thumb::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg,rgba(55,230,255,.055) 0 1px,transparent 1px 5px),
+    linear-gradient(120deg,transparent 42%,rgba(232,246,255,.09) 50%,transparent 58%);
+}
+.dl-head{flex:1 1 260px;min-width:0}
+.dl-head h3{font-size:21px;letter-spacing:.08em;line-height:1.35}
+.dl-head .slug{font-family:var(--mono);font-size:11px;color:var(--holo);letter-spacing:.2em;margin:3px 0 10px}
+.dl-head .desc{font-size:13.5px;color:var(--dim)}
+.dl-head .wk-tags{margin-top:10px}
+.dl-actions{display:flex;gap:10px;margin:16px 0 4px;flex-wrap:wrap}
+.dl-actions .mini-btn{
+  font-size:12px;padding:9px 18px;display:inline-flex;align-items:center;gap:8px;
+}
+.qa{margin-top:16px;border-top:1px dashed rgba(55,230,255,.18)}
+.qa-cap{font-family:var(--mono);font-size:10.5px;letter-spacing:.26em;color:var(--mut);padding:12px 0 4px}
+.qa-item{border:1px solid rgba(55,230,255,.13);border-radius:4px;margin-top:8px;overflow:hidden;background:rgba(9,18,31,.55)}
+.qa-q{
+  width:100%;display:flex;align-items:center;gap:10px;text-align:left;
+  background:none;border:none;color:var(--ink);
+  font-size:13.5px;padding:11px 13px;
+  transition:background .2s;
+}
+.qa-q:hover{background:rgba(55,230,255,.06)}
+.qa-q .qm{font-family:var(--mono);color:var(--cat,#37E6FF);font-size:12px;flex:none}
+.qa-q .ar{margin-left:auto;font-family:var(--mono);color:var(--mut);transition:transform .25s var(--ease);flex:none}
+.qa-item.open .qa-q .ar{transform:rotate(90deg);color:var(--holo)}
+.qa-a{
+  display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s var(--ease);
+}
+.qa-item.open .qa-a{grid-template-rows:1fr}
+.qa-a>div{overflow:hidden}
+.qa-a p{font-size:13px;color:var(--dim);padding:0 13px 12px 36px;line-height:1.75}
+.qa-a p .am{color:var(--cat,#37E6FF);font-family:var(--mono);margin-right:6px}
+
+/* ==================================================================
+   11 · D 博客本体（深底高对比面板）
+   ================================================================== */
+#blog{padding:0 clamp(0px,4vw,60px) 0}
+.blog-shell{max-width:1060px;margin:0 auto}
+.bl-panel{
+  background:var(--panel);
+  border:1px solid rgba(55,230,255,.15);
+  border-top:1px solid rgba(55,230,255,.4);
+  border-radius:8px 8px 0 0;
+  box-shadow:0 -18px 60px rgba(0,0,0,.55),0 0 40px rgba(55,230,255,.05);
+  padding:clamp(26px,5vw,58px) clamp(18px,5vw,64px) clamp(30px,5vw,54px);
+  backdrop-filter:blur(10px);
+}
+.bl-cap{
+  font-family:var(--mono);font-size:11px;letter-spacing:.34em;color:var(--holo);
+  display:flex;align-items:center;gap:14px;margin-bottom:18px;
+}
+.bl-cap::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(55,230,255,.4),transparent)}
+.bl-fore blockquote{
+  font-size:clamp(16px,2.2vw,19px);line-height:2.1;color:var(--ink);
+  border-left:3px solid var(--holo);padding:6px 0 6px 22px;
+  text-shadow:0 0 14px rgba(55,230,255,.12);
+}
+.bl-fore .sign{margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--mut);letter-spacing:.14em;padding-left:25px}
+#articles{margin-top:clamp(40px,7vw,64px)}
+.art-list{display:flex;flex-direction:column;gap:14px}
+.art-card{
+  border:1px solid rgba(55,230,255,.14);border-radius:6px;
+  background:rgba(9,18,31,.62);
+  transition:border-color .25s,box-shadow .25s;
+  overflow:hidden;
+}
+.art-card:hover{border-color:rgba(55,230,255,.4);box-shadow:0 0 24px rgba(55,230,255,.08)}
+.art-head{
+  width:100%;text-align:left;background:none;border:none;color:var(--ink);
+  display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  padding:17px 20px;
+}
+.art-head .ad{font-family:var(--mono);font-size:11.5px;color:var(--mut);letter-spacing:.06em;flex:none}
+.art-head h3{font-size:16.5px;letter-spacing:.04em;font-weight:600;flex:1;min-width:200px}
+.art-head .ac{
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--warn);
+  border:1px solid rgba(255,159,69,.4);padding:2px 9px;border-radius:2px;flex:none;
+}
+.art-head .ar{font-family:var(--mono);font-size:11px;color:var(--holo);flex:none;transition:transform .28s var(--ease)}
+.art-card.open .art-head .ar{transform:rotate(90deg)}
+.art-fold{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s var(--ease)}
+.art-card.open .art-fold{grid-template-rows:1fr}
+.art-fold>div{overflow:hidden}
+.art-body{
+  padding:4px 22px 22px;border-top:1px dashed rgba(55,230,255,.16);
+  font-size:14px;color:var(--dim);line-height:2;
+}
+.art-body p{margin:10px 0}
+.art-body h4{
+  font-size:14.5px;color:var(--holo);letter-spacing:.1em;margin:20px 0 6px;
+  text-shadow:0 0 10px rgba(55,230,255,.3);
+}
+.art-body strong{color:var(--ink)}
+.art-body em{font-style:normal;color:var(--warn)}
+.art-body table{
+  width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px;
+  font-family:var(--mono);
+}
+.art-body th,.art-body td{border:1px solid rgba(55,230,255,.18);padding:7px 10px;text-align:left}
+.art-body th{color:var(--holo);background:rgba(55,230,255,.06);font-weight:400;letter-spacing:.1em}
+.art-body .art-note{font-family:var(--mono);font-size:11px;color:var(--mut);letter-spacing:.12em;margin-top:14px}
+/* 入场显现（IntersectionObserver 驱动） */
+.rv{opacity:0;transform:translateY(22px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.rv.in{opacity:1;transform:none}
+#about{margin-top:clamp(40px,7vw,64px)}
+.about-card{
+  border:1px solid rgba(55,230,255,.14);border-radius:6px;
+  background:rgba(9,18,31,.62);padding:22px 24px;
+  display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;
+}
+.about-ava{
+  width:64px;height:64px;flex:none;border-radius:6px;position:relative;overflow:hidden;
+  border:1px solid var(--edge);background:#0a1524;
+}
+.about-ava svg{width:100%;height:100%}
+.about-card p{flex:1;min-width:240px;font-size:14px;color:var(--dim);line-height:2}
+.about-card p b{color:var(--ink)}
+#footer{
+  max-width:1060px;margin:0 auto;
+  padding:26px clamp(18px,5vw,64px) 40px;
+  display:flex;flex-direction:column;gap:14px;
+  font-family:var(--mono);font-size:11.5px;color:var(--mut);letter-spacing:.1em;
+}
+#footer .ft-row{display:flex;gap:8px 22px;flex-wrap:wrap;align-items:center}
+#footer a{color:var(--dim)}
+#footer a:hover{color:var(--holo);text-shadow:0 0 8px rgba(55,230,255,.5)}
+#footer .ft-line{height:1px;background:linear-gradient(90deg,transparent,rgba(55,230,255,.3),transparent)}
+#theme-toggle{display:inline-flex;align-items:center;gap:8px;background:none;border:none;color:var(--dim);font-family:var(--mono);font-size:11.5px;letter-spacing:.1em}
+#theme-toggle .sw{
+  width:34px;height:16px;border-radius:9px;position:relative;
+  border:1px solid rgba(55,230,255,.4);background:rgba(55,230,255,.1);
+}
+#theme-toggle .sw::after{
+  content:"";position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;
+  background:var(--holo);box-shadow:0 0 6px var(--holo);
+}
+#theme-toggle:hover{color:var(--ink)}
+
+/* ==================================================================
+   12 · WebGL 降级（no3d）：CSS 全息风卡片网格，功能 100% 保留
+   ================================================================== */
+#fallback{display:none;position:relative;z-index:5;padding:120px clamp(16px,4vw,50px) 60px;max-width:1180px;margin:0 auto}
+body.no3d #fallback{display:block}
+body.no3d #space,body.no3d #deck-index,body.no3d #readout,body.no3d #hint{display:none}
+#fallback .fb-cap{
+  font-family:var(--mono);font-size:12px;letter-spacing:.34em;color:var(--holo);margin-bottom:22px;
+  text-shadow:0 0 12px rgba(55,230,255,.5);
+}
+.fb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:16px}
+.fb-cat{
+  position:relative;border:1px solid var(--edge);border-radius:8px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(10,21,36,.92),rgba(7,14,25,.92));
+  box-shadow:0 0 26px rgba(55,230,255,.07);
+  padding:18px 16px 16px;
+}
+.fb-cat::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--cat,#37E6FF);box-shadow:0 0 14px var(--cat,#37E6FF);opacity:.8;
+}
+.fb-cat::after{ /* 扫描线遮罩 */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(55,230,255,.045) 0 1px,transparent 1px 4px);
+}
+.fb-cat h3{display:flex;align-items:baseline;gap:10px;font-size:16px;letter-spacing:.1em;margin-bottom:2px}
+.fb-cat h3 .no{font-family:var(--mono);font-size:11px;color:var(--cat,#37E6FF)}
+.fb-cat .en{font-family:var(--mono);font-size:9.5px;letter-spacing:.28em;color:var(--mut);margin-bottom:12px}
+.fb-cat .fb-open{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--cat,#37E6FF);
+  border:1px solid;padding:4px 12px;border-radius:3px;background:transparent;margin-bottom:12px;
+}
+.fb-cat .fb-open:hover{box-shadow:0 0 12px rgba(55,230,255,.3)}
+.fb-chips{display:flex;flex-direction:column;gap:7px;position:relative;z-index:1}
+.fb-chip{
+  text-align:left;background:rgba(55,230,255,.04);border:1px solid rgba(55,230,255,.14);
+  border-radius:4px;color:var(--dim);font-size:12.5px;padding:8px 11px;
+  transition:all .2s;
+}
+.fb-chip:hover{color:var(--ink);border-color:var(--cat,#37E6FF);box-shadow:0 0 12px -2px var(--cat,#37E6FF)}
+.fb-chip b{font-weight:600;color:var(--ink)}
+
+/* ==================================================================
+   13 · Toast
+   ================================================================== */
+#toast{
+  position:fixed;top:56px;left:50%;z-index:80;transform:translate(-50%,-14px);
+  font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;
+  color:var(--holo);background:rgba(7,16,28,.95);
+  border:1px solid var(--edge);border-radius:4px;
+  padding:10px 22px;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;
+  box-shadow:0 0 22px rgba(55,230,255,.25);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .25s,transform .25s var(--ease),visibility .25s;
+}
+#toast.show{opacity:1;visibility:visible;transform:translate(-50%,0)}
+
+/* ==================================================================
+   14 · 响应式：≥1200 / 768–1199 / ≤767 三档
+   ================================================================== */
+@media (max-width:1199px){
+  #readout{display:none}
+  .di-btn{min-width:0;padding:8px 11px}
+  .di-btn .nm{font-size:12px}
+  .di-btn .st{display:none}
+}
+@media (max-width:767px){
+  html{scroll-behavior:auto}
+  #ticker{height:34px}
+  .tk{font-size:12px;padding:0 18px}
+  #topbar{top:34px;padding:10px 14px}
+  #topbar nav a,#topbar nav button{padding:6px 10px;font-size:11px;letter-spacing:.08em}
+  #topbar nav .hide-m{display:none}
+  #deck-index{
+    left:0;right:0;top:auto;bottom:0;transform:none;
+    flex-direction:row;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+    background:linear-gradient(0deg,rgba(5,10,18,.96),rgba(5,10,18,.7) 80%,transparent);
+  }
+  #deck-index .di-cap{display:none}
+  .di-btn{flex:1;min-width:0;flex-direction:column;gap:3px;padding:8px 4px;border-left:none;border-top:2px solid var(--cat,#37E6FF);align-items:center}
+  .di-btn .nm{font-size:10.5px;letter-spacing:0}
+  .di-btn .no{font-size:9px}
+  #hint{display:none}
+  #beacon{width:50px;height:50px;bottom:calc(76px + env(safe-area-inset-bottom));right:14px}
+  #beacon::before,#beacon::after{display:none}
+  #cat-panel .panel-box{width:100vw;border-left:none}
+  #detail .panel-box{max-height:92vh}
+  .dl-hero{gap:12px}
+  .bl-panel{border-radius:0;border-left:none;border-right:none}
+  #contact .panel-box{right:8px;left:8px;width:auto}
+}
+@media (max-width:374px){
+  .tk{font-size:11px;padding:0 14px}
+  .di-btn .nm{font-size:9.5px}
+}
+
+/* ==================================================================
+   15 · 动效降级 prefers-reduced-motion：静态直出
+   ================================================================== */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .tk-track{animation:none}
+  #ticker{overflow-x:auto}
+  #ticker::-webkit-scrollbar{height:0}
+  #curtain .cu-logo,#curtain .cu-bar::after{animation:none}
+  #curtain .cu-bar::after{transform:scaleX(1)}
+  #beacon::before,#beacon::after,.di-btn .st.on::before,.di-btn .st.re::before{animation:none}
+  #hint,.rv{transition:none;animation:none}
+  .rv{opacity:1;transform:none}
+  .layer .mask,.layer .panel-box,#toast{transition:none}
+  .art-fold,.qa-a,.qa-q .ar{transition:none}
+  .about-ava,.ct-qr .qrbox{animation:none}
+  .skel::before{animation:none}
+  #fx-scan{opacity:.3}
+}
+</style>
+</head>
+<body>
+
+<!-- 3D 舞台：全屏指挥台 -->
+<canvas id="stage" aria-label="全息投影台三维场景：四座作品基座，可拖拽环视、滚动巡航、点击基座重建"></canvas>
+
+<!-- WebGL 降级背景（仅 body.no3d 显示） -->
+<div id="no3d-bg" aria-hidden="true"></div>
+
+<!-- 氛围叠层 -->
+<div id="fx-vignette" aria-hidden="true"></div>
+<div id="fx-scan" aria-hidden="true"></div>
+
+<!-- 加载幕（开机序列） -->
+<div id="curtain" role="button" tabindex="-1" aria-label="加载中，点击跳过开场动画">
+  <div class="cu-logo">SLOW CACHE // HOLOGRAM DECK</div>
+  <div class="cu-bar" aria-hidden="true"></div>
+  <div class="cu-sub">正在校准全息投影阵列 …</div>
+  <div class="cu-skip">点击任意位置跳过开场</div>
+</div>
+
+<main>
+  <!-- 滚动巡航区（scroll 驱动相机在基座间巡航） -->
+  <div id="space" aria-hidden="true"></div>
+
+  <!-- ============ D 博客本体 ============ -->
+  <section id="blog" aria-label="博客本体">
+    <div class="blog-shell">
+      <div class="bl-panel">
+        <div class="bl-cap">FOREWORD · 卷首语</div>
+        <div class="bl-fore rv">
+          <blockquote>欢迎来到我的公开笔记本。这里记录我做的小工具、写下的长句，以及一些和生活有关的慢实验。更新不快，但每一篇都经过缓存。</blockquote>
+          <p class="sign">—— 沈知远 @ 慢速缓存 Slow Cache</p>
+        </div>
+
+        <div id="articles">
+          <div class="bl-cap rv">ARCHIVE · 文章缓存 7 条</div>
+          <div class="art-list" id="art-list"><!-- JS 生成 --></div>
+        </div>
+
+        <div id="about">
+          <div class="bl-cap rv">ABOUT · 关于</div>
+          <div class="about-card rv">
+            <div class="about-ava" aria-hidden="true">
+              <svg viewBox="0 0 64 64">
+                <rect width="64" height="64" fill="#0a1524"/>
+                <circle cx="32" cy="25" r="11" fill="none" stroke="#37E6FF" stroke-width="1.6"/>
+                <path d="M12 56 Q32 38 52 56" fill="none" stroke="#37E6FF" stroke-width="1.6"/>
+                <rect x="4" y="4" width="56" height="56" fill="none" stroke="#1B4B7A" stroke-width="1" stroke-dasharray="4 3"/>
+              </svg>
+            </div>
+            <p><b>白天写组件，晚上写句子。</b>我是沈知远，一个相信慢速缓存、长期保鲜的独立开发者。信箱永远开着，见右上角。</p>
+          </div>
+        </div>
+      </div>
+
+      <footer id="footer">
+        <div class="ft-line" aria-hidden="true"></div>
+        <div class="ft-row">
+          <span>© 2026 沈知远 · 慢速缓存 Slow Cache</span>
+          <span>slowcache.example</span>
+          <a href="https://github.com/slowcache-example" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://weibo.com/slowcache" target="_blank" rel="noopener">微博</a>
+          <a href="https://space.bilibili.com/slowcache" target="_blank" rel="noopener">B 站</a>
+          <a href="https://slowcache.example/feed.xml" target="_blank" rel="noopener">RSS</a>
+        </div>
+        <div class="ft-row">
+          <span>把值得想的事，写在会呼吸的页面上。</span>
+          <span>本页由 WebGL 全息投影台实时渲染 · 无外部图片与模型</span>
+          <button id="theme-toggle" type="button" aria-pressed="true"><span>夜间模式</span><span class="sw" aria-hidden="true"></span></button>
+        </div>
+      </footer>
+    </div>
+  </section>
+</main>
+
+<!-- ============ UI 浮层（pointer-events:none，子元素单独开启） ============ -->
+<div id="ui">
+  <!-- A 滚动通知条 -->
+  <div id="ticker" role="marquee" aria-label="滚动通知">
+    <div class="tk-track" id="tk-track"><!-- JS 生成两份 --></div>
+  </div>
+
+  <!-- 刊头 -->
+  <header id="topbar">
+    <a class="brand" href="#top" id="brand" onclick="return false">
+      <b>慢速缓存 <em>SLOW CACHE</em></b>
+      <span>HOLOGRAM DECK · 全息投影台</span>
+    </a>
+    <nav aria-label="站内导航">
+      <button type="button" data-nav="deck">指挥台</button>
+      <button type="button" data-nav="blog">博客</button>
+      <button type="button" data-nav="about" class="hide-m">关于</button>
+      <button type="button" data-nav="contact" class="nav-contact">联系</button>
+    </nav>
+  </header>
+
+  <!-- 左侧基座索引 -->
+  <nav id="deck-index" aria-label="作品基座索引">
+    <div class="di-cap">DECK INDEX · 基座</div>
+    <!-- JS 生成 4 座 -->
+  </nav>
+
+  <!-- 左下读数 -->
+  <div id="readout" aria-hidden="true">
+    <span>AZ <b id="ro-az">000°</b></span>
+    <span>CRUISE <b id="ro-p">000%</b></span>
+    <span><b id="ro-fps">--</b> FPS</span>
+    <span>装配 <b id="ro-as">0/17</b></span>
+  </div>
+
+  <!-- 底部提示 -->
+  <div id="hint">拖拽环视 · 滚轮巡航 · 点击基座重建作品</div>
+
+  <!-- B 联系信标 -->
+  <button id="beacon" type="button" aria-haspopup="dialog" aria-label="联系作者">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+      <path d="M3 7l9 6 9-6M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z"/>
+    </svg>
+    <span>联系</span>
+  </button>
+</div>
+
+<!-- ============ C 分类投影面板 ============ -->
+<div id="cat-panel" class="layer" role="dialog" aria-modal="true" aria-labelledby="cp-title" aria-hidden="true">
+  <div class="mask" data-close-panel></div>
+  <div class="panel-box">
+    <div class="cp-body">
+      <div class="pb-head">
+        <div class="pb-ico" id="cp-ico" aria-hidden="true">▣</div>
+        <div>
+          <h3 id="cp-title">分类</h3>
+          <div class="pb-sub" id="cp-en">CATEGORY</div>
+        </div>
+        <button class="pb-x" type="button" data-close-panel aria-label="关闭面板（返回巡航）">✕</button>
+      </div>
+      <div class="cp-list" id="cp-list"><!-- JS 生成 --></div>
+      <div class="cp-tip"><span>ESC / 滚轮 返回巡航</span><span id="cp-hint">HOLOGRAM REBUILDING…</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ C 作品详情弹层（固化投影） ============ -->
+<div id="detail" class="layer" role="dialog" aria-modal="true" aria-labelledby="dl-title" aria-hidden="true">
+  <div class="mask" data-close-detail></div>
+  <div class="panel-box">
+    <div class="pb-head">
+      <div class="pb-ico" aria-hidden="true">◈</div>
+      <div>
+        <h3 id="dl-title">作品详情</h3>
+        <div class="pb-sub">SPECIFICATION PROJECTION</div>
+      </div>
+      <button class="pb-x" type="button" data-close-detail aria-label="关闭详情">✕</button>
+    </div>
+    <div class="dl-body" id="dl-body"><!-- JS 生成 --></div>
+  </div>
+</div>
+
+<!-- ============ B 联系作者面板 ============ -->
+<div id="contact" class="layer ct-layer" role="dialog" aria-modal="true" aria-labelledby="ct-title" aria-hidden="true">
+  <div class="mask" data-close-contact></div>
+  <div class="panel-box">
+    <div class="pb-head">
+      <div class="pb-ico" aria-hidden="true">✉</div>
+      <div>
+        <h3 id="ct-title">联系作者</h3>
+        <div class="pb-sub">SIGNAL UPLINK · 信号上行</div>
+      </div>
+      <button class="pb-x" type="button" data-close-contact aria-label="关闭联系面板">✕</button>
+    </div>
+    <div class="pb-body" id="ct-body">
+      <p class="ct-sign">白天写组件，晚上写句子。信箱永远开着。</p>
+      <div class="ct-mail">
+        <span class="addr" id="ct-addr">hi@slowcache.example</span>
+        <button class="mini-btn" type="button" id="ct-copy">复制邮箱</button>
+        <a class="mini-btn warm" href="mailto:hi@slowcache.example">写信</a>
+      </div>
+      <div class="ct-grid">
+        <div class="ct-soc">
+          <a href="https://github.com/slowcache-example" target="_blank" rel="noopener"><i></i>GitHub</a>
+          <a href="https://weibo.com/slowcache" target="_blank" rel="noopener"><i></i>微博</a>
+          <a href="https://space.bilibili.com/slowcache" target="_blank" rel="noopener"><i></i>B 站</a>
+          <a href="https://slowcache.example/feed.xml" target="_blank" rel="noopener"><i></i>RSS</a>
+        </div>
+        <div class="ct-qr">
+          <div class="qrbox" id="ct-qr" aria-hidden="true"></div>
+          <p>扫码回到首页</p>
+        </div>
+      </div>
+      <form class="ct-form" id="ct-form" novalidate>
+        <div class="row2">
+          <div>
+            <label for="cf-name">称呼（选填）</label>
+            <input id="cf-name" name="name" type="text" maxlength="30" autocomplete="nickname">
+          </div>
+          <div>
+            <label for="cf-mail">邮箱（选填）</label>
+            <input id="cf-mail" name="email" type="email" autocomplete="email" placeholder="用于收到回复">
+          </div>
+        </div>
+        <label for="cf-msg">留言内容（必填，10-500 字）</label>
+        <textarea id="cf-msg" name="msg" maxlength="500" required placeholder="想对沈知远说点什么…"></textarea>
+        <p class="err" id="cf-msg-err">留言需要 10-500 字，当前不足或超出。</p>
+        <p class="err" id="cf-mail-err">邮箱格式看起来不太对。</p>
+        <button class="ct-send" type="submit">投进邮筒</button>
+      </form>
+      <div class="ct-ok" id="ct-ok">
+        <div class="ok-ico" aria-hidden="true">◆</div>
+        <p>已收到，48 小时内回复。<br>慢速缓存，说到做到。</p>
+        <button class="mini-btn" type="button" id="ct-again" style="margin-top:14px">再写一封</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ WebGL 降级：CSS 全息作品网格 ============ -->
+<div id="fallback">
+  <div class="fb-cap">HOLOGRAM DECK // CSS 降级模式 —— 3D 引擎不可用，全息网格已展开，全部功能可达</div>
+  <div class="fb-grid" id="fb-grid"><!-- JS 生成 --></div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<noscript><div style="position:fixed;inset:0;z-index:200;background:#050A12;color:#E8F6FF;display:flex;align-items:center;justify-content:center;font-family:monospace;letter-spacing:.2em">需要启用 JavaScript 以点亮全息投影台</div></noscript>
+
+<script>
+'use strict';
+/* ####################################################################
+   §0 全局工具 / 环境判定
+   #################################################################### */
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isMobile = matchMedia('(pointer: coarse)').matches || innerWidth < 768;
+const LOW = isMobile || (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory && navigator.deviceMemory <= 4);
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const easeIO = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const easeO = t => 1 - Math.pow(1 - t, 3);
+function mulberry32(seed){ let a = seed >>> 0; return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* ####################################################################
+   §1 统一内容库（research/15 §一 逐字照用）
+   #################################################################### */
+const CATS = [
+  { id:'ai',     num:'01', name:'AI 工具', en:'AI TOOLS',    hex:0x37E6FF, css:'#37E6FF', ang:Math.PI * 0.25 },
+  { id:'web',    num:'02', name:'网页设计', en:'WEB DESIGN',  hex:0x5EA0FF, css:'#5EA0FF', ang:Math.PI * 0.75 },
+  { id:'health', num:'03', name:'健康生活', en:'HEALTH LIFE', hex:0x4DFFC4, css:'#4DFFC4', ang:Math.PI * 1.25 },
+  { id:'game',   num:'04', name:'游戏娱乐', en:'GAME ZONE',   hex:0xFFB454, css:'#FFB454', ang:Math.PI * 1.75 }
+];
+
+const WORKS = [
+  /* ---- AI 工具 5 件 ---- */
+  { n:'墨问 Mowen', slug:'mowen', cat:'ai', d:'AI 中文写作 Copilot：把半生不熟的想法追问成干净段落。', tags:['写作','大纲','改写'], tool:'https://mowen.example.com', video:'https://video.example.com/mowen',
+    qa:[ ['和通用聊天助手有何区别？','墨问只做中文长文：内置大纲树、段内改写与语气校准，不闲聊、不跑题。'],
+         ['我的稿子会被拿去训练吗？','不会，默认本地缓存草稿，云端处理即用即删，设置里可一键导出全部数据。'],
+         ['可以指定文风吗？','从「论文」「博客」「公文」三档起步，再用你已发布的文章微调出专属文风。'] ] },
+  { n:'词嵌 Ciproc', slug:'ciproc', cat:'ai', d:'翻译润色：让机翻长句落回中文的语感。', tags:['翻译','润色','术语表'], tool:'https://ciproc.example.com', video:'https://video.example.com/ciproc',
+    qa:[ ['支持哪些语言？','中英日韩四语互译，中译英与英译中两条主路线打磨最深。'],
+         ['术语表怎么用？','上传「原文,译文」两列 CSV 即全库生效，人名与产品名从此不再译飞。'],
+         ['润色会改专有名词吗？','不会，润色只动句法与连接词，术语按表原样保留。'] ] },
+  { n:'拾光 Rememory', slug:'rememory', cat:'ai', d:'老照片修复上色：把像素噪声还给面孔和黄昏。', tags:['修复','上色','老照片'], tool:'https://rememory.example.com', video:'https://video.example.com/rememory',
+    qa:[ ['划痕很重的照片能修吗？','先跑「重度修复」通道，再用手动笔触补细节，1990 年前的泛黄照实测成功率约八成。'],
+         ['上色会失真吗？','AI 只给建议色，可先锁定人物服色与背景色调再渲染，避免「染色感」。'],
+         ['支持批量吗？','3.0 正在做批量队列（见通知条预告），当前单张约 20 秒。'] ] },
+  { n:'速记 Scriptor', slug:'scriptor', cat:'ai', d:'会议转写摘要：一小时的会，两分钟拿到决议和待办。', tags:['转写','摘要','待办'], tool:'https://scriptor.example.com', video:'https://video.example.com/scriptor',
+    qa:[ ['录音质量差能转吗？','可以，8kHz 电话音质也能出稿，专业术语建议先加进词库。'],
+         ['摘要格式可定制吗？','内置「决议/待办/风险」三段式，也支持自定义 Markdown 模板。'],
+         ['说话人区分准吗？','会前 30 秒轮流自报姓名，区分准确率可到 95% 以上。'] ] },
+  { n:'灵感匣 Ideabox', slug:'ideabox', cat:'ai', d:'头脑风暴卡片：一个人也能开的头脑风暴会。', tags:['头脑风暴','卡片','内测'], tool:'https://ideabox.example.com', video:'https://video.example.com/ideabox',
+    qa:[ ['一个人也能用吗？','能，「自我对抗」模式会让 AI 扮演反方连续追问五轮。'],
+         ['卡片能导出吗？','支持白板 PNG、思维导图 OPML 与纯文本大纲三种格式。'],
+         ['内测怎么加入？','首页留邮箱排号，每周五发 50 个邀请码（见通知条）。'] ] },
+  /* ---- 网页设计 4 件 ---- */
+  { n:'霓虹栅格 NeonGrid', slug:'neongrid', cat:'web', d:'CSS 霓虹组件库：给暗色站点一整排会发光的零件。', tags:['CSS','组件库','暗色'], tool:'https://neongrid.example.com', video:'https://video.example.com/neongrid',
+    qa:[ ['亮色站点能用吗？','可以，加 data-ng-theme="light" 变体，霓虹自动降为荧光细描边。'],
+         ['依赖框架吗？','零依赖纯 CSS 加少量 JS，复制类名即用，gzip 后约 12KB。'],
+         ['发光影响性能吗？','发光用分层 box-shadow 缓存，实测 200 个组件同屏仍 60fps。'] ] },
+  { n:'纸间 UI PaperUI', slug:'paperui', cat:'web', d:'纸质质感设计系统：让屏幕学会纸张的呼吸。', tags:['设计系统','拟物','排印'], tool:'https://paperui.example.com', video:'https://video.example.com/paperui',
+    qa:[ ['纸质感是贴图吗？','全部由 SVG feTurbulence 程序化生成，无一张图片，可随主题换纸色。'],
+         ['和框架兼容吗？','提供 React/Vue/Svelte 三套封装，同时保留原味 CSS 版。'],
+         ['支持打印吗？','内置 print 样式层，网页直接打印即成手册排版。'] ] },
+  { n:'微动 MicroMove', slug:'micromove', cat:'web', d:'微交互动效库：48 个小动作，让界面像被摸过一样。', tags:['动效','缓动','开源'], tool:'https://micromove.example.com', video:'https://video.example.com/micromove',
+    qa:[ ['一共多少种动效？','首版 48 个，覆盖按钮、表单、卡片、加载四大场景，每季新增一批。'],
+         ['支持 prefers-reduced-motion 吗？','每个动效都有降级变体，引入即自动生效。'],
+         ['怎么自定义缓动？','在线缓动编辑器拖出曲线，复制 cubic-bezier 即可。'] ] },
+  { n:'拾贝 Shellpick', slug:'shellpick', cat:'web', d:'落地页模板集：把转化区块像贝壳一样捡起来拼好。', tags:['落地页','模板','转化'], tool:'https://shellpick.example.com', video:'https://video.example.com/shellpick',
+    qa:[ ['模板包含哪些区块？','每套 9-12 个区块：英雄区、社会证明、定价、FAQ 等，自由增删排序。'],
+         ['可以商用吗？','可以，MIT 授权，保留页脚一行 Built with Shellpick 即可。'],
+         ['如何换主题色？','改一个 CSS 变量全站生效，附赠 6 组配色预设。'] ] },
+  /* ---- 健康生活 4 件 ---- */
+  { n:'息律 BreathRhythm', slug:'breathrhythm', cat:'health', d:'呼吸训练：跟着一圈光，把呼吸放慢。', tags:['呼吸','冥想','4-7-8'], tool:'https://breathrhythm.example.com', video:'https://video.example.com/breathrhythm',
+    qa:[ ['内置哪些呼吸法？','4-7-8、盒式呼吸、Coherent 三种，也可自定「吸-停-呼」节拍。'],
+         ['需要戴耳机吗？','不必须，视觉光圈与震动引导可单独使用，耳机只是加分项。'],
+         ['数据会上传吗？','默认只存本机、可导出 CSV，云同步在路线图上且默认关闭。'] ] },
+  { n:'轻食记 LightBite', slug:'lightbite', cat:'health', d:'饮食记录：两分钟记完一顿饭，不审判你。', tags:['饮食','记录','营养'], tool:'https://lightbite.example.com', video:'https://video.example.com/lightbite',
+    qa:[ ['必须拍照识别吗？','支持拍照，也支持纯文字，「两分钟一顿饭」是设计红线。'],
+         ['有食物数据库吗？','内置中文常见菜 6000+ 条，支持自建家常菜模板。'],
+         ['会劝我节食吗？','不会，只做记录与趋势，不设卡路里羞辱提醒。'] ] },
+  { n:'眠海 SleepSea', slug:'sleepsea', cat:'health', d:'白噪音助眠：八轨海浪，混一杯属于你的夜。', tags:['白噪音','助眠','混音'], tool:'https://sleepsea.example.com', video:'https://video.example.com/sleepsea',
+    qa:[ ['音源能混搭吗？','雨、浪、风、柴火等八轨自由混音，并记忆你的配比。'],
+         ['整夜播放耗电吗？','开启渐弱定时后低于 2% 电量每小时，凌晨自动淡出。'],
+         ['可以下载离线听吗？','专业版可打包三种混音离线缓存，免费版仅在线播放。'] ] },
+  { n:'万步路线图 StepMap', slug:'stepmap', cat:'health', d:'城市步行路线：给下班后的两万步画一条闭环。', tags:['步行','城市','路线'], tool:'https://stepmap.example.com', video:'https://video.example.com/stepmap',
+    qa:[ ['路线怎么生成？','输入时长与偏好（树荫/咖啡/少坡度），算法沿街巷拼出闭环路线。'],
+         ['支持哪些城市？','已覆盖 12 城步道路网，杭州与上海最细，欢迎提交城市申请。'],
+         ['能记录走过的路吗？','可导入步数生成「足迹墨水」，走过的街道会被染上颜色。'] ] },
+  /* ---- 游戏娱乐 4 件 ---- */
+  { n:'字块 WordBlocks', slug:'wordblocks', cat:'game', d:'中文填字：每天一局，和汉字较劲。', tags:['填字','文字','每日一题'], tool:'https://wordblocks.example.com', video:'https://video.example.com/wordblocks',
+    qa:[ ['每天更新吗？','每天 0 点更新一局，周日是 13×13 大盘，历史局可随时回玩。'],
+         ['提示怎么计分？','揭示一字扣 10 分，无广告无内购，分数只和自己较劲。'],
+         ['能自己出题吗？','编辑器出题后生成题号分享，好题会收进精选题库。'] ] },
+  { n:'像素信使 PixelCourier', slug:'pixelcourier', cat:'game', d:'像素跑酷：替人送信的信使，在屋顶上一路向前。', tags:['跑酷','像素','单手玩'], tool:'https://pixelcourier.example.com', video:'https://video.example.com/pixelcourier',
+    qa:[ ['一局多长？','3 分钟一局，刚好一趟地铁，死亡即结算、退出不惩罚。'],
+         ['支持手柄吗？','支持，也保留单指触摸：按住蓄力跳，松手触发二段跳。'],
+         ['有剧情吗？','你是替人送信的像素信使，每封信是一段关卡引言，读不读随你。'] ] },
+  { n:'猫咪塔 CatTower', slug:'cattower', cat:'game', d:'叠塔：把猫叠稳，是门手艺。', tags:['休闲','物理','猫咪'], tool:'https://cattower.example.com', video:'https://video.example.com/cattower',
+    qa:[ ['规则是什么？','把下落的猫叠稳，歪 15° 内它会自己找姿势卧好，超过就溜走。'],
+         ['猫有区别吗？','12 种猫各有体重与弹性：橘猫稳、奶牛猫爱弹，开局三选一。'],
+         ['最高纪录多少层？','全球榜目前 47 层，突破 30 层解锁云端巨猫彩蛋。'] ] },
+  { n:'谜题船 PuzzleShip', slug:'puzzleship', cat:'game', d:'解谜：一艘纸船，六十道安静的海关。', tags:['解谜','关卡','手绘'], tool:'https://puzzleship.example.com', video:'https://video.example.com/puzzleship',
+    qa:[ ['卡关了怎么办？','每关三枚「漂流瓶」提示，从暗示到图解逐级展开，不用也不影响成就。'],
+         ['有多少关？','六章 60 关，每章引入一种新机制，通关后开放玩家自制海图。'],
+         ['需要什么配置？','一部能开浏览器的手机即可，无 3D 无强光效，电量友好。'] ] }
+];
+const workBySlug = slug => WORKS.find(w => w.slug === slug);
+
+/* A · 通知条 10 条（逐字） */
+const MSGS = [
+  { t:'更新', x:'新文章《把博客首屏压进 300ms》补全附录：完整 Lighthouse 数据表已上传。', go:'article:0' },
+  { t:'预告', x:'本周六 20:00 B 站直播「从 0 到 1 做一个独立小工具」，现在预约。', href:'https://live.example.com/slowcache' },
+  { t:'更新', x:'订阅数突破 10,000，写给你们的《第一万零一次缓存》已发出。', go:'articles' },
+  { t:'资讯', x:'墨问 Mowen 2.4 发布：新增长文大纲模式与本地草稿缓存。', go:'work:mowen' },
+  { t:'资讯', x:'《凌晨四点的杭州菜市场》被「独立开发者周刊」第 082 期转载。', href:'https://weekly.example.com/issue-82' },
+  { t:'预告', x:'灵感匣 Ideabox 内测招募 200 名用户，本周五发放邀请码。', go:'work:ideabox' },
+  { t:'更新', x:'全站夜间模式上线，跟随系统自动切换，也可以在页脚手动拨一下。' },
+  { t:'资讯', x:'「慢速写作训练营」第三期开放报名，本期只收 30 人。', href:'https://camp.example.com/slowcache' },
+  { t:'资讯', x:'RSS 地址迁移至 feed.slowcache.example，旧地址保留 90 天。', href:'https://feed.slowcache.example' },
+  { t:'预告', x:'拾光 Rememory 3.0「批量修复」开发中，路线图已挂出，欢迎许愿。', go:'work:rememory' }
+];
+const BD_CLS = { '更新':'bd-upd', '资讯':'bd-info', '预告':'bd-pre' };
+
+/* D · 博客文章 7 篇（≥6，第 1/2 篇完整正文） */
+const ARTICLES = [
+  { date:'2026-08-14', title:'把博客首屏压进 300ms：一次性能考古', cat:'造轮子', read:'12 min',
+    body:`<p>四月的某个周一，我用 Lighthouse 给博客跑了个分：<strong>45</strong>。第一反应是怪图片——可首屏明明只有两张配图。第二反应是怪服务器——TTFB 稳定在 80ms，也没毛病。第三次归因，终于轮到我自己：<em>字体 6 个请求、CSS 210KB，还有三个「以防万一」的库</em>。性能问题十有八九，最后都怪自己。</p>
+<h4>① 字体：6 个请求砍到 2 个</h4>
+<p>中文 webfont 的体积是原罪。子集化工具对比之后，我选择 unicode-range 切片：把字体按常用字切成 8 片，浏览器按需加载，实际首屏只命中 2 片。字体请求 6→2，字体字节 1.1MB→180KB。</p>
+<table><thead><tr><th>工具</th><th>方式</th><th>结论</th></tr></thead><tbody>
+<tr><td>fontmin</td><td>Node 脚本精确子集</td><td>准，但每次改文案要重跑</td></tr>
+<tr><td>glyphhanger</td><td>一行命令扫全站字符</td><td>省心，适合整站静态化</td></tr>
+<tr><td>unicode-range 切片</td><td>按频段切 8 片按需加载</td><td>最终方案，首屏命中 2 片</td></tr>
+</tbody></table>
+<h4>② CSS：关键路径内联 14KB</h4>
+<p>把首屏真正用到的样式抽出来内联进 head，14KB；其余样式用 media="print" 换 onload 的老技巧延后加载。首屏渲染不再被 210KB 的 CSS 拦路。</p>
+<h4>③ 图片：首屏 0 图策略</h4>
+<p>最激进也最有效的一刀：<strong>首屏一张图都不发</strong>。头图改用 CSS 渐变加 SVG 线稿，配图全部懒加载。LCP 从 3.8s 提前到 1.2s——最快的图片就是没有图片。</p>
+<h4>④ JS：删掉三个「以防万一」</h4>
+<p>轮播库（首页根本没有轮播）、动画库（CSS 够用）、统计 SDK 的预热脚本，全删。事件委托替代了 200 行监听器绑定。JS 从 96KB 到 31KB。</p>
+<h4>⑤ 终局：98 分与未完清单</h4>
+<p>最终 <strong>98 分</strong>，首屏 300ms 内可交互。未完清单：Service Worker 离线阅读、字体按站点缓存，以及给评论区懒到极致的加载策略——留到下篇。</p>` },
+  { date:'2026-07-02', title:'词嵌一年：从 0 个用户到 1000 个用户', cat:'折腾录', read:'9 min',
+    body:`<p><strong>动机</strong>：被机翻长句折磨的第 N 次，我决定自己写一个翻译润色工具。起点很低：一个输入框，一个术语表。</p>
+<h4>① 三个月，0 个用户</h4>
+<p>上线头三个月，UV 曲线平得像凌晨的西湖。数据谷底截图我还留着：单日 3 个访问，其中一个是我自己。<em>那段时间我学会的事：做出来只是开始，让人知道才是另一门手艺。</em></p>
+<h4>② 转折：一条知乎回答</h4>
+<p>一条认真回答「如何让机翻更像人话」的知乎回答，带来了第一批 300 个用户。内容即渠道，这句话我如今逢人就讲。</p>
+<h4>③ 定价摇摆史</h4>
+<p>免费 → 买断 45 元 → 订阅 8 元/月，一年改了三次价。每次改价都有用户来信，有骂的也有鼓励的。最后落回「免费加 Pro 订阅」，与其说这是最优解，不如说它是吵架最少的一档。</p>
+<h4>④ 差评处理</h4>
+<p>最凶的一条差评骂术语表难用。我把它贴在工位边上——后来它变成了 2.0 的功能路线图。<strong>差评是免费的产品经理，虽然脾气差了点。</strong></p>
+<h4>⑤ 一年后</h4>
+<p>1000 个用户，收入刚好够服务器钱，以及「不辞职」的决定。词嵌不打算改变世界，它只想把长句翻译得像样一点。</p>` },
+  { date:'2026-05-21', title:'凌晨四点的杭州菜市场', cat:'城市漫步', read:'6 min',
+    body:`<p>跟着送货三轮车走完一条街的城市漫步笔记，配 9 张手机摄影。凌晨四点的杭州不属于互联网：卷帘门半开的鱼摊、第一屉冒气的小笼、把「新鲜」两个字用粉笔写在泡沫板上的老人。</p><p>我原以为是去拍照片，回来才发现拍下的全是时间——这座城市苏醒前，最后一次属于自己的样子。</p>` },
+  { date:'2026-04-09', title:'滚动即叙事：拆解 3 个获奖网站的动效节奏', cat:'观展记', read:'14 min',
+    body:`<p>逐帧分析获奖长文的 pinned 章节、节拍与留白。好的滚动叙事像电影剪辑：pinned 章节是长镜头，视差是场面调度，而留白是剪辑点的呼吸。</p><p>三个案例的共同点：动效永远比文案慢半拍——先让你看清，再让你往前。</p>` },
+  { date:'2026-03-15', title:'数字花园第一年：种下 214 条笔记之后', cat:'半成品 🌲', read:'8 min',
+    body:`<p>笔记成熟度统计、双链心得，与放弃完美主义的收获。214 条笔记里，种子 121 条、发芽 71 条、长成 22 条——长成率一成，和真实花园差不多。</p><p>最大的收获是接受「公开的半成品」：数字花园的价值不在每颗植物完美，而在园子一直活着。</p>` },
+  { date:'2026-02-08', title:'给十年前的 Kindle 刷了个「慢读」系统', cat:'折腾录', read:'10 min',
+    body:`<p>越狱、换字体，把墨水屏改成只读文章的慢读终端。原理不复杂：全屏浏览器加一个极简阅读器页面，RSS 拉取、字体换成思源宋、禁掉一切交互娱乐。</p><p>现在它是床头唯一会发光的东西——发光强度为零的那种。</p>` },
+  { date:'2026-01-12', title:'呼吸训练 30 天实验报告', cat:'健康实验', read:'7 min',
+    body:`<p>用自己写的息律每天 10 分钟：睡眠、心率与情绪的笨办法记录。30 天里最深的感觉不是放松，而是「原来我平时一直在屏气」。</p><p>数据上，入睡时间平均提前 11 分钟；情绪上，通勤地铁里做 4-7-8 比刷手机划算得多。</p>` }
+];
+
+/* ####################################################################
+   §2 程序化缩略图 SVG（17 件，按 15 号文档 §1.4 缩略图描述绘制）
+   #################################################################### */
+function svgrap(id, c1, c2){
+  return `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs>`;
+}
+function scanlines(){ return '<rect width="160" height="100" fill="url(#scnp)" opacity=".5"/><pattern id="scnp" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="1" fill="rgba(55,230,255,.06)"/></pattern>'; }
+const THUMBS = {
+  mowen(){ return svgrap('tg1','#0B2038','#06101E') + `<rect width="160" height="100" fill="url(#tg1)"/>
+    <rect x="28" y="34" width="96" height="50" rx="2" fill="#0E2440" stroke="rgba(159,215,255,.4)"/>
+    <rect x="38" y="44" width="52" height="4" rx="2" fill="#7FE3FF" opacity=".95"/><rect x="38" y="54" width="64" height="4" rx="2" fill="#7FE3FF" opacity=".7"/><rect x="38" y="64" width="40" height="4" rx="2" fill="#7FE3FF" opacity=".45"/>
+    <path d="M118 14 L130 28 L114 52 L104 42 Z" fill="none" stroke="#E8F6FF" stroke-width="1.6"/>
+    <line x1="114" y1="52" x2="110" y2="58" stroke="#E8F6FF" stroke-width="1.2"/>
+    <circle cx="132" cy="72" r="8" fill="none" stroke="#FF9F45" stroke-width="1.6"/><text x="132" y="75" font-size="7" fill="#FF9F45" text-anchor="middle" font-family="serif">印</text>`; },
+  ciproc(){ return svgrap('tg2','#111C2C','#0A1220') + `<rect width="160" height="100" fill="url(#tg2)"/>
+    ${[0,1,2,3,4].map(i=>`<rect x="26" y="${26+i*11}" width="42" height="3.6" rx="1.8" fill="rgba(232,246,255,${.75-i*.12})"/>`).join('')}
+    ${[0,1,2,3,4].map(i=>`<rect x="92" y="${26+i*11}" width="42" height="3.6" rx="1.8" fill="rgba(142,168,255,${.75-i*.12})"/>`).join('')}
+    <line x1="80" y1="18" x2="80" y2="82" stroke="rgba(77,255,196,.5)" stroke-dasharray="3 4"/>
+    <circle cx="80" cy="50" r="11" fill="#0A1220" stroke="#4DFFC4" stroke-width="4"/>
+    <circle cx="80" cy="50" r="11" fill="none" stroke="rgba(77,255,196,.35)" stroke-width="9"/>`; },
+  rememory(){ return svgrap('tg3','#141220','#0A0C16') + `<rect width="160" height="100" fill="url(#tg3)"/>
+    <g transform="rotate(-4 80 50)">
+      <rect x="34" y="24" width="92" height="60" fill="#B9C2CC"/>
+      <rect x="80" y="24" width="46" height="60" fill="url(#tg3w)"/>
+      <rect x="34" y="24" width="92" height="60" fill="none" stroke="rgba(232,246,255,.5)"/>
+      <path d="M52 40 l14 12 M62 38 l-12 16" stroke="#5B6672" stroke-width="1"/>
+      <circle cx="102" cy="52" r="10" fill="rgba(255,159,69,.85)"/>
+    </g>
+    <rect x="26" y="16" width="26" height="10" fill="rgba(255,233,201,.55)" transform="rotate(-18 39 21)"/>
+    <rect x="112" y="80" width="26" height="10" fill="rgba(255,233,201,.55)" transform="rotate(-14 125 85)"/>
+    <defs><linearGradient id="tg3w" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB36B"/><stop offset="1" stop-color="#E86A3C"/></linearGradient></defs>`; },
+  scriptor(){ return svgrap('tg4','#0B1B30','#060F1C') + `<rect width="160" height="100" fill="url(#tg4)"/>
+    <polyline points="18,52 30,52 36,30 44,74 52,40 60,64 68,46 76,58 84,44 92,66 100,50 108,56 116,48 130,52 142,52" fill="none" stroke="#7FE3FF" stroke-width="1.6"/>
+    <rect x="42" y="58" width="24" height="24" rx="1" fill="rgba(55,230,255,.2)" stroke="#37E6FF" transform="rotate(-4 54 70)"/>
+    <rect x="70" y="60" width="24" height="24" rx="1" fill="rgba(77,255,196,.16)" stroke="#4DFFC4" transform="rotate(3 82 72)"/>
+    <rect x="98" y="57" width="24" height="24" rx="1" fill="rgba(255,159,69,.16)" stroke="#FF9F45" transform="rotate(-2 110 69)"/>
+    <text x="54" y="73" font-size="9" fill="#BFE9FF" text-anchor="middle" transform="rotate(-4 54 70)">决议</text>
+    <text x="82" y="75" font-size="9" fill="#CFFFEF" text-anchor="middle" transform="rotate(3 82 72)">待办</text>
+    <text x="110" y="72" font-size="9" fill="#FFD9AE" text-anchor="middle" transform="rotate(-2 110 69)">风险</text>`; },
+  ideabox(){ return svgrap('tg5','#191033','#0B0718') + `<rect width="160" height="100" fill="url(#tg5)"/>
+    <path d="M52 56 L108 56 L102 82 L58 82 Z" fill="#241a08" stroke="#D8B36A" stroke-width="1.6"/>
+    <path d="M52 56 L46 40 L104 40 L108 56 Z" fill="none" stroke="#D8B36A" stroke-width="1.4" transform="translate(6 -12) rotate(-8 80 48)"/>
+    ${['#FF6B81','#FFB454','#FFE38A','#4DFFC4','#37E6FF','#8EA8FF'].map((c,i)=>{const a=-70+i*24,r=44;const x=80+Math.cos(a*Math.PI/180)*r,y=62-Math.sin(a*Math.PI/180)*r*0.62;return `<rect x="${x-8}" y="${y-11}" width="16" height="22" rx="1.5" fill="#0B0718" stroke="${c}" stroke-width="1.4" transform="rotate(${a+90} ${x} ${y})"/>`;}).join('')}
+    <circle cx="80" cy="56" r="2.4" fill="#D8B36A"/>`; },
+  neongrid(){ return svgrap('tg6','#0A0F22','#060812') + `<rect width="160" height="100" fill="url(#tg6)"/>
+    ${[20,40,60,80,100,120,140].map(x=>`<line x1="${x}" y1="0" x2="${x}" y2="100" stroke="rgba(94,160,255,.1)"/>`).join('')}
+    ${[20,40,60,80].map(y=>`<line x1="0" y1="${y}" x2="160" y2="${y}" stroke="rgba(94,160,255,.1)"/>`).join('')}
+    <rect x="22" y="30" width="34" height="16" rx="8" fill="none" stroke="#37E6FF" stroke-width="1.6"/><circle cx="39" cy="38" r="5" fill="#37E6FF"/>
+    <rect x="70" y="30" width="34" height="16" rx="3" fill="none" stroke="#8EA8FF" stroke-width="1.4"/>
+    <rect x="116" y="30" width="26" height="16" rx="3" fill="rgba(55,230,255,.15)" stroke="#37E6FF" stroke-width="1.6"/>
+    <rect x="22" y="60" width="52" height="14" rx="3" fill="none" stroke="rgba(159,215,255,.5)"/><line x1="28" y1="67" x2="46" y2="67" stroke="#BFE9FF"/>
+    <rect x="90" y="58" width="44" height="18" rx="3" fill="rgba(255,159,69,.1)" stroke="#FF9F45" stroke-width="1.6"/>`; },
+  paperui(){ return svgrap('tg7','#F2E8D5','#DFD2B8') + `<rect width="160" height="100" fill="url(#tg7)"/>
+    <rect x="26" y="20" width="66" height="58" fill="#FBF5E9" stroke="#C9B697"/>
+    <path d="M92 20 L78 34 L92 34 Z" fill="#E4D6BC"/>
+    <line x1="34" y1="42" x2="82" y2="42" stroke="#B8A47F"/><line x1="34" y1="52" x2="74" y2="52" stroke="#C9B697"/><line x1="34" y1="62" x2="80" y2="62" stroke="#C9B697"/>
+    <rect x="104" y="26" width="34" height="40" fill="#FBF5E9" stroke="#C9B697" stroke-dasharray="3 2"/>
+    <circle cx="121" cy="46" r="9" fill="none" stroke="#B8A47F" stroke-dasharray="2 2"/>
+    <path d="M104 70 L138 70 L132 82 L110 82 Z" fill="#EFE2C8" stroke="#C9B697"/>
+    <rect x="24" y="18" width="116" height="66" fill="none" stroke="rgba(90,70,50,.25)" stroke-width="6" rx="2"/>`; },
+  micromove(){ return svgrap('tg8','#101426','#080A16') + `<rect width="160" height="100" fill="url(#tg8)"/>
+    ${[0,1,2].map(i=>[0,1,2].map(j=>{const x=34+i*36,y=20+j*24;const z=((i+j)%3)-1;return `<rect x="${x}" y="${y+z*3}" width="24" height="15" rx="4" fill="none" stroke="${['#37E6FF','#8EA8FF','#FF9F45'][(i+j)%3]}" stroke-width="1.5" transform="rotate(${z*7} ${x+12} ${y+7})" opacity="${1-Math.abs(z)*.25}"/>`;}).join('')).join('')}
+    <path d="M46 36 q14 -10 28 -2" fill="none" stroke="rgba(232,246,255,.5)" stroke-dasharray="3 3"/>
+    <path d="M118 62 q-12 10 -26 4" fill="none" stroke="rgba(232,246,255,.5)" stroke-dasharray="3 3"/>
+    <path d="M74 40 l6 -3 -1 6 z" fill="rgba(232,246,255,.7)"/><path d="M94 60 l-6 3 1 -6 z" fill="rgba(232,246,255,.7)"/>`; },
+  shellpick(){ return svgrap('tg9','#D9C9A8','#B49A6F') + `<rect width="160" height="100" fill="url(#tg9)"/>
+    <path d="M28 76 q10 -34 34 -38 q22 -4 26 14 q3 14 -10 18 q-11 3 -14 -7 q-2 -9 7 -11" fill="none" stroke="#8A5A33" stroke-width="3" stroke-linecap="round"/>
+    <path d="M18 84 q14 -4 28 0 t28 0 t28 0 t28 0" fill="none" stroke="rgba(90,70,50,.5)" stroke-width="1.4"/>
+    <g stroke="#FBF5E9" fill="none" stroke-width="1.4"><rect x="104" y="20" width="40" height="34" rx="1"/><line x1="104" y1="30" x2="144" y2="30"/><rect x="110" y="36" width="20" height="8"/></g>
+    <line x1="112" y1="54" x2="136" y2="54" stroke="#8A5A33" stroke-dasharray="4 2"/>`; },
+  breathrhythm(){ return svgrap('tg10','#081128','#040A18') + `<rect width="160" height="100" fill="url(#tg10)"/>
+    <circle cx="80" cy="50" r="26" fill="none" stroke="rgba(77,255,196,.9)" stroke-width="2"/>
+    <circle cx="80" cy="50" r="34" fill="none" stroke="rgba(77,255,196,.35)" stroke-width="1.2"/>
+    <circle cx="80" cy="50" r="7" fill="#4DFFC4"/>
+    ${Array.from({length:12},(_,i)=>{const a=i*30*Math.PI/180,x1=80+Math.cos(a)*40,y1=50+Math.sin(a)*40,x2=80+Math.cos(a)*44,y2=50+Math.sin(a)*44;return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(77,255,196,.6)"/>`;}).join('')}
+    <text x="80" y="93" font-size="8" fill="rgba(77,255,196,.8)" text-anchor="middle" font-family="monospace">4 - 7 - 8</text>`; },
+  lightbite(){ return svgrap('tg11','#12202E','#081018') + `<rect width="160" height="100" fill="url(#tg11)"/>
+    <circle cx="76" cy="54" r="28" fill="#0C1826" stroke="rgba(232,246,255,.7)" stroke-width="1.6"/>
+    <path d="M76 54 L76 26 A28 28 0 0 1 100 40 Z" fill="rgba(255,159,69,.7)"/>
+    <path d="M76 54 L100 40 A28 28 0 0 1 102 62 Z" fill="rgba(77,255,196,.65)"/>
+    <path d="M76 54 L102 62 A28 28 0 0 1 76 82 Z" fill="rgba(94,160,255,.6)"/>
+    <line x1="112" y1="26" x2="126" y2="66" stroke="#E8F6FF" stroke-width="1.6"/><line x1="120" y1="24" x2="134" y2="62" stroke="#E8F6FF" stroke-width="1.6"/>
+    <circle cx="30" cy="34" r="3" fill="#FF9F45"/><circle cx="24" cy="46" r="3" fill="#4DFFC4"/><circle cx="34" cy="52" r="3" fill="#8EA8FF"/>`; },
+  sleepsea(){ return svgrap('tg12','#07130F','#03100C') + `<rect width="160" height="100" fill="url(#tg12)"/>
+    <path d="M96 20 a16 16 0 1 0 12 27 a13 13 0 1 1 -12 -27" fill="#F5E9C8"/>
+    ${[0,1,2,3].map(i=>`<ellipse cx="76" cy="${72+i*6}" rx="${54-i*12}" ry="${7-i}" fill="none" stroke="rgba(77,255,196,${.55-i*.12})" stroke-width="1.2"/>`).join('')}
+    <line x1="18" y1="86" x2="142" y2="86" stroke="rgba(127,178,255,.4)"/>`; },
+  stepmap(){ return svgrap('tg13','#B98D5F','#96714A') + `<rect width="160" height="100" fill="url(#tg13)"/>
+    ${[30,55,80,105,130].map(x=>`<line x1="${x}" y1="12" x2="${x}" y2="88" stroke="rgba(90,70,50,.4)"/>`).join('')}
+    ${[24,46,68,90].map(y=>`<line x1="12" y1="${y}" x2="148" y2="${y}" stroke="rgba(90,70,50,.4)"/>`).join('')}
+    <rect x="58" y="40" width="44" height="32" fill="none" stroke="#E8543F" stroke-width="2.4" stroke-dasharray="6 4" rx="4"/>
+    <circle cx="58" cy="72" r="7" fill="none" stroke="#5A4632" stroke-width="1.6"/><ellipse cx="58" cy="71" rx="2.6" ry="3.6" fill="#5A4632"/>
+    <text x="118" y="30" font-size="8" fill="#5A4632" font-family="monospace">2万步</text>`; },
+  wordblocks(){ return svgrap('tg14','#6B4A2A','#4A3018') + `<rect width="160" height="100" fill="url(#tg14)"/>
+    ${[0,1,2,3].map(i=>[0,1].map(j=>`<rect x="${30+i*26}" y="${26+j*26}" width="22" height="22" rx="2" fill="${(i+j)%2?'#141210':'#F2E8D5'}" stroke="rgba(20,18,16,.6)"/>`).join('')).join('')}
+    <g transform="rotate(-8 108 78)"><rect x="96" y="66" width="24" height="24" rx="2" fill="#141210" stroke="#F2E8D5"/><text x="108" y="83" font-size="14" fill="#F2E8D5" text-anchor="middle" font-family="serif">慢</text></g>
+    <line x1="20" y1="86" x2="52" y2="72" stroke="#E8D5B0" stroke-width="3"/><path d="M52 72 l8 -4 -4 8 z" fill="#E8D5B0"/>
+    <rect x="128" y="18" width="14" height="10" rx="4" fill="#E8D5B0"/>`; },
+  pixelcourier(){ return `<defs><linearGradient id="tg15" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2B1A3A"/><stop offset=".7" stop-color="#7A3A52"/><stop offset="1" stop-color="#FF9F45"/></linearGradient></defs><rect width="160" height="100" fill="url(#tg15)"/>
+    <circle cx="118" cy="58" r="12" fill="#FFD98E"/>
+    ${[10,34,58,86,112,136].map((x,i)=>`<rect x="${x}" y="${52-(i%3)*10}" width="16" height="${48+(i%3)*10}" fill="#0D0A18"/>`).join('')}
+    <rect x="62" y="52" width="6" height="9" fill="#E8F6FF"/><rect x="69" y="49" width="4" height="4" fill="#FF6B81"/><rect x="66" y="58" width="9" height="5" fill="#8EA8FF"/>
+    ${[[80,42],[90,36],[100,32]].map(p=>`<rect x="${p[0]}" y="${p[1]}" width="4" height="4" fill="#FFE38A" transform="rotate(45 ${p[0]+2} ${p[1]+2})"/>`).join('')}
+    <rect x="0" y="96" width="160" height="4" fill="#0D0A18"/>`; },
+  cattower(){ return svgrap('tg16','#F5EAD8','#E0CDae') + `<rect width="160" height="100" fill="url(#tg16)"/>
+    ${[["#FFB454",0],["#8E9BAB",-4],["#FF9F45",5],["#C4A484",-7]].map((c,i)=>{const y=84-i*14;return `<rect x="${62+i*2}" y="${y}" width="${52-i*4}" height="12" rx="6" fill="${c[0]}" stroke="rgba(90,70,50,.5)" transform="rotate(${c[1]} 80 ${y+6})"/>`;}).join('')}
+    <circle cx="86" cy="26" r="11" fill="#F0B27A" stroke="rgba(90,70,50,.5)"/>
+    <path d="M78 19 l-3 -7 6 2 z M94 19 l3 -7 -6 2 z" fill="#F0B27A" stroke="rgba(90,70,50,.5)"/>
+    <path d="M81 27 q2 2 4 0 M89 27 q2 2 4 0" fill="none" stroke="#5A4632" stroke-width="1.2"/>
+    <path d="M86 31 q2 2 4 0" fill="none" stroke="#5A4632" stroke-width="1"/>`; },
+  puzzleship(){ return svgrap('tg17','#0C1C33','#060F1E') + `<rect width="160" height="100" fill="url(#tg17)"/>
+    ${[0,1,2].map(i=>`<path d="M14 ${72+i*8} q12 -6 24 0 t24 0 t24 0 t24 0 t24 0" fill="none" stroke="rgba(127,178,255,${.5-i*.13})" stroke-width="1.4"/>`).join('')}
+    <path d="M62 62 L104 62 L96 74 L70 74 Z" fill="#F5F2FF" stroke="#B8CCe8"/>
+    <path d="M62 62 L104 62 L96 74 L70 74 Z" fill="none" stroke="rgba(184,204,232,.9)"/>
+    <path d="M82 60 L82 30 L102 54 Z" fill="#F5F2FF" stroke="#B8CCe8"/>
+    <path d="M82 60 L82 34 L66 54 Z" fill="#E4ECF8" stroke="#B8CCe8"/>
+    <circle cx="34" cy="36" r="8" fill="none" stroke="rgba(127,178,255,.8)" stroke-width="1.6" stroke-dasharray="3 2"/><circle cx="34" cy="36" r="2.5" fill="rgba(127,178,255,.8)"/>
+    <text x="128" y="30" font-size="12" fill="rgba(127,178,255,.9)">*</text><text x="118" y="52" font-size="9" fill="rgba(127,178,255,.7)">*</text>`; }
+};
+function thumbSVG(w){
+  const inner = (THUMBS[w.slug] || THUMBS.mowen)();
+  return `<svg viewBox="0 0 160 100" role="img" aria-label="${w.n} 缩略图" preserveAspectRatio="xMidYMid slice">${inner}</svg>`;
+}
+/* 程序化伪二维码：三定位角 + 随机模块 + 中央印章 */
+function qrSVG(){
+  const rnd = mulberry32(20260814);
+  const N = 21, C = 4, M = 4, size = N * C + M * 2;
+  let rects = '';
+  const inFinder = (x, y) => (x < 7 && y < 7) || (x >= N - 7 && y < 7) || (x < 7 && y >= N - 7);
+  const inStamp = (x, y) => x >= 8 && x <= 12 && y >= 8 && y <= 12;
+  for(let y = 0; y < N; y++) for(let x = 0; x < N; x++){
+    if(inFinder(x, y) || inStamp(x, y)) continue;
+    if(rnd() < .44) rects += `<rect x="${M + x * C}" y="${M + y * C}" width="${C - .6}" height="${C - .6}"/>`;
+  }
+  const finder = (fx, fy) => `<rect x="${M + fx * C}" y="${M + fy * C}" width="${7 * C}" height="${7 * C}" fill="none" stroke="#04121e" stroke-width="${C}"/><rect x="${M + (fx + 2) * C}" y="${M + (fy + 2) * C}" width="${3 * C}" height="${3 * C}" fill="#04121e"/>`;
+  const stamp = `<rect x="${M + 8 * C - 1}" y="${M + 8 * C - 1}" width="${5 * C + 2}" height="${5 * C + 2}" fill="#04121e"/><text x="${M + 10.5 * C}" y="${M + 11.2 * C}" font-size="7.5" fill="#eaf6ff" text-anchor="middle" font-family="serif" font-weight="700">缓</text>`;
+  return `<svg viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges"><rect width="${size}" height="${size}" fill="#eaf6ff"/><g fill="#04121e">${rects}${finder(0, 0)}${finder(N - 7, 0)}${finder(0, N - 7)}${stamp}</g></svg>`;
+}
+
+/* ####################################################################
+   §3 DOM 构建：A 通知条 / 基座索引 / C 面板 / D 博客 / 降级网格
+   #################################################################### */
+/* ---- A 通知条：内容两份拼接 → translateX(-50%) 无缝循环 ---- */
+function tkItem(m){
+  const badge = `<span class="bd ${BD_CLS[m.t]}">${m.t}</span>`;
+  const body = `<span class="tx">${m.x}</span>`;
+  const arr = (m.go || m.href) ? '<span class="arr">→</span>' : '';
+  if(m.href) return `<a class="tk" href="${m.href}" target="_blank" rel="noopener">${badge}${body}${arr}</a>`;
+  if(m.go) return `<a class="tk" href="javascript:void(0)" data-go="${m.go}">${badge}${body}${arr}</a>`;
+  return `<span class="tk">${badge}${body}</span>`;
+}
+function buildTicker(){
+  const items = MSGS.map(tkItem).join('');
+  const items2 = items.replace(/<a class="tk"/g, '<a class="tk" tabindex="-1"');
+  $('#tk-track').innerHTML = `<div class="tkset">${items}</div><div class="tkset" aria-hidden="true">${items2}</div>`;
+}
+$('#tk-track') && document.addEventListener('click', e => {
+  const a = e.target.closest('[data-go]');
+  if(!a) return;
+  e.preventDefault();
+  handleGo(a.getAttribute('data-go'));
+});
+function handleGo(go){
+  if(go === 'articles'){ scrollToBlog('#articles'); return; }
+  if(go.indexOf('article:') === 0){ gotoArticle(+go.split(':')[1]); return; }
+  if(go.indexOf('work:') === 0){ const w = workBySlug(go.split(':')[1]); if(w) flyToCat(w.cat, w.slug); return; }
+}
+
+/* ---- 左侧基座索引 ---- */
+function buildDeckIndex(){
+  const nav = $('#deck-index');
+  nav.insertAdjacentHTML('beforeend', CATS.map((c, i) =>
+    `<button class="di-btn" type="button" data-cat="${i}" style="--cat:${c.css}">
+      <span class="no">${c.num}</span><span class="nm">${c.name}</span>
+      <span class="st" id="di-st-${i}">待机</span>
+    </button>`).join(''));
+  nav.addEventListener('click', e => {
+    const b = e.target.closest('[data-cat]');
+    if(b) flyToCat(CATS[+b.getAttribute('data-cat')].id);
+  });
+}
+function setDeckStatus(i, s){
+  const el = $('#di-st-' + i);
+  if(!el) return;
+  el.className = 'st' + (s === '在线' ? ' on' : s === '重建中' ? ' re' : '');
+  el.textContent = s;
+}
+
+/* ---- C 分类面板 ---- */
+const catPanel = $('#cat-panel');
+function openCategoryPanel(i, slug){
+  const c = CATS[i];
+  catPanel.style.setProperty('--cat', c.css);
+  $('#cp-title').textContent = c.num + ' · ' + c.name;
+  $('#cp-en').textContent = c.en + ' // HOLOGRAM REBUILD';
+  $('#cp-ico').style.color = c.css;
+  const works = WORKS.filter(w => w.cat === c.id);
+  $('#cp-list').innerHTML =
+    `<div class="cp-count">${works.length} 件作品 · 线框重建完成 · 点击卡片固化详情投影</div>` +
+    works.map(w => `
+    <button class="wk-card" type="button" data-slug="${w.slug}" style="--cat:${c.css}">
+      <span class="wk-thumb skel" data-thumb="${w.slug}"></span>
+      <span class="wk-meta">
+        <h4>${w.n}<span class="slug">${w.slug}</span></h4>
+        <p>${w.d}</p>
+        <span class="wk-tags">${w.tags.map(t => `<span>${t}</span>`).join('')}</span>
+      </span>
+    </button>`).join('');
+  /* 懒加载：骨架屏至少呈现一帧，再替换为程序化 SVG 缩略图 */
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    $$('#cp-list .wk-thumb').forEach(el => {
+      const w = workBySlug(el.getAttribute('data-thumb'));
+      if(w){ el.innerHTML = thumbSVG(w); el.classList.remove('skel'); }
+    });
+  }));
+  openLayer(catPanel, {
+    opener: null,
+    onClose: endFocus
+  });
+  $('#cp-hint').textContent = 'HOLOGRAM REBUILDING…';
+  setTimeout(() => { $('#cp-hint').textContent = 'REBUILD COMPLETE · 100%'; }, RM ? 60 : 1500);
+  if(slug) setTimeout(() => openDetail(slug), RM ? 60 : 380);
+}
+$('#cp-list') && $('#cp-list').addEventListener('click', e => {
+  const card = e.target.closest('[data-slug]');
+  if(card) openDetail(card.getAttribute('data-slug'));
+});
+
+/* ---- C 详情弹层 ---- */
+const detailLayer = $('#detail');
+function openDetail(slug){
+  const w = workBySlug(slug);
+  if(!w) return;
+  const c = CATS.find(x => x.id === w.cat);
+  detailLayer.style.setProperty('--cat', c.css);
+  $('#dl-title').textContent = w.n;
+  const qa = w.qa.map((item, i) => `
+    <div class="qa-item${i === 0 ? ' open' : ''}">
+      <button class="qa-q" type="button" aria-expanded="${i === 0 ? 'true' : 'false'}">
+        <span class="qm">Q${i + 1}</span><span>${item[0]}</span><span class="ar">▶</span>
+      </button>
+      <div class="qa-a"><div><p><span class="am">A</span>${item[1]}</p></div></div>
+    </div>`).join('');
+  $('#dl-body').innerHTML = `
+    <div class="dl-hero">
+      <div class="dl-thumb">${thumbSVG(w)}</div>
+      <div class="dl-head">
+        <h3>${w.n}</h3>
+        <div class="slug">${w.slug.toUpperCase()} // ${c.en}</div>
+        <p class="desc">${w.d}</p>
+        <div class="wk-tags">${w.tags.map(t => `<span>${t}</span>`).join('')}</div>
+        <div class="dl-actions">
+          <a class="mini-btn" href="${w.tool}" target="_blank" rel="noopener">⚙ 打开工具</a>
+          <a class="mini-btn warm" href="${w.video}" target="_blank" rel="noopener">▶ 视频教程</a>
+        </div>
+      </div>
+    </div>
+    <div class="qa">
+      <div class="qa-cap">QA · 常见三问 // SPEC SHEET</div>
+      ${qa}
+    </div>`;
+  openLayer(detailLayer, { opener: null, onClose: null });
+}
+$('#dl-body') && $('#dl-body').addEventListener('click', e => {
+  const q = e.target.closest('.qa-q');
+  if(!q) return;
+  const item = q.parentElement;
+  const open = item.classList.toggle('open');
+  q.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+
+/* ---- D 博客文章列表 ---- */
+function buildArticles(){
+  $('#art-list').innerHTML = ARTICLES.map((a, i) => `
+    <article class="art-card rv" id="art-${i}">
+      <button class="art-head" type="button" aria-expanded="false" aria-controls="art-b-${i}">
+        <span class="ad">${a.date}</span>
+        <h3>《${a.title}》</h3>
+        <span class="ac">${a.cat}</span>
+        <span class="ad">${a.read}</span>
+        <span class="ar" aria-hidden="true">▶</span>
+      </button>
+      <div class="art-fold" id="art-b-${i}"><div><div class="art-body">${a.body}</div></div></div>
+    </article>`).join('');
+  $('#art-list').addEventListener('click', e => {
+    const head = e.target.closest('.art-head');
+    if(!head) return;
+    toggleArticle(head.parentElement, !head.parentElement.classList.contains('open'));
+  });
+}
+function toggleArticle(card, open){
+  card.classList.toggle('open', open);
+  card.querySelector('.art-head').setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function gotoArticle(i){
+  scrollToBlog(null);
+  const card = $('#art-' + i);
+  if(!card) return;
+  toggleArticle(card, true);
+  setTimeout(() => card.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'center' }), 80);
+}
+function scrollToBlog(anchor){
+  const t = anchor ? $(anchor) : $('#blog');
+  if(t) t.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
+}
+
+/* ---- 降级网格（仅 body.no3d 显示） ---- */
+function buildFallback(){
+  $('#fb-grid').innerHTML = CATS.map((c, i) => `
+    <div class="fb-cat" style="--cat:${c.css}">
+      <h3><span class="no">${c.num}</span>${c.name}</h3>
+      <div class="en">${c.en} // HOLO-GRID</div>
+      <button class="fb-open" type="button" data-cat="${i}">▤ 展开分类面板</button>
+      <div class="fb-chips">
+        ${WORKS.filter(w => w.cat === c.id).map(w => `<button class="fb-chip" type="button" data-slug="${w.slug}"><b>${w.n}</b> — ${w.d}</button>`).join('')}
+      </div>
+    </div>`).join('');
+  $('#fb-grid').addEventListener('click', e => {
+    const cat = e.target.closest('[data-cat]');
+    if(cat){ openCategoryPanel(+cat.getAttribute('data-cat')); return; }
+    const chip = e.target.closest('[data-slug]');
+    if(chip) openDetail(chip.getAttribute('data-slug'));
+  });
+}
+
+/* ####################################################################
+   §4 图层系统（焦点圈闭 / Esc / 遮罩 / 归还焦点）+ Toast + 表单
+   #################################################################### */
+const layerStack = [];
+let lockCount = 0;
+function lockScroll(){ lockCount++; document.body.classList.add('locked'); }
+function unlockScroll(){ lockCount = Math.max(0, lockCount - 1); if(lockCount === 0) document.body.classList.remove('locked'); }
+function openLayer(el, opts){
+  if(layerStack.some(l => l.el === el)) return;
+  el.classList.add('open');
+  el.setAttribute('aria-hidden', 'false');
+  layerStack.push({ el: el, opener: opts && opts.opener || null, onClose: opts && opts.onClose || null });
+  lockScroll();
+  const f = el.querySelector('button,[href],input,textarea,select');
+  if(f) setTimeout(() => f.focus(), RM ? 0 : 120);
+}
+function closeLayer(el){
+  const idx = layerStack.findIndex(l => l.el === el);
+  if(idx < 0) return;
+  const entry = layerStack[idx];
+  layerStack.splice(idx, 1);
+  el.classList.remove('open');
+  el.setAttribute('aria-hidden', 'true');
+  unlockScroll();
+  if(entry.onClose) entry.onClose();
+  if(entry.opener && entry.opener.focus) entry.opener.focus();
+}
+function closeTopLayer(){
+  if(layerStack.length) closeLayer(layerStack[layerStack.length - 1].el);
+}
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape'){
+    if(layerStack.length){ closeTopLayer(); }
+    else if(stage3d.ready && mode === 'focus'){ closePanel(); }
+  }
+  /* 焦点圈闭 */
+  if(e.key === 'Tab' && layerStack.length){
+    const root = layerStack[layerStack.length - 1].el;
+    const f = Array.from(root.querySelectorAll('button,[href],input,textarea,select')).filter(x => !x.disabled && x.offsetParent !== null);
+    if(!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if(e.shiftKey && document.activeElement === first){ last.focus(); e.preventDefault(); }
+    else if(!e.shiftKey && document.activeElement === last){ first.focus(); e.preventDefault(); }
+  }
+});
+/* 遮罩 / 关闭钮 */
+document.addEventListener('click', e => {
+  if(e.target.closest('[data-close-panel]')) closePanel();
+  else if(e.target.closest('[data-close-detail]')) closeLayer(detailLayer);
+  else if(e.target.closest('[data-close-contact]')) closeLayer($('#contact'));
+});
+
+/* Toast */
+let toastT = 0;
+function showToast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove('show'), 1900);
+}
+
+/* B 联系面板 */
+const contactLayer = $('#contact');
+$('#beacon').addEventListener('click', () => openLayer(contactLayer, { opener: $('#beacon') }));
+$('#ct-qr').innerHTML = qrSVG();
+async function copyText(txt){
+  try{
+    await navigator.clipboard.writeText(txt);
+    return true;
+  }catch(err){
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    }catch(e2){ return false; }
+  }
+}
+$('#ct-copy').addEventListener('click', async () => {
+  const addr = $('#ct-addr').textContent;
+  const ok = await copyText(addr);
+  showToast(ok ? '已复制，随时来信' : '复制失败，请手动选中邮箱文本');
+});
+$('#ct-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const msgEl = $('#cf-msg'), mailEl = $('#cf-mail');
+  const msg = msgEl.value.trim();
+  const mail = mailEl.value.trim();
+  let ok = true;
+  /* 行内校验，不弹窗 */
+  const msgBad = !(msg.length >= 10 && msg.length <= 500);
+  $('#cf-msg-err').style.display = msgBad ? 'block' : 'none';
+  msgEl.style.borderColor = msgBad ? 'var(--warn)' : '';
+  if(msgBad) ok = false;
+  const mailBad = mail !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail);
+  $('#cf-mail-err').style.display = mailBad ? 'block' : 'none';
+  mailEl.style.borderColor = mailBad ? 'var(--warn)' : '';
+  if(mailBad) ok = false;
+  if(!ok) return;
+  try{
+    const box = JSON.parse(localStorage.getItem('sc_messages') || '[]');
+    box.push({ name: $('#cf-name').value.trim(), email: mail, msg: msg, at: new Date().toISOString() });
+    localStorage.setItem('sc_messages', JSON.stringify(box));
+  }catch(err){}
+  contactLayer.classList.add('ct-done');
+  showToast('留言已投进邮筒');
+});
+$('#cf-msg').addEventListener('input', e => {
+  $('#cf-msg-err').style.display = 'none';
+  e.target.style.borderColor = '';
+});
+$('#ct-again').addEventListener('click', () => {
+  contactLayer.classList.remove('ct-done');
+  $('#ct-form').reset();
+  $('#cf-msg').focus();
+});
+
+/* 刊头导航 */
+$('#topbar').addEventListener('click', e => {
+  const b = e.target.closest('[data-nav]');
+  if(!b) return;
+  const nav = b.getAttribute('data-nav');
+  if(nav === 'deck') window.scrollTo({ top: 0, behavior: RM ? 'auto' : 'smooth' });
+  else if(nav === 'blog') scrollToBlog('#articles');
+  else if(nav === 'about') scrollToBlog('#about');
+  else if(nav === 'contact') openLayer(contactLayer, { opener: b });
+});
+/* 页脚夜间模式拨杆（全息舱常驻夜间的彩蛋） */
+$('#theme-toggle').addEventListener('click', () => showToast('全息舱常驻夜间模式。慢速缓存，夜间保鲜。'));
+
+/* ---- 飞向基座（3D 与降级模式共用的总入口） ---- */
+function flyToCat(catId, slug){
+  const i = CATS.findIndex(c => c.id === catId);
+  if(i < 0) return;
+  if(!stage3d.ready){
+    openCategoryPanel(i, slug);
+    return;
+  }
+  if(scrollY > 40) window.scrollTo(0, 0);
+  if(mode === 'focus'){
+    if(focusIdx === i){ if(slug) openDetail(slug); return; }
+    closePanel(true);
+  }
+  focusPedestal(i, slug);
+}
+
+/* ---- 滚动显现（博客区） ---- */
+function buildReveal(){
+  if(!('IntersectionObserver' in window) || RM){
+    $$('.rv').forEach(el => el.classList.add('in'));
+    return;
+  }
+  const io = new IntersectionObserver(es => es.forEach(en => {
+    if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+  }), { rootMargin: '0px 0px -60px 0px' });
+  $$('.rv').forEach(el => io.observe(el));
+}
+
+/* ####################################################################
+   §5 three.js 场景 —— 全息投影台（research/16 §一 基线 + §二 配方 2）
+   CDN 兜底链：cdnjs r128 → jsdelivr 0.149.0 → unpkg 0.149.0（统一 r128 API）
+   #################################################################### */
+const stage3d = { ready: false };
+function loadScript(src){
+  return new Promise((ok, no) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = ok;
+    s.onerror = no;
+    document.head.appendChild(s);
+  });
+}
+let booted = false;
+(async () => {
+  const cdns = [
+    'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+    'https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js',
+    'https://unpkg.com/three@0.149.0/build/three.min.js'
+  ];
+  for(const u of cdns){
+    try{ await loadScript(u); if(window.THREE) break; }catch(e){}
+  }
+  if(!window.THREE){ degrade('three.js 三源 CDN 全部失败'); return; }
+  try{ boot(); }catch(err){ degrade('场景初始化异常: ' + (err && err.message || err)); }
+})();
+
+function degrade(reason){
+  if(booted) return;
+  console.warn('[HOLOGRAM DECK] 降级为 CSS 全息模式 →', reason);
+  document.body.classList.add('no3d');
+  const c = $('#stage');
+  if(c) c.style.display = 'none';
+  hideCurtain();
+  CATS.forEach((c2, i) => setDeckStatus(i, '在线'));
+  $('#cp-hint') && ($('#cp-hint').textContent = 'CSS HOLO MODE');
+}
+function hideCurtain(){
+  const cu = $('#curtain');
+  if(cu && !cu.classList.contains('off')) cu.classList.add('off');
+}
+
+/* ---- 三维全局 ---- */
+let renderer, scene, camera, clock, raf = 0;
+let mode = 'intro';            /* intro | cruise | focus */
+let focusIdx = -1;
+let curP = 0, targetP = 0;
+let yaw = 0, yawT = 0, pitch = 0, pitchT = 0;
+let activeCamTween = null;
+let pathCurve, lookCurve, camFrom = null;
+let introT = 0, sweepT = -100;   /* sweepT 哨兵：<=-100 表示扫描已结束 */
+let frameN = 0, fpsAcc = 0, lowDropped = false;
+let hoverPed = null, dustPts = null, rainObj = null, floorMat = null, converge = null, coreObj = null;
+const camLook = { x: 0, y: 1.6, z: 0 };
+const pedestals = [];
+const hitPedestals = [], hitWorks = [];
+const RING_R = 8.2;
+const _v1 = { x: 0, y: 0, z: 0 }, _v2 = { x: 0, y: 0, z: 0 }, _v3 = { x: 0, y: 0, z: 0 };
+/* three 对象复用池（GC 红线：update 循环内禁止 new） */
+let _tv1, _tv2, _tv3, _projM, _frustum, _sphere;
+
+function rotY(v, a){
+  const c = Math.cos(a), s = Math.sin(a);
+  const x = v.x * c + v.z * s, z = -v.x * s + v.z * c;
+  v.x = x; v.z = z;
+}
+function pedPos(cat){
+  return { x: Math.sin(cat.ang) * RING_R, y: 0, z: Math.cos(cat.ang) * RING_R };
+}
+
+function boot(){
+  const canvas = $('#stage');
+  /* WebGL 预检 */
+  let gl = null;
+  try{ gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl'); }catch(e){}
+  if(!gl){ degrade('WebGL 上下文不可用'); return; }
+  try{
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: !isMobile, powerPreference: 'high-performance' });
+  }catch(e){ degrade('WebGLRenderer 创建失败'); return; }
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, isMobile ? 1.5 : 2));   /* DPR 钳制 */
+  renderer.setSize(innerWidth, innerHeight, false);
+  if(THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x050a12);
+  scene.fog = new THREE.FogExp2(0x050a12, 0.026);
+  camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 320);
+  camera.position.set(0, 17, 34);
+  clock = new THREE.Clock();
+
+  _tv1 = new THREE.Vector3(); _tv2 = new THREE.Vector3(); _tv3 = new THREE.Vector3();
+  _projM = new THREE.Matrix4(); _frustum = new THREE.Frustum(); _sphere = new THREE.Sphere();
+
+  buildLights();
+  buildFloor();
+  buildSectorLines();
+  buildCore();
+  buildDust();
+  buildRain();
+  buildPedestals();
+  buildConverge();
+
+  bindStageEvents(canvas);
+
+  /* 相机巡航路径：环绕四基座的闭环 + 注视点双曲线 */
+  const pathPts = [], lookPts = [];
+  for(let i = 0; i < 10; i++){
+    const a = i / 10 * Math.PI * 2;
+    pathPts.push(new THREE.Vector3(Math.sin(a) * 12.8, 3.3 + Math.sin(a * 2) * 0.55, Math.cos(a) * 12.8));
+    lookPts.push(new THREE.Vector3(Math.sin(a) * 7.4, 1.7, Math.cos(a) * 7.4));
+  }
+  pathCurve = new THREE.CatmullRomCurve3(pathPts, true, 'catmullrom', 0.5);
+  lookCurve = new THREE.CatmullRomCurve3(lookPts, true, 'catmullrom', 0.5);
+
+  camera.position.set(0, 17, 34);   /* 入场起点：自高处推近（startIntro 会捕获此位） */
+  onScroll();          /* 页面可能带滚动位置刷新：先同步一次巡航进度 */
+  startIntro();
+  if(RM) applyCruisePose(0);
+  loop();
+  stage3d.ready = true;
+  booted = true;
+  hideCurtain();
+}
+
+/* ---- 氛围三件套：灯光 / 地面 shader 网格 / 扇区线 ---- */
+function buildLights(){
+  scene.add(new THREE.AmbientLight(0x24405c, 1.0));
+  const pt = new THREE.PointLight(0x37e6ff, 1.05, 52, 2);
+  pt.position.set(0, 6.5, 0);
+  scene.add(pt);
+  const dir = new THREE.DirectionalLight(0x88bbff, 0.35);
+  dir.position.set(8, 14, 6);
+  scene.add(dir);
+}
+function glowTexture(){
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 256;
+  const g = cv.getContext('2d');
+  const grad = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+  grad.addColorStop(0, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.25, 'rgba(190,240,255,.75)');
+  grad.addColorStop(0.55, 'rgba(55,230,255,.28)');
+  grad.addColorStop(1, 'rgba(55,230,255,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 256, 256);
+  const t = new THREE.CanvasTexture(cv);
+  return t;
+}
+let GLOW_TEX = null;
+function buildFloor(){
+  floorMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uSweep: { value: -1 },
+      uBg: { value: new THREE.Color(0x050a12) },
+      uGlow: { value: new THREE.Color(0x2fb9d8) }
+    },
+    vertexShader: [
+      'varying vec3 vW; varying float vDist;',
+      'void main(){',
+      '  vec4 wp = modelMatrix * vec4(position,1.0);',
+      '  vW = wp.xyz;',
+      '  vec4 mv = viewMatrix * wp;',
+      '  vDist = -mv.z;',
+      '  gl_Position = projectionMatrix * mv;',
+      '}'
+    ].join('\n'),
+    fragmentShader: [
+      'uniform float uTime; uniform float uSweep; uniform vec3 uBg; uniform vec3 uGlow;',
+      'varying vec3 vW; varying float vDist;',
+      'float gridL(vec2 p, float sc, float w){',
+      '  vec2 f = abs(fract(p * sc) - 0.5);',
+      '  float m = max(f.x, f.y);',
+      '  return smoothstep(0.5 - w, 0.5, m);',
+      '}',
+      'void main(){',
+      '  float g1 = gridL(vW.xz, 0.5, 0.022);',   /* 细网格：每 2 单位 */
+      '  float g2 = gridL(vW.xz, 0.1, 0.006);',  /* 主网格：每 10 单位 */
+      '  float fade = 1.0 - smoothstep(16.0, 78.0, vDist);',
+      '  float sweep = 0.0;',
+      '  if(uSweep > 0.0){',
+      '    float d = length(vW.xz);',
+      '    sweep = exp(-abs(d - uSweep) * 1.1) * 1.35;',
+      '  }',
+      '  float pulse = 0.04 + 0.02 * sin(uTime * 0.8 - vDist * 0.14);',
+      '  vec3 col = uBg + uGlow * ((g1 * 0.38 + g2 * 0.95) * (0.2 + 0.8 * fade) + pulse * fade * g2);',
+      '  col += uGlow * sweep * fade;',
+      '  gl_FragColor = vec4(col, 1.0);',
+      '}'
+    ].join('\n')
+  });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(320, 320), floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  scene.add(floor);
+}
+function buildSectorLines(){
+  const mat = new THREE.LineBasicMaterial({ color: 0x1b4b7a, transparent: true, opacity: 0.55 });
+  /* 基座环 */
+  const circPts = [];
+  for(let i = 0; i <= 72; i++){
+    const a = i / 72 * Math.PI * 2;
+    circPts.push(new THREE.Vector3(Math.sin(a) * RING_R, 0.02, Math.cos(a) * RING_R));
+  }
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(circPts), mat));
+  /* 四条辐线（扇区分区线） */
+  const spokePts = [];
+  CATS.forEach(c => {
+    const p = pedPos(c);
+    const dir = _tv1.set(p.x, 0, p.z).normalize();
+    spokePts.push(new THREE.Vector3(dir.x * 2.1, 0.02, dir.z * 2.1));
+    spokePts.push(new THREE.Vector3(dir.x * (RING_R - 0.15), 0.02, dir.z * (RING_R - 0.15)));
+  });
+  scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(spokePts), mat));
+}
+function buildCore(){
+  const grp = new THREE.Group();
+  const ico = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(0.62, 0)),
+    new THREE.LineBasicMaterial({ color: 0x37e6ff, transparent: true, opacity: 0.5 })
+  );
+  ico.position.y = 2.6;
+  grp.add(ico);
+  if(!GLOW_TEX) GLOW_TEX = glowTexture();
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: GLOW_TEX, color: 0x37e6ff, transparent: true, opacity: 0.5,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  }));
+  sp.position.y = 2.6;
+  sp.scale.setScalar(2.6);
+  grp.add(sp);
+  scene.add(grp);
+  coreObj = { grp: grp, ico: ico };
+}
+
+/* ---- 漂浮尘埃 ---- */
+function buildDust(){
+  const N = LOW ? 160 : 620;
+  const pos = new Float32Array(N * 3);
+  const spd = new Float32Array(N);
+  for(let i = 0; i < N; i++){
+    const a = Math.random() * Math.PI * 2, r = 3 + Math.random() * 30;
+    pos[i * 3] = Math.sin(a) * r;
+    pos[i * 3 + 1] = Math.random() * 13;
+    pos[i * 3 + 2] = Math.cos(a) * r;
+    spd[i] = 0.1 + Math.random() * 0.25;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({
+    color: 0x9fd7ff, size: 0.07, sizeAttenuation: true, transparent: true, opacity: 0.55,
+    depthWrite: false, blending: THREE.AdditiveBlending
+  });
+  dustPts = new THREE.Points(geo, mat);
+  dustPts.userData.spd = spd;
+  scene.add(dustPts);
+}
+/* ---- 数据流雨（粒子线束） ---- */
+function buildRain(){
+  const N = LOW ? 100 : 340;
+  const pos = new Float32Array(N * 6);
+  const col = new Float32Array(N * 6);
+  const spd = new Float32Array(N);
+  for(let i = 0; i < N; i++){
+    const a = Math.random() * Math.PI * 2, r = 5 + Math.random() * 38;
+    const x = Math.sin(a) * r, z = Math.cos(a) * r;
+    const y = Math.random() * 20, len = 0.7 + Math.random() * 1.1;
+    pos[i * 6] = x; pos[i * 6 + 1] = y; pos[i * 6 + 2] = z;
+    pos[i * 6 + 3] = x; pos[i * 6 + 4] = y + len; pos[i * 6 + 5] = z;
+    col[i * 6] = 0.22; col[i * 6 + 1] = 0.85; col[i * 6 + 2] = 1.0;
+    col[i * 6 + 3] = 0.03; col[i * 6 + 4] = 0.16; col[i * 6 + 5] = 0.3;
+    spd[i] = 2.4 + Math.random() * 3.4;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  rainObj = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
+    vertexColors: true, transparent: true, opacity: 0.42,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  }));
+  rainObj.userData.spd = spd;
+  rainObj.userData.N = N;
+  scene.add(rainObj);
+}
+
+/* ---- 四座全息投影基座 ---- */
+function buildPedestals(){
+  if(!GLOW_TEX) GLOW_TEX = glowTexture();
+  CATS.forEach((cat, i) => {
+    const p = pedPos(cat);
+    const grp = new THREE.Group();
+    grp.position.set(p.x, 0, p.z);
+    /* 基座台体 */
+    const baseMat = new THREE.MeshStandardMaterial({
+      color: 0x0a1622, roughness: 0.55, metalness: 0.35,
+      emissive: new THREE.Color(cat.hex), emissiveIntensity: 0
+    });
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.72, 0.34, 26), baseMat);
+    base.position.y = 0.17;
+    grp.add(base);
+    /* 顶环 */
+    const ringMat = new THREE.MeshBasicMaterial({ color: cat.hex, transparent: true, opacity: 0 });
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.035, 8, 42), ringMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.36;
+    grp.add(ring);
+    /* 光锥（additive 半透明，自下而上打光） */
+    const coneGeo = new THREE.ConeGeometry(1.42, 3.7, 26, 1, true);
+    coneGeo.rotateX(Math.PI);
+    const coneMat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      uniforms: { uColor: { value: new THREE.Color(cat.hex) }, uOn: { value: 0 }, uTime: { value: 0 } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+      fragmentShader: [
+        'uniform vec3 uColor; uniform float uOn; uniform float uTime; varying vec2 vUv;',
+        'void main(){',
+        '  float a = pow(vUv.y, 1.7) * 0.15;',
+        '  a += 0.035 * pow(max(0.0, sin(vUv.y * 17.0 - uTime * 2.1)), 3.0);',
+        '  a *= uOn;',
+        '  gl_FragColor = vec4(uColor * a, a);',
+        '}'
+      ].join('\n')
+    });
+    const cone = new THREE.Mesh(coneGeo, coneMat);
+    cone.position.y = 0.36 + 1.85;
+    grp.add(cone);
+    /* 台心辉光 */
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: GLOW_TEX, color: cat.hex, transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    }));
+    glow.position.y = 0.5;
+    glow.scale.setScalar(3.2);
+    grp.add(glow);
+    /* 基座铭牌 */
+    const label = makeLabel(cat.num + ' · ' + cat.name, cat.css);
+    label.position.y = 5.0;
+    label.material.opacity = 0;
+    grp.add(label);
+    /* 全息作品群（懒装配容器） */
+    const holo = new THREE.Group();
+    holo.position.y = 2.42;
+    grp.add(holo);
+    /* 不可见命中代理（大圆柱，覆盖整座全息区） */
+    const hit = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.9, 1.9, 5.6, 8),
+      new THREE.MeshBasicMaterial({ visible: false })
+    );
+    hit.position.y = 2.8;
+    hit.userData.pedIdx = i;
+    grp.add(hit);
+    hitPedestals.push(hit);
+    scene.add(grp);
+    pedestals.push({
+      idx: i, cat: cat, grp: grp, holo: holo, pos: p,
+      baseMat: baseMat, ringMat: ringMat, coneMat: coneMat, glowMat: glow.material, labelMat: label.material,
+      works: [], assembled: false, ignited: false, igniteT: 0,
+      clip: 0, clipSpeed: 0.12, boost: 1, hit: hit
+    });
+    setDeckStatus(i, '待机');
+  });
+}
+function makeLabel(text, colorCss){
+  const cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 128;
+  const g = cv.getContext('2d');
+  g.font = '600 46px ui-monospace, Consolas, monospace';
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.shadowColor = colorCss;
+  g.shadowBlur = 22;
+  g.fillStyle = '#eaf9ff';
+  g.fillText(text, 256, 56);
+  g.shadowBlur = 0;
+  g.strokeStyle = colorCss;
+  g.lineWidth = 3;
+  g.beginPath();
+  g.moveTo(96, 96); g.lineTo(416, 96);
+  g.stroke();
+  const tex = new THREE.CanvasTexture(cv);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: tex, transparent: true, depthWrite: false
+  }));
+  sp.scale.set(3.6, 0.9, 1);
+  return sp;
+}
+
+/* ---- 作品线框形状库（17 件，图元组合 → EdgesGeometry 合并） ---- */
+const G = {
+  box: (w, h, d) => new THREE.BoxGeometry(w, h, d),
+  cyl: (rt, rb, h, s) => new THREE.CylinderGeometry(rt, rb, h, s || 10, 1),
+  cone: (r, h, s) => new THREE.ConeGeometry(r, h, s || 8, 1, true),
+  tor: (r, t, s, arc) => new THREE.TorusGeometry(r, t, 7, s || 18, arc || Math.PI * 2),
+  sph: (r) => new THREE.SphereGeometry(r, 10, 8),
+  ico: (r) => new THREE.IcosahedronGeometry(r, 0),
+  oct: (r) => new THREE.OctahedronGeometry(r, 0),
+  tet: (r) => new THREE.TetrahedronGeometry(r, 0),
+  pla: (w, h) => new THREE.PlaneGeometry(w, h)
+};
+function prim(g, x, y, z, rx, ry, rz){
+  return { g: g, x: x || 0, y: y || 0, z: z || 0, rx: rx || 0, ry: ry || 0, rz: rz || 0 };
+}
+const SHAPES = {
+  mowen: () => [
+    prim(G.box(0.78, 0.05, 0.52), 0, -0.28, 0),
+    prim(G.cone(0.15, 0.5, 6), 0.08, 0.12, 0, 0, 0, 0.5),
+    prim(G.cyl(0.13, 0.13, 0.05, 12), 0.26, -0.22, 0.14),
+    prim(G.tor(0.1, 0.025, 14), -0.26, -0.22, -0.1)
+  ],
+  ciproc: () => [
+    prim(G.box(0.3, 0.52, 0.04), -0.24, 0, 0),
+    prim(G.box(0.3, 0.52, 0.04), 0.24, 0, 0),
+    prim(G.tor(0.13, 0.032, 16), 0, 0, 0, 0, 0, Math.PI / 2)
+  ],
+  rememory: () => [
+    prim(G.box(0.86, 0.6, 0.03), 0, 0, 0),
+    prim(G.box(0.36, 0.5, 0.035), 0.2, 0, 0),
+    prim(G.box(0.18, 0.05, 0.012), -0.38, 0.33, 0.02, 0, 0, 0.5),
+    prim(G.box(0.18, 0.05, 0.012), 0.4, -0.34, 0.02, 0, 0, 0.5)
+  ],
+  scriptor: () => {
+    const arr = [];
+    for(let i = 0; i < 7; i++){
+      const h = 0.1 + ((i * 37) % 23) / 23 * 0.36;
+      arr.push(prim(G.box(0.06, h, 0.06), (i - 3) * 0.11, -0.08, 0));
+    }
+    arr.push(prim(G.tor(0.17, 0.03, 14), 0, 0.32, 0));
+    return arr;
+  },
+  ideabox: () => [
+    prim(G.box(0.5, 0.26, 0.34), 0, -0.24, 0),
+    prim(G.oct(0.15), 0.18, 0.05, 0, 0, 0.6, 0),
+    prim(G.tet(0.13), -0.2, 0.16, 0.05, 0, 0.9, 0),
+    prim(G.oct(0.1), 0.02, 0.32, -0.05, 0, 0.3, 0)
+  ],
+  neongrid: () => [
+    prim(G.box(0.8, 0.55, 0.06), 0, 0, 0),
+    prim(G.box(0.16, 0.1, 0.02), -0.2, -0.12, 0.05),
+    prim(G.box(0.3, 0.08, 0.02), 0.18, -0.12, 0.05),
+    prim(G.box(0.5, 0.1, 0.02), 0, 0.1, 0.05),
+    prim(G.cyl(0.05, 0.05, 0.02, 10), -0.28, 0.1, 0.05)
+  ],
+  paperui: () => [
+    prim(G.box(0.72, 0.52, 0.02), -0.04, 0, 0, 0, 0, 0.06),
+    prim(G.box(0.16, 0.4, 0.024), 0.24, 0.02, 0.01),
+    prim(G.box(0.3, 0.2, 0.022), -0.1, -0.08, 0.02)
+  ],
+  micromove: () => {
+    const arr = [];
+    for(let i = 0; i < 3; i++) for(let j = 0; j < 3; j++){
+      const z = ((i + j) % 3) - 1;
+      arr.push(prim(G.box(0.17, 0.17, 0.02), (i - 1) * 0.24, (j - 1) * 0.24, z * 0.1, 0, 0, ((i * j) % 3 - 1) * 0.2));
+    }
+    return arr;
+  },
+  shellpick: () => [
+    prim(G.tor(0.22, 0.09, 20, Math.PI * 1.35), -0.18, -0.02, 0, 0, 0, 0.4),
+    prim(G.cone(0.14, 0.2, 8), 0.06, 0.14, 0, 0, 0, -0.9),
+    prim(G.pla(0.42, 0.3), 0.32, 0, 0, 0, -0.5, 0),
+    prim(G.pla(0.55, 0.36), 0, -0.3, 0, -Math.PI / 2.1, 0, 0)
+  ],
+  breathrhythm: () => [
+    prim(G.tor(0.32, 0.03, 28), 0, 0, 0),
+    prim(G.tor(0.42, 0.012, 28), 0, 0, 0),
+    prim(G.sph(0.1), 0, 0, 0)
+  ],
+  lightbite: () => [
+    prim(G.cyl(0.38, 0.3, 0.18, 18), 0, -0.16, 0),
+    prim(G.tor(0.38, 0.025, 24), 0, -0.06, 0, Math.PI / 2, 0, 0),
+    prim(G.sph(0.05), 0.12, -0.02, 0.06),
+    prim(G.sph(0.045), -0.14, -0.03, -0.06),
+    prim(G.box(0.5, 0.015, 0.03), 0.3, 0.12, 0, 0, 0, 0.3)
+  ],
+  sleepsea: () => [
+    prim(G.sph(0.22), 0.12, 0.24, 0),
+    prim(G.tor(0.3, 0.012, 24), 0, -0.1, 0, Math.PI / 2.3, 0, 0),
+    prim(G.tor(0.42, 0.01, 24), 0, -0.16, 0, Math.PI / 2.3, 0, 0),
+    prim(G.pla(0.9, 0.5), 0, -0.32, 0, -Math.PI / 2, 0, 0)
+  ],
+  stepmap: () => [
+    prim(G.pla(0.8, 0.58), 0, -0.12, 0, -Math.PI / 2.6, 0, 0),
+    prim(G.tor(0.2, 0.02, 20), 0.05, -0.1, 0, -Math.PI / 2.6, 0, 0),
+    prim(G.cone(0.07, 0.1, 8), -0.26, 0.04, 0)
+  ],
+  wordblocks: () => [
+    prim(G.box(0.24, 0.06, 0.24), -0.14, -0.2, -0.14),
+    prim(G.box(0.24, 0.06, 0.24), 0.14, -0.2, -0.14),
+    prim(G.box(0.24, 0.06, 0.24), -0.14, -0.2, 0.14),
+    prim(G.box(0.24, 0.24, 0.06), 0.14, -0.08, 0.14, 0.9, 0, 0),
+    prim(G.cyl(0.02, 0.02, 0.42, 8), 0.32, 0.1, 0, 0, 0, 0.6),
+    prim(G.cone(0.035, 0.09, 6), 0.44, 0.26, 0, 0, 0, -0.45)
+  ],
+  pixelcourier: () => [
+    prim(G.box(0.2, 0.5, 0.2), -0.28, -0.08, 0),
+    prim(G.box(0.16, 0.34, 0.16), -0.04, -0.16, 0.06),
+    prim(G.box(0.22, 0.62, 0.2), 0.24, -0.02, 0),
+    prim(G.box(0.08, 0.12, 0.06), -0.14, 0.02, 0.18),
+    prim(G.oct(0.06), 0.02, 0.28, 0)
+  ],
+  cattower: () => [
+    prim(G.box(0.4, 0.14, 0.3), 0, -0.3, 0),
+    prim(G.box(0.36, 0.14, 0.28), 0, -0.16, 0, 0, 0, 0.12),
+    prim(G.box(0.34, 0.14, 0.26), 0, -0.02, 0, 0, 0, -0.1),
+    prim(G.box(0.3, 0.14, 0.24), 0, 0.12, 0, 0, 0, 0.08),
+    prim(G.sph(0.12), 0, 0.29, 0),
+    prim(G.cone(0.045, 0.08, 4), -0.07, 0.41, 0),
+    prim(G.cone(0.045, 0.08, 4), 0.07, 0.41, 0)
+  ],
+  puzzleship: () => [
+    prim(G.cone(0.14, 0.34, 4), 0, -0.1, 0, 0, 0, -Math.PI / 2),
+    prim(G.tet(0.15), 0, 0.14, 0, 0, 0.4, 0),
+    prim(G.tor(0.32, 0.012, 20, Math.PI), 0, -0.26, 0, Math.PI / 2.1, 0, 0),
+    prim(G.tor(0.07, 0.02, 10), 0.3, 0.14, 0),
+    prim(G.oct(0.05), -0.3, 0.2, 0)
+  ]
+};
+/* 图元组合 → EdgesGeometry 位置合并 → 单一 LineSegments（省 draw call） */
+function mergedEdges(prims){
+  const m = new THREE.Matrix4();
+  const e = new THREE.Euler();
+  const q = new THREE.Quaternion();
+  const pv = new THREE.Vector3();
+  const sv = new THREE.Vector3(1, 1, 1);
+  const arrays = [];
+  let total = 0;
+  prims.forEach(p => {
+    const g = p.g;
+    e.set(p.rx, p.ry, p.rz);
+    q.setFromEuler(e);
+    pv.set(p.x, p.y, p.z);
+    m.compose(pv, q, sv);
+    g.applyMatrix4(m);
+    const eg = new THREE.EdgesGeometry(g, 24);
+    g.dispose();
+    const arr = eg.attributes.position.array;
+    total += arr.length;
+    arrays.push(arr);
+  });
+  const all = new Float32Array(total);
+  let off = 0;
+  arrays.forEach(a => { all.set(a, off); off += a.length; });
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(all, 3));
+  geo.computeBoundingBox();
+  return geo;
+}
+/* 扫描显影 ShaderMaterial（clipHeight 自下而上扫描循环） */
+const WIRE_VERT = [
+  'varying float vY; varying float vDist;',
+  'void main(){',
+  '  vY = position.y;',
+  '  vec4 mv = modelViewMatrix * vec4(position,1.0);',
+  '  vDist = -mv.z;',
+  '  gl_Position = projectionMatrix * mv;',
+  '}'
+].join('\n');
+const WIRE_FRAG = [
+  'uniform float uClip; uniform float uFull; uniform float uTime; uniform float uBoost;',
+  'uniform vec3 uColor;',
+  'varying float vY; varying float vDist;',
+  'void main(){',
+  '  float c = mix(fract(uClip), 2.0, uFull);',
+  '  float n = clamp(vY + 0.5, 0.0, 1.0);',   /* 图元已归一化到 [-0.5, 0.5] */
+  '  if(n > c) discard;',
+  '  float band = smoothstep(c - 0.13, c, n);',
+  '  float flick = 0.9 + 0.1 * sin(uTime * 22.0 + n * 24.0);',
+  '  vec3 col = mix(uColor, vec3(1.0), band * 0.85);',
+  '  float a = (0.5 + 0.5 * band) * flick * uBoost;',
+  '  a *= 1.0 - smoothstep(34.0, 62.0, vDist);',
+  '  gl_FragColor = vec4(col * a, a);',
+  '}'
+].join('\n');
+function buildWorkMesh(ped, work, j){
+  const prims = (SHAPES[work.slug] || SHAPES.mowen)();
+  const geo = mergedEdges(prims);
+  /* 归一化到 [-0.5,0.5]，供扫描 uniform 使用 */
+  geo.computeBoundingBox();
+  const bb = geo.boundingBox;
+  const cy = (bb.max.y + bb.min.y) / 2;
+  const ch = Math.max(bb.max.y - bb.min.y, 0.0001);
+  geo.translate(0, -cy, 0);
+  geo.scale(1 / Math.max(ch, 0.4), 1 / Math.max(ch, 0.4), 1 / Math.max(ch, 0.4));
+  geo.computeBoundingSphere();
+  const mat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    uniforms: {
+      uClip: { value: 0 },
+      uFull: { value: RM ? 1 : 0 },
+      uTime: { value: 0 },
+      uBoost: { value: 1 },
+      uColor: { value: new THREE.Color(ped.cat.hex) }
+    },
+    vertexShader: WIRE_VERT,
+    fragmentShader: WIRE_FRAG
+  });
+  const mesh = new THREE.LineSegments(geo, mat);
+  mesh.userData.work = work;
+  mesh.userData.pedIdx = ped.idx;
+  mesh.visible = false;
+  const ang = j / WORKS.filter(w => w.cat === ped.cat.id).length * Math.PI * 2;
+  const holder = new THREE.Group();
+  holder.position.set(Math.sin(ang) * 1.28, 0, Math.cos(ang) * 1.28);
+  holder.add(mesh);
+  /* 每件作品一枚青色 additive 辉光 sprite */
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: GLOW_TEX, color: ped.cat.hex, transparent: true,
+    opacity: RM ? 0.28 : 0.34, blending: THREE.AdditiveBlending, depthWrite: false
+  }));
+  sp.scale.setScalar(1.5);
+  holder.add(sp);
+  ped.holo.add(holder);
+  const w = {
+    slug: work.slug, mesh: mesh, mat: mat, holder: holder, sprite: sp,
+    phase: j * 0.27, on: false, t0: 0
+  };
+  ped.works.push(w);
+  hitWorks.push(mesh);
+  return w;
+}
+/* 懒装配：基座进入巡航视野才装配作品群 */
+function assemblePed(ped){
+  if(ped.assembled) return;
+  ped.assembled = true;
+  const works = WORKS.filter(w => w.cat === ped.cat.id);
+  works.forEach((w, j) => buildWorkMesh(ped, w, j));
+  updateAssembleCount();
+}
+function updateAssembleCount(){
+  const n = pedestals.reduce((s, p) => s + (p.assembled ? p.works.length : 0), 0);
+  const el = $('#ro-as');
+  if(el) el.textContent = n + '/17';
+}
+function checkAssemble(){
+  if(!camera) return;
+  _projM.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+  _frustum.setFromProjectionMatrix(_projM);
+  pedestals.forEach(ped => {
+    if(!ped.ignited || ped.assembled) return;
+    _tv3.set(ped.pos.x, 2.6, ped.pos.z);
+    _sphere.set(_tv3, 3.6);
+    if(_frustum.intersectsSphere(_sphere)) assemblePed(ped);
+  });
+}
+
+/* ---- 粒子聚合 FX（重建扫描时粒子向作品位汇聚） ---- */
+function buildConverge(){
+  const N = LOW ? 110 : 240;
+  const start = new Float32Array(N * 3);
+  const target = new Float32Array(N * 3);
+  const rand = new Float32Array(N);
+  const pos = new Float32Array(N * 3);
+  for(let i = 0; i < N; i++) rand[i] = Math.random();
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('aStart', new THREE.BufferAttribute(start, 3));
+  geo.setAttribute('aTarget', new THREE.BufferAttribute(target, 3));
+  geo.setAttribute('aRand', new THREE.BufferAttribute(rand, 1));
+  const mat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    uniforms: { uProg: { value: 0 }, uColor: { value: new THREE.Color(0x37e6ff) } },
+    vertexShader: [
+      'attribute vec3 aStart; attribute vec3 aTarget; attribute float aRand;',
+      'uniform float uProg; varying float vA;',
+      'void main(){',
+      '  float t = clamp(uProg * 1.45 - aRand * 0.45, 0.0, 1.0);',
+      '  float e = t * t * (3.0 - 2.0 * t);',
+      '  vec3 p = mix(aStart, aTarget, e);',
+      '  vA = 0.25 + (1.0 - t) * 0.75;',
+      '  vec4 mv = modelViewMatrix * vec4(p, 1.0);',
+      '  gl_PointSize = (2.2 + 3.0 * (1.0 - t)) * (130.0 / max(-mv.z, 1.0));',
+      '  gl_Position = projectionMatrix * mv;',
+      '}'
+    ].join('\n'),
+    fragmentShader: [
+      'uniform vec3 uColor; varying float vA;',
+      'void main(){',
+      '  float d = length(gl_PointCoord - 0.5);',
+      '  float a = smoothstep(0.5, 0.08, d) * vA;',
+      '  gl_FragColor = vec4(uColor * a, a);',
+      '}'
+    ].join('\n')
+  });
+  converge = new THREE.Points(geo, mat);
+  converge.visible = false;
+  converge.userData.N = N;
+  converge.userData.runT = 1;
+  scene.add(converge);
+}
+function runConverge(ped){
+  const N = converge.userData.N;
+  const geo = converge.geometry;
+  const start = geo.attributes.aStart.array;
+  const target = geo.attributes.aTarget.array;
+  const works = ped.works;
+  for(let i = 0; i < N; i++){
+    const a = Math.random() * Math.PI * 2;
+    const r = 3.5 + Math.random() * 3.5;
+    start[i * 3] = ped.pos.x + Math.sin(a) * r;
+    start[i * 3 + 1] = 0.4 + Math.random() * 2;
+    start[i * 3 + 2] = ped.pos.z + Math.cos(a) * r;
+    if(works.length){
+      const w = works[i % works.length];
+      _tv3.set(0, 0, 0);
+      w.holder.getWorldPosition(_tv3);
+      target[i * 3] = _tv3.x + (Math.random() - 0.5) * 0.5;
+      target[i * 3 + 1] = _tv3.y + (Math.random() - 0.5) * 0.5;
+      target[i * 3 + 2] = _tv3.z + (Math.random() - 0.5) * 0.5;
+    }else{
+      target[i * 3] = ped.pos.x; target[i * 3 + 1] = 2.4; target[i * 3 + 2] = ped.pos.z;
+    }
+  }
+  geo.attributes.aStart.needsUpdate = true;
+  geo.attributes.aTarget.needsUpdate = true;
+  converge.material.uniforms.uColor.value.setHex(ped.cat.hex);
+  converge.userData.runT = 0;
+  converge.visible = !RM;
+  converge.material.uniforms.uProg.value = RM ? 1 : 0;
+}
+
+/* ---- 交互：拖拽环视 / 点选 / 滚轮巡航 ---- */
+let dragging = false, dragMoved = 0, downX = 0, downY = 0, downT = 0, lastX = 0, lastY = 0;
+let hoverCheckT = 0;
+let raycaster = null;
+const ndc = { x: 0, y: 0 };
+function bindStageEvents(canvas){
+  raycaster = new THREE.Raycaster();
+  if(!raycaster.params.Line) raycaster.params.Line = {};
+  raycaster.params.Line.threshold = 0.16;
+  canvas.addEventListener('pointerdown', e => {
+    if(e.button !== undefined && e.button !== 0) return;
+    dragging = true; dragMoved = 0;
+    downX = lastX = e.clientX; downY = lastY = e.clientY;
+    downT = performance.now();
+    canvas.classList.add('dragging');
+    hideHint();
+    skipIntro();
+  });
+  window.addEventListener('pointermove', e => {
+    if(dragging){
+      const dx = e.clientX - lastX, dy = e.clientY - lastY;
+      lastX = e.clientX; lastY = e.clientY;
+      dragMoved += Math.abs(dx) + Math.abs(dy);
+      if(mode === 'cruise'){
+        yawT -= dx * 0.0042;
+        pitchT = clamp(pitchT + dy * 0.0028, -0.22, 0.42);
+      }
+    }
+    /* hover 节流 50ms */
+    const now = performance.now();
+    if(now - hoverCheckT > 50 && stage3d.ready && mode === 'cruise' && !isMobile){
+      hoverCheckT = now;
+      hoverRaycast(e.clientX, e.clientY, canvas);
+    }
+  });
+  const endDrag = e => {
+    if(!dragging) return;
+    dragging = false;
+    canvas.classList.remove('dragging');
+    const dist = Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY);
+    const dur = performance.now() - downT;
+    if(dist < 8 && dur < 420) clickRaycast(e.clientX, e.clientY);
+  };
+  window.addEventListener('pointerup', endDrag);
+  window.addEventListener('pointercancel', () => {
+    dragging = false;
+    canvas.classList.remove('dragging');
+  });
+  /* 聚焦状态下滚轮 = 退出聚焦 */
+  window.addEventListener('wheel', e => {
+    if(stage3d.ready && mode === 'focus' && !e.target.closest('.cp-body,.dl-body,.ct-body')) closePanel();
+  }, { passive: true });
+  canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); degrade('WebGL 上下文丢失'); });
+  /* 后台标签页暂停 */
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden){ cancelAnimationFrame(raf); raf = 0; }
+    else{ clock.getDelta(); if(!raf) loop(); }
+  });
+  let rzT = 0;
+  addEventListener('resize', () => {
+    clearTimeout(rzT);
+    rzT = setTimeout(() => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight, false);
+    }, 150);
+  });
+  addEventListener('scroll', onScroll, { passive: true });
+  $('#curtain').addEventListener('click', skipIntro);
+}
+function setNDC(x, y){
+  ndc.x = x / innerWidth * 2 - 1;
+  ndc.y = -(y / innerHeight) * 2 + 1;
+}
+function hoverRaycast(x, y, canvas){
+  setNDC(x, y);
+  raycaster.setFromCamera(ndc, camera);
+  const hits = raycaster.intersectObjects(hitPedestals, false);
+  const nh = hits.length ? hits[0].object.userData.pedIdx : null;
+  if(nh !== hoverPed){
+    hoverPed = nh;
+    canvas.classList.toggle('pointing', nh !== null);
+  }
+}
+function clickRaycast(x, y){
+  if(mode !== 'cruise' && mode !== 'focus') return;
+  setNDC(x, y);
+  raycaster.setFromCamera(ndc, camera);
+  /* 先检测作品线框（更细粒度），再检测基座代理 */
+  if(mode === 'cruise'){
+    const wh = raycaster.intersectObjects(hitWorks, false);
+    if(wh.length){
+      const ud = wh[0].object.userData;
+      focusPedestal(ud.pedIdx, ud.work.slug);
+      return;
+    }
+  }
+  const ph = raycaster.intersectObjects(hitPedestals, false);
+  if(ph.length){
+    const i = ph[0].object.userData.pedIdx;
+    if(mode === 'focus' && focusIdx === i) return;
+    focusPedestal(i);
+  }
+}
+function onScroll(){
+  const sp = $('#space').offsetHeight - innerHeight;
+  targetP = sp > 0 ? clamp(scrollY / sp, 0, 1) : 0;
+  $('#deck-index').classList.toggle('away', scrollY > sp * 1.02);
+  if(scrollY > 60) hideHint();
+}
+let hintOff = false;
+function hideHint(){
+  if(hintOff) return;
+  hintOff = true;
+  $('#hint').classList.add('off');
+}
+
+/* ---- 相机位与补间（自写 20 行 tween，无第三方库） ---- */
+let camTween = null;
+function tweenCam(toPos, toLook, dur, onDone){
+  camTween = {
+    t: 0,
+    dur: RM ? 0.01 : dur,
+    fp: camera.position.clone(),
+    fl: new THREE.Vector3(camLook.x, camLook.y, camLook.z),
+    tp: toPos.clone(),
+    tl: toLook.clone(),
+    onDone: onDone || null
+  };
+}
+function applyCruisePose(p){
+  const t = ((p % 1) + 1) % 1;
+  pathCurve.getPoint(t, _tv1);
+  lookCurve.getPoint(((t + 0.045) % 1 + 1) % 1, _tv2);
+  rotYv(_tv1, yaw); rotYv(_tv2, yaw);
+  _tv1.y += pitch * 5;
+  _tv2.y += pitch * 2.2;
+  camera.position.copy(_tv1);
+  camLook.x = _tv2.x; camLook.y = _tv2.y; camLook.z = _tv2.z;
+  camera.lookAt(_tv2);
+}
+function rotYv(v, a){
+  const c = Math.cos(a), s = Math.sin(a);
+  const x = v.x * c + v.z * s, z = -v.x * s + v.z * c;
+  v.x = x; v.z = z;
+}
+function focusPosOf(i){
+  const ped = pedestals[i];
+  const d = _tv3.set(ped.pos.x, 0, ped.pos.z).normalize();
+  return new THREE.Vector3(ped.pos.x + d.x * 7.4, 7.4, ped.pos.z + d.z * 7.4);
+}
+function focusLookOf(i){
+  const ped = pedestals[i];
+  return new THREE.Vector3(ped.pos.x, 1.35, ped.pos.z);
+}
+
+/* ---- 开机序列：加载幕 → 扫描线横扫 → 基座逐个点亮 ---- */
+function startIntro(){
+  if(RM){
+    /* 静态直出：全部点亮，扫描全显 */
+    pedestals.forEach(p => { ignitePed(p, true); });
+    if(floorMat) floorMat.uniforms.uSweep.value = -1;
+    mode = 'cruise';
+    return;
+  }
+  camFrom = camera.position.clone();
+  introT = 0;
+  sweepT = -0.35;   /* 负值 = 延迟 0.35s 后扫描线开始横扫 */
+  /* 点亮次序：按相对镜头方位角排序 → 逐个显影 */
+  pedestals.forEach(p => {
+    const da = ((p.cat.ang % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    p.igniteAt = 0.55 + da / (Math.PI * 2) * 1.5;
+  });
+}
+let introSkipped = false;
+function skipIntro(){
+  if(RM || introSkipped || !booted) return;
+  if(mode !== 'intro' && sweepT <= -100) return;
+  introSkipped = true;
+  introT = 99;
+  if(sweepT > -100){
+    sweepT = -100;
+    if(floorMat) floorMat.uniforms.uSweep.value = -1;
+  }
+  pedestals.forEach(p => { if(!p.ignited) ignitePed(p, true); });
+  if(mode === 'intro'){
+    applyCruisePose(0);
+    mode = 'cruise';
+  }
+}
+function ignitePed(ped, instant){
+  if(ped.ignited) return;
+  ped.ignited = true;
+  ped.igniteT = instant ? 1 : 0;
+  setDeckStatus(ped.idx, '在线');
+  if(instant){
+    ped.baseMat.emissiveIntensity = 0.55;
+    ped.ringMat.opacity = 0.9;
+    ped.coneMat.uniforms.uOn.value = 1;
+    ped.glowMat.opacity = 0.85;
+    ped.labelMat.opacity = 1;
+  }
+}
+
+/* ---- 聚焦基座：45° 俯角飞行 + 扫描加速重建 + DOM 面板浮现 ---- */
+let returnPos = null, returnLook = null;
+function focusPedestal(i, slug){
+  const ped = pedestals[i];
+  if(!ped) return;
+  if(mode === 'focus' && catPanel.classList.contains('open')) closeLayer(catPanel);   /* 归还滚动锁，避免计数泄漏 */
+  returnPos = camera.position.clone();
+  returnLook = new THREE.Vector3(camLook.x, camLook.y, camLook.z);
+  mode = 'focus';
+  focusIdx = i;
+  lockScroll();
+  /* 扫描加速「重建」该类全部作品 */
+  ped.clipSpeed = 0.5;
+  ped.boost = 1.9;
+  runConverge(ped);
+  setDeckStatus(i, '重建中');
+  tweenCam(focusPosOf(i), focusLookOf(i), 1.05, null);
+  setTimeout(() => {
+    setDeckStatus(i, '在线');
+    ped.boost = 1.25;
+  }, RM ? 60 : 1600);
+  openCategoryPanel(i, slug);
+}
+function closePanel(instant){
+  if(mode !== 'focus') { if(catPanel.classList.contains('open')) closeLayer(catPanel); return; }
+  const i = focusIdx;
+  closeLayer(catPanel);   /* 触发 onClose → endFocus */
+  if(i >= 0 && pedestals[i]) pedestals[i].clipSpeed = 0.12;
+}
+function endFocus(){
+  if(mode !== 'focus') return;
+  mode = 'cruise';
+  focusIdx = -1;
+  unlockScroll();
+  if(stage3d.ready && returnPos){
+    tweenCam(returnPos, returnLook, 0.85, null);
+  }
+}
+
+/* ---- 主循环（单 rAF 调度） ---- */
+function loop(){
+  raf = requestAnimationFrame(loop);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  update(dt);
+  renderer.render(scene, camera);
+}
+function update(dt){
+  const t = clock.elapsedTime;
+  frameN++;
+  /* FPS 首帧探测：前 60 帧均值 <30 → 运行时降档 */
+  if(frameN <= 60){
+    fpsAcc += dt;
+    if(frameN === 60 && fpsAcc > 0){
+      const fps = 60 / fpsAcc;
+      const el = $('#ro-fps'); if(el) el.textContent = Math.round(fps);
+      if(fps < 30 && !lowDropped){
+        lowDropped = true;
+        renderer.setPixelRatio(1);
+        if(dustPts) dustPts.visible = false;
+        if(rainObj) rainObj.geometry.setDrawRange(0, Math.floor(rainObj.userData.N / 2) * 2);
+      }
+    }
+  }else if(frameN % 90 === 0){
+    const el = $('#ro-fps');
+    if(el) el.textContent = Math.round(1 / Math.max(dt, 0.001));
+  }
+
+  /* 地面 uniforms */
+  if(floorMat){
+    floorMat.uniforms.uTime.value = t;
+    if(sweepT > -100 && !RM){
+      sweepT += dt;
+      if(sweepT > 0 && sweepT < 2.1){
+        floorMat.uniforms.uSweep.value = sweepT / 2.1 * 95;
+      }else if(sweepT >= 2.1){
+        floorMat.uniforms.uSweep.value = -1;
+      }
+      pedestals.forEach(p => { if(!p.ignited && sweepT >= p.igniteAt) ignitePed(p, false); });
+      if(sweepT > 2.4) sweepT = -100;
+    }
+  }
+  /* 尘埃上浮 */
+  if(dustPts && dustPts.visible && !RM){
+    const pos = dustPts.geometry.attributes.position.array;
+    const spd = dustPts.userData.spd;
+    for(let i = 0; i < spd.length; i++){
+      pos[i * 3 + 1] += spd[i] * dt;
+      pos[i * 3] += Math.sin(t * 0.6 + i) * 0.002;
+      if(pos[i * 3 + 1] > 13) pos[i * 3 + 1] = 0;
+    }
+    dustPts.geometry.attributes.position.needsUpdate = true;
+  }
+  /* 数据流雨下落 */
+  if(rainObj && rainObj.visible && !RM){
+    const pos = rainObj.geometry.attributes.position.array;
+    const spd = rainObj.userData.spd;
+    for(let i = 0; i < spd.length; i++){
+      const dy = spd[i] * dt;
+      pos[i * 6 + 1] -= dy; pos[i * 6 + 4] -= dy;
+      if(pos[i * 6 + 1] < 0.2){
+        const len = pos[i * 6 + 4] - pos[i * 6 + 1];   /* 先存长度再回绕 */
+        const ny = 18 + Math.random() * 4;
+        pos[i * 6 + 4] = ny;
+        pos[i * 6 + 1] = ny - len;
+      }
+    }
+    rainObj.geometry.attributes.position.needsUpdate = true;
+  }
+  /* 中央核心缓转 */
+  if(coreObj && !RM) coreObj.ico.rotation.y += dt * 0.4;
+
+  /* 基座：点亮补间 / 全息自转 / 扫描循环 */
+  pedestals.forEach(ped => {
+    if(ped.ignited && ped.igniteT < 1 && !RM){
+      ped.igniteT = Math.min(1, ped.igniteT + dt / 0.85);
+      const e = easeO(ped.igniteT);
+      ped.baseMat.emissiveIntensity = 0.55 * e;
+      ped.ringMat.opacity = 0.9 * e;
+      ped.coneMat.uniforms.uOn.value = e;
+      ped.glowMat.opacity = 0.85 * e;
+      ped.labelMat.opacity = e;
+    }
+    if(ped.coneMat) ped.coneMat.uniforms.uTime.value = t;
+    if(ped.assembled && !RM) ped.holo.rotation.y += dt * 0.27;
+    ped.clip += dt * (RM ? 0 : ped.clipSpeed);
+    ped.boost += (1 - ped.boost) * Math.min(1, dt * 2);
+    ped.works.forEach(w => {
+      if(!w.on && ped.igniteT > 0.4){ w.on = true; w.t0 = 0; }
+      if(!w.on) return;
+      if(w.t0 < 1){
+        w.t0 = Math.min(1, w.t0 + dt / 0.7);
+        const e = easeO(w.t0);
+        w.holder.scale.setScalar(0.55 + 0.45 * e);
+        w.mat.uniforms.uBoost.value = (1 + 2.2 * (1 - e)) * ped.boost;
+      }else{
+        w.mat.uniforms.uBoost.value = ped.boost;
+      }
+      w.mat.uniforms.uClip.value = ped.clip + w.phase;
+      w.mat.uniforms.uTime.value = t;
+      if(!RM) w.holder.position.y = Math.sin(t * 1.15 + w.phase * 6.2) * 0.07;
+    });
+  });
+  /* 粒子聚合 */
+  if(converge && converge.visible){
+    converge.userData.runT = Math.min(1.2, converge.userData.runT + dt);
+    converge.material.uniforms.uProg.value = converge.userData.runT;
+    if(converge.userData.runT >= 1.2) converge.visible = false;
+  }
+
+  /* 相机：补间优先，否则按模式 */
+  if(camTween){
+    camTween.t += dt;
+    const k = easeIO(clamp(camTween.t / camTween.dur, 0, 1));
+    camera.position.lerpVectors(camTween.fp, camTween.tp, k);
+    _tv2.lerpVectors(camTween.fl, camTween.tl, k);
+    camLook.x = _tv2.x; camLook.y = _tv2.y; camLook.z = _tv2.z;
+    camera.lookAt(_tv2);
+    if(camTween.t >= camTween.dur){
+      const cb = camTween.onDone;
+      camTween = null;
+      if(cb) cb();
+    }
+  }else if(mode === 'intro'){
+    introT += dt;
+    const k = easeO(clamp(introT / 1.5, 0, 1));
+    pathCurve.getPoint(0, _tv1);
+    camera.position.lerpVectors(camFrom, _tv1, k);
+    lookCurve.getPoint(0.045, _tv2);
+    camLook.x = _tv2.x; camLook.y = _tv2.y; camLook.z = _tv2.z;
+    camera.lookAt(_tv2);
+    if(introT >= 1.5) mode = 'cruise';
+  }else if(mode === 'cruise'){
+    curP += (targetP - curP) * Math.min(1, dt * 3.1);
+    yaw += (yawT - yaw) * Math.min(1, dt * 6);
+    pitch += (pitchT - pitch) * Math.min(1, dt * 6);
+    applyCruisePose(curP);
+    if(frameN % 12 === 0){
+      const az = ((-Math.atan2(camera.position.x, camera.position.z) * 180 / Math.PI) + 360) % 360;
+      const el1 = $('#ro-az'); if(el1) el1.textContent = String(Math.round(az)).padStart(3, '0') + '°';
+      const el2 = $('#ro-p'); if(el2) el2.textContent = String(Math.round(curP * 100)).padStart(3, '0') + '%';
+    }
+  }
+
+  /* 懒装配检测（含视锥 + 距离） */
+  if(frameN % 9 === 0) checkAssemble();
+  /* 距离剔除：远端全息群隐藏渲染 */
+  if(frameN % 20 === 0){
+    pedestals.forEach(ped => {
+      if(!ped.assembled) return;
+      const d = Math.hypot(camera.position.x - ped.pos.x, camera.position.z - ped.pos.z);
+      ped.holo.visible = d < 46;
+    });
+  }
+}
+
+/* ####################################################################
+   §6 启动
+   #################################################################### */
+buildTicker();
+buildDeckIndex();
+buildArticles();
+buildFallback();
+buildReveal();
+$('#space').style.height = RM ? '160vh' : '520vh';
+/* 加载幕兜底：CDN 迟迟不至 → 4.5s 后降级，功能仍 100% 可达 */
+setTimeout(() => {
+  if(!stage3d.ready) degrade('three.js 加载超时');
+}, 4500);
+/* 键盘直达：1-4 飞向基座 */
+document.addEventListener('keydown', e => {
+  if(e.target.closest('input,textarea')) return;
+  const k = parseInt(e.key, 10);
+  if(k >= 1 && k <= 4) flyToCat(CATS[k - 1].id);
+});
+</script>
+</body>
+</html>

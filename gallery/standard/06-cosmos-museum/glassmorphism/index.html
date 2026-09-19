@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<!--
+  穹象天文博物馆 ASTRAEUM · 玻璃拟态 Glassmorphism（标准网页）
+  规格依据：research/12-style-round4.md §一.1 + research/06-cosmos-museum.md §一/§六
+  红线自查：
+  - 同屏毛玻璃卡 ≤6 张：展厅恰好 6 卡满屏；藏品卡按 3 列 × 约 420px 高设计，典型视口同屏约 6 张
+  - 禁止 blur 叠 blur：玻璃元素互不嵌套（卡内图片/输入框/图鉴插画均无 backdrop-filter）
+  - @supports 不支持 backdrop-filter 时整体降级为 rgba(13,18,38,.9) 实底
+  - 背景动画只用 transform；玻璃上正文以深色填充保证对比
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="穹象天文博物馆 ASTRAEUM——把宇宙装进一座馆。常设展厅、馆藏天体档案、穹幕影院与观星夜预约。">
+<title>穹象天文博物馆 ASTRAEUM · 把宇宙装进一座馆</title>
+<style>
+/* ============ 1. 设计令牌 ============ */
+:root{
+  --space:#070B1E;            /* 深空底 */
+  --violet:#7C3AED;           /* 星云紫 */
+  --cyan:#22D3EE;             /* 宇宙青 */
+  --gold:#FBBF24;             /* 点缀金 */
+  --txt:#F1F5F9;              /* 正文白 */
+  --mut:#94A3B8;              /* 弱文字 */
+  --line:rgba(255,255,255,.25);
+  --line-strong:rgba(255,255,255,.45);
+  --fill:rgba(255,255,255,.08);
+  --r:20px;
+  --font-d:"Space Grotesk","Inter","PingFang SC","Microsoft YaHei",sans-serif;
+  --font-b:"Inter","PingFang SC","Microsoft YaHei",sans-serif;
+  color-scheme:dark;
+}
+/* ============ 2. 基础 ============ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font:400 16px/1.75 var(--font-b);
+  color:var(--txt);
+  background:linear-gradient(180deg,#060917 0%,var(--space) 34%,#0A1030 72%,#060917 100%);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:rgba(124,58,237,.55);color:#fff}
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+section{scroll-margin-top:86px}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
+.skip{position:absolute;left:-999px;top:8px;z-index:200;background:var(--gold);color:#3B2B06;padding:8px 16px;border-radius:8px;font-weight:600}
+.skip:focus{left:8px}
+.wrap{width:min(1200px,92%);margin:0 auto}
+/* ============ 3. 背景：星野 + 光斑（只动 transform） ============ */
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.stars,.stars2{position:absolute;inset:0;background-repeat:repeat}
+.stars{
+  background-image:
+    radial-gradient(1.3px 1.3px at 22px 34px,rgba(255,255,255,.9),transparent 60%),
+    radial-gradient(1px 1px at 121px 87px,rgba(255,255,255,.65),transparent 60%),
+    radial-gradient(1.7px 1.7px at 233px 156px,rgba(196,181,253,.85),transparent 60%),
+    radial-gradient(1px 1px at 310px 44px,rgba(103,232,249,.8),transparent 60%),
+    radial-gradient(1.1px 1.1px at 402px 201px,rgba(255,255,255,.6),transparent 60%),
+    radial-gradient(.9px .9px at 58px 220px,rgba(255,255,255,.5),transparent 60%);
+  background-size:460px 260px;
+}
+.stars2{
+  background-image:
+    radial-gradient(2px 2px at 88px 120px,rgba(251,191,36,.55),transparent 60%),
+    radial-gradient(1.4px 1.4px at 260px 60px,rgba(255,255,255,.75),transparent 60%),
+    radial-gradient(1.6px 1.6px at 420px 260px,rgba(125,211,252,.7),transparent 60%),
+    radial-gradient(1.2px 1.2px at 180px 330px,rgba(255,255,255,.55),transparent 60%);
+  background-size:700px 420px;opacity:.7;
+}
+.blob{position:absolute;border-radius:50%}
+.blob i{
+  display:block;width:100%;height:100%;border-radius:50%;
+  filter:blur(120px);
+  transform:translateZ(0);
+}
+.b1{width:620px;height:620px;top:-14%;left:-8%}
+.b1 i{background:radial-gradient(circle at 40% 40%,rgba(124,58,237,.85),rgba(124,58,237,0) 68%);animation:drift-a 34s ease-in-out infinite alternate}
+.b2{width:560px;height:560px;top:22%;right:-12%}
+.b2 i{background:radial-gradient(circle at 55% 45%,rgba(34,211,238,.7),rgba(34,211,238,0) 68%);animation:drift-b 41s ease-in-out infinite alternate}
+.b3{width:420px;height:420px;top:64%;left:16%;opacity:.8}
+.b3 i{background:radial-gradient(circle at 50% 50%,rgba(168,85,247,.6),rgba(168,85,247,0) 70%);animation:drift-b 37s ease-in-out infinite alternate-reverse}
+.b4{width:460px;height:460px;bottom:-12%;right:6%;opacity:.75}
+.b4 i{background:radial-gradient(circle at 50% 50%,rgba(59,130,246,.55),rgba(59,130,246,0) 70%);animation:drift-a 44s ease-in-out infinite alternate-reverse}
+@keyframes drift-a{from{transform:translate3d(0,0,0)}to{transform:translate3d(38px,26px,0)}}
+@keyframes drift-b{from{transform:translate3d(0,0,0)}to{transform:translate3d(-34px,-22px,0)}}
+/* ============ 4. 玻璃组件基准（含 @supports 降级） ============ */
+/* 基座：不支持 backdrop-filter 时即为可读实底 rgba(13,18,38,.9) */
+.glass,.glass-deep{
+  border-radius:var(--r);
+  border:1px solid var(--line);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 8px 32px rgba(0,0,0,.35);
+  background:rgba(13,18,38,.9);
+}
+.glass-deep{background:rgba(11,16,36,.94)}
+/* 增强：毛玻璃 */
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .glass{
+    background:var(--fill);
+    -webkit-backdrop-filter:blur(16px) saturate(140%);
+    backdrop-filter:blur(16px) saturate(140%);
+  }
+  .glass-deep{
+    background:rgba(11,16,36,.55);
+    -webkit-backdrop-filter:blur(20px) saturate(140%);
+    backdrop-filter:blur(20px) saturate(140%);
+  }
+}
+/* ============ 5. 排版与区块 ============ */
+.eyebrow{
+  display:inline-flex;align-items:center;gap:10px;
+  color:var(--gold);font:600 12.5px/1 var(--font-d);
+  letter-spacing:.32em;text-transform:uppercase;
+}
+.eyebrow::before{content:"";width:26px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+.sec-head{margin-bottom:40px}
+.sec-head h2{font:700 clamp(1.7rem,3vw,2.3rem)/1.3 var(--font-d);letter-spacing:.01em;margin:14px 0 10px}
+.sec-head p{color:var(--mut);font-size:15px;max-width:60ch}
+section{padding:96px 0}
+/* 金色文字链 */
+.glink{
+  color:var(--gold);font:600 14px/1 var(--font-b);
+  display:inline-flex;align-items:center;gap:6px;
+  background:none;border:0;padding:0;
+  transition:gap .2s ease,color .2s ease;
+}
+.glink::after{content:"→";font-size:15px}
+.glink:hover{gap:10px;color:#FDE68A}
+/* ============ 6. 按钮与胶囊（无 backdrop-filter，避免叠 blur） ============ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 26px;border-radius:999px;border:1px solid transparent;
+  font:600 15px/1 var(--font-d);letter-spacing:.02em;
+  transition:transform .22s ease,box-shadow .22s ease,background .22s ease,border-color .22s ease;
+}
+.btn:active{transform:translateY(1px)}
+.btn-gold{
+  background:linear-gradient(135deg,#FDE68A,#FBBF24 52%,#F59E0B);
+  color:#3B2B06;box-shadow:0 8px 26px rgba(251,191,36,.3);
+}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(251,191,36,.42)}
+.btn-ghost{
+  background:rgba(255,255,255,.06);border-color:var(--line);color:var(--txt);
+}
+.btn-ghost:hover{transform:translateY(-2px);border-color:var(--line-strong);background:rgba(255,255,255,.1)}
+.chip{
+  padding:9px 18px;border-radius:999px;
+  border:1px solid var(--line);background:rgba(255,255,255,.05);
+  color:var(--mut);font:500 14px/1 var(--font-b);
+  transition:color .2s,border-color .2s,background .2s;
+}
+.chip:hover{color:var(--txt);border-color:var(--line-strong)}
+.chip.on{color:#FDE68A;border-color:rgba(251,191,36,.65);background:rgba(251,191,36,.12)}
+.chip .n{font:600 12px var(--font-d);opacity:.75;margin-left:4px;font-variant-numeric:tabular-nums}
+/* ============ 7. 顶部导航（通栏玻璃条，滚动后加深） ============ */
+header{
+  position:fixed;top:0;left:0;right:0;z-index:70;
+  border-radius:0;border-width:0 0 1px 0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1);
+  transition:background .3s ease;
+}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  header{background:rgba(7,11,30,.38);-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%)}
+  header.scrolled{background:rgba(7,11,30,.68);-webkit-backdrop-filter:blur(24px) saturate(150%);backdrop-filter:blur(24px) saturate(150%)}
+}
+header.scrolled{border-bottom-color:rgba(255,255,255,.16)}
+.nav{height:68px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;align-items:center;gap:11px;font:700 17px/1.2 var(--font-d);letter-spacing:.04em}
+.brand small{display:block;font:500 10.5px/1 var(--font-d);color:var(--mut);letter-spacing:.3em;margin-top:4px}
+.brand .logo{width:34px;height:34px;flex:none}
+.nav-links{display:flex;align-items:center;gap:6px;list-style:none}
+.nav-links a{
+  display:block;padding:9px 15px;border-radius:999px;
+  color:var(--mut);font:500 14.5px/1 var(--font-b);transition:color .2s,background .2s;
+}
+.nav-links a:hover{color:var(--txt);background:rgba(255,255,255,.07)}
+.nav-links a.active{color:#FDE68A;background:rgba(251,191,36,.1)}
+.nav-cta{display:flex;align-items:center;gap:10px}
+.nav-cta .btn{padding:10px 20px;font-size:14px}
+.burger{display:none;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.burger span{width:18px;height:2px;background:var(--txt);border-radius:2px;transition:transform .25s,opacity .25s}
+header.open .burger span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+header.open .burger span:nth-child(2){opacity:0}
+header.open .burger span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.m-menu{display:none}
+/* ============ 8. HERO ============ */
+.hero{min-height:calc(100vh - 68px);display:flex;align-items:center;padding:140px 0 56px}
+.hero-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:56px;align-items:center;width:100%}
+.kicker{display:inline-flex;align-items:center;gap:9px;color:var(--mut);font:500 13.5px/1 var(--font-b);letter-spacing:.12em}
+.kicker i{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px rgba(34,211,238,.9);flex:none}
+.hero h1{margin:20px 0 6px;font-family:var(--font-d)}
+.hero h1 .en{
+  display:block;font-size:clamp(2.9rem,6vw,4.6rem);font-weight:700;line-height:1.04;
+  letter-spacing:.015em;
+  background:linear-gradient(120deg,#FFFFFF 30%,#C7D2FE 70%,#A5B4FC);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+}
+.hero h1 .zh{display:block;font-size:clamp(1.25rem,2.2vw,1.7rem);font-weight:600;color:var(--txt);letter-spacing:.34em;margin-top:12px}
+.slogan{margin:18px 0 14px;font:600 clamp(1.02rem,1.6vw,1.2rem)/1.6 var(--font-d);color:var(--gold)}
+.slogan::before{content:"「"}.slogan::after{content:"」"}
+.lead{color:var(--mut);font-size:15.5px;max-width:50ch}
+.hero-btns{display:flex;flex-wrap:wrap;gap:14px;margin:30px 0 14px}
+.hero-note{color:#64748B;font-size:13px}
+.hero-cards{display:grid;gap:18px}
+.hcard{padding:24px 24px 22px}
+.hcard .tag{
+  display:inline-block;padding:5px 13px;border-radius:999px;
+  border:1px solid rgba(251,191,36,.55);color:#FDE68A;
+  font:600 12px/1 var(--font-d);letter-spacing:.18em;
+  background:rgba(251,191,36,.1);margin-bottom:14px;
+}
+.hcard h3{font:700 20px/1.45 var(--font-d);margin-bottom:6px}
+.hcard .meta{color:var(--mut);font-size:13px;font-variant-numeric:tabular-nums;margin-bottom:10px}
+.hcard p{color:var(--mut);font-size:14px;margin-bottom:14px}
+.sky-title{display:flex;align-items:center;gap:9px;font:600 15px/1 var(--font-d);margin-bottom:14px}
+.sky-title svg{width:18px;height:18px;color:var(--gold)}
+.sky-rows{display:grid;gap:0}
+.sky-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:10px 2px;border-bottom:1px dashed rgba(255,255,255,.12);
+}
+.sky-row:last-of-type{border-bottom:0}
+.sky-row .k{color:var(--mut);font-size:13.5px}
+.sky-row .v{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.sky-note{margin-top:10px;color:#64748B;font-size:12.5px}
+/* 数据带：玻璃胶囊 */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:64px}
+.stat{
+  border:1px solid var(--line);background:rgba(255,255,255,.05);
+  border-radius:16px;padding:16px 20px;text-align:center;
+}
+.stat b{display:block;font:700 27px/1.2 var(--font-d);font-variant-numeric:tabular-nums;color:var(--txt)}
+.stat b em{font-style:normal;font-size:14px;color:var(--gold);margin-left:3px}
+.stat span{color:var(--mut);font-size:12.5px;letter-spacing:.08em}
+/* ============ 9. 常设展厅（同屏恰好 6 张玻璃卡） ============ */
+.hall-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.hall{
+  padding:26px 24px 22px;position:relative;overflow:hidden;
+  transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;
+}
+.hall::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--a1,#7C3AED),var(--a2,#22D3EE));
+}
+.hall:hover{transform:translateY(-4px);border-color:var(--line-strong);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 14px 40px rgba(0,0,0,.45)}
+.hall-no{
+  position:absolute;top:8px;right:14px;
+  font:700 56px/1 var(--font-d);color:rgba(255,255,255,.06);
+  font-variant-numeric:tabular-nums;pointer-events:none;
+}
+.hall .salle{font:600 12px/1 var(--font-d);letter-spacing:.26em;color:var(--a2,#22D3EE);margin-bottom:14px;font-variant-numeric:tabular-nums}
+.hall h3{font:700 19px/1.4 var(--font-d);margin-bottom:8px}
+.hall>p{color:var(--mut);font-size:14px;min-height:48px}
+.hall .facts{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 18px}
+.hall .facts span{
+  padding:5px 11px;border-radius:999px;font-size:12px;color:var(--mut);
+  border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);
+  font-variant-numeric:tabular-nums;
+}
+/* ============ 10. 馆藏图鉴 ============ */
+.coll-bar{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:30px}
+.coll-chips{display:flex;flex-wrap:wrap;gap:10px}
+.coll-count{color:var(--mut);font-size:13px;font-variant-numeric:tabular-nums}
+.coll-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{
+  padding:14px;cursor:pointer;text-align:left;color:inherit;
+  transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease,opacity .2s ease;
+}
+.card:hover{transform:translateY(-4px);border-color:var(--line-strong);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 14px 40px rgba(0,0,0,.45)}
+.card:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.art-frame{
+  border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.14);
+  background:
+    radial-gradient(120% 100% at 50% 0%,rgba(124,58,237,.18),rgba(34,211,238,.06) 62%,transparent),
+    rgba(9,13,31,.5);
+}
+.art-frame svg{width:100%;height:auto}
+.card-body{padding:14px 8px 6px}
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.cat{
+  padding:4px 10px;border-radius:999px;font-size:11.5px;letter-spacing:.12em;
+  color:var(--cyan);border:1px solid rgba(34,211,238,.4);background:rgba(34,211,238,.08);
+}
+.cat.c-star{color:#FDE68A;border-color:rgba(251,191,36,.45);background:rgba(251,191,36,.08)}
+.cat.c-comet{color:#A5B4FC;border-color:rgba(165,180,252,.45);background:rgba(165,180,252,.08)}
+.cat.c-deep{color:#F0ABFC;border-color:rgba(240,171,252,.4);background:rgba(240,171,252,.07)}
+.card .no{color:#64748B;font:500 12px var(--font-d);font-variant-numeric:tabular-nums}
+.card h3{font:700 17.5px/1.4 var(--font-d)}
+.card .latin{color:#64748B;font:500 12px var(--font-d);letter-spacing:.06em;margin:2px 0 8px}
+.card .desc{color:var(--mut);font-size:13.5px;line-height:1.65;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-foot{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin-top:14px;padding-top:12px;border-top:1px dashed rgba(255,255,255,.14);
+}
+.card .dist{color:var(--mut);font-size:12.5px;font-variant-numeric:tabular-nums}
+.card.gone{display:none}
+.empty{
+  display:none;padding:70px 20px;text-align:center;color:var(--mut);
+  border:1px dashed rgba(255,255,255,.22);border-radius:var(--r);
+  background:rgba(255,255,255,.03);
+}
+.empty.show{display:block}
+.empty b{display:block;font:600 17px var(--font-d);color:var(--txt);margin-bottom:6px}
+/* ============ 11. 参观票务 ============ */
+.tk-grid{display:grid;grid-template-columns:5fr 7fr;gap:22px;align-items:start}
+.info-card{padding:26px}
+.info-card h3{font:700 18px/1.4 var(--font-d);margin-bottom:16px;display:flex;align-items:center;gap:9px}
+.info-card h3 svg{width:19px;height:19px;color:var(--cyan)}
+.trow{
+  display:flex;justify-content:space-between;gap:14px;
+  padding:11px 0;border-bottom:1px dashed rgba(255,255,255,.12);font-size:14px;
+}
+.trow:last-of-type{border-bottom:0}
+.trow .k{color:var(--mut)}
+.trow .v{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.trow .v small{display:block;font-weight:400;color:#64748B;font-size:12px}
+.info-note{margin-top:14px;padding:12px 14px;border-radius:12px;font-size:13px;color:var(--mut);background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.22)}
+.form-card{padding:30px}
+.form-card h3{font:700 19px/1.4 var(--font-d);margin-bottom:4px}
+.form-card .sub{color:var(--mut);font-size:13.5px;margin-bottom:24px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.field{margin-bottom:18px}
+.field>label{display:block;font:600 13.5px/1 var(--font-b);margin-bottom:9px}
+.field>label .req{color:var(--gold);margin-left:3px}
+.field input[type=text],.field input[type=tel],.field input[type=date],.field select{
+  width:100%;padding:12px 14px;border-radius:12px;
+  border:1px solid var(--line);background:rgba(255,255,255,.06);
+  color:var(--txt);font:400 15px/1.4 var(--font-b);
+  transition:border-color .2s,box-shadow .2s,background .2s;
+}
+.field input::placeholder{color:#64748B}
+.field input:focus,.field select:focus{
+  outline:none;border-color:rgba(251,191,36,.7);background:rgba(255,255,255,.09);
+  box-shadow:0 0 0 3px rgba(251,191,36,.16);
+}
+.err{display:none;color:#FCA5A5;font-size:12.5px;margin-top:7px}
+.field.bad input,.field.bad select{border-color:rgba(248,113,113,.75)}
+.field.bad .err{display:block}
+.field .hint{color:#64748B;font-size:12.5px;margin-top:7px}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.opt{position:relative;cursor:pointer}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt span{
+  display:block;padding:11px 10px;text-align:center;border-radius:12px;
+  border:1px solid var(--line);background:rgba(255,255,255,.04);
+  color:var(--mut);font-size:13px;line-height:1.45;transition:all .2s;
+}
+.opt span small{display:block;font-size:11px;color:#64748B}
+.opt input:checked+span{border-color:rgba(251,191,36,.7);background:rgba(251,191,36,.1);color:#FDE68A}
+.opt input:checked+span small{color:rgba(253,230,138,.75)}
+.opt input:focus-visible+span{outline:2px solid var(--gold);outline-offset:2px}
+.opt:hover span{border-color:var(--line-strong)}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.05);overflow:hidden}
+.stepper button{
+  width:42px;height:44px;border:0;background:transparent;color:var(--txt);
+  font:600 19px/1 var(--font-d);transition:background .2s;
+}
+.stepper button:hover{background:rgba(255,255,255,.1)}
+.stepper input{
+  width:64px;height:44px;border:0;background:transparent;color:var(--txt);
+  text-align:center;font:600 16px var(--font-d);font-variant-numeric:tabular-nums;
+}
+.stepper input:focus{outline:none}
+.est{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 16px;border-radius:14px;margin:6px 0 20px;
+  border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.08);
+  font-size:14px;
+}
+.est b{font:700 21px var(--font-d);color:var(--gold);font-variant-numeric:tabular-nums}
+.est small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
+.form-foot{font-size:12.5px;color:#64748B;margin-top:14px}
+/* 预约成功态 */
+.done{padding:34px;text-align:left}
+.done-head{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.done-head .ok{
+  width:46px;height:46px;border-radius:50%;flex:none;
+  background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.6);
+  display:grid;place-items:center;color:var(--gold);
+}
+.done-head .ok svg{width:22px;height:22px}
+.done-head h3{font:700 21px/1.3 var(--font-d)}
+.done .code-line{margin:10px 0 20px;color:var(--mut);font-size:14px}
+.done .code-line b{
+  display:inline-block;margin-left:8px;padding:5px 14px;border-radius:10px;
+  background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.4);
+  color:var(--cyan);font:700 17px var(--font-d);letter-spacing:.08em;font-variant-numeric:tabular-nums;
+}
+.done-grid{display:grid;grid-template-columns:1fr auto;gap:26px;align-items:center}
+.done-rows{display:grid;gap:0}
+.done-rows .trow{font-size:13.5px}
+.done .qr-box{text-align:center}
+.done .qr-box svg{width:108px;height:108px;color:var(--txt);background:#0D1428;border-radius:10px;padding:7px;border:1px solid rgba(255,255,255,.16)}
+.done .qr-box span{display:block;margin-top:8px;font-size:11.5px;color:#64748B;letter-spacing:.1em}
+.done-btns{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
+/* ============ 12. 详情弹层 ============ */
+.modal{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:22px}
+.modal[hidden]{display:none}
+.scrim{position:absolute;inset:0;background:rgba(4,7,20,.8)}
+.panel{
+  position:relative;width:min(900px,100%);max-height:min(86vh,780px);
+  overflow:auto;padding:28px;
+}
+.panel-close{
+  position:absolute;top:16px;right:16px;width:38px;height:38px;border-radius:50%;
+  border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--txt);
+  font-size:17px;line-height:1;display:grid;place-items:center;transition:all .2s;z-index:2;
+}
+.panel-close:hover{border-color:var(--line-strong);background:rgba(255,255,255,.13);transform:rotate(90deg)}
+.panel-grid{display:grid;grid-template-columns:320px 1fr;gap:26px;align-items:start}
+.panel-art{border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.14);background:radial-gradient(120% 100% at 50% 0%,rgba(124,58,237,.2),rgba(34,211,238,.07) 62%,transparent),rgba(9,13,31,.55)}
+.panel-art svg{width:100%;height:auto}
+.panel h3{font:700 23px/1.35 var(--font-d);margin:2px 0 2px;padding-right:44px}
+.panel .latin{color:#64748B;font:500 13px var(--font-d);letter-spacing:.08em;margin-bottom:10px}
+.panel .pdesc{color:var(--mut);font-size:14.5px;margin-bottom:18px}
+.kv{display:grid;grid-template-columns:92px 1fr;gap:11px 16px;padding:16px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05)}
+.kv dt{color:#64748B;font-size:13px}
+.kv dd{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.panel-foot{margin-top:18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+/* ============ 13. 页脚 ============ */
+footer{background:#05070F;border-top:1px solid rgba(255,255,255,.08);padding:60px 0 26px;margin-top:20px}
+.ft-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1.25fr;gap:36px}
+.ft-brand p{color:var(--mut);font-size:13.5px;margin-top:14px;max-width:34ch}
+.ft-col h4{font:600 14px/1 var(--font-d);letter-spacing:.14em;margin-bottom:16px;color:var(--txt)}
+.ft-col ul{list-style:none;display:grid;gap:10px}
+.ft-col a,.ft-col li{color:var(--mut);font-size:13.5px;transition:color .2s}
+.ft-col a:hover{color:var(--txt)}
+.ft-bottom{
+  margin-top:44px;padding-top:22px;border-top:1px solid rgba(255,255,255,.07);
+  display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;
+  color:#64748B;font-size:12.5px;
+}
+/* ============ 14. 浮动件 ============ */
+.toTop{
+  position:fixed;right:22px;bottom:22px;z-index:60;
+  width:46px;height:46px;border-radius:50%;border:1px solid var(--line);
+  background:rgba(13,18,38,.85);color:var(--txt);font-size:17px;
+  display:grid;place-items:center;opacity:0;transform:translateY(12px);
+  pointer-events:none;transition:opacity .3s,transform .3s,border-color .2s;
+}
+.toTop.show{opacity:1;transform:none;pointer-events:auto}
+.toTop:hover{border-color:var(--line-strong)}
+.mbar{
+  position:fixed;left:14px;right:14px;bottom:14px;z-index:65;display:none;
+  align-items:center;justify-content:space-between;gap:14px;
+  padding:10px 10px 10px 18px;border-radius:18px;
+}
+.mbar .t{font-size:13px;color:var(--mut)}
+.mbar .t b{display:block;color:var(--txt);font:600 15px var(--font-d)}
+.mbar .btn{padding:11px 22px;font-size:14px;flex:none}
+/* ============ 15. 滚动显现 ============ */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+.reveal.in{opacity:1;transform:none}
+/* ============ 16. 响应式 ============ */
+@media (max-width:1199px){
+  .hall-grid,.coll-grid{grid-template-columns:repeat(2,1fr)}
+  .hero-grid{grid-template-columns:1fr .95fr;gap:36px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .tk-grid{grid-template-columns:1fr}
+  .ft-grid{grid-template-columns:1fr 1fr;gap:30px}
+}
+@media (max-width:767px){
+  section{padding:70px 0}
+  .b3,.b4{display:none}             /* 移动端减少光斑数量 */
+  .b1{width:440px;height:440px}
+  .b2{width:400px;height:400px}
+  .nav-links,.nav-cta .btn-ghost{display:none}
+  .burger{display:flex}
+  .m-menu{
+    display:none;position:absolute;top:70px;left:14px;right:14px;
+    padding:10px;border-radius:18px;
+  }
+  header.open .m-menu{display:grid;gap:4px}
+  .m-menu a{padding:13px 16px;border-radius:12px;color:var(--txt);font-size:15px}
+  .m-menu a:hover,.m-menu a.active{background:rgba(255,255,255,.08)}
+  .hero{min-height:0;padding:120px 0 80px}
+  .hero-grid{grid-template-columns:1fr;gap:34px}
+  .hero h1 .zh{letter-spacing:.2em}
+  .hall-grid,.coll-grid{grid-template-columns:1fr}
+  .coll-bar{flex-direction:column;align-items:flex-start}
+  .frow{grid-template-columns:1fr}
+  .slots{grid-template-columns:1fr}
+  .panel-grid{grid-template-columns:1fr}
+  .done-grid{grid-template-columns:1fr}
+  .done .qr-box{text-align:left}
+  .ft-grid{grid-template-columns:1fr}
+  .mbar{display:flex}
+  body{padding-bottom:74px}
+  .toTop{bottom:84px;right:16px}
+  .modal{padding:14px}
+}
+/* ============ 17. 降低动效 ============ */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .blob i{animation:none}
+  .reveal{opacity:1;transform:none;transition:none}
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+
+<!-- 背景：星野 + 光斑（视差由 JS 以 transform 驱动） -->
+<div class="bg" aria-hidden="true">
+  <div class="stars"></div>
+  <div class="stars2"></div>
+  <div class="blob b1" data-para="0.06"><i></i></div>
+  <div class="blob b2" data-para="0.1"><i></i></div>
+  <div class="blob b3" data-para="0.045"><i></i></div>
+  <div class="blob b4" data-para="0.08"><i></i></div>
+</div>
+
+<!-- ============ 导航（通栏玻璃条） ============ -->
+<header id="header" class="glass">
+  <div class="wrap nav">
+    <a class="brand" href="#home" aria-label="穹象天文博物馆 首页">
+      <svg class="logo" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <circle cx="20" cy="20" r="8" fill="#FBBF24"/>
+        <circle cx="20" cy="20" r="8" fill="url(#lg)" opacity=".55"/>
+        <ellipse cx="20" cy="20" rx="17" ry="6.5" stroke="#22D3EE" stroke-width="1.4" transform="rotate(-24 20 20)"/>
+        <circle cx="33.5" cy="13.5" r="2.2" fill="#22D3EE"/>
+        <circle cx="6.5" cy="27" r="1.4" fill="#94A3B8"/>
+        <defs><radialGradient id="lg" cx="35%" cy="30%" r="80%">
+          <stop offset="0%" stop-color="#FDE68A"/><stop offset="100%" stop-color="#F59E0B"/>
+        </radialGradient></defs>
+      </svg>
+      <span>穹象天文博物馆<small>ASTRAEUM</small></span>
+    </a>
+    <nav aria-label="主导航">
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#home" class="active">首页</a></li>
+        <li><a href="#halls">常设展厅</a></li>
+        <li><a href="#collection">馆藏图鉴</a></li>
+        <li><a href="#tickets">参观票务</a></li>
+      </ul>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-ghost" href="#collection">馆藏图鉴</a>
+      <a class="btn btn-gold" href="#tickets">购票预约</a>
+      <button class="burger" id="burger" aria-label="打开菜单" aria-expanded="false" aria-controls="mMenu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+  <div class="m-menu glass-deep" id="mMenu">
+    <a href="#home" class="active">首页</a>
+    <a href="#halls">常设展厅</a>
+    <a href="#collection">馆藏图鉴</a>
+    <a href="#tickets">参观票务</a>
+  </div>
+</header>
+
+<main id="main">
+<!-- ============ HERO ============ -->
+<section class="hero" id="home">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <p class="kicker"><i></i>星港大道 88 号 · 地铁 9 号线「天文馆站」B 口 · 步行 300 米</p>
+        <h1>
+          <span class="en">ASTRAEUM</span>
+          <span class="zh">穹象天文博物馆</span>
+        </h1>
+        <p class="slogan">把宇宙装进一座馆</p>
+        <p class="lead">六座常设展厅、1,402 件数字化天体档案、一座穹幕影院与一片屋顶星空——从大爆炸的第一缕光，到银河系中心的黑洞影像，都在这里与你相遇。</p>
+        <div class="hero-btns">
+          <a class="btn btn-gold" href="#tickets">预约参观</a>
+          <a class="btn btn-ghost" href="#collection">逛逛馆藏图鉴</a>
+        </div>
+        <p class="hero-note">每时段限 2,000 人 · 可提前 7 天实名预约 · 周一闭馆（法定节假日除外）</p>
+      </div>
+      <div class="hero-cards">
+        <!-- 当前特展 · 玻璃卡 -->
+        <article class="hcard glass">
+          <span class="tag">当期特展</span>
+          <h3>引力回响 · 人类看见黑洞十年</h3>
+          <p class="meta">2026.04.30 — 10.08 · 3F 临展厅 · 早鸟票 ¥40</p>
+          <p>事件视界望远镜十年影像档案全国巡展首站：从 M87* 到人马座 A*，看两团「橙色光环」如何改写人类对引力的想象。</p>
+          <a class="glink" href="#tickets">预约特展早鸟票</a>
+        </article>
+        <!-- 今晚天象 · 玻璃卡 -->
+        <article class="hcard glass">
+          <h4 class="sky-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M20 13A8 8 0 1 1 11 4a6.5 6.5 0 0 0 9 9Z" stroke-linejoin="round"/>
+            </svg>
+            今晚天象 · 模拟数据
+          </h4>
+          <div class="sky-rows">
+            <div class="sky-row"><span class="k">月相</span><span class="v">上弦月 · 月出 22:14</span></div>
+            <div class="sky-row"><span class="k">可见行星</span><span class="v">木星 · 土星</span></div>
+            <div class="sky-row"><span class="k">观测指数</span><span class="v">良（晴 · 视宁度 2″）</span></div>
+          </div>
+          <p class="sky-note">周五、周六 19:00–21:30 屋顶观星台开放夜场。</p>
+        </article>
+      </div>
+    </div>
+    <!-- 数据带：玻璃胶囊 + 数字滚动 -->
+    <div class="stats" id="stats">
+      <div class="stat"><b><span class="num" data-target="6">0</span></b><span>常设展厅（座）</span></div>
+      <div class="stat"><b><span class="num" data-target="1402">0</span><em>件</em></b><span>数字化馆藏档案</span></div>
+      <div class="stat"><b><span class="num" data-target="480">0</span><em>场</em></b><span>年度免费讲解</span></div>
+      <div class="stat"><b><span class="num" data-target="96">0</span><em>场</em></b><span>屋顶观星夜 · 每年</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 常设展厅 ============ -->
+<section id="halls">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <span class="eyebrow">Permanent Halls</span>
+      <h2>六座常设展厅</h2>
+      <p>沿「序厅 → 太阳系 → 恒星 → 星云 → 黑洞」的叙事动线展开，终点是一天 45 分钟的穹顶天象影院与夜里的真星。点击展厅卡可直达对应馆藏。</p>
+    </div>
+    <div class="hall-grid">
+      <article class="hall glass" data-reveal style="--a1:#7C3AED;--a2:#A78BFA">
+        <span class="hall-no">01</span>
+        <p class="salle">SALLE 01 · B1 层</p>
+        <h3>序厅 · 回到大爆炸</h3>
+        <p>138 亿年，从一粒奇点开始。一段 8 分钟的沉浸式光之隧道，带你亲历宇宙最初的三分钟。</p>
+        <div class="facts"><span>全年龄</span><span>关联藏品 12 件</span><span>时长约 30 分钟</span></div>
+        <button class="glink" type="button" data-jump="all">浏览全部馆藏</button>
+      </article>
+      <article class="hall glass" data-reveal style="--a1:#22D3EE;--a2:#67E8F9">
+        <span class="hall-no">02</span>
+        <p class="salle">SALLE 02 · 1F 层</p>
+        <h3>太阳系漫游厅</h3>
+        <p>八大行星与它们的卫星们。1:10 亿比例的太阳与可以「称重」的月球，理解引力最直观的地方。</p>
+        <div class="facts"><span>全年龄</span><span>关联藏品 34 件</span><span>时长约 50 分钟</span></div>
+        <button class="glink" type="button" data-jump="planet">浏览行星藏品</button>
+      </article>
+      <article class="hall glass" data-reveal style="--a1:#FBBF24;--a2:#FDE68A">
+        <span class="hall-no">03</span>
+        <p class="salle">SALLE 03 · 2F 层</p>
+        <h3>恒星的一生</h3>
+        <p>从星尘到超新星。看一团分子云如何点燃核聚变，又如何在坍缩中把元素还给宇宙。</p>
+        <div class="facts"><span>建议 8 岁+</span><span>关联藏品 28 件</span><span>时长约 40 分钟</span></div>
+        <button class="glink" type="button" data-jump="star">浏览恒星藏品</button>
+      </article>
+      <article class="hall glass" data-reveal style="--a1:#F472B6;--a2:#C4B5FD">
+        <span class="hall-no">04</span>
+        <p class="salle">SALLE 04 · 2F 层</p>
+        <h3>星云花园</h3>
+        <p>宇宙中正在诞生的云。猎户座的育婴房、蟹状遗骸与创生之柱，在 1:1 光深比例的暗厅里缓缓发光。</p>
+        <div class="facts"><span>全年龄</span><span>关联藏品 26 件</span><span>时长约 40 分钟</span></div>
+        <button class="glink" type="button" data-jump="deep">浏览深空藏品</button>
+      </article>
+      <article class="hall glass" data-reveal style="--a1:#4F46E5;--a2:#818CF8">
+        <span class="hall-no">05</span>
+        <p class="salle">SALLE 05 · 3F 层</p>
+        <h3>引力与黑洞剧场</h3>
+        <p>时空如何被弯曲。可坐 80 人的球形剧场，每天四场「坠落视界」引力演示。</p>
+        <div class="facts"><span>建议 10 岁+</span><span>关联藏品 18 件</span><span>时长约 35 分钟</span></div>
+        <button class="glink" type="button" data-jump="deep">浏览黑洞档案</button>
+      </article>
+      <article class="hall glass" data-reveal style="--a1:#3B82F6;--a2:#7DD3FC">
+        <span class="hall-no">06</span>
+        <p class="salle">SALLE 06 · 4F 层</p>
+        <h3>穹顶天象影院 + 屋顶观星台</h3>
+        <p>白天看穹幕，夜里看真星。直径 18 米的穹幕每天三场；周五、周六夜场由讲解员带队认星。</p>
+        <div class="facts"><span>全年龄</span><span>场次制 · 需单独预约</span><span>每场 45 分钟</span></div>
+        <button class="glink" type="button" data-jump="tickets">查看场次与预约</button>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 馆藏图鉴 ============ -->
+<section id="collection">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <span class="eyebrow">Digital Collection</span>
+      <h2>馆藏天体图鉴</h2>
+      <p>精选 14 件数字化天体档案，插画由页面程序化生成。点击任意卡片查看完整档案。</p>
+    </div>
+    <div class="coll-bar" data-reveal>
+      <div class="coll-chips" id="chips" role="tablist" aria-label="藏品分类筛选">
+        <button class="chip on" type="button" data-cat="all">全部<span class="n">14</span></button>
+        <button class="chip" type="button" data-cat="planet">行星<span class="n">8</span></button>
+        <button class="chip" type="button" data-cat="star">恒星<span class="n">1</span></button>
+        <button class="chip" type="button" data-cat="comet">彗星<span class="n">1</span></button>
+        <button class="chip" type="button" data-cat="deep">星云与深空<span class="n">4</span></button>
+      </div>
+      <span class="coll-count" id="collCount">共 14 件</span>
+    </div>
+    <div class="coll-grid" id="collGrid"></div>
+    <div class="empty" id="collEmpty">
+      <b>该分类下暂无藏品</b>
+      当前筛选没有匹配的档案，试试「全部」。
+    </div>
+    <noscript><p style="color:#94A3B8;margin-top:20px">馆藏图鉴需要启用 JavaScript 才能加载。</p></noscript>
+  </div>
+</section>
+
+<!-- ============ 参观票务 ============ -->
+<section id="tickets">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <span class="eyebrow">Plan Your Visit</span>
+      <h2>参观与票务预约</h2>
+      <p>官网实名预约，每时段限 2,000 人，可提前 7 天预约。1.2 米以下儿童免票（需成人陪同）。</p>
+    </div>
+    <div class="tk-grid">
+      <!-- 参观信息 · 玻璃卡 -->
+      <aside class="info-card glass" data-reveal>
+        <h3>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2" stroke-linecap="round"/></svg>
+          开放时间与票价
+        </h3>
+        <div class="trow"><span class="k">周二至周日</span><span class="v">9:00 – 17:00<small>16:00 停止入馆</small></span></div>
+        <div class="trow"><span class="k">周一</span><span class="v">闭馆<small>法定节假日除外</small></span></div>
+        <div class="trow"><span class="k">夜场观星</span><span class="v">周五、六 19:00 – 21:30<small>屋顶观星台</small></span></div>
+        <div class="trow"><span class="k">穹幕影院</span><span class="v">10:30 / 13:30 / 15:30<small>每场 45 分钟 · 需单独预约</small></span></div>
+        <div class="trow"><span class="k">成人票</span><span class="v">¥60 / 人</span></div>
+        <div class="trow"><span class="k">学生 · 60 岁以上</span><span class="v">¥30 / 人</span></div>
+        <div class="trow"><span class="k">1.2 米以下儿童</span><span class="v">免票<small>需成人陪同</small></span></div>
+        <div class="trow"><span class="k">夜场观星票</span><span class="v">¥88 / 人</span></div>
+        <div class="trow"><span class="k">团体（20 人以上）</span><span class="v">预约八折</span></div>
+        <div class="info-note">无障碍通道全馆覆盖 · 行李寄存 · 母婴室 · 讲解器租赁 ¥20 · 咨询电话 400-000-0000</div>
+      </aside>
+      <!-- 预约表单 · 玻璃卡 -->
+      <div class="form-card glass-deep" data-reveal>
+        <form id="bookForm" novalidate>
+          <h3>门票时段预约</h3>
+          <p class="sub">提交后将生成预约码，入馆时出示预约码与本人身份证原件。</p>
+          <div class="frow">
+            <div class="field" id="fName">
+              <label for="inName">姓名<span class="req">*</span></label>
+              <input type="text" id="inName" name="name" placeholder="与身份证一致的姓名" autocomplete="name">
+              <p class="err">请填写至少 2 个字的姓名</p>
+            </div>
+            <div class="field" id="fTel">
+              <label for="inTel">手机号<span class="req">*</span></label>
+              <input type="tel" id="inTel" name="tel" placeholder="11 位大陆手机号" autocomplete="tel" inputmode="numeric">
+              <p class="err">请输入正确的 11 位手机号</p>
+            </div>
+          </div>
+          <div class="frow">
+            <div class="field" id="fDate">
+              <label for="inDate">参观日期<span class="req">*</span></label>
+              <input type="date" id="inDate" name="date">
+              <p class="err" id="dateErr">请选择 7 天内的参观日期</p>
+              <p class="hint">可提前 7 天预约 · 周一常规闭馆</p>
+            </div>
+            <div class="field" id="fTicket">
+              <label for="inTicket">票种<span class="req">*</span></label>
+              <select id="inTicket" name="ticket">
+                <option value="adult">成人票 ¥60</option>
+                <option value="conc">学生 / 60 岁以上 ¥30</option>
+                <option value="night">夜场观星票 ¥88（仅周五、六）</option>
+                <option value="child">1.2 米以下儿童 免票</option>
+              </select>
+            </div>
+          </div>
+          <div class="field" id="fSlot">
+            <label id="slotLabel">入馆时段<span class="req">*</span></label>
+            <div class="slots" role="radiogroup" aria-labelledby="slotLabel">
+              <label class="opt"><input type="radio" name="slot" value="am"><span>上午场<small>9:00 – 12:00</small></span></label>
+              <label class="opt"><input type="radio" name="slot" value="pm"><span>下午场<small>13:00 – 16:00</small></span></label>
+              <label class="opt"><input type="radio" name="slot" value="night"><span>夜场观星<small>周五、六 19:00 – 21:30</small></span></label>
+            </div>
+            <p class="err">请选择一个入馆时段</p>
+          </div>
+          <div class="frow">
+            <div class="field" id="fCount">
+              <label for="inCount">人数<span class="req">*</span></label>
+              <div class="stepper">
+                <button type="button" id="cntMinus" aria-label="减少人数">−</button>
+                <input type="text" id="inCount" name="count" value="2" inputmode="numeric" aria-live="polite">
+                <button type="button" id="cntPlus" aria-label="增加人数">+</button>
+              </div>
+              <p class="err">人数需在 1 – 20 之间</p>
+              <p class="hint">满 20 人自动按团体八折计价</p>
+            </div>
+            <div class="field">
+              <label>预估应付</label>
+              <div class="est">
+                <span><b id="estVal">¥120</b><small id="estNote">成人票 × 2</small></span>
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-gold" style="width:100%">确认预约</button>
+          <p class="form-foot">预约成功后如需改期，请于入馆前一日 24:00 前在公众号操作；咨询电话 400-000-0000。</p>
+        </form>
+        <!-- 成功态 -->
+        <div class="done" id="doneBox" hidden>
+          <div class="done-head">
+            <span class="ok">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <div>
+              <h3>预约成功</h3>
+              <p style="color:#94A3B8;font-size:13px">请在入馆当日出示以下凭据</p>
+            </div>
+          </div>
+          <p class="code-line">预约码<b id="doneCode">AST-000000</b></p>
+          <div class="done-grid">
+            <div class="done-rows" id="doneRows"></div>
+            <div class="qr-box">
+              <div id="qrBox"></div>
+              <span>入馆核验二维码 · 占位示意</span>
+            </div>
+          </div>
+          <div class="done-btns">
+            <button type="button" class="btn btn-ghost" id="btnAgain">再预约一单</button>
+            <a class="btn btn-gold" href="#halls">逛逛展厅</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ 详情弹层 ============ -->
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="scrim" id="mScrim"></div>
+  <div class="panel glass-deep">
+    <button class="panel-close" id="mClose" aria-label="关闭详情">✕</button>
+    <div class="panel-grid">
+      <div class="panel-art" id="mArt" aria-hidden="true"></div>
+      <div>
+        <span class="cat" id="mCat" style="display:inline-block"></span>
+        <h3 id="mTitle">藏品名</h3>
+        <p class="latin" id="mLatin"></p>
+        <p class="pdesc" id="mDesc"></p>
+        <dl class="kv">
+          <dt>档案编号</dt><dd id="mNo"></dd>
+          <dt>收录年份</dt><dd id="mYear"></dd>
+          <dt>距地距离</dt><dd id="mDist"></dd>
+          <dt>关键参数</dt><dd id="mSpec"></dd>
+          <dt>所在展厅</dt><dd id="mHall"></dd>
+        </dl>
+        <div class="panel-foot">
+          <a class="glink" id="mHallLink" href="#halls">前往所在展厅</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 页脚 ============ -->
+<footer>
+  <div class="wrap">
+    <div class="ft-grid">
+      <div class="ft-brand">
+        <a class="brand" href="#home">
+          <svg class="logo" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+            <circle cx="20" cy="20" r="8" fill="#FBBF24"/>
+            <ellipse cx="20" cy="20" rx="17" ry="6.5" stroke="#22D3EE" stroke-width="1.4" transform="rotate(-24 20 20)"/>
+            <circle cx="33.5" cy="13.5" r="2.2" fill="#22D3EE"/>
+          </svg>
+          <span>穹象天文博物馆<small>ASTRAEUM</small></span>
+        </a>
+        <p>把宇宙装进一座馆。自 2016 年开馆以来，我们致力于让每一次仰望都有回应。</p>
+      </div>
+      <div class="ft-col">
+        <h4>参观</h4>
+        <ul>
+          <li>周二至周日 9:00 – 17:00</li>
+          <li>周一闭馆（节假日除外）</li>
+          <li>星港大道 88 号</li>
+          <li>地铁 9 号线「天文馆站」B 口</li>
+        </ul>
+      </div>
+      <div class="ft-col">
+        <h4>栏目</h4>
+        <ul>
+          <li><a href="#halls">常设展厅</a></li>
+          <li><a href="#collection">馆藏图鉴</a></li>
+          <li><a href="#tickets">参观票务</a></li>
+          <li><a href="#tickets">无障碍服务</a></li>
+        </ul>
+      </div>
+      <div class="ft-col">
+        <h4>服务</h4>
+        <ul>
+          <li>咨询电话 400-000-0000</li>
+          <li>讲解器租赁 ¥20 / 台</li>
+          <li>无障碍通道全馆覆盖</li>
+          <li>官方公众号「穹象 ASTRAEUM」</li>
+        </ul>
+      </div>
+    </div>
+    <div class="ft-bottom">
+      <span>© 2026 穹象天文博物馆 ASTRAEUM · 星港大道 88 号</span>
+      <span>本页为纯前端设计示范 · 馆名、数据与票务信息均为虚构</span>
+    </div>
+  </div>
+</footer>
+
+<!-- 移动端底部悬浮购票条 -->
+<div class="mbar glass-deep" aria-hidden="false">
+  <span class="t"><b>成人票 ¥60 起</b>每时段限 2,000 人 · 提前 7 天预约</span>
+  <a class="btn btn-gold" href="#tickets">立即预约</a>
+</div>
+
+<button class="toTop" id="toTop" aria-label="返回顶部">↑</button>
+
+<script>
+/* ================================================================
+   穹象天文博物馆 · 页面脚本（零依赖）
+   ================================================================ */
+'use strict';
+var $ = function(s){ return document.querySelector(s); };
+var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- 1. 馆藏数据（14 件，取自调研 §六） ---------- */
+var CATNAME = { planet:'行星', star:'恒星', comet:'彗星', deep:'星云与深空' };
+var ITEMS = [
+  { id:'sol', name:'太阳', latin:'Sol · G2V', cat:'star', type:'sun',
+    no:'AST-0001', year:'2016 年入藏', dist:'1.496 亿 km（1 AU）',
+    hall:'SALLE 03 · 恒星的一生', spec:'直径 139.2 万 km，占太阳系总质量 99.86%',
+    desc:'距离我们最近的一颗 G 型主序星，馆内以 1:10 亿比例模型呈现其核心聚变与黑子周期。' },
+  { id:'mercury', name:'水星', latin:'Mercury', cat:'planet', type:'rocky',
+    no:'AST-0002', year:'2016 年入藏', dist:'约 7,730 万 km',
+    hall:'SALLE 02 · 太阳系漫游厅', spec:'昼夜温差约 600℃，表面布满撞击坑',
+    desc:'昼夜温差 600℃ 的焦土信使，绕日一圈只需 88 个地球日。' },
+  { id:'venus', name:'金星', latin:'Venus', cat:'planet', type:'venus',
+    no:'AST-0003', year:'2017 年入藏', dist:'最近约 4,140 万 km',
+    hall:'SALLE 02 · 太阳系漫游厅', spec:'表面均温 465℃，自转方向与众不同',
+    desc:'被硫酸云包裹的失控温室，表面温度足以熔化铅。' },
+  { id:'earth', name:'地球与月球', latin:'Earth & Luna', cat:'planet', type:'earth',
+    no:'AST-0004', year:'2016 年入藏', dist:'月球距地 38.4 万 km',
+    hall:'SALLE 02 · 太阳系漫游厅', spec:'已知唯一存在生命的天体系统',
+    desc:'已知唯一存在生命的双星系统，月球正以每年 3.8 cm 的速度缓缓远离我们。' },
+  { id:'mars', name:'火星 · 奥林帕斯山', latin:'Olympus Mons', cat:'planet', type:'mars',
+    no:'AST-0005', year:'2018 年入藏', dist:'5,500 万 – 4 亿 km',
+    hall:'SALLE 02 · 太阳系漫游厅', spec:'太阳系最高火山，高约 22 km',
+    desc:'太阳系最高的火山，高度接近珠穆朗玛峰的 2.5 倍，山口宽达 80 km。' },
+  { id:'jupiter', name:'木星 · 大红斑', latin:'Great Red Spot', cat:'planet', type:'jupiter',
+    no:'AST-0006', year:'2016 年入藏', dist:'约 6.3 亿 km',
+    hall:'SALLE 02 · 太阳系漫游厅', spec:'持续 350 余年的巨型反气旋风暴',
+    desc:'一场持续了三百多年的巨型风暴，其内部足以装下整个地球。' },
+  { id:'saturn', name:'土星环', latin:'Rings of Saturn', cat:'planet', type:'saturn',
+    no:'AST-0007', year:'2017 年入藏', dist:'约 12.8 亿 km',
+    hall:'SALLE 02 · 太阳系漫游厅', spec:'环径约 28 万 km，厚度仅数十米',
+    desc:'宽 28 万公里、厚仅数十米的冰之圆盘，是太阳系尺度上最纤薄的奇观。' },
+  { id:'uranus', name:'天王星', latin:'Uranus', cat:'planet', type:'uranus',
+    no:'AST-0008', year:'2019 年入藏', dist:'约 27.2 亿 km',
+    hall:'SALLE 02 · 太阳系漫游厅', spec:'自转轴倾角约 98°，「躺着」绕行',
+    desc:'躺着自转的冰巨星，每个季节长达 21 个地球年。' },
+  { id:'neptune', name:'海王星 · 大暗斑', latin:'Great Dark Spot', cat:'planet', type:'neptune',
+    no:'AST-0009', year:'2019 年入藏', dist:'约 43.5 亿 km',
+    hall:'SALLE 02 · 太阳系漫游厅', spec:'风速可达 2,100 km/h',
+    desc:'风速 2,100 km/h 的深蓝世界，是距太阳最远的行星。' },
+  { id:'halley', name:'哈雷彗星', latin:'1P/Halley', cat:'comet', type:'comet',
+    no:'AST-0010', year:'2020 年入藏', dist:'当前约 35 AU（51.9 亿 km）',
+    hall:'SALLE 02 · 太阳系漫游厅', spec:'回归周期约 76 年，下次 2061 年',
+    desc:'76 年一归的访客，下一次回归要等到 2061 年。' },
+  { id:'m42', name:'猎户座大星云', latin:'Messier 42', cat:'deep', type:'nebula',
+    no:'AST-0011', year:'2016 年入藏', dist:'约 1,344 光年',
+    hall:'SALLE 04 · 星云花园', spec:'肉眼可见的恒星育婴房',
+    desc:'距离地球 1,344 光年的恒星育婴房，猎户座佩剑上那团模糊的光。' },
+  { id:'m1', name:'蟹状星云', latin:'Messier 1', cat:'deep', type:'crab',
+    no:'AST-0012', year:'2018 年入藏', dist:'约 6,500 光年',
+    hall:'SALLE 04 · 星云花园', spec:'公元 1054 年超新星遗迹',
+    desc:'公元 1054 年超新星爆发的遗骸，中心藏着一颗每秒自转 30 圈的脉冲星。' },
+  { id:'pillars', name:'创生之柱', latin:'Pillars of Creation', cat:'deep', type:'pillar',
+    no:'AST-0013', year:'2022 年入藏', dist:'约 6,500 光年',
+    hall:'SALLE 04 · 星云花园', spec:'柱状云气高约 4 光年',
+    desc:'鹰状星云中正在坍缩成恒星的柱状云气，韦布望远镜的新影像令世界屏息。' },
+  { id:'sgra', name:'人马座 A*', latin:'Sagittarius A*', cat:'deep', type:'blackhole',
+    no:'AST-0014', year:'2022 年入藏', dist:'约 26,000 光年',
+    hall:'SALLE 05 · 引力与黑洞剧场', spec:'质量约 430 万倍太阳质量',
+    desc:'银河系中心 430 万倍太阳质量的超大质量黑洞，2022 年首张照片正式发布。' }
+];
+
+/* ---------- 2. 程序化 SVG 天体插画 ---------- */
+var BASE_STARS = '<circle cx="18" cy="22" r="1.1" fill="#F1F5F9" opacity=".7"/>' +
+  '<circle cx="182" cy="30" r="1.4" fill="#F1F5F9" opacity=".8"/>' +
+  '<circle cx="34" cy="118" r="1" fill="#F1F5F9" opacity=".6"/>' +
+  '<circle cx="170" cy="112" r="1.2" fill="#7DD3FC" opacity=".75"/>' +
+  '<circle cx="120" cy="14" r="1" fill="#F1F5F9" opacity=".5"/>';
+function spark(x,y,r,c){
+  return '<g stroke="'+c+'" stroke-width="1.1" stroke-linecap="round" opacity=".9">' +
+    '<line x1="'+(x-r)+'" y1="'+y+'" x2="'+(x+r)+'" y2="'+y+'"/>' +
+    '<line x1="'+x+'" y1="'+(y-r)+'" x2="'+x+'" y2="'+(y+r)+'"/></g>';
+}
+function artSVG(it, suffix){
+  var u = 'g' + it.id + suffix + '-';
+  var s = '<svg viewBox="0 0 200 150" role="img" aria-label="' + it.name + '示意插画" preserveAspectRatio="xMidYMid meet">';
+  s += '<defs>';
+  function rg(stops, id, cx, cy, r){
+    return '<radialGradient id="' + u + id + '" cx="' + cx + '" cy="' + cy + '" r="' + r + '">' + stops + '</radialGradient>';
+  }
+  function lg(stops, id, a, b, c, d){
+    return '<linearGradient id="' + u + id + '" x1="' + a + '" y1="' + b + '" x2="' + c + '" y2="' + d + '">' + stops + '</linearGradient>';
+  }
+  function st(o, c){ return '<stop offset="' + o + '" stop-color="' + c + '"/>'; }
+  var t = it.type;
+  var shade = rg(st('0%','rgba(255,255,255,.28)') + st('55%','rgba(255,255,255,0)') + st('100%','rgba(4,7,20,.5)'), 'sh', '34%', '28%', '92%');
+  if (t === 'sun'){
+    s += rg(st('0%','#FFFBEB') + st('42%','#FDE68A') + st('78%','#FBBF24') + st('100%','#F59E0B'), 'core', '50%', '50%', '55%');
+    s += '</defs>' + BASE_STARS;
+    s += '<circle cx="100" cy="75" r="56" fill="#F59E0B" opacity=".22"/>';
+    var rays = '', i;
+    for (i = 0; i < 12; i++){
+      rays += '<g transform="rotate(' + (i * 30) + ' 100 75)"><line x1="100" y1="9" x2="100" y2="22" stroke="#FDE68A" stroke-width="2.4" stroke-linecap="round" opacity=".7"/></g>';
+    }
+    s += rays;
+    s += '<circle cx="100" cy="75" r="38" fill="url(#' + u + 'core)"/>';
+    s += '<ellipse cx="88" cy="66" rx="7" ry="4.5" fill="#D97706" opacity=".55"/>';
+    s += '<ellipse cx="112" cy="86" rx="5" ry="3.2" fill="#D97706" opacity=".45"/>';
+    s += '<path d="M76 84 Q100 96 124 82" stroke="#FFF7ED" stroke-width="2" fill="none" opacity=".4" stroke-linecap="round"/>';
+  } else if (t === 'rocky' || t === 'venus' || t === 'mars' || t === 'earth'){
+    var cols = {
+      rocky:  [st('0%','#E7E5E4') + st('60%','#A8A29E') + st('100%','#57534E')],
+      venus:  [st('0%','#FEF3C7') + st('55%','#FBBF24') + st('100%','#B45309')],
+      mars:   [st('0%','#FCA5A5') + st('52%','#EF6C4D') + st('100%','#9A3412')],
+      earth:  [st('0%','#7DD3FC') + st('55%','#38BDF8') + st('100%','#1D4ED8')]
+    }[t][0];
+    s += rg(cols, 'p', '34%', '28%', '92%');
+    s += shade;
+    s += '<clipPath id="' + u + 'cp"><circle cx="100" cy="75" r="40"/></clipPath>';
+    s += '</defs>' + BASE_STARS;
+    if (t === 'earth') s += '<circle cx="158" cy="42" r="11" fill="#CBD5E1"/><ellipse cx="100" cy="75" rx="66" ry="20" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1" stroke-dasharray="3 5"/>';
+    s += '<circle cx="100" cy="75" r="40" fill="url(#' + u + 'p)"/>';
+    s += '<g clip-path="url(#' + u + 'cp)">';
+    if (t === 'rocky'){
+      s += '<circle cx="84" cy="58" r="5.5" fill="#44403C" opacity=".55"/><circle cx="110" cy="74" r="7" fill="#44403C" opacity=".5"/>' +
+           '<circle cx="92" cy="92" r="4" fill="#44403C" opacity=".55"/><circle cx="117" cy="54" r="3.4" fill="#44403C" opacity=".5"/>' +
+           '<circle cx="74" cy="80" r="3" fill="#44403C" opacity=".45"/>';
+    } else if (t === 'venus'){
+      s += '<path d="M56 60 Q100 46 146 62" stroke="#FFF7ED" stroke-width="7" fill="none" opacity=".3" stroke-linecap="round"/>' +
+           '<path d="M54 80 Q102 66 148 82" stroke="#B45309" stroke-width="8" fill="none" opacity=".35" stroke-linecap="round"/>' +
+           '<path d="M58 98 Q100 88 144 100" stroke="#FFF7ED" stroke-width="6" fill="none" opacity=".26" stroke-linecap="round"/>';
+    } else if (t === 'mars'){
+      s += '<ellipse cx="100" cy="38" rx="15" ry="5.5" fill="#F8FAFC" opacity=".9"/>' +
+           '<path d="M92 76 L99 62 L106 76 Z" fill="#7C2D12" opacity=".8"/>' +
+           '<path d="M74 90 Q92 98 112 92 T134 88" stroke="#7F1D1D" stroke-width="3" fill="none" opacity=".6" stroke-linecap="round"/>';
+    } else if (t === 'earth'){
+      s += '<path d="M74 52 Q92 42 106 52 Q112 62 100 68 Q82 72 74 62 Z" fill="#34D399" opacity=".92"/>' +
+           '<path d="M108 76 Q126 72 132 84 Q128 96 114 94 Q104 88 108 76 Z" fill="#34D399" opacity=".88"/>' +
+           '<path d="M70 90 Q80 86 88 94 Q86 104 74 102 Q66 96 70 90 Z" fill="#34D399" opacity=".8"/>' +
+           '<path d="M62 60 Q84 50 118 58" stroke="#FFFFFF" stroke-width="4" fill="none" opacity=".3" stroke-linecap="round"/>' +
+           '<path d="M78 96 Q104 104 132 92" stroke="#FFFFFF" stroke-width="3.4" fill="none" opacity=".26" stroke-linecap="round"/>';
+    }
+    s += '<circle cx="100" cy="75" r="40" fill="url(#' + u + 'sh)"/>';
+    s += '</g>';
+  } else if (t === 'jupiter' || t === 'saturn' || t === 'uranus' || t === 'neptune'){
+    var R = t === 'jupiter' ? 44 : (t === 'saturn' ? 30 : (t === 'uranus' ? 36 : 38));
+    var pc = {
+      jupiter: st('0%','#FDE9C8') + st('55%','#E8B36A') + st('100%','#92400E'),
+      saturn:  st('0%','#FBF0CE') + st('55%','#ECD28A') + st('100%','#A16207'),
+      uranus:  st('0%','#E0F7FA') + st('55%','#7DD3FC') + st('100%','#0E7490'),
+      neptune: st('0%','#93C5FD') + st('55%','#3B82F6') + st('100%','#1E3A8A')
+    }[t];
+    s += rg(pc, 'p', '34%', '28%', '92%');
+    s += shade;
+    s += '<clipPath id="' + u + 'cp"><circle cx="100" cy="75" r="' + R + '"/></clipPath>';
+    s += '</defs>' + BASE_STARS;
+    s += '<circle cx="100" cy="75" r="' + R + '" fill="url(#' + u + 'p)"/>';
+    s += '<g clip-path="url(#' + u + 'cp)">';
+    if (t === 'jupiter'){
+      var bandCols = ['rgba(255,255,255,.2)','rgba(146,64,14,.3)','rgba(254,243,199,.26)','rgba(120,53,15,.3)','rgba(255,255,255,.16)','rgba(146,64,14,.26)'];
+      var i2, y2;
+      for (i2 = 0; i2 < 6; i2++){
+        y2 = 36 + i2 * 13;
+        s += '<rect x="52" y="' + y2 + '" width="96" height="8.5" fill="' + bandCols[i2] + '"/>';
+      }
+      s += '<ellipse cx="120" cy="92" rx="13" ry="8" fill="#DC2626" opacity=".85"/>' +
+           '<ellipse cx="120" cy="92" rx="8" ry="4.6" fill="#FCA5A5" opacity=".8"/>';
+    } else if (t === 'neptune'){
+      s += '<ellipse cx="112" cy="84" rx="12" ry="7.5" fill="#172554" opacity=".85"/>' +
+           '<ellipse cx="112" cy="84" rx="7" ry="4" fill="#1D4ED8" opacity=".9"/>' +
+           '<path d="M70 60 Q92 52 118 58" stroke="#EFF6FF" stroke-width="3.4" fill="none" opacity=".55" stroke-linecap="round"/>' +
+           '<path d="M66 96 Q88 102 110 98" stroke="#EFF6FF" stroke-width="2.6" fill="none" opacity=".4" stroke-linecap="round"/>';
+    } else if (t === 'uranus'){
+      s += '<path d="M64 66 Q100 58 138 66" stroke="#F0FDFA" stroke-width="5" fill="none" opacity=".35" stroke-linecap="round"/>' +
+           '<path d="M64 86 Q100 78 138 86" stroke="#0E7490" stroke-width="6" fill="none" opacity=".4" stroke-linecap="round"/>';
+    }
+    s += '<circle cx="100" cy="75" r="' + R + '" fill="url(#' + u + 'sh)"/>';
+    s += '</g>';
+    if (t === 'saturn'){
+      s += lg(st('0%','rgba(253,230,138,.95)') + st('55%','rgba(251,191,36,.75)') + st('100%','rgba(180,83,9,.55)'), 'rg', '0', '0', '1', '1');
+      s += '<g transform="rotate(-18 100 75)">' +
+           '<ellipse cx="100" cy="75" rx="64" ry="15" fill="none" stroke="url(#' + u + 'rg)" stroke-width="7" opacity=".92"/>' +
+           '<ellipse cx="100" cy="75" rx="52" ry="11" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.6"/></g>';
+    }
+    if (t === 'uranus'){
+      s += '<g transform="rotate(76 100 75)"><ellipse cx="100" cy="75" rx="55" ry="9" fill="none" stroke="rgba(148,163,184,.7)" stroke-width="2.6"/></g>';
+    }
+  } else if (t === 'comet'){
+    s += lg(st('0%','rgba(165,243,252,.95)') + st('100%','rgba(34,211,238,0)'), 't1', '1', '0', '0', '0');
+    s += lg(st('0%','rgba(251,191,36,.55)') + st('100%','rgba(251,191,36,0)'), 't2', '1', '0', '0', '0');
+    s += '</defs>' + BASE_STARS;
+    s += '<path d="M148 38 C110 24 64 32 20 56 C66 44 114 44 148 44 Z" fill="url(#' + u + 't1)"/>';
+    s += '<path d="M148 46 C118 46 82 56 44 78 C88 60 122 54 148 52 Z" fill="url(#' + u + 't2)" opacity=".8"/>';
+    s += '<circle cx="150" cy="44" r="12" fill="rgba(165,243,252,.25)"/>';
+    s += '<circle cx="150" cy="44" r="5.5" fill="#F0FDFA"/>';
+    s += '<circle cx="150" cy="44" r="10" fill="none" stroke="rgba(224,242,254,.5)" stroke-width="1"/>';
+  } else if (t === 'nebula'){
+    s += '<filter id="' + u + 'b" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="9"/></filter>';
+    s += '</defs>' + BASE_STARS;
+    s += '<g filter="url(#' + u + 'b)">' +
+         '<ellipse cx="96" cy="76" rx="52" ry="34" fill="#7C3AED" opacity=".5"/>' +
+         '<ellipse cx="120" cy="66" rx="34" ry="24" fill="#22D3EE" opacity=".42"/>' +
+         '<ellipse cx="84" cy="88" rx="30" ry="20" fill="#F472B6" opacity=".38"/></g>';
+    s += spark(96, 74, 7, '#FFFFFF') + spark(120, 62, 5, '#CFFAFE') + spark(78, 90, 4, '#FBCFE8');
+    s += '<circle cx="96" cy="74" r="2.2" fill="#FFFFFF"/><circle cx="120" cy="62" r="1.7" fill="#E0F2FE"/>';
+  } else if (t === 'crab'){
+    s += '<filter id="' + u + 'b" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter>';
+    s += '</defs>' + BASE_STARS;
+    s += '<g filter="url(#' + u + 'b)"><circle cx="100" cy="75" r="40" fill="#9D174D" opacity=".4"/><circle cx="100" cy="75" r="26" fill="#7DD3FC" opacity=".3"/></g>';
+    var fil = '', i3, an;
+    for (i3 = 0; i3 < 10; i3++){
+      an = i3 * 36 * Math.PI / 180;
+      fil += '<path d="M100 75 Q' + (100 + Math.cos(an) * 24).toFixed(1) + ' ' + (75 + Math.sin(an) * 18).toFixed(1) + ' ' +
+             (100 + Math.cos(an + .35) * 44).toFixed(1) + ' ' + (75 + Math.sin(an + .35) * 32).toFixed(1) +
+             '" stroke="' + ['#F9A8D4','#7DD3FC','#FCD34D'][i3 % 3] + '" stroke-width="1.6" fill="none" opacity=".55"/>';
+    }
+    s += fil;
+    s += '<circle cx="100" cy="75" r="3" fill="#FFFFFF"/>' + spark(100, 75, 8, '#E0F2FE');
+  } else if (t === 'pillar'){
+    s += '<filter id="' + u + 'b" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="10"/></filter>';
+    s += '<filter id="' + u + 'b2" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6"/></filter>';
+    s += lg(st('0%','#C4B5FD') + st('60%','#7C3AED') + st('100%','#2E1065'), 'pl', '0', '0', '0', '1');
+    s += '</defs>' + BASE_STARS;
+    s += '<g filter="url(#' + u + 'b)">' +
+         '<ellipse cx="100" cy="70" rx="62" ry="34" fill="#7C3AED" opacity=".45"/>' +
+         '<ellipse cx="70" cy="52" rx="30" ry="18" fill="#22D3EE" opacity=".3"/>' +
+         '<ellipse cx="130" cy="56" rx="26" ry="16" fill="#F472B6" opacity=".28"/></g>';
+    s += '<g filter="url(#' + u + 'b2)">' +
+         '<path d="M56 46 Q50 74 58 116 L74 116 Q68 80 74 48 Z" fill="url(#' + u + 'pl)"/>' +
+         '<path d="M88 34 Q82 70 90 116 L106 116 Q100 72 106 36 Z" fill="url(#' + u + 'pl)"/>' +
+         '<path d="M120 50 Q114 80 122 116 L138 116 Q132 84 138 52 Z" fill="url(#' + u + 'pl)"/></g>';
+    s += spark(88, 30, 6, '#FFFFFF') + spark(130, 46, 4.5, '#CFFAFE') + spark(60, 42, 4, '#FBCFE8');
+  } else if (t === 'blackhole'){
+    s += lg(st('0%','rgba(253,230,138,.95)') + st('55%','rgba(251,146,60,.8)') + st('100%','rgba(153,27,27,.15)'), 'ac', '0', '0', '1', '0');
+    s += '</defs>' + BASE_STARS;
+    s += '<path d="M36 72 A 64 18 0 0 1 164 72" stroke="url(#' + u + 'ac)" stroke-width="8" fill="none" opacity=".55" stroke-linecap="round"/>';
+    s += '<circle cx="100" cy="75" r="23" fill="#04060F"/>';
+    s += '<circle cx="100" cy="75" r="25.5" fill="none" stroke="#FDE68A" stroke-width="1.4" opacity=".9"/>';
+    s += '<path d="M36 79 A 64 18 0 0 0 164 79" stroke="url(#' + u + 'ac)" stroke-width="10" fill="none" opacity=".95" stroke-linecap="round"/>';
+    s += '<path d="M40 82 A 62 16 0 0 0 92 92" stroke="rgba(147,197,253,.55)" stroke-width="5" fill="none" stroke-linecap="round"/>';
+    s += '<circle cx="100" cy="75" r="34" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="1" stroke-dasharray="2 6"/>';
+  } else {
+    s += '</defs>' + BASE_STARS + '<circle cx="100" cy="75" r="36" fill="rgba(255,255,255,.12)"/>';
+  }
+  s += '</svg>';
+  return s;
+}
+
+/* ---------- 3. 渲染藏品网格 ---------- */
+var grid = $('#collGrid');
+var html = '', i;
+for (i = 0; i < ITEMS.length; i++){
+  var it = ITEMS[i];
+  html += '<article class="card glass" tabindex="0" role="button" data-id="' + it.id + '" data-cat="' + it.cat + '" aria-label="查看展品：' + it.name + '">' +
+    '<div class="art-frame">' + artSVG(it, '-c') + '</div>' +
+    '<div class="card-body">' +
+      '<div class="card-top"><span class="cat c-' + it.cat + '">' + CATNAME[it.cat] + '</span><span class="no">' + it.no + '</span></div>' +
+      '<h3>' + it.name + '</h3>' +
+      '<p class="latin">' + it.latin + '</p>' +
+      '<p class="desc">' + it.desc + '</p>' +
+      '<div class="card-foot"><span class="dist">距地 ' + it.dist + '</span><span class="glink">查看展品</span></div>' +
+    '</div></article>';
+}
+grid.innerHTML = html;
+
+/* ---------- 4. 分类筛选（200ms 淡入） ---------- */
+var chips = $$('#chips .chip');
+var countEl = $('#collCount');
+var emptyEl = $('#collEmpty');
+function applyFilter(cat){
+  var shown = 0, k;
+  var cards = $$('#collGrid .card');
+  for (k = 0; k < cards.length; k++){
+    var ok = cat === 'all' || cards[k].getAttribute('data-cat') === cat;
+    cards[k].classList.toggle('gone', !ok);
+    if (ok){
+      shown++;
+      cards[k].classList.remove('fadein');
+    }
+  }
+  /* 触发 200ms 淡入 */
+  requestAnimationFrame(function(){
+    var vis = $$('#collGrid .card:not(.gone)');
+    for (var j = 0; j < vis.length; j++){
+      vis[j].style.animation = 'none';
+      void vis[j].offsetWidth;
+      vis[j].style.animation = 'cardIn .2s ease both';
+    }
+  });
+  countEl.textContent = '共 ' + shown + ' 件';
+  emptyEl.classList.toggle('show', shown === 0);
+}
+/* 淡入关键帧（一次性注入，动画仅 opacity/transform） */
+(function(){
+  var st = document.createElement('style');
+  st.textContent = '@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}';
+  document.head.appendChild(st);
+})();
+chips.forEach(function(ch){
+  ch.addEventListener('click', function(){
+    chips.forEach(function(c){ c.classList.remove('on'); });
+    ch.classList.add('on');
+    applyFilter(ch.getAttribute('data-cat'));
+  });
+});
+
+/* ---------- 5. 详情弹层 ---------- */
+var modal = $('#modal'), lastFocus = null;
+function openModal(it){
+  $('#mArt').innerHTML = artSVG(it, '-m');
+  var catEl = $('#mCat');
+  catEl.textContent = CATNAME[it.cat];
+  catEl.className = 'cat c-' + it.cat;
+  catEl.style.display = 'inline-block';
+  catEl.style.cssText += 'padding:4px 10px;border-radius:999px;font-size:11.5px;letter-spacing:.12em;margin-bottom:10px;';
+  $('#mTitle').textContent = it.name;
+  $('#mLatin').textContent = it.latin;
+  $('#mDesc').textContent = it.desc;
+  $('#mNo').textContent = it.no;
+  $('#mYear').textContent = it.year;
+  $('#mDist').textContent = it.dist;
+  $('#mSpec').textContent = it.spec;
+  $('#mHall').textContent = it.hall;
+  lastFocus = document.activeElement;
+  modal.hidden = false;
+  document.body.style.overflow = 'hidden';
+  $('#mClose').focus();
+}
+function closeModal(){
+  modal.hidden = true;
+  document.body.style.overflow = '';
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+grid.addEventListener('click', function(e){
+  var card = e.target.closest('.card');
+  if (!card) return;
+  var id = card.getAttribute('data-id');
+  for (var k = 0; k < ITEMS.length; k++){
+    if (ITEMS[k].id === id){ openModal(ITEMS[k]); break; }
+  }
+});
+grid.addEventListener('keydown', function(e){
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  var card = e.target.closest('.card');
+  if (!card) return;
+  e.preventDefault();
+  var id = card.getAttribute('data-id');
+  for (var k = 0; k < ITEMS.length; k++){
+    if (ITEMS[k].id === id){ openModal(ITEMS[k]); break; }
+  }
+});
+$('#mClose').addEventListener('click', closeModal);
+$('#mScrim').addEventListener('click', closeModal);
+$('#mHallLink').addEventListener('click', function(){ closeModal(); });
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && !modal.hidden) closeModal();
+});
+
+/* ---------- 6. 导航：滚动态 / 锚点高亮 / 移动端菜单 ---------- */
+var header = $('#header');
+function onScrollNav(){ header.classList.toggle('scrolled', window.scrollY > 40); }
+window.addEventListener('scroll', onScrollNav, { passive: true });
+onScrollNav();
+
+var burger = $('#burger');
+burger.addEventListener('click', function(){
+  var open = header.classList.toggle('open');
+  burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  burger.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+});
+$$('#mMenu a').forEach(function(a){
+  a.addEventListener('click', function(){
+    header.classList.remove('open');
+    burger.setAttribute('aria-expanded', 'false');
+  });
+});
+/* Scrollspy */
+var spy = new IntersectionObserver(function(entries){
+  entries.forEach(function(en){
+    if (!en.isIntersecting) return;
+    var id = en.target.id;
+    $$('#navLinks a, #mMenu a').forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+    });
+  });
+}, { rootMargin: '-42% 0px -52% 0px' });
+['home','halls','collection','tickets'].forEach(function(id){
+  var el = document.getElementById(id);
+  if (el) spy.observe(el);
+});
+
+/* ---------- 7. 滚动显现 ---------- */
+var revealEls = $$('[data-reveal], .card');
+revealEls.forEach(function(el, idx){
+  el.classList.add('reveal');
+  el.style.transitionDelay = (idx % 6) * 55 + 'ms';
+});
+if (REDUCED){
+  revealEls.forEach(function(el){ el.classList.add('in'); });
+} else {
+  var ro = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); ro.unobserve(en.target); }
+    });
+  }, { threshold: .12 });
+  revealEls.forEach(function(el){ ro.observe(el); });
+}
+
+/* ---------- 8. 数字滚动 ---------- */
+function fmt(n){ return n.toLocaleString('en-US'); }
+function countUp(el){
+  var target = parseInt(el.getAttribute('data-target'), 10);
+  if (REDUCED){ el.textContent = fmt(target); return; }
+  var t0 = null, DUR = 1100;
+  function step(ts){
+    if (!t0) t0 = ts;
+    var p = Math.min((ts - t0) / DUR, 1);
+    var e = 1 - Math.pow(1 - p, 3);
+    el.textContent = fmt(Math.round(target * e));
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+(function(){
+  var done = false;
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting && !done){
+        done = true;
+        $$('.num').forEach(countUp);
+        io.disconnect();
+      }
+    });
+  }, { threshold: .4 });
+  io.observe($('#stats'));
+})();
+
+/* ---------- 9. 光斑视差（transform，0.05~0.1 速率） ---------- */
+if (!REDUCED){
+  var blobs = $$('.blob');
+  var sy = 0, tick = false;
+  function para(){
+    tick = false;
+    blobs.forEach(function(b){
+      var r = parseFloat(b.getAttribute('data-para')) || .06;
+      b.style.transform = 'translate3d(0,' + (sy * r * -1).toFixed(1) + 'px,0)';
+    });
+  }
+  window.addEventListener('scroll', function(){
+    sy = window.scrollY;
+    if (!tick){ tick = true; requestAnimationFrame(para); }
+  }, { passive: true });
+}
+
+/* ---------- 10. 返回顶部 ---------- */
+var toTop = $('#toTop');
+window.addEventListener('scroll', function(){
+  toTop.classList.toggle('show', window.scrollY > 620);
+}, { passive: true });
+toTop.addEventListener('click', function(){
+  window.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' });
+});
+
+/* ---------- 11. 展厅卡跳转对应馆藏 ---------- */
+$$('.hall [data-jump]').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var cat = btn.getAttribute('data-jump');
+    if (cat === 'tickets'){
+      document.getElementById('tickets').scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth' });
+      return;
+    }
+    var target = chips.filter(function(c){ return c.getAttribute('data-cat') === cat; })[0] || chips[0];
+    target.click();
+    document.getElementById('collection').scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth' });
+  });
+});
+
+/* ---------- 12. 预约表单 ---------- */
+var form = $('#bookForm');
+var doneBox = $('#doneBox');
+var PRICE = { adult: 60, conc: 30, night: 88, child: 0 };
+var PRICELABEL = { adult: '成人票', conc: '学生 / 长者票', night: '夜场观星票', child: '儿童免票' };
+var SLOTNAME = { am: '上午场 9:00 – 12:00', pm: '下午场 13:00 – 16:00', night: '夜场观星 19:00 – 21:30' };
+var WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+var inDate = $('#inDate');
+var inTicket = $('#inTicket');
+var inCount = $('#inCount');
+/* 日期范围：今天起 7 天 */
+(function(){
+  var d = new Date();
+  var pad = function(n){ return (n < 10 ? '0' : '') + n; };
+  var iso = function(dt){ return dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate()); };
+  inDate.min = iso(d);
+  var max = new Date(d.getTime() + 7 * 864e5);
+  inDate.max = iso(max);
+})();
+function getSlot(){
+  var r = form.querySelector('input[name=slot]:checked');
+  return r ? r.value : '';
+}
+function calcPrice(){
+  var n = Math.max(1, Math.min(20, parseInt(inCount.value, 10) || 1));
+  var tk = inTicket.value;
+  var unit = PRICE[tk];
+  var note = PRICELABEL[tk] + ' × ' + n;
+  if (tk === 'child') note += '（需成人陪同）';
+  if ((tk === 'adult' || tk === 'conc') && n >= 20){
+    unit = Math.round(unit * 0.8);
+    note += ' · 团体八折';
+  }
+  $('#estVal').textContent = '¥' + fmt(unit * n);
+  $('#estNote').textContent = note;
+  return unit * n;
+}
+form.addEventListener('input', calcPrice);
+form.addEventListener('change', calcPrice);
+calcPrice();
+$('#cntMinus').addEventListener('click', function(){
+  inCount.value = Math.max(1, (parseInt(inCount.value, 10) || 1) - 1);
+  calcPrice();
+});
+$('#cntPlus').addEventListener('click', function(){
+  inCount.value = Math.min(20, (parseInt(inCount.value, 10) || 1) + 1);
+  calcPrice();
+});
+function setBad(fieldId, bad){
+  var f = document.getElementById(fieldId);
+  if (f) f.classList.toggle('bad', !!bad);
+}
+['inName','inTel','inDate'].forEach(function(id){
+  document.getElementById(id).addEventListener('input', function(){
+    this.closest('.field').classList.remove('bad');
+  });
+});
+form.querySelectorAll('input[name=slot]').forEach(function(r){
+  r.addEventListener('change', function(){ $('#fSlot').classList.remove('bad'); });
+});
+form.addEventListener('submit', function(e){
+  e.preventDefault();
+  var ok = true;
+  var name = $('#inName').value.trim();
+  var tel = $('#inTel').value.trim();
+  var dv = inDate.value;
+  var slot = getSlot();
+  var n = parseInt(inCount.value, 10);
+  if (name.length < 2){ setBad('fName', true); ok = false; }
+  if (!/^1[3-9]\d{9}$/.test(tel)){ setBad('fTel', true); ok = false; }
+  var dateErr = $('#dateErr');
+  if (!dv){
+    dateErr.textContent = '请选择参观日期';
+    setBad('fDate', true); ok = false;
+  } else {
+    var d = new Date(dv + 'T00:00:00');
+    var wd = d.getDay();
+    if (wd === 1){
+      dateErr.textContent = '周一常规闭馆（法定节假日除外），请改期';
+      setBad('fDate', true); ok = false;
+    } else if (slot === 'night' && wd !== 5 && wd !== 6){
+      $('#fSlot').classList.add('bad');
+      $('#fSlot .err').textContent = '夜场观星仅周五、周六开放，请调整日期或时段';
+      ok = false;
+    } else if (inTicket.value === 'night' && slot !== 'night'){
+      $('#fSlot').classList.add('bad');
+      $('#fSlot .err').textContent = '夜场观星票需选择 19:00 – 21:30 夜场时段';
+      ok = false;
+    } else if (slot === 'night' && (inTicket.value === 'child')){
+      $('#fSlot').classList.add('bad');
+      $('#fSlot .err').textContent = '夜场观星不设免票儿童，请选择日间场次';
+      ok = false;
+    }
+  }
+  if (!slot){
+    $('#fSlot .err').textContent = '请选择一个入馆时段';
+    $('#fSlot').classList.add('bad'); ok = false;
+  }
+  if (!(n >= 1 && n <= 20)){ setBad('fCount', true); ok = false; }
+  if (!ok) return;
+  /* 生成预约码与凭据 */
+  var seed = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  var code = 'AST' + dv.replace(/-/g, '') + '-';
+  for (var c = 0; c < 4; c++) code += seed[Math.floor(Math.random() * seed.length)];
+  $('#doneCode').textContent = code;
+  var d = new Date(dv + 'T00:00:00');
+  var rows = [
+    ['参观人', name],
+    ['联系电话', tel.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')],
+    ['参观日期', dv + '（周' + WEEK[d.getDay()] + '）'],
+    ['入馆时段', SLOTNAME[slot]],
+    ['票种 · 人数', PRICELABEL[inTicket.value] + ' × ' + n],
+    ['预估应付', '¥' + fmt(calcPrice())]
+  ];
+  var rh = '';
+  rows.forEach(function(r2){
+    rh += '<div class="trow"><span class="k">' + r2[0] + '</span><span class="v">' + r2[1] + '</span></div>';
+  });
+  $('#doneRows').innerHTML = rh;
+  $('#qrBox').innerHTML = qrSVG(code);
+  form.hidden = true;
+  doneBox.hidden = false;
+  doneBox.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'center' });
+});
+$('#btnAgain').addEventListener('click', function(){
+  form.reset();
+  calcPrice();
+  doneBox.hidden = true;
+  form.hidden = false;
+  $('#inName').focus();
+});
+
+/* ---------- 13. 预约码二维码占位（确定性伪随机） ---------- */
+function qrSVG(seedStr){
+  var s = 0, ci;
+  for (ci = 0; ci < seedStr.length; ci++){ s = (s * 31 + seedStr.charCodeAt(ci)) >>> 0; }
+  function rnd(){ s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }
+  var N = 21, cell = 4, q = 2, rects = '';
+  function inFinder(r, c){ return (r < 7 && c < 7) || (r < 7 && c >= N - 7) || (r >= N - 7 && c < 7); }
+  var r, c;
+  for (r = 0; r < N; r++){
+    for (c = 0; c < N; c++){
+      if (inFinder(r, c)) continue;
+      if (rnd() > .52){
+        rects += '<rect x="' + ((c + q) * cell) + '" y="' + ((r + q) * cell) + '" width="' + cell + '" height="' + cell + '"/>';
+      }
+    }
+  }
+  function finder(r0, c0){
+    return '<rect x="' + ((c0 + q) * cell) + '" y="' + ((r0 + q) * cell) + '" width="' + (7 * cell) + '" height="' + (7 * cell) + '" fill="#F1F5F9"/>' +
+      '<rect x="' + ((c0 + q + 1) * cell) + '" y="' + ((r0 + q + 1) * cell) + '" width="' + (5 * cell) + '" height="' + (5 * cell) + '" fill="#0D1428"/>' +
+      '<rect x="' + ((c0 + q + 2) * cell) + '" y="' + ((r0 + q + 2) * cell) + '" width="' + (3 * cell) + '" height="' + (3 * cell) + '" fill="#F1F5F9"/>';
+  }
+  var size = (N + 2 * q) * cell;
+  return '<svg viewBox="0 0 ' + size + ' ' + size + '" aria-hidden="true">' + rects + finder(0, 0) + finder(0, N - 7) + finder(N - 7, 0) + '</svg>';
+}
+</script>
+</body>
+</html>

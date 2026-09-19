@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="穹象天文博物馆 ASTRAEUM · 古代星图手卷：铜版雕星图长卷，滚动展卷，星座连线逐段描画、星点次第点亮。">
+<title>古代星图手卷 · 穹象天文博物馆 ASTRAEUM</title>
+<style>
+/* ============================================================
+   古代星图手卷 Ancient Star Atlas
+   穹象天文博物馆 ASTRAEUM · 炫酷方向：17世纪铜版雕星图手卷
+   配色：羊皮底 #E9DCC0 / 雕线棕 #5B4A32 / 星点金 #B98F3E
+         注记墨 #3E3222 / 暗角深棕 #8A7350 / 朱砂印 #A63A2B
+   ============================================================ */
+:root{
+  --bg:#20180E; --bg2:#2A2013; --bg3:#17100A;
+  --cream:#EFE6D2; --cream-dim:#C6B898; --cream-faint:#9C8F72;
+  --gold:#C9A870; --gold-d:#8A6B2F;
+  --parch:#E9DCC0; --parch2:#F1E6C8; --parch3:#DECDA4; --parch4:#D3BF92;
+  --ink:#3E3222; --line:#5B4A32; --star:#B98F3E; --vin:#8A7350; --seal:#A63A2B; --seal-d:#8C2E21;
+  --serif:"Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",Georgia,serif;
+  --kai:"Kaiti SC","STKaiti","KaiTi","Noto Serif SC",serif;
+  --latin:Georgia,"Times New Roman",serif;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(120% 90% at 50% 0%, #2E2314 0%, transparent 55%),
+    radial-gradient(100% 80% at 85% 100%, #241A0E 0%, transparent 60%),
+    var(--bg);
+  color:var(--cream);
+  font-family:var(--sans);
+  line-height:1.85;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:rgba(166,58,43,.85);color:#F5EBD8}
+img,svg{vertical-align:middle}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+section{scroll-margin-top:70px}
+.wrap{width:min(1240px,92vw);margin:0 auto}
+
+/* ---------- 隐藏的共享 SVG 定义（纹理滤镜 / 图鉴雕纹） ---------- */
+.svg-defs{position:absolute;width:0;height:0;overflow:hidden}
+
+/* ---------- 顶部进度与导航 ---------- */
+#navProg{position:fixed;top:0;left:0;height:3px;width:0;z-index:130;
+  background:linear-gradient(90deg,var(--gold-d),var(--gold));box-shadow:0 0 8px rgba(201,168,112,.6)}
+.nav{position:fixed;top:0;left:0;right:0;z-index:120;height:62px;
+  display:flex;align-items:center;justify-content:space-between;padding:0 clamp(14px,3vw,36px);
+  background:rgba(23,16,9,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(201,168,112,.28);
+  animation:navIn 1s ease 2.3s both}
+@keyframes navIn{from{opacity:0;transform:translateY(-12px)}}
+.nav.scrolled{background:rgba(23,16,9,.92)}
+.brand{display:flex;align-items:center;gap:10px;color:var(--gold)}
+.brand svg{width:30px;height:30px}
+.brand-zh{font:700 17px/1.2 var(--serif);letter-spacing:4px;color:var(--cream)}
+.brand-la{font:italic 10px/1.2 var(--latin);letter-spacing:3px;color:var(--gold)}
+.nav-links{display:flex;gap:clamp(10px,2vw,28px);align-items:center}
+.nav-links a{font:14px/1 var(--sans);letter-spacing:3px;color:var(--cream-dim);
+  padding:8px 2px;border-bottom:2px solid transparent;transition:.25s}
+.nav-links a:hover,.nav-links a.on{color:var(--gold);border-bottom-color:var(--gold)}
+.nav-cta{background:var(--seal);color:#F5EBD8;border:1px solid rgba(245,235,216,.25);
+  font:14px/1 var(--sans);letter-spacing:3px;padding:9px 18px;border-radius:2px;transition:.25s}
+.nav-cta:hover{background:var(--seal-d);transform:translateY(-1px)}
+
+/* ---------- 羊皮纸板材（纹理 = feTurbulence） ---------- */
+.sheet{position:relative;background:
+  radial-gradient(120% 95% at 50% 38%, var(--parch2) 0%, var(--parch) 52%, var(--parch3) 88%, var(--parch4) 100%)}
+.sheet::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:radial-gradient(90% 74% at 50% 44%, transparent 52%, rgba(90,66,38,.42) 100%)}
+.sheet::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
+  box-shadow:inset 0 0 60px rgba(74,52,28,.35), inset 0 0 6px rgba(74,52,28,.28)}
+.tex{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;mix-blend-mode:multiply}
+.sheet>.edge{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+
+/* ---------- 开场：手卷展开 + 印章盖落 ---------- */
+.hero{position:relative;min-height:100vh;min-height:100svh;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;padding:104px 4vw 84px}
+.hero-sheet{position:absolute;inset:52px 10px;z-index:1;overflow:hidden;
+  clip-path:inset(48% 3% 48% 3% round 10px);
+  animation:unroll 1.5s cubic-bezier(.2,.75,.25,1) .1s both}
+@keyframes unroll{to{clip-path:inset(0% 0% 0% 0% round 10px)}}
+.roller-h{position:absolute;left:-6px;right:-6px;height:30px;z-index:6;
+  background:linear-gradient(180deg,#120b05,#3a2412 18%,#6e4d26 46%,#8a6534 52%,#6e4d26 60%,#2a1a0c 86%,#0e0803)}
+.roller-h::before,.roller-h::after{content:'';position:absolute;top:50%;width:46px;height:46px;margin-top:-23px;
+  border-radius:50%;background:radial-gradient(circle at 35% 30%,#f2dfae,#c9a25c 45%,#7a5a24 80%,#43300e);
+  box-shadow:0 3px 8px rgba(0,0,0,.5)}
+.roller-h::before{left:-10px}.roller-h::after{right:-10px}
+.roller-h.t{top:22px;animation:rollT 1.5s cubic-bezier(.2,.75,.25,1) .1s both}
+.roller-h.b{bottom:22px;animation:rollB 1.5s cubic-bezier(.2,.75,.25,1) .1s both}
+@keyframes rollT{from{transform:translateY(42vh)}}
+@keyframes rollB{from{transform:translateY(-42vh)}}
+.hero-inner{position:relative;z-index:5;display:flex;align-items:stretch;justify-content:center;
+  gap:clamp(26px,6vw,90px);width:100%;max-width:1150px;animation:heroIn .9s ease .95s both}
+@keyframes heroIn{from{opacity:0}}
+.hcol{writing-mode:vertical-rl;text-orientation:mixed}
+.hcol-title{display:flex;flex-direction:column;align-items:center;gap:22px}
+.hero-eyebrow{font:15px/1.6 var(--kai);letter-spacing:12px;color:var(--line)}
+.hero-title{font:600 clamp(42px,5.6vw,80px)/1.14 var(--kai);letter-spacing:.16em;color:var(--ink);
+  text-shadow:0 1px 0 rgba(255,250,235,.5)}
+.t-ch{display:inline-block;animation:chIn .6s cubic-bezier(.2,.7,.3,1) both;
+  animation-delay:calc(1.15s + var(--i)*.09s)}
+@keyframes chIn{from{opacity:0;transform:translateY(16px)}}
+.hero-la{font:italic 12px/1.8 var(--latin);letter-spacing:6px;color:var(--vin)}
+.hero-sealwrap{writing-mode:horizontal-tb;display:flex;justify-content:center;margin-top:6px}
+.seal{position:relative;width:clamp(88px,9vw,116px);height:clamp(88px,9vw,116px);
+  opacity:0;transform:rotate(-6deg);animation:stampIn .5s cubic-bezier(.25,1.2,.4,1) 2.15s both}
+@keyframes stampIn{0%{opacity:0;transform:rotate(-14deg) scale(2.1)}
+  62%{opacity:1;transform:rotate(-5deg) scale(.95)}100%{opacity:1;transform:rotate(-6deg) scale(1)}}
+.seal::after{content:'';position:absolute;inset:-10px;border:2px solid rgba(166,58,43,.5);border-radius:8px;
+  animation:inkRing .8s ease-out 2.32s both}
+@keyframes inkRing{0%{opacity:.85;transform:scale(1.55)}100%{opacity:0;transform:scale(.98)}}
+.seal-svg{width:100%;height:100%;filter:url(#fInk)}
+.seal-ch{font:700 40px var(--kai);fill:var(--seal)}
+.hcol-pref{display:flex;flex-direction:column;justify-content:flex-start;gap:26px;max-height:60vh}
+.pref-h{font:700 20px/1 var(--serif);letter-spacing:14px;color:var(--line);
+  border-block:1px solid rgba(91,74,50,.45);padding:10px 4px}
+.pref-p{font:16px/2.35 var(--kai);letter-spacing:.14em;color:var(--ink);opacity:.92}
+.pref-p b{color:var(--seal)}
+.hero-divider{width:1px;background:linear-gradient(180deg,transparent,rgba(91,74,50,.6) 20%,rgba(91,74,50,.6) 80%,transparent)}
+.hero-foot{position:relative;z-index:5;margin-top:clamp(22px,4vh,44px);
+  display:flex;flex-direction:column;align-items:center;gap:16px;animation:heroIn .9s ease 1.5s both}
+.hero-meta{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.hero-meta span{font:12px/1 var(--sans);letter-spacing:2px;color:var(--line);
+  border:1px solid rgba(91,74,50,.5);padding:6px 12px;border-radius:2px;background:rgba(241,230,200,.5)}
+.hero-stats{display:flex;gap:clamp(20px,4vw,54px);flex-wrap:wrap;justify-content:center}
+.stat{text-align:center}
+.stat .num{font:700 clamp(24px,2.6vw,34px)/1.1 var(--serif);color:var(--ink);font-variant-numeric:tabular-nums}
+.stat .num i{font:italic .55em var(--latin)}
+.stat .lab{font:11px/1 var(--sans);letter-spacing:3px;color:var(--vin);margin-top:6px}
+.hero-cta{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.btn{display:inline-block;font:15px/1 var(--sans);letter-spacing:4px;padding:13px 30px;
+  border-radius:2px;border:1px solid transparent;transition:.25s}
+.btn-solid{background:var(--seal);color:#F5EBD8;border-color:rgba(245,235,216,.25)}
+.btn-solid:hover{background:var(--seal-d);transform:translateY(-2px)}
+.btn-ink{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn-ink:hover{background:var(--line);color:var(--parch2);transform:translateY(-2px)}
+.btn-gold{background:transparent;color:var(--gold);border-color:rgba(201,168,112,.6)}
+.btn-gold:hover{background:var(--gold);color:#241A0E;transform:translateY(-2px)}
+.hero-hint{font:12px/1 var(--sans);letter-spacing:5px;color:var(--line);display:flex;align-items:center;gap:10px}
+.hero-hint .ar{display:inline-block;animation:bob 1.8s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+
+/* ---------- 星图长卷（sticky 竖滚驱动横展） ---------- */
+.atlas{position:relative;border-block:1px solid rgba(201,168,112,.28);
+  background:radial-gradient(120% 100% at 50% 30%,#33271A 0%,#241A10 55%,#170F08 100%)}
+.atlas-track{position:relative}
+.atlas-stage{position:sticky;top:0;height:100vh;height:100svh;display:flex;flex-direction:column;overflow:hidden}
+.atlas-head{flex:0 0 58px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(16px,3vw,34px);color:var(--cream-dim);z-index:7}
+.atlas-head .ttl{font:16px/1 var(--serif);letter-spacing:6px;color:var(--cream)}
+.atlas-head .ttl i{font:italic 10px/1 var(--latin);letter-spacing:3px;color:var(--gold);margin-left:12px}
+.atlas-hint{font:12px/1 var(--sans);letter-spacing:3px;color:var(--gold);transition:opacity .6s}
+.atlas-hint .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--seal);
+  margin-right:8px;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.4;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+.atlas-scene{position:relative;flex:1 1 auto;overflow:hidden}
+.sheet-clip{position:absolute;inset:0;overflow:hidden}
+.sheet-clip.h{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.atlas-sheet{position:absolute;top:50%;left:0;will-change:transform}
+.sheet-clip.h .atlas-sheet{position:relative;top:0;display:inline-block}
+#chartSvg{display:block;height:clamp(380px,calc(100vh - 252px),660px);height:clamp(380px,calc(100svh - 252px),660px);width:auto}
+.sheet-clip.h #chartSvg{height:340px}
+.sheet-clip.h{display:flex;align-items:center}
+/* 卷轴轴头 */
+.roller-v{position:absolute;top:-8px;bottom:-8px;width:52px;z-index:6;
+  background:linear-gradient(90deg,#160e07,#3a2412 18%,#6e4d26 46%,#8a6534 52%,#6e4d26 60%,#33200f 88%,#120b05)}
+.roller-v::before,.roller-v::after{content:'';position:absolute;left:50%;width:70px;height:70px;margin-left:-35px;
+  border-radius:50%;background:radial-gradient(circle at 35% 30%,#f2dfae,#c9a25c 45%,#7a5a24 80%,#43300e);
+  box-shadow:0 3px 9px rgba(0,0,0,.55)}
+.roller-v::before{top:-24px}.roller-v::after{bottom:-24px}
+.roller-v.l{left:0;box-shadow:8px 0 20px rgba(0,0,0,.55)}
+.roller-v.r{right:0;box-shadow:-8px 0 20px rgba(0,0,0,.55)}
+/* 底部展卷进度（轴杆） */
+.atlas-axis{flex:0 0 64px;display:flex;align-items:center;gap:clamp(10px,2vw,22px);
+  padding:0 clamp(16px,3vw,34px);color:var(--cream-dim);font:13px/1 var(--sans);letter-spacing:2px;z-index:7}
+.atlas-axis b{color:var(--gold);font-variant-numeric:tabular-nums;font-weight:600}
+.axis-bar{position:relative;flex:1;max-width:560px;height:6px;border-radius:3px;
+  background:rgba(233,220,192,.14);margin:0 26px}
+.axis-bar::before,.axis-bar::after{content:'';position:absolute;top:50%;width:13px;height:13px;margin-top:-7px;
+  border-radius:50%;background:radial-gradient(circle at 35% 30%,#f2dfae,#c9a25c 45%,#6e5120 85%)}
+.axis-bar::before{left:-20px}.axis-bar::after{right:-20px}
+.axis-fill{height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,var(--gold-d),var(--gold))}
+.axis-right{margin-left:auto;text-align:right;white-space:nowrap}
+/* 星座注记卡 */
+.con-card{position:absolute;z-index:9;top:70px;width:min(310px,72vw);padding:14px 18px 15px;
+  background:linear-gradient(#F4EAD0,#EADCB6);color:var(--ink);
+  border:1px solid var(--star);box-shadow:0 12px 30px rgba(15,9,3,.5), inset 0 0 0 3px rgba(185,143,62,.18);
+  opacity:0;transform:translateY(8px) scale(.97);pointer-events:none;transition:.25s ease}
+.con-card.show{opacity:1;transform:none}
+.con-card .cc-no{font:10px/1 var(--latin);letter-spacing:3px;color:var(--vin)}
+.con-card h4{font:700 19px/1.3 var(--kai);letter-spacing:3px;margin:4px 0 1px}
+.con-card h4 i{font:italic 11px/1 var(--latin);letter-spacing:2px;color:var(--gold-d);margin-left:8px}
+.con-card .cc-main{font:12.5px/1.9 var(--sans);color:var(--line);letter-spacing:1px}
+.con-card .cc-main b{color:var(--seal);font-weight:600}
+.con-card .cc-myth{font:13px/1.9 var(--kai);color:var(--ink);opacity:.9;margin-top:6px;
+  border-top:1px dashed rgba(91,74,50,.5);padding-top:8px}
+.con-card .cc-tip{font:10px/1 var(--latin);letter-spacing:2px;color:var(--vin);margin-top:8px}
+
+/* ---------- 星图 SVG 内部样式 ---------- */
+#chartSvg text{font-family:var(--kai);user-select:none}
+#chartSvg .frame rect{fill:none;stroke:var(--line)}
+#chartSvg .cl-no{font-size:11px;letter-spacing:4px;fill:var(--vin)}
+#chartSvg .cl-zh{font-size:31px;font-weight:700;letter-spacing:12px;fill:var(--ink)}
+#chartSvg .cl-la{font-size:12.5px;letter-spacing:5px;fill:#6B5638;font-family:var(--latin);font-style:italic}
+#chartSvg .planet-ch{font-size:19px;font-weight:700;fill:var(--ink)}
+#chartSvg .planet-la{font-size:11px;letter-spacing:2px;fill:#6B5638;font-family:var(--latin);font-style:italic}
+.cline{stroke:#6B5638;stroke-width:1;opacity:.88}
+g.con:hover .cline{stroke:#8A6B2F;stroke-width:1.6}
+.figure{stroke:#7A6440;stroke-width:1.5;fill:none;stroke-dasharray:5 4}
+g.con:hover .figure{opacity:.55}
+.star-c{fill:var(--star);stroke:var(--ink);stroke-width:.5}
+.halo{fill:rgba(185,143,62,.16)}
+.rays line{stroke:var(--star);stroke-width:.9;opacity:.85}
+.star-name{font-size:11.5px;fill:#5B4A32;letter-spacing:1px}
+.plaque .pr{fill:var(--parch2);stroke:var(--star);stroke-width:1}
+.plaque .pi{fill:none;stroke:var(--star);stroke-width:.45}
+.plaque .p1{font-size:21px;font-weight:700;letter-spacing:5px;fill:var(--ink)}
+.plaque .p2{font-size:10.5px;letter-spacing:3px;fill:#6B5638;font-family:var(--latin);font-style:italic}
+.plaque .p3{font-size:12.5px;letter-spacing:1.5px;fill:var(--line)}
+.con-hit{fill:transparent;cursor:pointer;outline:none}
+.con-hit:focus-visible{stroke:var(--star);stroke-dasharray:5 5;stroke-width:1.2}
+.band-line{stroke:var(--line);stroke-width:1;opacity:.55}
+.band-cell rect.bc{fill:rgba(91,74,50,.05)}
+.band-cell rect.bh{fill:rgba(185,143,62,.1);stroke:var(--gold-d);stroke-width:1.1;opacity:0;transition:opacity .4s}
+.band-cell.on rect.bh{opacity:1}
+.band-cell .bn{font-size:19px;letter-spacing:6px;fill:var(--ink);opacity:.85}
+.band-cell.on .bn{opacity:1;font-weight:700;fill:#4A3B25}
+.band-cell .bl{font-size:8.5px;letter-spacing:2px;fill:var(--vin);font-family:var(--latin);font-style:italic}
+.band-tick{stroke:var(--line);stroke-width:.7;opacity:.5}
+#needleG polygon{fill:var(--seal)}
+.milky ellipse{fill:var(--vin);opacity:.1}
+.milky text{font-size:12px;letter-spacing:6px;fill:var(--vin);opacity:.75}
+.deco{stroke:#6B5638;fill:none;opacity:.55}
+.deco.faint{opacity:.4}
+.deco use{stroke:inherit}
+.legend text{font-size:11.5px;letter-spacing:2px;fill:var(--line)}
+.legend .lg-t{font-size:13px;font-weight:700;letter-spacing:8px;fill:var(--ink)}
+.legend line,.legend circle{stroke:var(--line);fill:none}
+.legend .dotf{fill:var(--star);stroke:var(--ink);stroke-width:.4}
+.cartouche .co{fill:rgba(241,230,200,.55);stroke:var(--line);stroke-width:2.2}
+.cartouche .ci{fill:none;stroke:var(--line);stroke-width:.8}
+.cartouche .c-title{font-size:30px;font-weight:700;letter-spacing:8px;fill:var(--ink)}
+.cartouche .c-sub{font-size:10px;letter-spacing:5px;fill:var(--vin);font-family:var(--latin);font-style:italic}
+.cartouche .c-line{font-size:13px;letter-spacing:3px;fill:var(--line)}
+.cartouche .c-note{font-size:11.5px;letter-spacing:2px;fill:var(--vin)}
+.cartouche .c-no{font-size:12px;letter-spacing:4px;fill:var(--seal);font-family:var(--latin);font-style:italic}
+.cartouche .c-end{font-size:24px;font-weight:700;letter-spacing:14px;fill:var(--ink)}
+.cartouche .c-div{stroke:var(--line);stroke-width:.8;opacity:.6}
+.mini-seal{opacity:.85}
+.mini-seal text{font:700 26px var(--kai);fill:var(--seal)}
+.mini-seal rect{fill:none;stroke:var(--seal)}
+.compass circle{fill:none;stroke:var(--line)}
+.compass .cl{font-size:17px;fill:var(--ink);font-family:var(--latin);font-style:italic}
+.compass .clz{font-size:11px;fill:var(--vin);letter-spacing:2px}
+.compass text.cl-deg{font-size:8px;fill:var(--vin);font-family:var(--latin)}
+.noscript-note{font-size:26px;fill:var(--line);letter-spacing:4px}
+
+/* ---------- 通用区块头 ---------- */
+.sec-head{text-align:center;margin-bottom:clamp(30px,5vw,54px)}
+.sec-head .eyebrow{font:italic 12px/1 var(--latin);letter-spacing:6px;color:var(--gold)}
+.catalog .sec-head .eyebrow,.visit .sec-head .eyebrow{color:var(--gold-d)}
+.sec-head h2{font:700 clamp(26px,3.4vw,40px)/1.3 var(--kai);letter-spacing:14px;margin:12px 0 10px}
+.catalog .sec-head h2,.visit .sec-head h2{color:var(--ink)}
+.halls .sec-head h2{color:var(--cream)}
+.sec-head .sub{font:14px/2 var(--sans);letter-spacing:2px;color:var(--cream-faint);max-width:640px;margin:0 auto}
+.catalog .sec-head .sub,.visit .sec-head .sub{color:#6B5638}
+.sec-head .orn{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:16px;color:var(--gold)}
+.sec-head .orn::before,.sec-head .orn::after{content:'';width:min(150px,22vw);height:1px;
+  background:linear-gradient(90deg,transparent,currentColor)}
+.sec-head .orn::after{background:linear-gradient(90deg,currentColor,transparent)}
+
+/* ---------- 馆藏图鉴（古籍档案卡） ---------- */
+.catalog{padding:clamp(70px,9vw,120px) 0 clamp(70px,9vw,110px)}
+.filter-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.chip{font:13px/1 var(--sans);letter-spacing:3px;padding:9px 18px;border-radius:2px;
+  background:transparent;border:1px solid var(--line);color:var(--line);transition:.22s}
+.chip:hover{border-color:var(--gold-d);color:var(--gold-d)}
+.chip.on{background:var(--line);border-color:var(--line);color:var(--parch2)}
+.chip .n{font:italic 10px var(--latin);margin-left:5px;opacity:.7}
+.count-line{text-align:center;font:12px/1 var(--sans);letter-spacing:3px;color:var(--vin);margin-bottom:34px}
+.arch-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.arch-card{position:relative;background:linear-gradient(160deg,var(--parch2),var(--parch) 60%,var(--parch3));
+  border:1px solid rgba(91,74,50,.55);border-radius:2px;padding:16px 16px 14px;color:var(--ink);
+  box-shadow:0 2px 8px rgba(20,12,4,.28);transition:.28s ease}
+.arch-card:hover{transform:translateY(-4px);border-color:var(--gold-d);box-shadow:0 12px 26px rgba(15,9,3,.4)}
+.arch-card.hide{display:none}
+.arch-card.pop{animation:cardPop .4s ease both}
+@keyframes cardPop{from{opacity:0;transform:translateY(10px)}}
+.arch-top{display:flex;justify-content:space-between;align-items:center}
+.arch-no{font:italic 10px/1 var(--latin);letter-spacing:2px;color:var(--vin)}
+.arch-seal{font:11px/1 var(--kai);letter-spacing:2px;color:var(--seal);border:1px solid var(--seal);
+  padding:3px 6px;border-radius:2px;opacity:.85}
+.arch-glyph{width:84px;height:84px;margin:12px auto 10px;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(90% 90% at 50% 40%,var(--parch3),var(--parch4));
+  border:1px solid rgba(91,74,50,.5);box-shadow:inset 0 0 0 3px rgba(241,230,200,.6);transition:.3s}
+.arch-glyph svg{width:60px;height:60px;stroke:#6B5638;fill:none;stroke-width:2;transition:.3s}
+.arch-card:hover .arch-glyph svg{transform:rotate(6deg) scale(1.06);stroke:#8A6B2F}
+.arch-card h3{font:700 18px/1.4 var(--kai);letter-spacing:2px;text-align:center}
+.arch-card h3 i{display:block;font:italic 11px/1.6 var(--latin);letter-spacing:2px;color:var(--gold-d)}
+.arch-card p{font:12.5px/1.85 var(--sans);color:#5A4A32;text-align:center;margin-top:8px;min-height:44px}
+.arch-meta{display:flex;justify-content:space-between;gap:8px;border-top:1px dashed rgba(91,74,50,.45);
+  margin-top:10px;padding-top:9px;font:10.5px/1.5 var(--sans);letter-spacing:1px;color:var(--vin)}
+.catalog-note{text-align:center;font:11.5px/2 var(--sans);letter-spacing:2px;color:var(--vin);margin-top:36px}
+
+/* ---------- 常设展厅 ---------- */
+.halls{padding:clamp(70px,9vw,120px) 0;border-top:1px solid rgba(201,168,112,.22);
+  background:radial-gradient(110% 80% at 50% 0%,#2C2113 0%,var(--bg) 60%)}
+.hall-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.hall-card{position:relative;background:linear-gradient(160deg,var(--parch2),var(--parch) 55%,var(--parch3));
+  color:var(--ink);padding:24px 22px 18px;border:1px solid rgba(91,74,50,.55);border-radius:2px;
+  box-shadow:0 2px 10px rgba(10,6,2,.5);transition:.28s;overflow:hidden}
+.hall-card::after{content:'';position:absolute;right:-26px;top:-26px;width:86px;height:86px;transform:rotate(45deg);
+  background:rgba(185,143,62,.14);border:1px solid rgba(138,107,47,.35)}
+.hall-card:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(8,5,2,.6);border-color:var(--gold-d)}
+.hall-no{font:italic 12px/1 var(--latin);letter-spacing:4px;color:var(--gold-d)}
+.hall-card h3{font:700 20px/1.5 var(--kai);letter-spacing:3px;margin:8px 0 6px}
+.hall-card>p{font:13px/1.9 var(--sans);color:#5A4A32}
+.hall-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.hall-meta span{font:11px/1 var(--sans);letter-spacing:1px;color:var(--line);
+  border:1px solid rgba(91,74,50,.45);padding:5px 9px;border-radius:2px;background:rgba(241,230,200,.45)}
+
+/* ---------- 参观与预约 ---------- */
+.visit{padding:clamp(70px,9vw,120px) 0}
+.visit-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(26px,3.5vw,46px);align-items:start}
+.info-card,.form-card{background:linear-gradient(165deg,var(--parch2),var(--parch) 58%,var(--parch3));
+  border:1px solid rgba(91,74,50,.55);border-radius:2px;color:var(--ink);
+  padding:clamp(20px,2.6vw,32px);box-shadow:0 3px 14px rgba(15,9,3,.3)}
+.info-card h3,.form-card h3{font:700 19px/1 var(--kai);letter-spacing:6px;display:flex;align-items:center;gap:12px}
+.info-card h3::before,.form-card h3::before{content:'';width:5px;height:20px;background:var(--seal);border-radius:1px}
+.info-block{margin-top:22px}
+.info-block h4{font:600 14px/1 var(--sans);letter-spacing:4px;color:var(--gold-d);margin-bottom:10px}
+table.info-tb{width:100%;border-collapse:collapse;font:13.5px/1.7 var(--sans)}
+.info-tb td{padding:8px 4px;border-bottom:1px dashed rgba(91,74,50,.35);color:#4A3B25}
+.info-tb td:first-child{color:var(--ink);letter-spacing:1px;white-space:nowrap;padding-right:14px}
+.info-tb .pr{font:600 15px var(--serif);color:var(--seal);font-variant-numeric:tabular-nums}
+.visit-note{font:11.5px/2 var(--sans);letter-spacing:1px;color:var(--vin);margin-top:14px;
+  border-top:1px solid rgba(91,74,50,.3);padding-top:10px}
+/* 表单 */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px 18px;margin-top:22px}
+.ffield{display:flex;flex-direction:column;gap:7px}
+.ffield.full{grid-column:1/-1}
+.ffield label{font:13px/1 var(--sans);letter-spacing:3px;color:var(--line)}
+.ffield label em{color:var(--seal);font-style:normal;margin-left:3px}
+.ffield input,.ffield select{font:15px/1.4 var(--sans);color:var(--ink);letter-spacing:1px;
+  background:rgba(241,230,200,.6);border:none;border-bottom:1.5px solid rgba(91,74,50,.55);
+  padding:9px 10px;border-radius:2px 2px 0 0;outline:none;transition:.2s;width:100%}
+.ffield input:focus,.ffield select:focus{border-bottom-color:var(--seal);background:rgba(241,230,200,.9)}
+.ffield input.error{border-bottom-color:var(--seal);background:rgba(166,58,43,.08)}
+.ferr{font:11.5px/1.5 var(--sans);color:var(--seal);min-height:0;display:none;letter-spacing:1px}
+.ferr.show{display:block}
+.slot-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.slot-row label{display:flex;align-items:center;gap:8px;font:12.5px/1.4 var(--sans);letter-spacing:1px;color:#4A3B25;
+  border:1px solid rgba(91,74,50,.4);padding:9px 10px;border-radius:2px;cursor:pointer;transition:.2s;background:rgba(241,230,200,.4)}
+.slot-row label:hover{border-color:var(--gold-d)}
+.slot-row input{accent-color:var(--seal);width:15px;height:15px}
+.slot-row label:has(input:checked){border-color:var(--seal);background:rgba(166,58,43,.07);color:var(--ink)}
+.count-ctl{display:flex;align-items:center;gap:0;border:1px solid rgba(91,74,50,.5);border-radius:2px;width:max-content}
+.count-ctl button{width:36px;height:38px;border:none;background:rgba(241,230,200,.6);color:var(--line);font-size:17px}
+.count-ctl button:hover{background:var(--line);color:var(--parch2)}
+.count-ctl input{width:64px;text-align:center;border:none;background:transparent;-moz-appearance:textfield}
+.count-ctl input::-webkit-outer-spin-button,.count-ctl input::-webkit-inner-spin-button{-webkit-appearance:none}
+.form-foot{grid-column:1/-1;display:flex;align-items:center;gap:16px;margin-top:6px;flex-wrap:wrap}
+.form-foot .tip{font:11px/1.7 var(--sans);color:var(--vin);letter-spacing:1px}
+.btn-submit{margin-left:auto}
+/* 预约凭据 */
+#receipt{display:none;margin-top:22px;position:relative}
+#receipt.show{display:block;animation:cardPop .45s ease both}
+.receipt-in{border:1.5px solid var(--line);background:rgba(241,230,200,.55);padding:22px;position:relative}
+.receipt-in::before{content:'';position:absolute;inset:5px;border:1px solid rgba(91,74,50,.4);pointer-events:none}
+.rc-title{font:700 17px/1 var(--kai);letter-spacing:8px;text-align:center}
+.rc-code{font:italic 22px/1 var(--latin);letter-spacing:3px;color:var(--seal);text-align:center;margin:12px 0 4px;font-weight:700}
+.rc-sub{text-align:center;font:11px/1 var(--sans);letter-spacing:2px;color:var(--vin)}
+.rc-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px 18px;margin:18px 0 8px;
+  border-block:1px dashed rgba(91,74,50,.4);padding:14px 4px}
+.rc-grid span{font:12.5px/1.7 var(--sans);color:#4A3B25}
+.rc-grid b{color:var(--ink);font-weight:600}
+.rc-seal{position:absolute;right:18px;bottom:14px;width:88px;height:88px;opacity:0;transform:rotate(14deg) scale(2)}
+.rc-seal.stamp{animation:stampIn2 .45s cubic-bezier(.25,1.2,.4,1) .45s both}
+@keyframes stampIn2{0%{opacity:0;transform:rotate(20deg) scale(2)}70%{opacity:.92;transform:rotate(12deg) scale(.96)}100%{opacity:.92;transform:rotate(14deg) scale(1)}}
+.rc-actions{display:flex;justify-content:center;gap:14px;margin-top:16px}
+#qrBox svg{display:block;margin:0 auto}
+
+/* ---------- 页脚（钤印） ---------- */
+footer{background:linear-gradient(#17100A,#100A05);border-top:1px solid rgba(201,168,112,.25);
+  padding:64px 0 30px;color:var(--cream-dim)}
+.foot-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:34px}
+.foot-brand{display:flex;gap:16px;align-items:flex-start}
+.foot-brand svg{width:40px;height:40px;color:var(--gold);flex:0 0 auto}
+.foot-brand h5{font:700 18px/1.4 var(--serif);letter-spacing:5px;color:var(--cream)}
+.foot-brand .la{font:italic 10px/1.8 var(--latin);letter-spacing:3px;color:var(--gold)}
+.foot-brand p{font:12.5px/2 var(--sans);margin-top:8px}
+footer h6{font:600 13px/1 var(--sans);letter-spacing:4px;color:var(--gold);margin-bottom:14px}
+footer li{list-style:none;font:12.5px/2.3 var(--sans);letter-spacing:1px}
+footer li a:hover{color:var(--gold)}
+.foot-seal{width:84px;height:84px;margin-top:10px;transform:rotate(-7deg);filter:url(#fInk);opacity:.92}
+.foot-bottom{border-top:1px solid rgba(201,168,112,.18);margin-top:40px;padding-top:20px;
+  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  font:11px/1.8 var(--sans);letter-spacing:2px;color:var(--cream-faint)}
+
+/* ---------- 移动端悬浮购票条 ---------- */
+.mob-book{display:none;position:fixed;left:0;right:0;bottom:0;z-index:110;padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+  background:rgba(23,16,9,.92);border-top:1px solid rgba(201,168,112,.3);backdrop-filter:blur(8px)}
+.mob-book a{display:block;text-align:center;background:var(--seal);color:#F5EBD8;
+  font:14px/1 var(--sans);letter-spacing:6px;padding:13px 0;border-radius:2px}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1199px){
+  .arch-grid{grid-template-columns:repeat(3,1fr)}
+  .hall-grid{grid-template-columns:repeat(2,1fr)}
+  .foot-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:900px){
+  .visit-grid{grid-template-columns:1fr}
+  #chartSvg{height:clamp(320px,calc(100svh - 268px),520px)}
+}
+@media (max-width:767px){
+  .nav-links{display:none}
+  .hero{padding:92px 5vw 70px}
+  .hcol{writing-mode:horizontal-tb}
+  .hcol-title{gap:14px}
+  .hero-title{letter-spacing:.22em}
+  .hero-eyebrow{letter-spacing:8px}
+  .hero-inner{flex-direction:column;align-items:center;gap:22px}
+  .hero-divider{display:none}
+  .hcol-pref{max-height:none;align-items:center;text-align:center}
+  .pref-h{letter-spacing:10px}
+  .pref-p{font-size:14px;line-height:2.1;max-width:32em}
+  .hcol-pref{display:flex;flex-direction:column}
+  .hero-foot{margin-top:26px}
+  /* 手卷退化为横向滑动 */
+  .atlas-stage{position:static;height:auto}
+  .atlas-track{height:auto!important}
+  .atlas-head{flex-direction:column;align-items:flex-start;gap:4px;padding-top:14px;height:auto}
+  .atlas-axis{flex-wrap:wrap;row-gap:8px;padding:12px 16px 18px;height:auto}
+  .axis-bar{max-width:none;margin:0 14px}
+  .atlas-hint{display:none}
+  .arch-grid{grid-template-columns:repeat(2,1fr);gap:14px}
+  .hall-grid{grid-template-columns:1fr}
+  .fgrid{grid-template-columns:1fr}
+  .slot-row{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr;gap:24px}
+  .mob-book{display:block}
+  body{padding-bottom:64px}
+  .con-card{top:auto;bottom:84px}
+}
+@media (max-width:420px){
+  .arch-grid{grid-template-columns:1fr}
+  .hero-stats{gap:16px}
+  .axis-right{display:none}
+}
+
+/* ---------- 无动画偏好：直接完整显示 ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+  html{scroll-behavior:auto}
+  .hero-sheet{clip-path:none;animation:none}
+  .roller-h.t,.roller-h.b{animation:none;transform:none}
+  .t-ch{animation:none;opacity:1;transform:none}
+  .seal{animation:none;opacity:1}
+  .seal::after,.hero-hint .ar,.atlas-hint .dot{display:none}
+  #chartSvg .figure{opacity:.2}
+}
+</style>
+</head>
+<body>
+
+<!-- 共享 SVG 定义：羊皮纹理滤镜（feTurbulence）+ 印章做旧 + 图鉴雕纹符号 -->
+<svg class="svg-defs" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="fGrain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.82" numOctaves="2" seed="3" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.36  0 0 0 0 0.27  0 0 0 0 0.15  0 0 0 0.5 0" result="c"/>
+      <feComposite in="c" in2="SourceAlpha" operator="in"/>
+    </filter>
+    <filter id="fStain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.017" numOctaves="3" seed="11" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.42  0 0 0 0 0.30  0 0 0 0 0.14  0 0 0 0.95 0" result="c"/>
+      <feComposite in="c" in2="SourceAlpha" operator="in"/>
+      <feGaussianBlur stdDeviation="1.4"/>
+    </filter>
+    <filter id="fRough" x="-6%" y="-6%" width="112%" height="112%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="9" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="7"/>
+    </filter>
+    <filter id="fCloud" x="-20%" y="-60%" width="140%" height="220%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="3" seed="5" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.54  0 0 0 0 0.45  0 0 0 0 0.31  0 0 0 0.9 0" result="c"/>
+      <feComposite in="c" in2="SourceAlpha" operator="in"/>
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+    <filter id="fInk" x="-12%" y="-12%" width="124%" height="124%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="2" seed="8" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="4" result="d"/>
+      <feComponentTransfer in="n" result="m"><feFuncA type="discrete" tableValues="0 1 1 1 1 1 1 1"/></feComponentTransfer>
+      <feComposite in="d" in2="m" operator="in"/>
+    </filter>
+    <!-- 图鉴类别雕纹 -->
+    <symbol id="gl-star" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="6.5"/><g><line x1="32" y1="8" x2="32" y2="17"/><line x1="32" y1="47" x2="32" y2="56"/><line x1="8" y1="32" x2="17" y2="32"/><line x1="47" y1="32" x2="56" y2="32"/><line x1="15" y1="15" x2="21.5" y2="21.5"/><line x1="42.5" y1="42.5" x2="49" y2="49"/><line x1="49" y1="15" x2="42.5" y2="21.5"/><line x1="15" y1="49" x2="21.5" y2="42.5"/></g>
+      <circle cx="14" cy="48" r="1.4"/><circle cx="52" cy="14" r="1.4"/>
+    </symbol>
+    <symbol id="gl-planet" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="12"/>
+      <ellipse cx="32" cy="32" rx="24" ry="7" transform="rotate(-18 32 32)"/>
+      <path d="M18 26 q14 -7 30 -1"/><path d="M20 40 q12 6 26 2"/>
+    </symbol>
+    <symbol id="gl-comet" viewBox="0 0 64 64">
+      <circle cx="21" cy="43" r="6"/>
+      <line x1="28" y1="37" x2="54" y2="11"/><line x1="30" y1="43" x2="56" y2="22"/><line x1="24" y1="35" x2="42" y2="12"/>
+      <circle cx="56" cy="9" r="1.6"/>
+    </symbol>
+    <symbol id="gl-nebula" viewBox="0 0 64 64">
+      <path d="M32 12 C48 12 56 24 52 36 C48 50 38 54 28 50 C16 46 10 36 14 26 C17 17 24 12 32 12 Z"/>
+      <path d="M32 20 C41 20 46 27 44 34 C41 42 34 45 28 42 C21 39 18 32 21 26 C24 21 27 20 32 20 Z"/>
+      <circle cx="30" cy="31" r="1.6"/><circle cx="38" cy="26" r="1.2"/><circle cx="26" cy="38" r="1.2"/><circle cx="36" cy="38" r="1"/>
+    </symbol>
+    <symbol id="gl-deep" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="3.4"/>
+      <path d="M18 26 C22 15 42 15 46 26"/><path d="M46 38 C42 49 22 49 18 38"/>
+      <line x1="10" y1="54" x2="24" y2="42"/><line x1="54" y1="10" x2="40" y2="22"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div id="navProg" aria-hidden="true"></div>
+
+<header class="nav" id="topNav">
+  <a class="brand" href="#home" aria-label="穹象天文博物馆">
+    <svg viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="32" cy="28" r="15"/><ellipse cx="32" cy="28" rx="15" ry="5.5" transform="rotate(22 32 28)"/><ellipse cx="32" cy="28" rx="15" ry="5.5" transform="rotate(-22 32 28)"/><line x1="32" y1="6" x2="32" y2="13"/></g><circle cx="32" cy="28" r="3" fill="currentColor"/><path d="M22 54 h20 M32 46 v8" stroke="currentColor" stroke-width="2.4" fill="none"/></svg>
+    <span><span class="brand-zh">穹象天文博物馆</span><br><span class="brand-la">ASTRAEUM</span></span>
+  </a>
+  <nav class="nav-links" aria-label="站内导航">
+    <a href="#atlas" data-spy="atlas">星图长卷</a>
+    <a href="#catalog" data-spy="catalog">馆藏图鉴</a>
+    <a href="#halls" data-spy="halls">常设展厅</a>
+    <a href="#visit" data-spy="visit">参观预约</a>
+  </nav>
+  <a class="nav-cta" href="#visit">购票预约</a>
+</header>
+
+<main>
+<!-- ============ 卷首：手卷展开 + 印章盖落 ============ -->
+<section id="home" class="hero" aria-label="卷首">
+  <div class="hero-sheet sheet" aria-hidden="false">
+    <svg class="tex" aria-hidden="true"><rect width="100%" height="100%" filter="url(#fGrain)" opacity=".13"/></svg>
+    <svg class="tex" aria-hidden="true"><rect width="100%" height="100%" filter="url(#fStain)" opacity=".07"/></svg>
+    <svg class="edge" aria-hidden="true">
+      <rect x="1%" y="2%" width="98%" height="96%" fill="none" stroke="rgba(90,66,38,.5)" stroke-width="3" filter="url(#fRough)"/>
+      <rect x="2.2%" y="3.4%" width="95.6%" height="93.2%" fill="none" stroke="rgba(90,66,38,.24)" stroke-width="1.2" filter="url(#fRough)"/>
+    </svg>
+  </div>
+  <div class="roller-h t" aria-hidden="true"></div>
+  <div class="roller-h b" aria-hidden="true"></div>
+
+  <div class="hero-inner">
+    <div class="hcol hcol-pref">
+      <h2 class="pref-h">卷 首 语</h2>
+      <p class="pref-p">夫星汉者，天之文也；图籍者，人之目也。十七世纪铜版雕星之艺，合<b>西士测天之器</b>与<b>中土星官之名</b>于一卷。今依原版重摹而藏之——展卷之处，万古星辰次第而明。</p>
+    </div>
+    <div class="hero-divider" aria-hidden="true"></div>
+    <div class="hcol hcol-title">
+      <span class="hero-eyebrow">天体博物馆 · 特藏部 藏本</span>
+      <h1 class="hero-title" aria-label="古代星图手卷"><span class="t-ch" style="--i:0">古</span><span class="t-ch" style="--i:1">代</span><span class="t-ch" style="--i:2">星</span><span class="t-ch" style="--i:3">图</span><span class="t-ch" style="--i:4">手</span><span class="t-ch" style="--i:5">卷</span></h1>
+      <span class="hero-la">ATLAS CAELESTIS ANTIQUUS · MMXXVI</span>
+      <div class="hero-sealwrap">
+        <div class="seal" role="img" aria-label="穹象之印">
+          <svg class="seal-svg" viewBox="0 0 120 120"><rect x="7" y="7" width="106" height="106" rx="10" fill="none" stroke="#A63A2B" stroke-width="6"/><rect x="18" y="18" width="84" height="84" rx="6" fill="none" stroke="#A63A2B" stroke-width="1.6"/><text x="60" y="53" text-anchor="middle" class="seal-ch">穹象</text><text x="60" y="99" text-anchor="middle" class="seal-ch">之印</text></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-foot">
+    <div class="hero-meta">
+      <span>馆藏编号 GU-1661</span><span>铜版雕本</span><span>纵 42 cm · 横 18.6 m</span><span>重摹本 第叁号</span>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="num"><span class="cnum" data-n="12470">0</span> <i>件</i></div><div class="lab">馆藏文物</div></div>
+      <div class="stat"><div class="num"><span class="cnum" data-n="6">0</span> <i>座</i></div><div class="lab">常设展厅</div></div>
+      <div class="stat"><div class="num"><span class="cnum" data-n="8">0</span> <i>座</i></div><div class="lab">摹绘星座</div></div>
+      <div class="stat"><div class="num"><span class="cnum" data-n="24">0</span> <i>幅</i></div><div class="lab">古星图藏本</div></div>
+    </div>
+    <div class="hero-cta">
+      <a class="btn btn-solid" href="#atlas">开卷 · 观星</a>
+      <a class="btn btn-ink" href="#visit">预约参观</a>
+    </div>
+    <div class="hero-hint">向下滚动 · 徐徐展卷<span class="ar">↓</span></div>
+  </div>
+</section>
+
+<!-- ============ 核心长卷：铜版雕星图（sticky 竖滚驱动横展） ============ -->
+<section id="atlas" class="atlas" aria-label="古代星图手卷长卷">
+  <div class="atlas-track" id="atlasTrack">
+    <div class="atlas-stage" id="atlasStage">
+      <div class="atlas-head">
+        <div class="ttl">第一展卷 · 铜版雕星图<i>HARMONIA MINORIS</i></div>
+        <div class="atlas-hint" id="atlasHint"><span class="dot"></span>缓缓滚动 · 星座连线将逐段描画，星点按星等错峰点亮</div>
+      </div>
+
+      <div class="atlas-scene">
+        <div class="sheet-clip" id="sheetClip">
+          <div class="atlas-sheet sheet" id="atlasSheet">
+            <svg class="tex" aria-hidden="true"><rect width="100%" height="100%" filter="url(#fGrain)" opacity=".12"/></svg>
+            <svg class="tex" aria-hidden="true"><rect width="100%" height="100%" filter="url(#fStain)" opacity=".065"/></svg>
+
+            <svg id="chartSvg" viewBox="0 0 5480 700" role="img" aria-label="铜版雕星图长卷：仙后、天鹅、天琴、大熊、金牛、狮子、猎户、天蝎八座星官">
+              <defs>
+                <!-- 神话形象线雕（虚线浮显，低透明底层） -->
+                <symbol id="fig-cas" viewBox="0 0 160 160">
+                  <path d="M40 140 L40 70 L58 70 M118 140 L118 70 M40 140 L118 140 M40 70 C40 54 52 46 64 50"/>
+                  <circle cx="78" cy="54" r="9"/>
+                  <path d="M78 63 C74 80 74 94 80 106 L108 110 L108 138"/>
+                  <path d="M76 76 L96 84"/><circle cx="103" cy="88" r="7"/>
+                  <path d="M70 46 L74 38 L78 46 L82 38 L86 46"/>
+                </symbol>
+                <symbol id="fig-cyg" viewBox="0 0 200 140">
+                  <path d="M60 96 C40 88 30 66 38 44 C44 28 58 22 66 30 C72 36 66 44 58 44"/>
+                  <path d="M58 44 L46 40"/><circle cx="57" cy="38" r="1.4"/>
+                  <path d="M60 96 C74 112 116 116 142 102 L156 88"/>
+                  <path d="M142 102 C120 92 84 88 60 96"/>
+                  <path d="M84 94 C88 66 116 50 146 58 M92 98 C102 78 124 68 148 72"/>
+                  <path d="M116 96 L138 86 M124 100 L146 92"/>
+                </symbol>
+                <symbol id="fig-lyr" viewBox="0 0 120 140">
+                  <path d="M30 30 C12 52 12 92 30 112 M90 30 C108 52 108 92 90 112"/>
+                  <path d="M30 112 L90 112"/>
+                  <path d="M30 30 C42 16 78 16 90 30"/>
+                  <circle cx="30" cy="26" r="5"/><circle cx="90" cy="26" r="5"/><circle cx="60" cy="18" r="4"/>
+                  <path d="M42 27 L46 108 M56 22 L58 108 M70 22 L70 108 M84 27 L80 108"/>
+                </symbol>
+                <symbol id="fig-uma" viewBox="0 0 220 120">
+                  <path d="M32 58 C20 54 12 44 14 34 C15 28 20 26 26 28 C30 30 33 34 37 39"/>
+                  <path d="M32 58 C55 34 130 30 168 48 C190 58 192 76 170 84"/>
+                  <path d="M170 84 C180 90 182 98 176 102"/>
+                  <path d="M52 74 L48 104 M64 76 L62 106 M150 86 L148 112 M162 82 L164 110"/>
+                  <circle cx="24" cy="34" r="3.4"/><circle cx="17" cy="39" r="1.2"/>
+                </symbol>
+                <symbol id="fig-tau" viewBox="0 0 200 130">
+                  <path d="M62 58 C40 50 28 30 32 10 M138 58 C160 50 172 30 168 10"/>
+                  <path d="M62 58 C70 44 130 44 138 58 C142 72 128 92 100 96 C72 92 58 72 62 58 Z"/>
+                  <path d="M58 62 L48 68 M142 62 L152 68"/>
+                  <path d="M138 58 C156 66 164 80 166 96 M62 58 C44 64 36 78 34 96"/>
+                  <circle cx="82" cy="66" r="1.6"/><circle cx="118" cy="66" r="1.6"/>
+                  <circle cx="90" cy="86" r="1.2"/><circle cx="110" cy="86" r="1.2"/>
+                </symbol>
+                <symbol id="fig-ori" viewBox="0 0 140 200">
+                  <circle cx="70" cy="40" r="8.5"/>
+                  <path d="M70 50 L70 104 M60 88 L80 88"/>
+                  <path d="M58 104 L82 104 L75 128 L65 128 Z"/>
+                  <path d="M70 58 L46 40 L38 22 L30 4"/><circle cx="28" cy="3" r="3.5"/>
+                  <path d="M70 58 L96 74"/>
+                  <circle cx="108" cy="88" r="17"/><circle cx="108" cy="88" r="9.5"/>
+                  <path d="M64 128 L60 164 M76 128 L82 166 M60 164 L52 170 M82 166 L90 172"/>
+                  <path d="M70 104 L70 134 M63 112 L77 112"/>
+                </symbol>
+                <symbol id="fig-leo" viewBox="0 0 220 140">
+                  <path d="M150 28 C168 26 176 40 172 52 C178 64 168 78 154 76 C140 80 128 68 132 54 C126 40 138 28 150 28 Z"/>
+                  <path d="M146 22 L150 12 M162 26 L170 18 M172 62 L182 66 M158 80 L162 90 M136 76 L130 84"/>
+                  <circle cx="151" cy="52" r="9"/><circle cx="148" cy="49" r="1.2"/>
+                  <path d="M136 66 C104 70 76 76 58 88 C46 96 44 108 54 114"/>
+                  <path d="M66 92 L64 120 M84 88 L84 118 M120 84 L122 112 M138 80 L140 108"/>
+                  <path d="M54 114 C34 112 26 98 34 88"/><circle cx="33" cy="86" r="4"/>
+                </symbol>
+                <symbol id="fig-sco" viewBox="0 0 240 160">
+                  <path d="M30 40 C50 36 66 42 72 56 C60 58 48 54 44 46 C36 44 32 42 30 40 Z"/>
+                  <path d="M34 84 C52 80 66 86 70 98 C58 100 48 96 45 89 C38 87 35 85 34 84 Z"/>
+                  <path d="M44 60 C80 66 120 76 152 96 C172 108 186 124 190 140"/>
+                  <path d="M190 140 C196 150 200 156 194 156 C188 156 186 148 191 143"/>
+                  <path d="M191 143 L199 133"/>
+                  <path d="M80 64 L84 80 M110 72 L116 88 M140 88 L148 102"/>
+                  <path d="M70 70 L60 92 M100 80 L96 102 M130 92 L130 112"/>
+                </symbol>
+                <!-- 手绘点缀：海怪 / 神祇 / 风神 -->
+                <symbol id="deco-monster" viewBox="0 0 260 110">
+                  <path d="M10 60 C30 30 50 30 66 52 C80 70 96 70 110 52 C124 34 140 34 152 52 C160 64 172 68 182 60"/>
+                  <path d="M182 60 C196 54 208 56 214 66 L232 58 L218 72"/>
+                  <circle cx="206" cy="62" r="1.6"/><path d="M204 52 L198 40"/>
+                  <path d="M70 44 L74 30 M112 38 L118 24"/>
+                  <path d="M20 84 C40 74 60 94 80 84 C100 74 120 94 140 84 C160 74 180 94 200 84 C220 76 236 88 248 82"/>
+                  <path d="M232 78 C244 74 250 82 244 88 C240 92 234 88 238 82"/>
+                </symbol>
+                <symbol id="deco-deity" viewBox="0 0 120 190">
+                  <circle cx="60" cy="26" r="9"/>
+                  <path d="M60 36 C48 60 42 100 44 150 C50 158 70 158 76 150 C78 100 72 60 60 36 Z"/>
+                  <path d="M54 70 L52 140 M66 70 L68 140"/>
+                  <path d="M56 48 L36 26"/>
+                  <circle cx="28" cy="16" r="3.4"/><path d="M28 6 L28 10 M28 22 L28 26 M18 16 L22 16 M34 16 L38 16"/>
+                  <path d="M64 52 L84 70"/><circle cx="90" cy="78" r="10"/><path d="M82 92 L98 92"/>
+                </symbol>
+                <symbol id="deco-wind" viewBox="0 0 120 90">
+                  <path d="M20 70 C14 54 18 36 32 28 C40 24 48 26 52 32 C58 28 62 32 60 38 L52 40 C56 44 54 48 50 48 C58 54 56 62 46 64 C38 78 26 80 20 70 Z"/>
+                  <path d="M44 44 C52 46 54 52 48 56"/>
+                  <path d="M62 44 C74 42 84 46 88 54 C92 62 86 70 78 68 C72 66 72 58 78 58"/>
+                  <path d="M64 60 C72 60 78 64 80 70"/>
+                  <path d="M28 26 C22 18 24 10 32 8 M38 24 C36 16 42 10 48 12"/>
+                </symbol>
+              </defs>
+
+              <text class="noscript-note" x="2740" y="360" text-anchor="middle">请启用 JavaScript 以展开星图长卷</text>
+              <g id="gMilky" class="milky" aria-hidden="true">
+                <ellipse cx="1120" cy="560" rx="620" ry="110" transform="rotate(-10 1120 560)" filter="url(#fCloud)"/>
+                <ellipse cx="1560" cy="290" rx="430" ry="95" transform="rotate(-14 1560 290)" filter="url(#fCloud)"/>
+                <text x="1010" y="470" transform="rotate(-10 1010 470)">银河 · VIA LACTEA</text>
+              </g>
+              <g id="gBand" aria-hidden="true"></g>
+              <g id="gDeco" aria-hidden="true">
+                <!-- 手卷外框 -->
+                <g class="frame">
+                  <rect x="10" y="10" width="5460" height="680" stroke-width="2.4" opacity=".8" filter="url(#fRough)"/>
+                  <rect x="22" y="22" width="5436" height="656" stroke-width="1" opacity=".5"/>
+                  <path d="M10 60 l14 8 -14 8 -14 -8 Z" fill="#5B4A32" opacity=".8"/>
+                  <path d="M5470 60 l14 8 -14 8 -14 -8 Z" fill="#5B4A32" opacity=".8"/>
+                </g>
+                <!-- 卷首涡卷饰题签 -->
+                <g class="cartouche" transform="translate(300,370)">
+                  <rect class="co" x="-160" y="-180" width="320" height="360" rx="14" filter="url(#fRough)"/>
+                  <rect class="ci" x="-148" y="-168" width="296" height="336" rx="10"/>
+                  <path class="ci" d="M-160 -132 q0 -28 26 -28 M160 -132 q0 -28 -26 -28 M-160 132 q0 28 26 28 M160 132 q0 28 -26 28"/>
+                  <text class="c-title" x="0" y="-116" text-anchor="middle">铜版雕星之图</text>
+                  <text class="c-sub" x="0" y="-88" text-anchor="middle">ATLAS CAELESTIS · VOLUMEN</text>
+                  <line class="c-div" x1="-110" y1="-64" x2="110" y2="-64"/>
+                  <text class="c-line" x="0" y="-30" text-anchor="middle">穹象天文博物馆 監製</text>
+                  <text class="c-line" x="0" y="0" text-anchor="middle">西历一六六一年 铜版原刻</text>
+                  <text class="c-line" x="0" y="30" text-anchor="middle">本馆依原版重摹 · 第叁号</text>
+                  <text class="c-no" x="0" y="72" text-anchor="middle">馆藏编号 GU-1661</text>
+                  <text class="c-note" x="0" y="118" text-anchor="middle">展卷之法：向下滚动</text>
+                  <text class="c-note" x="0" y="142" text-anchor="middle">星辰将次第描画点亮</text>
+                </g>
+                <!-- 图例（含镜相方位注记） -->
+                <g class="legend" transform="translate(300,614)">
+                  <text class="lg-t" x="-150" y="0">图 例</text>
+                  <circle class="dotf" cx="-60" cy="-4" r="4"/><text x="-48" y="0">星点大小，别乎星等</text>
+                  <line x1="88" y1="-4" x2="120" y2="-4"/><text x="128" y="0">连线为星官旧距，后人所加</text>
+                  <line x1="-150" y1="24" x2="-118" y2="24" stroke-dasharray="5 4"/><text x="-150" y="48">神话形象仅具大意，虚线示意</text>
+                  <text x="88" y="48">图式从镜 · 东西与天相反</text>
+                  <text x="-150" y="72">拉丁著其名 · 中土存其古称 · 双注并识</text>
+                </g>
+                <!-- 海怪 / 神祇 / 风神点缀 -->
+                <g class="deco"><use href="#deco-monster" x="2940" y="545" width="260" height="110"/></g>
+                <g class="deco faint"><use href="#deco-deity" x="2080" y="128" width="120" height="190"/></g>
+                <g class="deco faint"><use href="#deco-wind" x="580" y="180" width="120" height="90"/></g>
+                <g class="deco faint" transform="translate(4260,630) scale(-0.9,0.9) translate(-4600,-650)"><use href="#deco-wind" x="4600" y="600" width="110" height="83"/></g>
+                <!-- 卷尾涡卷饰与谨识 -->
+                <g class="cartouche" transform="translate(5260,370)">
+                  <rect class="co" x="-160" y="-180" width="320" height="360" rx="14" filter="url(#fRough)"/>
+                  <rect class="ci" x="-148" y="-168" width="296" height="336" rx="10"/>
+                  <path class="ci" d="M-160 -132 q0 -28 26 -28 M160 -132 q0 -28 -26 -28 M-160 132 q0 28 26 28 M160 132 q0 28 -26 28"/>
+                  <text class="c-title" x="0" y="-116" text-anchor="middle">星图终 · 谨识</text>
+                  <line class="c-div" x1="-110" y1="-88" x2="110" y2="-88"/>
+                  <text class="c-line" x="0" y="-52" text-anchor="middle">是卷依十七世纪铜版旧式摹绘</text>
+                  <text class="c-line" x="0" y="-22" text-anchor="middle">方位从镜，与天象左右相反</text>
+                  <text class="c-line" x="0" y="8" text-anchor="middle">观者垂鉴，勿以今律古</text>
+                  <text class="c-note" x="0" y="46" text-anchor="middle">穹象特藏部 谨识</text>
+                  <text class="c-end" x="0" y="120" text-anchor="middle">卷 终</text>
+                  <g class="mini-seal" transform="translate(96,138) rotate(9)" filter="url(#fInk)">
+                    <rect x="-34" y="-34" width="68" height="68" rx="7" stroke-width="3.4"/>
+                    <text x="0" y="-2" text-anchor="middle">穹象</text>
+                    <text x="0" y="26" text-anchor="middle">珍藏</text>
+                  </g>
+                </g>
+              </g>
+              <g id="gCons" aria-hidden="false"></g>
+              <g id="gCompass" class="compass" transform="translate(4900,380)" aria-hidden="true"></g>
+            </svg>
+          </div>
+        </div>
+        <div class="roller-v l" aria-hidden="true"></div>
+        <div class="roller-v r" aria-hidden="true"></div>
+
+        <!-- 星座注记卡（hover 弹出） -->
+        <div class="con-card" id="conCard" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="atlas-axis">
+        <span>已录星座 <b id="conCount">0</b> / 8</span>
+        <div class="axis-bar" aria-hidden="true"><div class="axis-fill" id="axisFill"></div></div>
+        <span class="axis-right">当前宫 · <b id="palaceNow">白羊宫</b> <b id="pctNow">0%</b></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 第二展卷 · 馆藏图鉴 ============ -->
+<section id="catalog" class="catalog sheet" aria-label="馆藏图鉴">
+  <svg class="tex" aria-hidden="true"><rect width="100%" height="100%" filter="url(#fGrain)" opacity=".12"/></svg>
+  <svg class="tex" aria-hidden="true"><rect width="100%" height="100%" filter="url(#fStain)" opacity=".06"/></svg>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">COLLECTIO · CATALOGUS</div>
+      <h2>第二展卷 · 馆藏图鉴</h2>
+      <p class="sub">十四件镇馆天体的古籍档案卡，依铜版雕本图式装裱。点击类别可筛选。</p>
+      <div class="orn" aria-hidden="true">◆</div>
+    </div>
+    <div class="filter-row" role="tablist" aria-label="馆藏筛选">
+      <button class="chip on" data-f="all">全部<span class="n">14</span></button>
+      <button class="chip" data-f="planet">行星<span class="n">8</span></button>
+      <button class="chip" data-f="star">恒星<span class="n">1</span></button>
+      <button class="chip" data-f="comet">彗星<span class="n">1</span></button>
+      <button class="chip" data-f="nebula">星云<span class="n">3</span></button>
+      <button class="chip" data-f="deep">深空<span class="n">1</span></button>
+    </div>
+    <div class="count-line" id="archCount">共 14 件 · 现展 14 件</div>
+
+    <div class="arch-grid" id="archGrid">
+      <article class="arch-card" data-cat="star">
+        <div class="arch-top"><span class="arch-no">典藏 · 〇一</span><span class="arch-seal">恒星</span></div>
+        <div class="arch-glyph"><svg viewBox="0 0 64 64"><use href="#gl-star"/></svg></div>
+        <h3>太阳<i>Sol</i></h3><p>距离最近的一颗 G 型主序星，馆内 1:10 亿比例模型。</p>
+        <div class="arch-meta"><span>SALLE 02 · 太阳系漫游厅</span><span>G2V · 距地 1 AU</span></div>
+      </article>
+      <article class="arch-card" data-cat="planet">
+        <div class="arch-top"><span class="arch-no">典藏 · 〇二</span><span class="arch-seal">行星</span></div>
+        <div class="arch-glyph"><svg viewBox="0 0 64 64"><use href="#gl-planet"/></svg></div>
+        <h3>水星<i>Mercury</i></h3><p>昼夜温差 600℃ 的焦土信使。</p>
+        <div class="arch-meta"><span>SALLE 02 · 太阳系漫游厅</span><span>辰星 · 距日 0.39 AU</span></div>
+      </article>
+      <article class="arch-card" data-cat="planet">
+        <div class="arch-top"><span class="arch-no">典藏 · 〇三</span><span class="arch-seal">行星</span></div>
+        <div class="arch-glyph"><svg viewBox="0 0 64 64"><use href="#gl-planet"/></svg></div>
+        <h3>金星<i>Venus</i></h3><p>被硫酸云包裹的失控温室。</p>
+        <div class="arch-meta"><span>SALLE 02 · 太阳系漫游厅</span><span>太白 · 启明长庚</span></div>
+      </article>
+      <article class="arch-card" data-cat="planet">
+        <div class="arch-top"><span class="arch-no">典藏 · 〇四</span><span class="arch-seal">行星</span></div>
+        <div class="arch-glyph"><svg viewBox="0 0 64 64"><use href="#gl-planet"/></svg></div>
+        <h3>地球与月球<i>Earth &amp; Luna</i></h3><p>已知唯一存在生命的双星系统。</p>
+        <div class="arch-meta"><span>SALLE 02 · 太阳系漫游厅</span><span>唯一的蓝</span></div>
+      </article>
+      <article class="arch-card" data-cat="planet">
+        <div class="arch-top"><span class="arch-no">典藏 · 〇五</span><span class="arch-seal">行星</span></div>
+        <div class="arch-glyph"><svg viewBox="0 0 64 64"><use href="#gl-planet"/></svg></div>
+        <h3>火星 · 奥林帕斯山<i>Olympus Mons</i></h3><p>太阳系最高火山，高约 22 千米。</p>
+        <div class="arch-meta"><span>SALLE 02 · 太阳系漫游厅</span><span>荧惑 · 高 22 km</span></div>
+      </article>
+      <article class="arch-card" data-cat="planet">
+        <div class="arch-top"><span class="arch-no">典藏 · 〇六</span><span class="arch-seal">行星</span></div>
+        <div class="arch-glyph"><svg viewBox="0 0 64 64"><use href="#gl-planet"/></svg></div>
+        <h3>木星 · 大红斑<i>Great Red Spot</i></h3><p>持续了三百多年的巨型风暴。</p>
+        <div class="arch-meta"><span>SALLE 02 · 太阳系漫游厅</span><span>岁星 · 风暴 350+ 年</span></div>
+      </article>
+      <article class="arch-card" data-cat="planet">
+        <div class="arch-top"><span class="arch-no">典藏 · 〇七</span><span class="arch-seal">行星</span></div>
+        <div class="arch-glyph"><svg viewBox="0 0 64 64"><use href="#gl-planet"/></svg></div>
+        <h3>土星环<i>Rings of Saturn</i></h3><p>宽 28 万公里、厚仅数十米的冰之圆盘。</p>
+        <div class="arch-meta"><span>SALLE 02 · 太阳系漫游厅</span><span>镇星 · 环宽 28 万 km</span></div>
+      </article>
+      <article class="arch-card" data-cat="planet">
+        <div class="arch-top"><span class="arch-no">典藏 · 〇八</span><span class="arch-seal">行星</span></div>
+        <div class="arch-glyph"><svg viewBox="0 0 64 64"><use href="#gl-planet"/></svg></div>
+        <h3>天王星<i>Uranus</i></h3><p>躺着自转的冰巨星。</p>
+        <div class="arch-meta"><span>SALLE 02 · 太阳系漫游厅</span><span>倾角 98°</span></div>
+      </article>
+      <article class="arch-card" data-cat="planet">
+        <div class="arch-top"><span class="arch-no">典藏 · 〇九</span><span class="arch-seal">行星</span></div>
+        <div class="arch-glyph"><svg viewBox="0 0 64 64"><use href="#gl-planet"/></svg></div>
+        <h3>海王星 · 大暗斑<i>Great Dark Spot</i></h3><p>风速 2100 km/h 的深蓝世界。</p>
+        <div class="arch-meta"><span>SALLE 02 · 太阳系漫游厅</span><span>风速 2100 km/h</span></div>
+      </article>
+      <article class="arch-card" data-cat="comet">
+        <div class="arch-top"><span class="arch-no">典藏 · 一〇</span><span class="arch-seal">彗星</span></div>
+        <div class="arch-glyph"><svg viewBox="0 0 64 64"><use href="#gl-comet"/></svg></div>
+        <h3>哈雷彗星<i>1P/Halley</i></h3><p>76 年一归的访客，下一次回归在 2061 年。</p>
+        <div class="arch-meta"><span>SALLE 02 · 太阳系漫游厅</span><span>回归周期 76 年</span></div>
+      </article>
+      <article class="arch-card" data-cat="nebula">
+        <div class="arch-top"><span class="arch-no">典藏 · 一一</span><span class="arch-seal">星云</span></div>
+        <div class="arch-glyph"><svg viewBox="0 0 64 64"><use href="#gl-nebula"/></svg></div>
+        <h3>猎户座大星云<i>Messier 42</i></h3><p>距离地球 1344 光年的恒星育婴房。</p>
+        <div class="arch-meta"><span>SALLE 04 · 星云花园</span><span>距地 1344 光年</span></div>
+      </article>
+      <article class="arch-card" data-cat="nebula">
+        <div class="arch-top"><span class="arch-no">典藏 · 一二</span><span class="arch-seal">星云</span></div>
+        <div class="arch-glyph"><svg viewBox="0 0 64 64"><use href="#gl-nebula"/></svg></div>
+        <h3>蟹状星云<i>Messier 1</i></h3><p>公元 1054 年超新星爆发的遗骸。</p>
+        <div class="arch-meta"><span>SALLE 04 · 星云花园</span><span>天关客星 · 1054 年</span></div>
+      </article>
+      <article class="arch-card" data-cat="nebula">
+        <div class="arch-top"><span class="arch-no">典藏 · 一三</span><span class="arch-seal">星云</span></div>
+        <div class="arch-glyph"><svg viewBox="0 0 64 64"><use href="#gl-nebula"/></svg></div>
+        <h3>创生之柱<i>Pillars of Creation</i></h3><p>鹰状星云中正在坍缩成恒星的柱状云气。</p>
+        <div class="arch-meta"><span>SALLE 04 · 星云花园</span><span>鹰状星云 M16</span></div>
+      </article>
+      <article class="arch-card" data-cat="deep">
+        <div class="arch-top"><span class="arch-no">典藏 · 一四</span><span class="arch-seal">深空</span></div>
+        <div class="arch-glyph"><svg viewBox="0 0 64 64"><use href="#gl-deep"/></svg></div>
+        <h3>人马座 A*<i>Sagittarius A*</i></h3><p>银河系中心 430 万倍太阳质量的超大质量黑洞。</p>
+        <div class="arch-meta"><span>SALLE 05 · 引力与黑洞剧场</span><span>430 万 M☉</span></div>
+      </article>
+    </div>
+    <p class="catalog-note">档案数据依馆内考订誊录，距离与年代皆为约数；「岁星／荧惑」等古称从《史记·天官书》。</p>
+  </div>
+</section>
+
+<!-- ============ 第三展卷 · 常设展厅 ============ -->
+<section id="halls" class="halls" aria-label="常设展厅">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">SALLAE · SEX</div>
+      <h2>第三展卷 · 常设展厅</h2>
+      <p class="sub">六座常设厅自「序厅」至「穹顶影院」次第排布，与星图长卷诸星官一一呼应。</p>
+      <div class="orn" aria-hidden="true">◆</div>
+    </div>
+    <div class="hall-grid">
+      <article class="hall-card">
+        <div class="hall-no">SALLE 01</div>
+        <h3>序厅 · 回到大爆炸</h3>
+        <p>138 亿年，从一粒奇点开始。</p>
+        <div class="hall-meta"><span>1F</span><span>全年龄</span><span>关联藏品 42 件</span></div>
+      </article>
+      <article class="hall-card">
+        <div class="hall-no">SALLE 02</div>
+        <h3>太阳系漫游厅</h3>
+        <p>八大行星与它们的卫星们。</p>
+        <div class="hall-meta"><span>1F</span><span>全年龄</span><span>关联藏品 128 件</span></div>
+      </article>
+      <article class="hall-card">
+        <div class="hall-no">SALLE 03</div>
+        <h3>恒星的一生</h3>
+        <p>从星尘到超新星。</p>
+        <div class="hall-meta"><span>2F</span><span>建议 8 岁+</span><span>关联藏品 86 件</span></div>
+      </article>
+      <article class="hall-card">
+        <div class="hall-no">SALLE 04</div>
+        <h3>星云花园</h3>
+        <p>宇宙中正在诞生的云。</p>
+        <div class="hall-meta"><span>2F</span><span>全年龄</span><span>关联藏品 64 件</span></div>
+      </article>
+      <article class="hall-card">
+        <div class="hall-no">SALLE 05</div>
+        <h3>引力与黑洞剧场</h3>
+        <p>时空如何被弯曲。</p>
+        <div class="hall-meta"><span>3F</span><span>建议 12 岁+</span><span>关联藏品 38 件</span></div>
+      </article>
+      <article class="hall-card">
+        <div class="hall-no">SALLE 06</div>
+        <h3>穹顶天象影院 · 屋顶观星台</h3>
+        <p>白天看穹幕，夜里看真星；夜场观星 周五、周六 19:00–21:30。</p>
+        <div class="hall-meta"><span>4F</span><span>全年龄</span><span>穹幕场次制</span></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 终卷 · 参观与预约 ============ -->
+<section id="visit" class="visit sheet" aria-label="参观与预约">
+  <svg class="tex" aria-hidden="true"><rect width="100%" height="100%" filter="url(#fGrain)" opacity=".12"/></svg>
+  <svg class="tex" aria-hidden="true"><rect width="100%" height="100%" filter="url(#fStain)" opacity=".06"/></svg>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">VISITVS · RESERVATIO</div>
+      <h2>终卷 · 参观与预约</h2>
+      <p class="sub">实名预约入馆，每时段限 2000 人，可提前 7 天预约。</p>
+      <div class="orn" aria-hidden="true">◆</div>
+    </div>
+    <div class="visit-grid">
+      <div class="info-card">
+        <h3>参观须知</h3>
+        <div class="info-block">
+          <h4>开放时间</h4>
+          <table class="info-tb">
+            <tr><td>周二至周日</td><td>9:00 – 17:00（16:00 停止入馆）</td></tr>
+            <tr><td>闭馆日</td><td>周一闭馆（法定节假日除外）</td></tr>
+            <tr><td>夜场观星</td><td>周五、周六 19:00 – 21:30</td></tr>
+            <tr><td>穹幕影院</td><td>10:30 / 13:30 / 15:30（每场 45 分钟，需另行预约）</td></tr>
+          </table>
+        </div>
+        <div class="info-block">
+          <h4>票价</h4>
+          <table class="info-tb">
+            <tr><td>成人</td><td class="pr">60 元</td></tr>
+            <tr><td>学生 / 60 岁以上老人</td><td class="pr">30 元</td></tr>
+            <tr><td>1.2 米以下儿童（需成人陪同）</td><td class="pr">免票</td></tr>
+            <tr><td>夜场观星</td><td class="pr">88 元</td></tr>
+            <tr><td>团体（20 人以上）</td><td class="pr">预约八折</td></tr>
+          </table>
+        </div>
+        <div class="info-block">
+          <h4>交通与联络</h4>
+          <table class="info-tb">
+            <tr><td>地址</td><td>星港大道 88 号 穹象天文博物馆</td></tr>
+            <tr><td>地铁</td><td>9 号线「天文馆站」B 口 步行 300 米</td></tr>
+            <tr><td>服务</td><td>无障碍通道全馆覆盖 / 行李寄存 / 母婴室 / 讲解器租赁 20 元</td></tr>
+            <tr><td>咨询电话</td><td>400-000-0000</td></tr>
+          </table>
+        </div>
+        <p class="visit-note">※ 本馆为设计演示，所有名称、票价与数据均属虚构；预约成功后凭码与有效证件入馆。</p>
+      </div>
+
+      <div class="form-card">
+        <h3>票务预约</h3>
+        <form id="bookForm" novalidate>
+          <div class="fgrid">
+            <div class="ffield">
+              <label for="fName">姓名<em>*</em></label>
+              <input id="fName" name="name" type="text" placeholder="观星者姓名" autocomplete="name">
+              <p class="ferr" id="eName"></p>
+            </div>
+            <div class="ffield">
+              <label for="fPhone">联系电话<em>*</em></label>
+              <input id="fPhone" name="phone" type="tel" placeholder="11 位手机号" autocomplete="tel" maxlength="11">
+              <p class="ferr" id="ePhone"></p>
+            </div>
+            <div class="ffield">
+              <label for="fDate">入馆日期<em>*</em></label>
+              <input id="fDate" name="date" type="date">
+              <p class="ferr" id="eDate"></p>
+            </div>
+            <div class="ffield">
+              <label for="fCount">人数<em>*</em></label>
+              <div class="count-ctl">
+                <button type="button" id="cntMinus" aria-label="减少人数">−</button>
+                <input id="fCount" name="count" type="number" value="1" min="1" max="30" inputmode="numeric">
+                <button type="button" id="cntPlus" aria-label="增加人数">＋</button>
+              </div>
+              <p class="ferr" id="eCount"></p>
+            </div>
+            <div class="ffield full">
+              <label>入馆时段<em>*</em></label>
+              <div class="slot-row" id="slotRow">
+                <label><input type="radio" name="slot" value="am">上午 9:00 – 11:00</label>
+                <label><input type="radio" name="slot" value="noon">午后 11:00 – 13:00</label>
+                <label><input type="radio" name="slot" value="pm">下午 13:00 – 15:00</label>
+                <label><input type="radio" name="slot" value="night">夜场 19:00（仅周五六）</label>
+              </div>
+              <p class="ferr" id="eSlot"></p>
+            </div>
+            <div class="ffield">
+              <label for="fTicket">票种</label>
+              <select id="fTicket" name="ticket">
+                <option value="adult">成人票 · 60 元</option>
+                <option value="conc">学生 / 优待票 · 30 元</option>
+                <option value="child">免票儿童（1.2m 以下）· 0 元</option>
+                <option value="night">夜场观星票 · 88 元</option>
+                <option value="group">团体票（20 人起 · 八折）</option>
+              </select>
+            </div>
+            <div class="ffield">
+              <label for="fDome">穹幕场次（可选 · 免费）</label>
+              <select id="fDome" name="dome">
+                <option value="no">不预约</option>
+                <option value="1030">10:30 场</option>
+                <option value="1330">13:30 场</option>
+                <option value="1530">15:30 场</option>
+              </select>
+            </div>
+            <div class="form-foot">
+              <span class="tip">提交即视为同意《入馆须知》；周一闭馆无法预约。</span>
+              <button type="submit" class="btn btn-solid btn-submit">提交预约</button>
+            </div>
+          </div>
+        </form>
+
+        <div id="receipt" aria-live="polite">
+          <div class="receipt-in">
+            <div class="rc-title">预 约 凭 据</div>
+            <div class="rc-code" id="rcCode">QX-00000000-0000</div>
+            <div class="rc-sub">RESERVATUM · 请凭码与有效证件入馆</div>
+            <div class="rc-grid" id="rcGrid"></div>
+            <div id="qrBox" aria-hidden="true"></div>
+            <div class="rc-sub" style="margin-top:6px">示意码 · 短信将于开馆前一日发送</div>
+            <div class="rc-seal" id="rcSeal">
+              <svg viewBox="0 0 120 120" class="seal-svg"><rect x="7" y="7" width="106" height="106" rx="10" fill="none" stroke="#A63A2B" stroke-width="6"/><rect x="18" y="18" width="84" height="84" rx="6" fill="none" stroke="#A63A2B" stroke-width="1.6"/><text x="60" y="53" text-anchor="middle" class="seal-ch" style="font-size:34px">预约</text><text x="60" y="99" text-anchor="middle" class="seal-ch" style="font-size:34px">之章</text></svg>
+            </div>
+            <div class="rc-actions">
+              <button type="button" class="btn btn-ink" id="rcReset">再预约一批</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ 页脚（钤印） ============ -->
+<footer aria-label="页脚">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="32" cy="28" r="15"/><ellipse cx="32" cy="28" rx="15" ry="5.5" transform="rotate(22 32 28)"/><ellipse cx="32" cy="28" rx="15" ry="5.5" transform="rotate(-22 32 28)"/><line x1="32" y1="6" x2="32" y2="13"/></g><circle cx="32" cy="28" r="3" fill="currentColor"/><path d="M22 54 h20 M32 46 v8" stroke="currentColor" stroke-width="2.4" fill="none"/></svg>
+        <div>
+          <h5>穹象天文博物馆</h5>
+          <div class="la">ASTRAEUM · MMXXVI</div>
+          <p>把宇宙装进一座馆。<br>星港大道 88 号 · 地铁 9 号线「天文馆站」B 口</p>
+        </div>
+      </div>
+      <div>
+        <h6>参观</h6>
+        <ul>
+          <li>周二至周日 9:00–17:00</li>
+          <li>周一闭馆（节假日除外）</li>
+          <li>夜场观星 周五、周六</li>
+          <li>咨询电话 400-000-0000</li>
+        </ul>
+      </div>
+      <div>
+        <h6>栏目</h6>
+        <ul>
+          <li><a href="#atlas">星图长卷</a></li>
+          <li><a href="#catalog">馆藏图鉴</a></li>
+          <li><a href="#halls">常设展厅</a></li>
+          <li><a href="#visit">票务预约</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>钤印</h6>
+        <svg class="foot-seal" viewBox="0 0 120 120" role="img" aria-label="穹象之印">
+          <rect x="7" y="7" width="106" height="106" rx="10" fill="none" stroke="#A63A2B" stroke-width="6"/>
+          <rect x="18" y="18" width="84" height="84" rx="6" fill="none" stroke="#A63A2B" stroke-width="1.6"/>
+          <text x="60" y="53" text-anchor="middle" class="seal-ch">穹象</text>
+          <text x="60" y="99" text-anchor="middle" class="seal-ch">之印</text>
+        </svg>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© MMXXVI 穹象天文博物馆 ASTRAEUM · 古代星图手卷特藏页</span>
+      <span>本站为前端设计演示，馆名、数据与考据均属虚构 · 仿镜相方位图式</span>
+    </div>
+  </div>
+</footer>
+
+<div class="mob-book"><a href="#visit">预约参观 · 穹象天文博物馆</a></div>
+
+<script>
+(function(){
+'use strict';
+/* ================= 工具 ================= */
+var $ = function(s){ return document.querySelector(s); };
+var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+var NS = 'http://www.w3.org/2000/svg';
+function el(name, attrs, parent){
+  var n = document.createElementNS(NS, name);
+  if(attrs){ for(var k in attrs){ n.setAttribute(k, attrs[k]); } }
+  if(parent){ parent.appendChild(n); }
+  return n;
+}
+function txt(parent, x, y, cls, str, anchor){
+  var t = el('text', {x:x, y:y, 'class':cls}, parent);
+  if(anchor){ t.setAttribute('text-anchor', anchor); }
+  t.textContent = str;
+  return t;
+}
+var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ================= 星座坐标表（内置数据） =================
+   star: [dx, dy, 星等, 中文名, 拉丁名]；line: 星点索引对 */
+var CONSTS = [
+  { id:'cas', no:'其一', name:'仙后座', latin:'CASSIOPEIA', ancient:'王良', mainZh:'王良四', mainLa:'Schedar',
+    myth:'埃塞俄比亚王后因夸耀美貌触怒海神，被缚于宝座绕北天旋转，永不得歇。',
+    ox:900, oy:380,
+    stars:[[-150,-18,2.1,'王良一','Caph'],[-72,16,1.9,'王良四','Schedar'],[0,-26,2.2,'策','γ Cas'],[82,10,2.5,''],[152,-32,3.2]],
+    lines:[[0,1],[1,2],[2,3],[3,4]],
+    fig:{id:'fig-cas', w:160, h:160, s:1.05, dy:-4} },
+  { id:'cyg', no:'其二', name:'天鹅座', latin:'CYGNUS', ancient:'天津', mainZh:'天津四', mainLa:'Deneb',
+    myth:'宙斯化作天鹅飞渡银河，翅上星辉从此不灭。',
+    ox:1370, oy:370,
+    stars:[[0,-85,1.1,'天津四','Deneb'],[0,0,2.0,'天津一','γ Cyg'],[-6,95,2.8,'辇道增七','Albireo'],[-78,-30,2.7,'天津二','δ Cyg'],[75,-24,2.8,'天津九','ε Cyg'],[-135,-55,3.4],[135,-50,3.5]],
+    lines:[[0,1],[1,2],[3,1],[1,4],[3,5],[4,6]],
+    fig:{id:'fig-cyg', w:200, h:140, s:1.05, dy:0} },
+  { id:'lyr', no:'其三', name:'天琴座', latin:'LYRA', ancient:'织女', mainZh:'织女一', mainLa:'Vega',
+    myth:'俄耳甫斯的七弦琴，琴声令顽石落泪，身后升华为天琴。',
+    ox:1780, oy:390,
+    stars:[[10,-45,0.8,'织女一','Vega'],[22,0,3.8],[14,38,3.2,'渐台二','β Lyr'],[32,72,2.9],[52,36,3.9]],
+    lines:[[0,1],[1,2],[2,3],[3,4],[4,1]],
+    fig:{id:'fig-lyr', w:120, h:140, s:.92, dx:6, dy:8} },
+  { id:'uma', no:'其四', name:'大熊座', latin:'URSA MAJOR', ancient:'北斗', mainZh:'玉衡', mainLa:'Alioth',
+    myth:'卡利斯托化为大熊，北斗七星即其背与尾，永绕北天回旋。',
+    ox:2280, oy:360,
+    stars:[[95,-55,1.9,'天枢','Dubhe'],[85,-10,2.1,'天璇','Merak'],[38,4,2.3,'天玑','Phecda'],[6,-16,3.1,'天权','Megrez'],[-36,-24,1.6,'玉衡','Alioth'],[-74,-38,2.2,'开阳','Mizar'],[-112,-60,1.7,'摇光','Alkaid'],[-20,70,3.4],[55,55,3.5]],
+    lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[3,0],[2,7],[1,8]],
+    fig:{id:'fig-uma', w:220, h:120, s:1.1, dy:-10} },
+  { id:'tau', no:'其五', name:'金牛座', latin:'TAURUS', ancient:'毕宿', mainZh:'毕宿五', mainLa:'Aldebaran',
+    myth:'宙斯化身白牛驮走欧罗巴公主，渡海而去，只留牛背上经年星光。',
+    ox:2800, oy:380,
+    stars:[[55,25,0.9,'毕宿五','Aldebaran'],[28,18,3.0,'毕宿四','γ Tau'],[0,6,3.2],[ -30,-8,3.0],[-95,-55,1.5,'五车五','El Nath'],[85,50,2.8,'天关','ζ Tau'],[-190,18,3.6],[-178,40,3.4],[-163,26,3.0],[-152,44,3.7],[-172,55,3.8],[-146,20,3.9],[-140,38,3.6]],
+    lines:[[0,1],[1,2],[2,3],[3,4],[0,5]],
+    fig:{id:'fig-tau', w:200, h:130, s:.78, dy:-92}, plei:[-166,30] },
+  { id:'ori', no:'其六', name:'猎户座', latin:'ORION', ancient:'参宿', mainZh:'参宿四', mainLa:'Betelgeuse',
+    myth:'猎手俄里翁夸口猎尽天下走兽，被蝎螫死后与天蝎分置东西，永不相见。',
+    ox:3350, oy:380,
+    stars:[[-55,-95,1.2,'参宿四','Betelgeuse'],[60,-80,2.0,'参宿五','Bellatrix'],[-18,-5,2.0,'参宿一','Alnitak'],[2,8,1.8,'参宿二','Alnilam'],[22,21,2.2,'参宿三','Mintaka'],[-50,95,2.2,'参宿六','Saiph'],[78,80,1.0,'参宿七','Rigel'],[-2,-140,3.2,'觜宿一','Meissa']],
+    lines:[[0,7],[7,1],[0,2],[1,4],[2,3],[3,4],[2,5],[4,6]],
+    fig:{id:'fig-ori', w:140, h:200, s:1.12, dy:6} },
+  { id:'leo', no:'其七', name:'狮子座', latin:'LEO', ancient:'轩辕', mainZh:'轩辕十四', mainLa:'Regulus',
+    myth:'涅墨亚狮子刀枪不入，为大力神十二伟业之一，死后升空为狮。',
+    ox:3900, oy:370,
+    stars:[[0,75,1.2,'轩辕十四','Regulus'],[-25,45,3.0,'轩辕十三','η Leo'],[-45,5,2.2,'轩辕十二','Algieba'],[-40,-40,3.2,'轩辕十一','ζ Leo'],[-65,-72,3.4],[-25,-88,2.8,'轩辕九','ε Leo'],[85,20,3.2,'西次相','θ Leo'],[110,-15,2.4,'西上相','δ Leo'],[160,-5,2.0,'五帝座一','Denebola']],
+    lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[2,7],[7,8],[7,6],[6,8],[6,0]],
+    fig:{id:'fig-leo', w:220, h:140, s:.85, dx:-16, dy:-30} },
+  { id:'sco', no:'其八', name:'天蝎座', latin:'SCORPIUS', ancient:'心宿', mainZh:'心宿二', mainLa:'Antares',
+    myth:'螫杀猎手的巨蝎，心口红色大火星，自古被视作天庭不灭的烛火。',
+    ox:4480, oy:350,
+    stars:[[0,-15,1.1,'心宿二','Antares'],[62,-95,2.4,'房宿四','Acrab'],[40,-78,2.4,'房宿四','Dschubba'],[18,-82,2.7],[15,-42,2.6],[-12,5,2.7],[-45,32,2.2],[-80,68,2.8],[-100,108,2.8],[-80,140,3.0],[-42,168,1.7,'尾宿五','Sargas'],[-10,190,2.8],[28,198,2.2],[62,185,1.5,'尾宿八','Shaula']],
+    lines:[[0,1],[1,2],[2,3],[2,4],[4,0],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,11],[11,12],[12,13]],
+    fig:{id:'fig-sco', w:240, h:160, s:1.0, dy:36} }
+];
+var CHART_W = 5480, CHART_H = 700;
+function starR(m){ return clamp(4.6 - m*0.95, 1.2, 4.2); }
+
+var PALACES = [['白羊','ARIES'],['金牛','TAURUS'],['双子','GEMINI'],['巨蟹','CANCER'],['狮子','LEO'],
+  ['室女','VIRGO'],['天秤','LIBRA'],['天蝎','SCORPIUS'],['人马','SAGITTARIUS'],['摩羯','CAPRICORNUS'],
+  ['宝瓶','AQUARIUS'],['双鱼','PISCES']];
+var PLANETS = [
+  {x:620,  y:200, ch:'日', la:'SOL',     zh:'太阳'},
+  {x:1120, y:600, ch:'太', la:'VENUS',   zh:'太白'},
+  {x:1590, y:600, ch:'辰', la:'MERCURY', zh:'辰星'},
+  {x:2560, y:200, ch:'岁', la:'JUPITER', zh:'岁星'},
+  {x:3640, y:200, ch:'镇', la:'SATURN',  zh:'镇星'},
+  {x:4220, y:200, ch:'荧', la:'MARS',    zh:'荧惑'}
+];
+
+/* ================= 构建星图 SVG ================= */
+var svgEl = $('#chartSvg');
+var bandCells = [], needleG = null, compassStar = null, compassHot = false, compassA = 0;
+
+function buildBand(){
+  var g = $('#gBand'); if(!g){ return; }
+  var x0 = 100, x1 = 5380, yT = 52, yB = 148, w = (x1 - x0) / PALACES.length;
+  el('line', {'class':'band-line', x1:x0, y1:yB, x2:x1, y2:yB}, g);
+  for(var i = 0; i <= PALACES.length; i++){
+    var x = x0 + i * w;
+    el('line', {'class':'band-tick', x1:x, y1:yT, x2:x, y2:yB}, g);
+  }
+  for(var j = 0; j < PALACES.length; j++){
+    var cx = x0 + j * w, mid = cx + w/2;
+    var cell = el('g', {'class':'band-cell'}, g);
+    if(j % 2 === 0){ el('rect', {'class':'bc', x:cx, y:yT, width:w, height:(yB-yT), fill:'rgba(91,74,50,.05)'}, cell); }
+    el('rect', {'class':'bh', x:(cx+4), y:(yT+3), width:(w-8), height:(yB-yT-6), rx:'3'}, cell);
+    el('path', {d:'M'+mid+' '+(yT+10)+' l6 6 -6 6 -6 -6 Z', fill:'rgba(91,74,50,.55)'}, cell);
+    txt(cell, mid, yT+44, 'bn', PALACES[j][0], 'middle');
+    txt(cell, mid, yT+60, 'bl', PALACES[j][1], 'middle');
+    for(var k = 1; k < 8; k++){
+      el('line', {'class':'band-tick', x1:(cx + w*k/8), y1:(yB-7), x2:(cx + w*k/8), y2:yB}, cell);
+    }
+    bandCells.push(cell);
+  }
+  needleG = el('g', {id:'needleG', transform:'translate(' + x0 + ',' + (yB+2) + ')'}, g);
+  el('polygon', {points:'0,14 -6,2 6,2'}, needleG);
+}
+
+function buildPlanets(g){
+  PLANETS.forEach(function(p){
+    var pg = el('g', {'class':'planet-medal', opacity:'.92'}, g);
+    el('circle', {cx:p.x, cy:p.y, r:24, fill:'rgba(241,230,200,.6)', stroke:'#5B4A32', 'stroke-width':'1.4'}, pg);
+    el('circle', {cx:p.x, cy:p.y, r:18.5, fill:'none', stroke:'#8A7350', 'stroke-width':'.7', 'stroke-dasharray':'2 3'}, pg);
+    txt(pg, p.x, p.y + 7, 'planet-ch', p.ch, 'middle');
+    txt(pg, p.x, p.y + 46, 'planet-la', p.la + ' · ' + p.zh, 'middle');
+  });
+}
+
+function buildCons(){
+  var layer = $('#gCons'); if(!layer){ return; }
+  var nos = svgEl.querySelector('.noscript-note'); if(nos){ nos.parentNode.removeChild(nos); }
+  CONSTS.forEach(function(c){
+    var g = el('g', {'class':'con', 'data-id':c.id}, layer);
+    /* 神话形象（低透明虚线浮显） */
+    var figG = el('g', {'class':'figure', opacity:'0', transform:'translate(' + c.ox + ',' + c.oy + ')'}, g);
+    var uw = c.fig.w * c.fig.s, uh = c.fig.h * c.fig.s;
+    el('use', {href:'#' + c.fig.id, x:(-uw/2), y:(-uh/2 + (c.fig.dy || 0)), width:uw, height:uh}, figG);
+    /* 连线 */
+    c._lines = [];
+    c.lines.forEach(function(pr){
+      var A = c.stars[pr[0]], B = c.stars[pr[1]];
+      var x1 = c.ox + A[0], y1 = c.oy + A[1], x2 = c.ox + B[0], y2 = c.oy + B[1];
+      var L = Math.hypot(x2 - x1, y2 - y1);
+      var ln = el('line', {'class':'cline', x1:x1, y1:y1, x2:x2, y2:y2,
+        'stroke-dasharray':L, 'stroke-dashoffset':L}, g);
+      c._lines.push({e:ln, l:L});
+    });
+    /* 星点（按星等大小） */
+    c._stars = [];
+    c.stars.forEach(function(s){
+      var x = c.ox + s[0], y = c.oy + s[1], m = s[2], zh = s[3] || '', la = s[4] || '';
+      var r = starR(m);
+      var sg = el('g', {'class':'star', opacity:'0', transform:'translate(' + x + ',' + y + ')'}, g);
+      var rays = null;
+      if(m < 1.65){
+        el('circle', {'class':'halo', r:(r * 2.5).toFixed(1)}, sg);
+        rays = el('g', {'class':'rays'}, sg);
+        for(var k = 0; k < 8; k++){
+          var a = k * Math.PI / 4, inner = r + 1.6, outer = r * 2.6 + 2;
+          el('line', {x1:(Math.cos(a)*inner).toFixed(1), y1:(Math.sin(a)*inner).toFixed(1),
+            x2:(Math.cos(a)*outer).toFixed(1), y2:(Math.sin(a)*outer).toFixed(1)}, rays);
+        }
+      }
+      el('circle', {'class':'star-c', r:r.toFixed(2)}, sg);
+      if(zh){ txt(sg, 9, -7, 'star-name', zh + (la ? ' · ' + la : '')); }
+      var ti = el('title', {}, sg);
+      ti.textContent = (zh ? zh + ' · ' : '') + (la ? la + ' · ' : '') + '视星等 ' + m;
+      c._stars.push({g:sg, c:sg.querySelector('.star-c'), r:r, rays:rays});
+    });
+    /* 昴星团小注 */
+    if(c.plei){
+      txt(g, c.ox + c.plei[0], c.oy + c.plei[1] + 52, 'star-name', '昴星团 · PLEIADES', 'middle');
+    }
+    /* 展签：编号 + 名称 + 拉丁 */
+    var lab = el('g', {'class':'con-label', opacity:'0'}, g);
+    txt(lab, c.ox, 178, 'cl-no', '图录 · ' + c.no, 'middle');
+    txt(lab, c.ox, 212, 'cl-zh', c.name, 'middle');
+    txt(lab, c.ox, 238, 'cl-la', c.latin, 'middle');
+    /* 羊皮签展牌 */
+    var plq = el('g', {'class':'plaque', opacity:'0'}, g);
+    el('rect', {'class':'pr', x:(c.ox - 140), y:584, width:280, height:76, rx:3}, plq);
+    el('rect', {'class':'pi', x:(c.ox - 134), y:590, width:268, height:64, rx:2}, plq);
+    txt(plq, c.ox, 612, 'p1', c.name, 'middle');
+    txt(plq, c.ox, 632, 'p2', c.latin, 'middle');
+    txt(plq, c.ox, 652, 'p3', '古称 ' + c.ancient + ' · 主星 ' + c.mainZh, 'middle');
+    /* 命中区（悬停注记卡） */
+    var hit = el('rect', {'class':'con-hit', x:(c.ox - 190), y:158, width:380, height:420,
+      tabindex:'0', role:'button',
+      'aria-label': c.name + ' ' + c.latin + '，古称' + c.ancient + '，主星' + c.mainZh + '，按回车查看注记'}, g);
+    c._hit = hit; c._p = -1;
+  });
+  buildPlanets(layer.parentNode.querySelector('#gDeco') ? $('#gDeco') : layer);
+}
+
+function buildCompass(){
+  var g = $('#gCompass'); if(!g){ return; }
+  el('circle', {r:98, 'stroke-width':'1.4'}, g);
+  el('circle', {r:44, 'stroke-width':'.8'}, g);
+  el('circle', {r:84, 'stroke-width':'.8', 'stroke-dasharray':'1.5 5.9'}, g);
+  var ring = el('g', {}, g);
+  for(var d = 0; d < 360; d += 15){
+    var a = d * Math.PI / 180, r1 = 88, r2 = 93;
+    el('line', {x1:(Math.sin(a)*r1).toFixed(1), y1:(-Math.cos(a)*r1).toFixed(1),
+      x2:(Math.sin(a)*r2).toFixed(1), y2:(-Math.cos(a)*r2).toFixed(1),
+      stroke:'#5B4A32', 'stroke-width':'.6', opacity:'.7'}, ring);
+  }
+  compassStar = el('g', {id:'compassStar'}, g);
+  function point(dirDeg, len, w, fill){
+    var a = dirDeg * Math.PI / 180;
+    var tx = Math.sin(a) * len, ty = -Math.cos(a) * len;
+    var px = Math.cos(a) * w, py = Math.sin(a) * w;
+    var mx = Math.sin(a) * len * .4, my = -Math.cos(a) * len * .4;
+    el('polygon', {points:tx.toFixed(1)+','+ty.toFixed(1)+' '+(mx+px).toFixed(1)+','+(my+py).toFixed(1)+' 0,0',
+      fill:fill, stroke:'#5B4A32', 'stroke-width':'.5'}, compassStar);
+    el('polygon', {points:tx.toFixed(1)+','+ty.toFixed(1)+' '+(mx-px).toFixed(1)+','+(my-py).toFixed(1)+' 0,0',
+      fill:'#EFE3C8', stroke:'#5B4A32', 'stroke-width':'.5'}, compassStar);
+  }
+  [45,135,225,315].forEach(function(d){ point(d, 64, 6, '#8A7350'); });
+  [0,90,180,270].forEach(function(d){ point(d, 94, 9, '#5B4A32'); });
+  el('circle', {r:7, fill:'#B98F3E', stroke:'#3E3222', 'stroke-width':'.8'}, compassStar);
+  txt(g, 0, -118, 'cl', 'N', 'middle');
+  txt(g, 0, -138, 'clz', '北', 'middle');
+  txt(g, 118, 6, 'cl', 'E', 'middle');
+  txt(g, -118, 6, 'cl', 'W', 'middle');
+  txt(g, 0, 130, 'cl', 'S', 'middle');
+  txt(g, 0, 152, 'clz', '罗盘 · ROSA VENTORUM', 'middle');
+  var hot = el('circle', {r:150, fill:'transparent', 'pointer-events':'all'}, g);
+  hot.addEventListener('pointerenter', function(){ compassHot = true; });
+  hot.addEventListener('pointerleave', function(){ compassHot = false; });
+}
+
+/* ================= 长卷滚动机制（单 rAF 循环） ================= */
+var track = $('#atlasTrack'), stage = $('#atlasStage'), sheet = $('#atlasSheet'),
+    clip = $('#sheetClip'), axisFill = $('#axisFill'), palaceNow = $('#palaceNow'),
+    pctNow = $('#pctNow'), conCountEl = $('#conCount'), hint = $('#atlasHint'),
+    card = $('#conCard');
+var mode = 'v', svgW = 1, scale = 1, travel = 0, sx0 = 0, sx1 = 0, curX = 0, atlasActive = false;
+var ROLLER = 52, vw = window.innerWidth, vh = window.innerHeight;
+var doneCount = 0, lastGlobalP = -1, hintFaded = false;
+
+function layout(){
+  vw = window.innerWidth; vh = window.innerHeight;
+  mode = vw <= 767 ? 'h' : 'v';
+  if(!svgEl){ return; }
+  svgW = svgEl.getBoundingClientRect().width || 1;
+  scale = svgW / CHART_W;
+  clip.classList.toggle('h', mode === 'h');
+  if(mode === 'v'){
+    var content = svgW + ROLLER * 2;
+    if(content > vw){ sx0 = ROLLER; sx1 = vw - svgW - ROLLER; }
+    else{ sx0 = sx1 = (vw - svgW) / 2; }
+    travel = Math.max(0, sx0 - sx1);
+    track.style.height = (vh + travel) + 'px';
+    sheet.style.transform = 'translate3d(' + sx0 + 'px,-50%,0)';
+    curX = sx0;
+  }else{
+    travel = 0; sx0 = sx1 = 0; curX = 0;
+    sheet.style.transform = 'none';
+    track.style.height = 'auto';
+  }
+}
+
+function applyCon(c, p){
+  if(Math.abs(p - c._p) < 0.0015 && !reduced){ return; }
+  c._p = p;
+  var i, t;
+  for(i = 0; i < c._lines.length; i++){
+    t = clamp(p - (i * 0.6) / c._lines.length, 0, 1) / 0.4;
+    t = clamp(t, 0, 1);
+    c._lines[i].e.setAttribute('stroke-dashoffset', (c._lines[i].l * (1 - t)).toFixed(1));
+  }
+  var S = c._stars.length;
+  for(i = 0; i < S; i++){
+    t = clamp((p - 0.1 - (i * 0.72) / S) / 0.16, 0, 1);
+    var st = c._stars[i];
+    st.g.setAttribute('opacity', t.toFixed(2));
+    st.c.setAttribute('r', (st.r * (0.25 + 0.75 * t)).toFixed(2));
+    if(st.rays){ st.rays.setAttribute('opacity', (t * 0.85).toFixed(2)); }
+  }
+  var f = clamp((p - 0.66) / 0.26, 0, 1);
+  c._fig.setAttribute('opacity', (0.2 * f).toFixed(3));
+  var q = clamp((p - 0.8) / 0.2, 0, 1);
+  c._lab.setAttribute('opacity', q.toFixed(2));
+  c._plq.setAttribute('opacity', q.toFixed(2));
+}
+
+function finishAll(){
+  CONSTS.forEach(function(c){ applyCon(c, 1); });
+}
+
+function tick(now){
+  /* 导航进度条（始终） */
+  var doc = document.documentElement;
+  var maxScroll = Math.max(1, doc.scrollHeight - vh);
+  navProg.style.width = ((window.pageYOffset / maxScroll) * 100).toFixed(2) + '%';
+  /* 计数器 */
+  if(countersOn){
+    var all = true;
+    counters.forEach(function(ct){
+      if(ct.done){ return; }
+      var t = clamp((now - ct.t0) / 1400, 0, 1);
+      t = 1 - Math.pow(1 - t, 3);
+      ct.el.textContent = Math.round(ct.n * t).toLocaleString('zh-CN');
+      if(t < 1){ all = false; } else { ct.done = true; }
+    });
+    if(all){ countersOn = false; }
+  }
+  /* 罗盘自转 */
+  if(!reduced && atlasActive && compassStar){
+    var dt = Math.min(0.05, (now - lastT) / 1000);
+    if(compassHot){
+      var target = Math.round(compassA / 360) * 360;
+      compassA += (target - compassA) * Math.min(1, dt * 4);
+    }else{
+      compassA += dt * 6;
+    }
+    compassStar.setAttribute('transform', 'rotate(' + compassA.toFixed(2) + ')');
+  }
+  lastT = now;
+  /* 长卷 */
+  if(atlasActive && svgEl){
+    if(mode === 'v'){
+      var tr = track.getBoundingClientRect();
+      var p = travel > 0 ? clamp(-tr.top / travel, 0, 1) : 0;
+      curX = sx0 + p * (sx1 - sx0);
+      sheet.style.transform = 'translate3d(' + curX.toFixed(1) + 'px,-50%,0)';
+      updateGlobal(p);
+      CONSTS.forEach(function(c){
+        var left = curX + c.ox * scale;
+        applyCon(c, reduced ? 1 : clamp((vw * 0.98 - left) / (vw * 0.8), 0, 1));
+      });
+    }else{
+      var sl = clip.scrollLeft, smax = Math.max(1, clip.scrollWidth - clip.clientWidth);
+      updateGlobal(clamp(sl / smax, 0, 1));
+      var r = svgEl.getBoundingClientRect();
+      scale = r.width / CHART_W;
+      CONSTS.forEach(function(c){
+        var left = r.left + c.ox * scale;
+        applyCon(c, reduced ? 1 : clamp((vw * 0.98 - left) / (vw * 0.8), 0, 1));
+      });
+    }
+    if(Math.abs(lastGlobalP - gp) > 0.004){ hideCard(); lastGlobalP = gp; }
+  }
+  requestAnimationFrame(tick);
+}
+
+var gp = 0;
+function updateGlobal(p){
+  gp = p;
+  axisFill.style.width = (p * 100).toFixed(1) + '%';
+  pctNow.textContent = Math.round(p * 100) + '%';
+  var pi = Math.min(11, Math.floor(p * 12));
+  for(var i = 0; i < bandCells.length; i++){
+    bandCells[i].classList.toggle('on', i === pi);
+  }
+  needleG.setAttribute('transform', 'translate(' + (100 + p * 5280).toFixed(1) + ',150)');
+  if(pi !== curPalace){ curPalace = pi; palaceNow.textContent = PALACES[pi][0] + '宫'; }
+  var dn = 0;
+  CONSTS.forEach(function(c){ if(c._p >= 0.995){ dn++; } });
+  if(dn !== doneCount){ doneCount = dn; conCountEl.textContent = dn; }
+  if(!hintFaded && p > 0.02){ hintFaded = true; hint.style.opacity = '0'; }
+}
+var curPalace = -1;
+
+/* ================= 注记卡（hover / focus） ================= */
+function conX(c){
+  if(mode === 'v'){ return curX + c.ox * scale; }
+  var r = svgEl.getBoundingClientRect();
+  return r.left + c.ox * scale;
+}
+function showCard(c){
+  var stageR = stage.getBoundingClientRect();
+  var x = conX(c);
+  var left = clamp(x - 155, ROLLER + 8, vw - ROLLER - 8 - Math.min(310, vw * 0.72));
+  card.style.left = left + 'px';
+  card.style.top = (stageR.height > 500 ? 70 : 56) + 'px';
+  card.innerHTML =
+    '<div class="cc-no">星官图录 · ' + c.no + ' / 共八</div>' +
+    '<h4>' + c.name + '<i>' + c.latin + '</i></h4>' +
+    '<div class="cc-main">古称 <b>' + c.ancient + '</b> · 主星 <b>' + c.mainZh + '</b> <i style="font-family:var(--latin)">' + c.mainLa + '</i></div>' +
+    '<div class="cc-myth">' + c.myth + '</div>' +
+    '<div class="cc-tip">HOVER · 注记浮显 — 移开即隐</div>';
+  card.classList.add('show');
+}
+function hideCard(){ card.classList.remove('show'); }
+function bindCards(){
+  CONSTS.forEach(function(c){
+    c._fig = c._fig || null;
+  });
+  CONSTS.forEach(function(c){
+    var hit = c._hit;
+    hit.addEventListener('pointerenter', function(){ showCard(c); });
+    hit.addEventListener('pointerleave', hideCard);
+    hit.addEventListener('focus', function(){ showCard(c); });
+    hit.addEventListener('blur', hideCard);
+    hit.addEventListener('click', function(e){
+      e.stopPropagation();
+      if(card.classList.contains('show')){ hideCard(); } else { showCard(c); }
+    });
+  });
+  document.addEventListener('click', function(e){
+    if(card.classList.contains('show') && !card.contains(e.target)){ hideCard(); }
+  });
+}
+
+/* ================= 馆藏图鉴筛选 ================= */
+(function initFilter(){
+  var chips = $$('.chip'), cards = $$('.arch-card'), countEl = $('#archCount');
+  chips.forEach(function(ch){
+    ch.addEventListener('click', function(){
+      chips.forEach(function(x){ x.classList.toggle('on', x === ch); });
+      var f = ch.getAttribute('data-f'), n = 0;
+      cards.forEach(function(cd){
+        var show = f === 'all' || cd.getAttribute('data-cat') === f;
+        cd.classList.toggle('hide', !show);
+        cd.classList.remove('pop');
+        if(show){ n++; void cd.offsetWidth; cd.classList.add('pop'); }
+      });
+      countEl.textContent = '共 14 件 · 现展 ' + n + ' 件';
+    });
+  });
+})();
+
+/* ================= 预约表单 ================= */
+(function initForm(){
+  var form = $('#bookForm'); if(!form){ return; }
+  var fName = $('#fName'), fPhone = $('#fPhone'), fDate = $('#fDate'),
+      fCount = $('#fCount'), fTicket = $('#fTicket'), fDome = $('#fDome');
+  var receipt = $('#receipt'), rcGrid = $('#rcGrid'), rcCode = $('#rcCode'), rcSeal = $('#rcSeal');
+  var PRICES = {adult:60, conc:30, child:0, night:88, group:48};
+  var SLOT_TXT = {am:'上午 9:00–11:00', noon:'午后 11:00–13:00', pm:'下午 13:00–15:00', night:'夜场 19:00–21:30'};
+  var TICKET_TXT = {adult:'成人票', conc:'学生 / 优待票', child:'免票儿童', night:'夜场观星票', group:'团体票（八折）'};
+  function setErr(input, errEl, msg){
+    if(msg){ errEl.textContent = msg; errEl.classList.add('show'); if(input){ input.classList.add('error'); } }
+    else{ errEl.classList.remove('show'); if(input){ input.classList.remove('error'); } }
+    return !msg;
+  }
+  /* 日期范围：今日起 7 天 */
+  var today = new Date(); today.setHours(0,0,0,0);
+  var dMin = new Date(today), dMax = new Date(today.getTime() + 7 * 86400000);
+  function fmt(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+  fDate.min = fmt(dMin); fDate.max = fmt(dMax);
+  /* 人数步进 */
+  $('#cntMinus').addEventListener('click', function(){ fCount.value = Math.max(1, (parseInt(fCount.value,10)||1) - 1); });
+  $('#cntPlus').addEventListener('click', function(){ fCount.value = Math.min(30, (parseInt(fCount.value,10)||1) + 1); });
+  /* 输入即清错 */
+  [fName, fPhone, fDate, fCount].forEach(function(inp){
+    inp.addEventListener('input', function(){ inp.classList.remove('error');
+      var m = {fName:'#eName', fPhone:'#ePhone', fDate:'#eDate', fCount:'#eCount'}[inp.id];
+      if(m){ $(m).classList.remove('show'); } });
+  });
+  form.addEventListener('change', function(){ $('#eSlot').classList.remove('show'); });
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var ok = true, slot = (form.querySelector('input[name="slot"]:checked') || {}).value || '';
+    ok = setErr(fName, $('#eName'), fName.value.trim().length >= 2 ? '' : '请填写至少 2 个字的姓名') && ok;
+    ok = setErr(fPhone, $('#ePhone'), /^1[3-9]\d{9}$/.test(fPhone.value.trim()) ? '' : '请填写 11 位大陆手机号') && ok;
+    var dateMsg = '';
+    var d = null;
+    if(!fDate.value){ dateMsg = '请选择入馆日期'; }
+    else{
+      d = new Date(fDate.value + 'T00:00:00');
+      var diff = Math.round((d - today) / 86400000);
+      if(isNaN(d.getTime()) || diff < 0 || diff > 7){ dateMsg = '仅可预约今日起 7 天内的场次'; }
+      else if(d.getDay() === 1){ dateMsg = '周一闭馆（法定节假日除外），请另择吉日'; }
+      else if(slot === 'night' && d.getDay() !== 5 && d.getDay() !== 6){ dateMsg = '夜场仅周五、周六开放'; }
+    }
+    ok = setErr(fDate, $('#eDate'), dateMsg) && ok;
+    ok = setErr(null, $('#eSlot'), slot ? '' : '请选择入馆时段') && ok;
+    var n = parseInt(fCount.value, 10);
+    var countMsg = '';
+    if(!(n >= 1 && n <= 30)){ countMsg = '人数需在 1–30 之间'; }
+    else if(fTicket.value === 'group' && n < 20){ countMsg = '团体票需 20 人起（享八折）'; }
+    ok = setErr(fCount, $('#eCount'), countMsg) && ok;
+    if(!ok){ return; }
+    /* 生成凭据 */
+    var code = 'QX-' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0')
+      + '-' + String(Math.floor(1000 + Math.random() * 9000));
+    var unit = PRICES[fTicket.value];
+    var cost = fTicket.value === 'group' ? Math.round(unit * n) : unit * n;
+    var phone = fPhone.value.trim();
+    var dateStr = d.getFullYear() + ' 年 ' + (d.getMonth()+1) + ' 月 ' + d.getDate() + ' 日（周' + '日一二三四五六'[d.getDay()] + '）';
+    rcCode.textContent = code;
+    rcGrid.innerHTML =
+      '<span>姓名 <b>' + fName.value.trim().replace(/</g,'&lt;') + '</b></span>' +
+      '<span>电话 <b>' + phone.slice(0,3) + '****' + phone.slice(7) + '</b></span>' +
+      '<span>日期 <b>' + dateStr + '</b></span>' +
+      '<span>时段 <b>' + SLOT_TXT[slot] + '</b></span>' +
+      '<span>票种 <b>' + TICKET_TXT[fTicket.value] + '</b></span>' +
+      '<span>人数 <b>' + n + ' 人</b></span>' +
+      '<span>穹幕场次 <b>' + (fDome.value === 'no' ? '不预约' : fDome.value.slice(0,2) + ':' + fDome.value.slice(2) + ' 场') + '</b></span>' +
+      '<span>预计金额 <b style="color:var(--seal)">' + cost + ' 元</b>' + (fTicket.value === 'group' ? '（已按八折计）' : '') + '</span>';
+    form.style.display = 'none';
+    receipt.classList.add('show');
+    rcSeal.classList.remove('stamp'); void rcSeal.offsetWidth; rcSeal.classList.add('stamp');
+    drawQR();
+    receipt.scrollIntoView({behavior: reduced ? 'auto' : 'smooth', block:'center'});
+  });
+  $('#rcReset').addEventListener('click', function(){
+    form.reset(); form.style.display = '';
+    receipt.classList.remove('show');
+    fName.focus();
+  });
+  /* 装饰性示意码（伪 QR，纯示意） */
+  function drawQR(){
+    var box = $('#qrBox'); if(!box){ return; }
+    if(box.getAttribute('data-done')){ return; }
+    box.setAttribute('data-done','1');
+    var N = 13, size = 104, cell = size / N;
+    var s = el('svg', {viewBox:'0 0 '+size+' '+size, width:size, height:size}, box);
+    el('rect', {x:0, y:0, width:size, height:size, fill:'#F1E6C8'}, s);
+    var seed = 7;
+    function rnd(){ seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+    function finder(x, y){
+      el('rect', {x:x*cell, y:y*cell, width:cell*3, height:cell*3, fill:'#3E3222'}, s);
+      el('rect', {x:(x+0.7)*cell, y:(y+0.7)*cell, width:cell*1.6, height:cell*1.6, fill:'#F1E6C8'}, s);
+      el('rect', {x:(x+1.1)*cell, y:(y+1.1)*cell, width:cell*0.8, height:cell*0.8, fill:'#3E3222'}, s);
+    }
+    for(var yy = 0; yy < N; yy++){
+      for(var xx = 0; xx < N; xx++){
+        var inFinder = (xx < 4 && yy < 4) || (xx > N-5 && yy < 4) || (xx < 4 && yy > N-5);
+        if(!inFinder && rnd() > 0.52){
+          el('rect', {x:xx*cell+0.5, y:yy*cell+0.5, width:cell-1, height:cell-1, fill:'#3E3222'}, s);
+        }
+      }
+    }
+    finder(0.5, 0.5); finder(N-3.5, 0.5); finder(0.5, N-3.5);
+  }
+})();
+
+/* ================= 导航与滚动杂项 ================= */
+var navProg = $('#navProg');
+var navEl = $('#topNav');
+window.addEventListener('scroll', function(){
+  navEl.classList.toggle('scrolled', window.pageYOffset > 40);
+}, {passive:true});
+/* 滚动定位高亮 */
+(function spy(){
+  var links = $$('.nav-links a[data-spy]');
+  var map = {};
+  links.forEach(function(a){ map[a.getAttribute('data-spy')] = a; });
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(en){
+      if(en.isIntersecting){
+        links.forEach(function(a){ a.classList.remove('on'); });
+        var a = map[en.target.id]; if(a){ a.classList.add('on'); }
+      }
+    });
+  }, {rootMargin:'-40% 0px -55% 0px'});
+  ['atlas','catalog','halls','visit'].forEach(function(id){
+    var s = document.getElementById(id); if(s){ io.observe(s); }
+  });
+})();
+/* 长卷可视开关 */
+(function atlasWatch(){
+  var sec = $('#atlas'); if(!sec){ return; }
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(en){ atlasActive = en.isIntersecting; });
+  }, {rootMargin:'160px 0px 160px 0px'});
+  io.observe(sec);
+})();
+
+/* ================= 计数器 ================= */
+var counters = [], countersOn = false;
+(function initCounters(){
+  $$('.cnum').forEach(function(elm){
+    counters.push({el:elm, n:parseInt(elm.getAttribute('data-n'),10) || 0, t0:0, done:false});
+  });
+  setTimeout(function(){
+    var t = performance.now();
+    counters.forEach(function(c){ c.t0 = t; });
+    countersOn = true;
+  }, reduced ? 100 : 1900);
+})();
+
+/* ================= 启动 ================= */
+var lastT = 0;
+function boot(){
+  buildBand();
+  buildCons();
+  buildCompass();
+  CONSTS.forEach(function(c){
+    c._fig = svgEl.querySelector('g.con[data-id="' + c.id + '"] .figure');
+    c._lab = svgEl.querySelector('g.con[data-id="' + c.id + '"] .con-label');
+    c._plq = svgEl.querySelector('g.con[data-id="' + c.id + '"] .plaque');
+  });
+  bindCards();
+  layout();
+  if(reduced){
+    finishAll();
+    doneCount = CONSTS.length; conCountEl.textContent = doneCount;
+    updateGlobal(0);
+  }
+  lastT = performance.now();
+  requestAnimationFrame(tick);
+}
+var resizeTimer = null;
+window.addEventListener('resize', function(){
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(function(){
+    layout();
+    if(reduced){ finishAll(); }
+    hideCard();
+  }, 160);
+});
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', boot);
+}else{
+  boot();
+}
+})();
+</script>
+</body>
+</html>

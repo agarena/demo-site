@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="水镜秘境·月影占卜——于幽绿深潭的水镜之上抽牌问月：圆形星盘牌阵、卡牌自水下倒影升起、月相随解读盈亏。">
+<title>水镜秘境 · 月影占卜 | Tarot of the Water Mirror</title>
+<style>
+/* ==========================================================================
+   水镜秘境 · 月影占卜 —— 方向D·炫酷方向
+   深潭墨绿 / 幽泉青 / 磷光青绿 / 月光银白 / 雾紫灰 / 深金铜
+   全站零外链：牌面为内联 SVG 线稿，水面与涟漪由 SVG 滤镜 + CSS 动画完成
+   ========================================================================== */
+:root{
+  --ink:#06231F;          /* 深潭墨绿 · 底 */
+  --ink2:#041A16;         /* 更深潭底 */
+  --panel:#0E4A40;        /* 幽泉青 · 面板 */
+  --panel2:#0A352E;       /* 面板加深 */
+  --glow:#5FF2C0;         /* 磷光青绿 · 辉光点缀 */
+  --moonc:#E9F5EF;        /* 月光银白 · 正文 */
+  --mist:#8B7FA8;         /* 雾紫灰 · 倒影与次级 */
+  --copper:#B08D57;       /* 深金铜 · 边框与收尾高光 */
+  --line:rgba(95,242,192,.22);
+  --line2:rgba(176,141,87,.42);
+  --serif:'Cormorant Garamond','Noto Serif SC','Songti SC','SimSun',serif;
+  --sans:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  --script:'Dancing Script','Ma Shan Zheng','KaiTi','STKaiti',cursive;
+  --cw:108px;             /* 塔罗牌宽 */
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans);
+  color:var(--moonc);
+  background:
+    radial-gradient(1300px 760px at 72% -12%, #0B3B33 0%, rgba(11,59,51,0) 62%),
+    radial-gradient(1000px 640px at 6% 18%, #0A2E28 0%, rgba(10,46,40,0) 58%),
+    var(--ink);
+  overflow-x:hidden;
+  line-height:1.75;
+}
+::selection{background:rgba(95,242,192,.3);color:#fff}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+a{color:inherit;text-decoration:none}
+
+/* ---------- 通用滚动显现 ---------- */
+.sec{opacity:0;transform:translateY(34px);transition:opacity .95s ease,transform .95s ease}
+.sec.vis{opacity:1;transform:none}
+.sec-head{text-align:center;max-width:720px;margin:0 auto 46px}
+.sec-eyebrow{font-family:var(--serif);font-size:12px;letter-spacing:.42em;color:var(--copper);text-transform:uppercase}
+.sec-head h2{font-family:var(--serif);font-weight:500;font-size:clamp(26px,3.4vw,38px);letter-spacing:.22em;margin:12px 0 10px;color:var(--moonc)}
+.sec-sub{color:rgba(233,245,239,.62);font-size:14.5px}
+
+/* ---------- 顶部 HUD：月相进度 ---------- */
+.hud{
+  position:fixed;top:0;left:0;right:0;z-index:120;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 22px;
+  background:linear-gradient(180deg, rgba(4,26,22,.82), rgba(4,26,22,0));
+  backdrop-filter:blur(3px);
+  pointer-events:none;
+}
+.hud>*{pointer-events:auto}
+.hud-brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);letter-spacing:.3em;font-size:15px;color:var(--moonc)}
+.hud-brand svg{width:30px;height:30px}
+.hud-right{display:flex;align-items:center;gap:16px}
+.hud-moon{width:40px;height:40px;filter:drop-shadow(0 0 6px rgba(233,245,239,.35))}
+.hud-nav{display:flex;gap:18px;font-size:13px;letter-spacing:.2em;color:rgba(233,245,239,.72)}
+.hud-nav a{border-bottom:1px solid transparent;padding-bottom:2px;transition:.3s}
+.hud-nav a:hover{color:var(--glow);border-color:var(--glow)}
+#hudPhase{font-size:12px;letter-spacing:.18em;color:rgba(233,245,239,.7);min-width:96px;text-align:right}
+.mbody{fill:#D9EDE4}
+.mshade{fill:#07211C}
+.mring{fill:none;stroke:rgba(176,141,87,.75);stroke-width:1.4}
+
+/* ---------- 涟漪（纯 CSS 圆环扩散） ---------- */
+.ripple{
+  position:absolute;width:230px;height:230px;border-radius:50%;
+  transform:translate(-50%,-50%) scale(.06);
+  border:1.5px solid rgba(95,242,192,.75);
+  box-shadow:0 0 18px rgba(95,242,192,.35), inset 0 0 22px rgba(95,242,192,.18);
+  opacity:.95;pointer-events:none;z-index:40;
+  animation:rippleGo 1.7s cubic-bezier(.2,.6,.4,1) forwards;
+}
+.ripple.gold{border-color:rgba(214,178,110,.9);box-shadow:0 0 26px rgba(214,178,110,.45), inset 0 0 30px rgba(214,178,110,.25)}
+.ripple.dim{border-color:rgba(139,127,168,.5);box-shadow:none}
+@keyframes rippleGo{
+  0%{transform:translate(-50%,-50%) scale(.06);opacity:.95}
+  70%{opacity:.4}
+  100%{transform:translate(-50%,-50%) scale(1);opacity:0}
+}
+
+/* ==========================================================================
+   HERO · 全屏水镜
+   ========================================================================== */
+#hero{position:relative;min-height:100vh;overflow:hidden;display:flex;flex-direction:column;justify-content:center}
+.sky{position:absolute;inset:0 0 42% 0}
+.stars{position:absolute;top:0;left:0;width:2px;height:2px;border-radius:50%;background:rgba(233,245,239,.8);
+  box-shadow:8vw 8vh rgba(233,245,239,.7),15vw 18vh rgba(233,245,239,.5),22vw 6vh rgba(233,245,239,.35),
+  30vw 22vh rgba(233,245,239,.6),38vw 9vh rgba(233,245,239,.4),46vw 16vh rgba(233,245,239,.55),
+  55vw 5vh rgba(233,245,239,.45),62vw 12vh rgba(233,245,239,.6),70vw 20vh rgba(233,245,239,.4),
+  78vw 7vh rgba(233,245,239,.6),86vw 15vh rgba(233,245,239,.45),93vw 10vh rgba(233,245,239,.6),
+  12vw 30vh rgba(139,127,168,.6),26vw 34vh rgba(139,127,168,.5),44vw 28vh rgba(139,127,168,.55),
+  60vw 32vh rgba(139,127,168,.45),75vw 27vh rgba(139,127,168,.5),90vw 33vh rgba(139,127,168,.6),
+  5vw 14vh rgba(233,245,239,.5),50vw 30vh rgba(233,245,239,.3),33vw 30vh rgba(233,245,239,.42);
+  animation:twinkle 5.5s ease-in-out infinite alternate;
+}
+@keyframes twinkle{from{opacity:.55}to{opacity:1}}
+.moon{
+  position:absolute;top:11%;left:64%;width:112px;height:112px;border-radius:50%;
+  background:
+    radial-gradient(circle at 34% 32%, rgba(255,255,255,.85) 0%, rgba(255,255,255,0) 42%),
+    radial-gradient(circle at 62% 68%, rgba(6,35,31,.22) 0%, rgba(6,35,31,.22) 14%, transparent 15%),
+    radial-gradient(circle at 40% 66%, rgba(6,35,31,.18) 0%, rgba(6,35,31,.18) 10%, transparent 11%),
+    radial-gradient(circle at 44% 38%, #F4FBF7 0%, #CDE9DD 52%, #86AC9E 100%);
+  box-shadow:0 0 46px rgba(233,245,239,.4), 0 0 130px rgba(95,242,192,.18);
+  animation:moonIn 1.8s .45s cubic-bezier(.2,.7,.3,1.15) both, moonGlow 7s 2.4s ease-in-out infinite alternate;
+}
+@keyframes moonIn{from{opacity:0;transform:translateY(-34px) scale(.7)}to{opacity:1;transform:none}}
+@keyframes moonGlow{from{box-shadow:0 0 46px rgba(233,245,239,.4),0 0 130px rgba(95,242,192,.18)}to{box-shadow:0 0 60px rgba(233,245,239,.55),0 0 170px rgba(95,242,192,.28)}}
+.beam{
+  position:absolute;top:calc(11% + 108px);left:64%;width:230px;height:46vh;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg, rgba(233,245,239,.22), rgba(95,242,192,.07) 55%, transparent 88%);
+  clip-path:polygon(41% 0,59% 0,100% 100%,0 100%);
+  filter:blur(7px);
+  animation:beamIn 2.2s 1.1s ease both, beamShimmer 6s 3.2s ease-in-out infinite alternate;
+  pointer-events:none;
+}
+@keyframes beamIn{from{opacity:0}to{opacity:1}}
+@keyframes beamShimmer{from{opacity:.65}to{opacity:1}}
+
+/* 水镜水面 */
+.water{
+  position:absolute;left:0;right:0;bottom:0;height:42%;
+  background:linear-gradient(180deg,#0C4238 0%, #072B24 42%, var(--ink2) 100%);
+  border-top:1px solid var(--line2);
+  animation:waterUp 1.5s .15s cubic-bezier(.2,.7,.3,1) both;
+  cursor:crosshair;
+}
+@keyframes waterUp{from{opacity:0;transform:translateY(90px)}to{opacity:1;transform:none}}
+.water::before{ /* 水面高光线 */
+  content:"";position:absolute;top:-1px;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent, rgba(233,245,239,.55) 30%, rgba(233,245,239,.7) 50%, rgba(233,245,239,.55) 70%, transparent);
+  animation:shoreLight 6s ease-in-out infinite alternate;
+}
+@keyframes shoreLight{from{opacity:.4}to{opacity:1}}
+.water .caustics{ /* 焦散光纹：CSS 渐变缓动（低成本） */
+  position:absolute;inset:0;opacity:.5;pointer-events:none;
+  background:
+    radial-gradient(220px 60px at 22% 30%, rgba(95,242,192,.16), transparent 70%),
+    radial-gradient(300px 70px at 70% 55%, rgba(95,242,192,.12), transparent 70%),
+    radial-gradient(260px 54px at 45% 78%, rgba(139,127,168,.14), transparent 70%);
+  animation:causticDrift 11s ease-in-out infinite alternate;
+}
+@keyframes causticDrift{
+  from{transform:translateX(-16px) scaleY(1);opacity:.4}
+  to{transform:translateX(18px) scaleY(1.12);opacity:.62}
+}
+.refl{position:absolute;top:0;left:0;width:100%;height:62%;pointer-events:none}
+.specks{position:absolute;inset:0;pointer-events:none}
+.specks i{position:absolute;bottom:18%;width:3px;height:3px;border-radius:50%;background:rgba(95,242,192,.55);filter:blur(1px);animation:speckFloat 9s ease-in-out infinite}
+.specks i:nth-child(1){left:12%;animation-delay:0s}
+.specks i:nth-child(2){left:28%;animation-delay:1.4s;bottom:34%}
+.specks i:nth-child(3){left:44%;animation-delay:.7s}
+.specks i:nth-child(4){left:58%;animation-delay:2.3s;bottom:40%}
+.specks i:nth-child(5){left:72%;animation-delay:1.1s}
+.specks i:nth-child(6){left:86%;animation-delay:3s;bottom:28%}
+.specks i:nth-child(7){left:8%;animation-delay:4.2s;bottom:44%}
+.specks i:nth-child(8){left:64%;animation-delay:5s}
+@keyframes speckFloat{0%,100%{transform:translateY(0);opacity:.25}50%{transform:translateY(-30px);opacity:.85}}
+
+/* Hero 中央内容 */
+.hero-inner{position:relative;z-index:10;text-align:center;padding:16vh 20px 0;pointer-events:none}
+.hero-inner .halo{
+  position:absolute;left:50%;top:44%;width:min(560px,86vw);height:min(560px,86vw);
+  transform:translate(-50%,-50%);border-radius:50%;
+  border:1px dashed rgba(176,141,87,.4);
+  animation:spinSlow 90s linear infinite;pointer-events:none;
+}
+.hero-inner .halo::after{
+  content:"";position:absolute;inset:26px;border-radius:50%;
+  border:1px solid rgba(95,242,192,.16);
+}
+@keyframes spinSlow{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.eyebrow{font-family:var(--script);color:var(--glow);font-size:clamp(16px,2vw,20px);letter-spacing:.35em;opacity:0;animation:fadeUp 1s 1s ease both}
+.hero-inner h1{
+  font-family:var(--serif);font-weight:500;letter-spacing:.24em;
+  font-size:clamp(30px,5.6vw,62px);margin:14px 0 10px;
+  color:var(--moonc);text-shadow:0 0 30px rgba(95,242,192,.35);
+  opacity:0;animation:fadeUp 1.1s 1.25s ease both;
+}
+.hero-inner h1 .thin{color:var(--copper)}
+.tagline{color:rgba(233,245,239,.68);font-size:clamp(13px,1.5vw,16px);letter-spacing:.3em;opacity:0;animation:fadeUp 1.1s 1.5s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+
+/* 占卜祭坛表单 */
+.altar-form{
+  position:relative;z-index:11;max-width:760px;margin:40px auto 0;padding:0 20px 12vh;
+  opacity:0;animation:fadeUp 1.2s 1.8s ease both;
+}
+.q-label{display:block;text-align:center;font-family:var(--serif);letter-spacing:.3em;font-size:15px;color:rgba(233,245,239,.85);margin-bottom:14px}
+.q-row{display:flex;justify-content:center}
+#qInput{
+  width:min(560px,100%);padding:13px 20px;border-radius:40px;
+  background:rgba(6,35,31,.72);border:1px solid var(--line2);
+  color:var(--moonc);font-size:15px;letter-spacing:.05em;outline:none;
+  transition:border-color .3s, box-shadow .3s;
+}
+#qInput::placeholder{color:rgba(139,127,168,.75)}
+#qInput:focus{border-color:var(--glow);box-shadow:0 0 0 3px rgba(95,242,192,.12)}
+.theme-row{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin:18px 0 26px}
+.theme-cap{font-size:12.5px;letter-spacing:.28em;color:rgba(139,127,168,.9);margin-right:4px}
+.chip{
+  padding:7px 18px;border-radius:30px;font-size:13.5px;letter-spacing:.14em;
+  background:rgba(14,74,64,.5);border:1px solid var(--line);color:rgba(233,245,239,.8);
+  transition:.3s;
+}
+.chip:hover{border-color:var(--glow);color:var(--glow);transform:translateY(-2px)}
+.chip.on{background:rgba(95,242,192,.14);border-color:var(--glow);color:var(--glow);box-shadow:0 0 14px rgba(95,242,192,.25)}
+
+.spread-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:30px}
+.spread-card{
+  position:relative;text-align:left;padding:18px 18px 16px;border-radius:14px;
+  background:linear-gradient(165deg, rgba(14,74,64,.66), rgba(6,35,31,.85));
+  border:1px solid var(--line);color:var(--moonc);
+  transition:transform .35s ease, border-color .35s, box-shadow .35s;
+  overflow:hidden;
+}
+.spread-card::after{ /* 水面反光扫过 */
+  content:"";position:absolute;top:0;bottom:0;left:-70%;width:46%;
+  background:linear-gradient(105deg, transparent, rgba(233,245,239,.10), transparent);
+  transform:skewX(-14deg);transition:left .7s ease;
+}
+.spread-card:hover::after{left:130%}
+.spread-card:hover{transform:translateY(-6px);border-color:rgba(95,242,192,.5);box-shadow:0 16px 34px rgba(0,0,0,.35)}
+.spread-card.on{border-color:var(--copper);box-shadow:0 0 0 1px rgba(176,141,87,.4), 0 14px 30px rgba(0,0,0,.35)}
+.spread-card .sp-top{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.sp-fig{width:52px;height:52px;flex:none}
+.sr{fill:none;stroke:rgba(176,141,87,.65);stroke-width:1.2;stroke-dasharray:3 5}
+.sd{fill:var(--glow)}
+.spread-card strong{display:block;font-family:var(--serif);letter-spacing:.18em;font-size:17px;font-weight:600}
+.spread-card em{display:block;font-style:normal;font-size:11.5px;letter-spacing:.2em;color:var(--copper);margin-top:3px}
+.spread-card p{font-size:12.5px;color:rgba(233,245,239,.62);line-height:1.7}
+
+.btn{
+  display:inline-block;padding:13px 42px;border-radius:40px;border:none;
+  font-size:15px;letter-spacing:.32em;text-indent:.32em;transition:.35s;
+}
+.btn.gold{
+  background:linear-gradient(160deg,#CBA76B,#B08D57 55%,#97744A);
+  color:#10251F;font-weight:600;box-shadow:0 10px 30px rgba(176,141,87,.35);
+}
+.btn.gold:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(176,141,87,.5)}
+.btn.ghost{
+  background:transparent;border:1px solid var(--line2);color:var(--moonc);
+}
+.btn.ghost:hover{border-color:var(--glow);color:var(--glow);transform:translateY(-3px)}
+.form-note{text-align:center;margin-top:16px;font-family:var(--script);font-size:14px;letter-spacing:.2em;color:rgba(139,127,168,.95)}
+
+/* ==========================================================================
+   主舞台 · 圆形星盘牌阵
+   ========================================================================== */
+#stage{position:relative;padding:96px 20px 40px;overflow:hidden}
+.stage-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px 26px;margin-bottom:8px}
+.stage-head .q-recap{font-size:14px;color:rgba(233,245,239,.85);letter-spacing:.06em}
+.stage-head .q-recap b{color:var(--glow);font-weight:600}
+.stage-head .spread-tag{font-size:12.5px;letter-spacing:.24em;color:var(--copper);border:1px solid var(--line2);padding:4px 14px;border-radius:20px}
+#btnSkip{
+  font-size:12px;letter-spacing:.2em;color:rgba(233,245,239,.6);
+  background:transparent;border:1px dashed rgba(139,127,168,.55);border-radius:20px;padding:5px 14px;transition:.3s;
+}
+#btnSkip:hover{color:var(--glow);border-color:var(--glow)}
+.dots{display:flex;justify-content:center;gap:10px;margin:16px 0 4px}
+.dots .dot{width:9px;height:9px;border-radius:50%;border:1px solid rgba(176,141,87,.7);transition:.4s}
+.dots .dot.done{background:var(--glow);border-color:var(--glow);box-shadow:0 0 10px rgba(95,242,192,.7)}
+.ring-wrap{position:relative;width:min(860px,100%);margin:0 auto 190px;height:640px}
+.astro{position:absolute;left:50%;top:50%;width:560px;height:560px;transform:translate(-50%,-50%);pointer-events:none}
+.astro .spin{transform-origin:50% 50%;animation:astroSpin 70s linear infinite}
+.ring-wrap:hover .astro .spin{animation-play-state:paused}
+@keyframes astroSpin{to{transform:rotate(360deg)}}
+.a1{fill:none;stroke:rgba(176,141,87,.34);stroke-width:1}
+.a2{fill:none;stroke:rgba(95,242,192,.3);stroke-width:1}
+.a3{fill:none;stroke:rgba(139,127,168,.3);stroke-width:1;stroke-dasharray:4 9}
+.a4{fill:rgba(95,242,192,.5)}
+
+/* 阵位 */
+.slot{position:absolute;width:var(--cw);transform:translate(-50%,-50%);z-index:20}
+.slot-ghost{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  aspect-ratio:5/8;border-radius:10px;border:1px dashed rgba(139,127,168,.55);
+  background:rgba(6,35,31,.35);transition:.4s;
+  animation:ghostPulse 3.4s ease-in-out infinite;
+}
+@keyframes ghostPulse{0%,100%{box-shadow:0 0 0 rgba(95,242,192,0)}50%{box-shadow:0 0 22px rgba(95,242,192,.18)}}
+.g-no{font-family:var(--serif);font-size:20px;color:rgba(176,141,87,.9);letter-spacing:.2em}
+.g-pos{font-size:13px;letter-spacing:.3em;text-indent:.3em;color:rgba(233,245,239,.85)}
+.g-tip{font-size:10.5px;color:rgba(139,127,168,.85);text-align:center;padding:0 8px;line-height:1.6}
+.slot-card{
+  position:relative;aspect-ratio:5/8;border-radius:10px;overflow:hidden;
+  cursor:pointer;transition:transform .45s ease, box-shadow .45s;
+  box-shadow:0 14px 30px rgba(0,0,0,.45), 0 0 24px rgba(95,242,192,.14);
+  animation:landIn .6s cubic-bezier(.2,.8,.3,1.2) both;
+}
+@keyframes landIn{from{transform:scale(.86);opacity:.4}to{transform:scale(1);opacity:1}}
+.slot-card:hover{transform:translateY(-8px);box-shadow:0 22px 42px rgba(0,0,0,.55), 0 0 30px rgba(95,242,192,.3)}
+.slot-card::after{ /* 水面反光扫过 */
+  content:"";position:absolute;top:0;bottom:0;left:-70%;width:46%;
+  background:linear-gradient(105deg, transparent, rgba(233,245,239,.16), transparent);
+  transform:skewX(-14deg);transition:left .8s ease;pointer-events:none;
+}
+.slot-card:hover::after{left:130%}
+.slot-card svg{width:100%;height:100%;display:block}
+.orient-tag{
+  position:absolute;top:8px;right:8px;font-size:10px;letter-spacing:.18em;padding:2px 8px;border-radius:12px;
+  background:rgba(95,242,192,.16);border:1px solid rgba(95,242,192,.55);color:var(--glow);
+}
+.orient-tag.r{background:rgba(139,127,168,.2);border-color:rgba(139,127,168,.7);color:#B9AFE0}
+.slot-lb{
+  position:absolute;bottom:0;left:0;right:0;text-align:center;
+  font-size:11px;letter-spacing:.32em;text-indent:.32em;color:var(--copper);
+  background:linear-gradient(180deg,transparent, rgba(4,26,22,.9));padding:14px 0 6px;
+}
+
+/* 牌面 SVG 线稿样式 */
+.cface{color:rgba(95,242,192,.88)}
+.cface path,.cface circle,.cface ellipse,.cface rect,.cface line{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.cface .au{stroke:var(--copper)}
+.cface .fl{fill:currentColor;stroke:none;opacity:.85}
+.cface .dash{stroke-dasharray:.5 6.5;stroke-width:2}
+.cface .lf{stroke:var(--copper);stroke-width:2.1;filter:drop-shadow(0 0 3px rgba(176,141,87,.8))}
+.cface .cb{fill:rgba(6,35,31,.72);stroke:rgba(176,141,87,.7);stroke-width:1.4}
+.cface .vb{fill:none;stroke:rgba(176,141,87,.5);stroke-width:.9}
+.cface .vv{stroke:rgba(176,141,87,.42);stroke-width:1}
+.cface .vd{fill:rgba(176,141,87,.85);stroke:none}
+.cface .tnum{fill:var(--copper);font:600 11px var(--serif);letter-spacing:.14em;text-anchor:middle}
+.cface .tname{fill:var(--moonc);font:500 13px var(--serif);letter-spacing:.3em;text-anchor:middle}
+.cface .ten{fill:rgba(139,127,168,.95);font:italic 500 5.6px var(--serif);letter-spacing:.14em;text-anchor:middle}
+.cface .tdiv{stroke:rgba(95,242,192,.4);stroke-width:1}
+
+/* 水下牌堆 */
+.waterband{
+  position:absolute;left:0;right:0;bottom:0;height:172px;z-index:30;
+  background:linear-gradient(180deg, rgba(14,74,64,.28), rgba(4,26,22,.94) 60%);
+  border-top:1px solid rgba(176,141,87,.3);
+}
+.waterband::before{ /* 焦散缓动 */
+  content:"";position:absolute;inset:0;opacity:.45;pointer-events:none;
+  background:
+    radial-gradient(240px 46px at 18% 40%, rgba(95,242,192,.16), transparent 70%),
+    radial-gradient(320px 60px at 80% 62%, rgba(95,242,192,.12), transparent 70%),
+    radial-gradient(200px 40px at 52% 82%, rgba(139,127,168,.16), transparent 70%);
+  animation:causticDrift 13s ease-in-out infinite alternate;
+}
+.deck-wrap{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);text-align:center;z-index:35}
+.deck{
+  position:relative;width:calc(var(--cw)*.92);aspect-ratio:5/8;
+  background:transparent;border:none;padding:0;transition:transform .35s ease, filter .35s;
+}
+.deck:hover{transform:translateY(-10px);filter:drop-shadow(0 0 22px rgba(95,242,192,.45))}
+.deck:focus-visible{outline:2px solid var(--glow);outline-offset:4px;border-radius:10px}
+.deck .dl{
+  position:absolute;inset:0;border-radius:9px;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(95,242,192,.14), transparent 46%),
+    linear-gradient(168deg,#0F5044 0%, #0A382F 55%, #062822 100%);
+  border:1px solid rgba(176,141,87,.55);
+  box-shadow:0 10px 22px rgba(0,0,0,.5);
+}
+.deck .dl3{transform:rotate(-4deg) translate(-5px,4px);opacity:.55}
+.deck .dl2{transform:rotate(2.5deg) translate(4px,2px);opacity:.75}
+.deck .dl1{display:flex;align-items:center;justify-content:center}
+.deck .dl1::before{
+  content:"";width:44%;aspect-ratio:1;border-radius:50%;
+  border:1px solid rgba(176,141,87,.6);position:absolute;
+}
+.deck .emblem{width:46%;height:auto;opacity:.9}
+.deck:active .dl1{transform:scale(.96)}
+.deck.busy{pointer-events:none}
+.deck.empty{opacity:.35;pointer-events:none}
+.deck.shuffling{animation:shuffle .55s ease-in-out 2}
+@keyframes shuffle{0%,100%{transform:rotate(0)}25%{transform:rotate(-5deg) translateY(-6px)}75%{transform:rotate(5deg) translateY(-3px)}}
+.deck-hint{margin-top:10px;font-size:12.5px;letter-spacing:.22em;color:rgba(233,245,239,.78)}
+.stage-note{
+  position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);
+  font-family:var(--script);font-size:17px;letter-spacing:.24em;color:rgba(139,127,168,.95);
+  text-align:center;z-index:15;transition:opacity .5s;
+}
+.stage-note.off{opacity:0;pointer-events:none}
+
+/* 飞行中的卡牌：升起 → 破水 → 翻转 → 归位 */
+.fly-card{
+  position:absolute;width:var(--cw);aspect-ratio:5/8;z-index:80;pointer-events:none;
+  transition:transform .9s cubic-bezier(.25,.85,.3,1);
+  perspective:900px;
+}
+.fly-card .lift{width:100%;height:100%}
+.fly-card.rise .lift{animation:cardRise 1.15s cubic-bezier(.2,.7,.3,1) both}
+@keyframes cardRise{
+  0%{transform:translateY(56px) scale(.84);filter:blur(10px);opacity:0}
+  38%{opacity:1}
+  55%{filter:blur(3.5px)}
+  82%{filter:blur(.6px)}
+  100%{transform:translateY(0) scale(1);filter:blur(0);opacity:1}
+}
+.fly-card.bob .lift{animation:cardBob 1.1s ease-in-out infinite alternate}
+@keyframes cardBob{from{transform:translateY(0)}to{transform:translateY(-9px)}}
+.fly-card .inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .78s cubic-bezier(.55,.06,.28,1)}
+.fly-card.flip .inner{transform:rotateY(180deg)}
+.fly-card .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:10px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.55)}
+.fly-card .face svg{width:100%;height:100%}
+.fly-card .face.front{transform:rotateY(180deg)}
+.fly-card .face .flash{
+  position:absolute;inset:0;background:radial-gradient(circle at 50% 42%, rgba(233,245,239,.5), transparent 62%);
+  opacity:0;
+}
+.fly-card.flip .face.front .flash{animation:flashOut 1s .3s ease-out}
+@keyframes flashOut{0%{opacity:.9}100%{opacity:0}}
+
+/* ==========================================================================
+   月之卷 · 解读卷轴
+   ========================================================================== */
+#reading{padding:110px 20px 60px}
+.scroll-wrap{position:relative;max-width:800px;margin:0 auto;padding:0 26px}
+.rod{
+  height:16px;border-radius:10px;position:relative;
+  background:linear-gradient(180deg,#D2AC72,#A8824F 60%,#8A683E);
+  box-shadow:0 4px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.35);
+}
+.rod::before,.rod::after{content:"";position:absolute;top:2px;width:10px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#E8CD9B,#9C7847)}
+.rod::before{left:-16px}.rod::after{right:-16px}
+.read-list{
+  margin:0 auto;padding:44px 8px;
+  background:
+    radial-gradient(500px 200px at 50% 0%, rgba(95,242,192,.06), transparent 70%),
+    linear-gradient(180deg, rgba(14,74,64,.55), rgba(6,35,31,.88));
+  border-left:1px solid var(--line2);border-right:1px solid var(--line2);
+}
+.read-panel{
+  position:relative;margin:0 auto 30px;max-width:640px;padding:24px 26px 20px;
+  background:linear-gradient(170deg, rgba(10,53,46,.92), rgba(6,35,31,.94));
+  border:1px solid var(--line);border-radius:16px;
+  box-shadow:0 14px 34px rgba(0,0,0,.35);
+  opacity:0;transform:translateY(30px);transition:opacity .85s ease, transform .85s ease;
+  display:grid;grid-template-columns:86px 1fr;gap:18px;align-items:start;
+}
+.read-panel.shown{opacity:1;transform:none}
+.read-panel:last-child{margin-bottom:0}
+.rp-art{width:86px;border-radius:8px;overflow:hidden;border:1px solid var(--line2);box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.rp-art svg{display:block;width:100%;height:auto}
+.rp-pos{
+  display:inline-block;font-size:11px;letter-spacing:.3em;text-indent:.3em;color:var(--copper);
+  border:1px solid var(--line2);border-radius:20px;padding:3px 12px;margin-bottom:8px;
+}
+.read-panel h4{font-family:var(--serif);font-size:21px;letter-spacing:.14em;font-weight:600}
+.read-panel h4 em{font-style:normal;font-size:12px;letter-spacing:.2em;margin-left:10px;padding:2px 10px;border-radius:12px;vertical-align:2px}
+.read-panel h4 em.u{color:var(--glow);background:rgba(95,242,192,.12);border:1px solid rgba(95,242,192,.4)}
+.read-panel h4 em.r{color:#B9AFE0;background:rgba(139,127,168,.14);border:1px solid rgba(139,127,168,.5)}
+.rp-kw{display:block;margin:8px 0 10px;font-size:12.5px;letter-spacing:.16em;color:rgba(176,141,87,.95)}
+.rp-txt{font-size:14px;color:rgba(233,245,239,.9);line-height:1.95}
+.rp-tip{margin-top:10px;font-size:11.5px;color:rgba(139,127,168,.9);letter-spacing:.08em}
+.read-panel.summary{
+  grid-template-columns:1fr;border:1px solid rgba(176,141,87,.6);
+  box-shadow:0 0 34px rgba(176,141,87,.18), 0 14px 34px rgba(0,0,0,.4);
+}
+.read-panel.summary h4{color:var(--copper);letter-spacing:.28em;text-align:center;margin-bottom:6px}
+.summary p{font-size:14px;color:rgba(233,245,239,.92);line-height:2;margin-bottom:8px}
+.summary .gline{font-family:var(--script);font-size:16px;color:var(--glow);letter-spacing:.16em;text-align:center;margin-top:10px}
+.read-actions{text-align:center;margin-top:40px;display:flex;justify-content:center;gap:18px;flex-wrap:wrap}
+
+/* ==========================================================================
+   沉水书架 · 22 大阿卡纳牌义库
+   ========================================================================== */
+#library{padding:100px 20px 80px}
+.lib-tools{display:flex;justify-content:center;margin:-20px 0 40px}
+#libSearch{
+  width:min(420px,90%);padding:11px 20px;border-radius:30px;font-size:14px;
+  background:rgba(6,35,31,.7);border:1px solid var(--line);color:var(--moonc);outline:none;transition:.3s;
+}
+#libSearch:focus{border-color:var(--glow);box-shadow:0 0 0 3px rgba(95,242,192,.1)}
+#libSearch::placeholder{color:rgba(139,127,168,.7)}
+.shelf{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));
+  gap:22px;max-width:1120px;margin:0 auto;
+}
+.shelf-card{
+  position:relative;border:none;background:transparent;padding:0;color:inherit;
+  transform:translateY(14px) scale(.97);filter:blur(2.2px) brightness(.72); /* 沉在水下 */
+  transition:transform .5s cubic-bezier(.2,.75,.3,1.2), filter .5s ease;
+}
+.shelf-card .sc-in{
+  position:relative;border-radius:11px;overflow:hidden;
+  box-shadow:0 18px 34px rgba(0,0,0,.5);
+}
+.shelf-card .sc-in svg{display:block;width:100%;height:auto}
+.shelf-card::after{ /* 水下倒影光斑 */
+  content:"";position:absolute;left:12%;right:12%;bottom:-14px;height:14px;border-radius:50%;
+  background:radial-gradient(ellipse, rgba(95,242,192,.28), transparent 70%);
+  transition:.5s;pointer-events:none;
+}
+.shelf-card:hover,.shelf-card:focus-visible{
+  transform:translateY(-12px) scale(1.02); /* 浮起 · 去模糊 */
+  filter:blur(0) brightness(1);outline:none;
+}
+.shelf-card:hover::after,.shelf-card:focus-visible::after{bottom:-22px;height:22px;background:radial-gradient(ellipse, rgba(95,242,192,.5), transparent 70%)}
+.sc-name{
+  display:flex;justify-content:space-between;align-items:baseline;
+  position:absolute;left:0;right:0;bottom:0;padding:20px 12px 9px;
+  background:linear-gradient(180deg,transparent, rgba(4,26,22,.94));
+  font-family:var(--serif);letter-spacing:.18em;font-size:15px;text-align:left;
+}
+.sc-name i{font-style:normal;font-size:10.5px;color:var(--copper);letter-spacing:.1em}
+.shelf-card .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:.4s;pointer-events:none}
+.shelf-card:hover .hint{opacity:1}
+.hint span{font-size:11px;letter-spacing:.24em;color:var(--moonc);background:rgba(4,26,22,.8);border:1px solid var(--line2);border-radius:16px;padding:4px 12px}
+
+/* 牌义详情浮层 */
+.modal-mask{
+  position:fixed;inset:0;z-index:200;background:rgba(3,18,15,.78);backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;pointer-events:none;transition:opacity .35s ease;
+}
+.modal-mask.open{opacity:1;pointer-events:auto}
+.modal{
+  position:relative;width:min(760px,100%);max-height:88vh;overflow:auto;
+  display:grid;grid-template-columns:236px 1fr;gap:26px;
+  background:linear-gradient(165deg, rgba(14,74,64,.96), rgba(6,35,31,.98));
+  border:1px solid var(--line2);border-radius:20px;padding:28px;
+  box-shadow:0 30px 80px rgba(0,0,0,.6), 0 0 50px rgba(95,242,192,.1);
+  transform:translateY(26px) scale(.96);transition:transform .4s cubic-bezier(.2,.8,.3,1.15);
+}
+.modal-mask.open .modal{transform:none}
+.modal .m-art{border-radius:12px;overflow:hidden;border:1px solid var(--line2);align-self:start}
+.modal .m-art svg{display:block;width:100%;height:auto}
+.modal h3{font-family:var(--serif);font-size:26px;letter-spacing:.2em;font-weight:600}
+.modal .m-en{font-size:12px;letter-spacing:.26em;color:var(--copper);margin:4px 0 14px}
+.m-kw{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.m-kw span{font-size:12px;letter-spacing:.12em;color:var(--glow);border:1px solid rgba(95,242,192,.4);border-radius:16px;padding:3px 12px;background:rgba(95,242,192,.08)}
+.m-block{margin-bottom:14px;padding:12px 16px;border-radius:12px;background:rgba(6,35,31,.6);border:1px solid var(--line)}
+.m-block b{display:block;font-size:12px;letter-spacing:.3em;color:var(--copper);margin-bottom:5px}
+.m-block p{font-size:13.5px;line-height:1.9;color:rgba(233,245,239,.92)}
+#mClose{
+  position:absolute;top:14px;right:16px;width:36px;height:36px;border-radius:50%;
+  background:transparent;border:1px solid var(--line2);color:var(--moonc);font-size:16px;transition:.3s;
+}
+#mClose:hover{border-color:var(--glow);color:var(--glow);transform:rotate(90deg)}
+
+/* ==========================================================================
+   页脚 · 月相时间轴
+   ========================================================================== */
+footer{position:relative;padding:80px 20px 46px;border-top:1px solid rgba(176,141,87,.25)}
+.moonline{display:flex;justify-content:center;align-items:flex-end;gap:clamp(10px,3vw,34px);flex-wrap:wrap;margin-bottom:40px}
+.moonline .ph{display:flex;flex-direction:column;align-items:center;gap:8px}
+.moonline .mi{width:38px;height:38px;opacity:.9}
+.moonline .ph span{font-size:11px;letter-spacing:.24em;color:rgba(139,127,168,.95)}
+.moonline .ph.full span{color:var(--copper)}
+.foot-brand{text-align:center;font-family:var(--serif);letter-spacing:.34em;font-size:17px;color:var(--moonc)}
+.foot-line{text-align:center;margin-top:10px;font-size:12.5px;color:rgba(233,245,239,.55);letter-spacing:.12em}
+.foot-script{text-align:center;margin-top:14px;font-family:var(--script);color:rgba(95,242,192,.75);font-size:15px;letter-spacing:.2em}
+
+/* ==========================================================================
+   动效降级 · prefers-reduced-motion 与手动跳过
+   ========================================================================== */
+body.skip-anim *,body.skip-anim *::before,body.skip-anim *::after{
+  animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;
+}
+body.skip-anim .astro .spin{animation:none}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  .astro .spin,.hero-inner .halo{animation:none !important}
+  .sec{opacity:1;transform:none}
+  .beam,.caustics,.specks{display:none}
+}
+
+/* ==========================================================================
+   响应式 · 1200 / 768 / 375
+   ========================================================================== */
+@media (max-width:1199px){
+  :root{--cw:94px}
+  .ring-wrap{height:560px;margin-bottom:172px}
+  .astro{width:480px;height:480px}
+}
+@media (max-width:767px){
+  :root{--cw:82px}
+  .ring-wrap{height:480px;margin-bottom:156px}
+  .astro{width:400px;height:400px}
+  .waterband{height:150px}
+  .moon{width:88px;height:88px;left:70%}
+  .beam{top:calc(11% + 86px)}
+  .hud-nav{display:none}
+  .spread-row{grid-template-columns:1fr;gap:12px}
+  .spread-card p{display:none}
+  .modal{grid-template-columns:1fr;width:min(420px,100%)}
+  .modal .m-art{width:180px;margin:0 auto}
+  .g-tip{display:none}
+}
+@media (max-width:479px){
+  :root{--cw:74px}
+  .ring-wrap{height:420px;margin-bottom:142px}
+  .astro{width:340px;height:340px}
+  .waterband{height:138px}
+  .deck-wrap{bottom:16px}
+  .deck-hint{font-size:11px;letter-spacing:.14em}
+  .stage-note{font-size:14px;width:78%}
+  .read-panel{grid-template-columns:64px 1fr;padding:18px 16px}
+  .rp-art{width:64px}
+  .hud{padding:10px 14px}
+  #hudPhase{min-width:auto;font-size:11px}
+  .moonline{gap:12px}
+  .moonline .mi{width:30px;height:30px}
+}
+noscript{display:block;text-align:center;padding:20px;color:var(--copper);letter-spacing:.2em}
+</style>
+</head>
+<body>
+
+<!-- SVG 滤镜定义区：水波扭曲（feTurbulence + feDisplacementMap） -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="fWater" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.052" numOctaves="2" seed="7" result="n">
+        <animate attributeName="baseFrequency" dur="16s" values="0.012 0.052;0.017 0.064;0.012 0.052" repeatCount="indefinite"></animate>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="16" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="fWaterSoft" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02 0.07" numOctaves="2" seed="11" result="n2">
+        <animate attributeName="baseFrequency" dur="22s" values="0.02 0.07;0.026 0.086;0.02 0.07" repeatCount="indefinite"></animate>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="n2" scale="10" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<!-- 顶部 HUD：月相进度 -->
+<header class="hud">
+  <a class="hud-brand" href="#hero" aria-label="回到水镜秘境顶部">
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(176,141,87,.8)" stroke-width="1.6"/>
+      <path d="M30 12A13 13 0 1 0 30 36 10 10 0 1 1 30 12Z" fill="#E9F5EF" opacity=".92"/>
+    </svg>
+    水镜秘境
+  </a>
+  <div class="hud-right">
+    <nav class="hud-nav" aria-label="站内导航">
+      <a href="#stage">星阵仪式</a>
+      <a href="#reading">月之卷</a>
+      <a href="#library">牌义库</a>
+    </nav>
+    <span id="hudPhase">月相 · 新月</span>
+    <svg class="hud-moon" viewBox="0 0 48 48" aria-hidden="true">
+      <circle class="mbody" cx="24" cy="24" r="13"/>
+      <circle class="mshade" id="hudShade" cx="24" cy="24" r="13"/>
+      <circle class="mring" cx="24" cy="24" r="13"/>
+    </svg>
+  </div>
+</header>
+
+<!-- ==========================================================================
+     HERO · 幽绿深海开场
+     ========================================================================== -->
+<section id="hero">
+  <div class="sky" aria-hidden="true">
+    <div class="stars"></div>
+    <div class="moon"></div>
+    <div class="beam"></div>
+  </div>
+
+  <div class="hero-inner">
+    <div class="halo" aria-hidden="true"></div>
+    <p class="eyebrow">于幽潭之上 · 问月一声</p>
+    <h1>水镜秘境<span class="thin"> · </span>月影占卜</h1>
+    <p class="tagline">塔罗牌自水下倒影升起 —— 涟漪为引，月光为答</p>
+  </div>
+
+  <div class="altar-form">
+    <label class="q-label" for="qInput">今夜，你想问什么？</label>
+    <div class="q-row">
+      <input id="qInput" type="text" maxlength="40" autocomplete="off"
+             placeholder="例如：我该不该接受那份新的工作机会？（留空则问「此刻我最需要知道什么」）">
+    </div>
+    <div class="theme-row" id="themeRow" role="group" aria-label="选择问题领域">
+      <span class="theme-cap">问题领域</span>
+      <button class="chip" data-t="love" type="button">爱情</button>
+      <button class="chip" data-t="career" type="button">事业</button>
+      <button class="chip" data-t="wealth" type="button">财运</button>
+      <button class="chip" data-t="study" type="button">学业</button>
+      <button class="chip on" data-t="self" type="button">自我</button>
+    </div>
+    <div class="spread-row" id="spreadRow" role="group" aria-label="选择牌阵">
+      <button class="spread-card" data-n="1" type="button">
+        <span class="sp-top">
+          <svg class="sp-fig" viewBox="0 0 60 60" aria-hidden="true">
+            <circle class="sr" cx="30" cy="30" r="20"/><circle class="sd" cx="30" cy="10" r="3.4"/>
+          </svg>
+          <span><strong>单张指引</strong><em>此刻 · 一问一牌</em></span>
+        </span>
+        <p>只问一件事，抽一张牌。适合每日能量、是否题或「此刻我最需要知道什么」。</p>
+      </button>
+      <button class="spread-card on" data-n="3" type="button">
+        <span class="sp-top">
+          <svg class="sp-fig" viewBox="0 0 60 60" aria-hidden="true">
+            <circle class="sr" cx="30" cy="30" r="20"/>
+            <circle class="sd" cx="30" cy="10" r="3.4"/><circle class="sd" cx="47.3" cy="40" r="3.4"/><circle class="sd" cx="12.7" cy="40" r="3.4"/>
+          </svg>
+          <span><strong>三张时间流</strong><em>过去 · 现在 · 未来</em></span>
+        </span>
+        <p>看清来路、立足当下、预见走向，也可读作处境—行动—结果。</p>
+      </button>
+      <button class="spread-card" data-n="4" type="button">
+        <span class="sp-top">
+          <svg class="sp-fig" viewBox="0 0 60 60" aria-hidden="true">
+            <circle class="sr" cx="30" cy="30" r="20"/>
+            <circle class="sd" cx="30" cy="10" r="3.4"/><circle class="sd" cx="50" cy="30" r="3.4"/><circle class="sd" cx="30" cy="50" r="3.4"/><circle class="sd" cx="10" cy="30" r="3.4"/>
+          </svg>
+          <span><strong>四方之环</strong><em>处境 · 行动 · 阻碍 · 指引</em></span>
+        </span>
+        <p>四张牌构成一轮完整循环，适合想看清全局的重要决策。</p>
+      </button>
+    </div>
+    <div style="text-align:center">
+      <button id="btnStart" class="btn gold" type="button">开启月影仪式</button>
+    </div>
+    <p class="form-note">卡牌将自水镜倒影中升起 · 正逆位由月光随机判定</p>
+  </div>
+
+  <!-- 水镜水面：月影倒影经 feTurbulence+feDisplacementMap 扭曲 -->
+  <div class="water" id="heroWater" aria-hidden="true">
+    <div class="caustics"></div>
+    <svg class="refl" viewBox="0 0 1200 240" preserveAspectRatio="none">
+      <g filter="url(#fWater)">
+        <ellipse cx="768" cy="36" rx="86" ry="18" fill="rgba(233,245,239,.30)"/>
+        <ellipse cx="768" cy="70" rx="62" ry="13" fill="rgba(233,245,239,.16)"/>
+        <ellipse cx="768" cy="106" rx="44" ry="10" fill="rgba(233,245,239,.10)"/>
+        <path d="M180 60h220M220 104h180M260 146h120M880 150h200M920 192h140"
+              stroke="rgba(95,242,192,.28)" stroke-width="2" fill="none"/>
+        <path d="M120 190q10-8 20 0t20 0t20 0" stroke="rgba(139,127,168,.4)" stroke-width="2" fill="none"/>
+      </g>
+    </svg>
+    <div class="specks">
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+  </div>
+</section>
+
+<noscript>此月影仪式需要启用 JavaScript 才能抽牌与解读。</noscript>
+
+<!-- ==========================================================================
+     主舞台 · 圆形星盘牌阵
+     ========================================================================== -->
+<section id="stage" class="sec" aria-label="圆形星盘牌阵主舞台">
+  <div class="sec-head">
+    <span class="sec-eyebrow">Circle of the Astrolabe</span>
+    <h2>圆盘星阵</h2>
+    <p class="sec-sub">阵位沿星盘圆环排布 · 点击水下牌堆，塔罗将自倒影中模糊升起、破水翻转、落入星位。</p>
+  </div>
+
+  <div class="stage-head">
+    <span class="spread-tag" id="stageSpread">三张时间流</span>
+    <span class="q-recap" id="stageQuestion">尚未设问 —— 月亮在等你的问题</span>
+    <button id="btnSkip" type="button">跳过动画</button>
+  </div>
+  <div class="dots" id="dots" aria-hidden="true"></div>
+
+  <div class="ring-wrap" id="ringWrap">
+    <svg class="astro" viewBox="0 0 560 560" aria-hidden="true">
+      <g class="spin">
+        <circle class="a1" cx="280" cy="280" r="272"/>
+        <circle class="a2" cx="280" cy="280" r="248" stroke-dasharray="2 10"/>
+        <circle class="a1" cx="280" cy="280" r="204" stroke-dasharray="46 16"/>
+        <g id="astroMarks"></g>
+      </g>
+      <circle class="a3" cx="280" cy="280" r="128"/>
+    </svg>
+    <p class="stage-note" id="stageNote">于上方写下你的问题，<br>选择牌阵，再开启这场月影仪式。</p>
+    <!-- 阵位由 JS 沿圆环排布 -->
+  </div>
+
+  <div class="waterband" id="stageWater" aria-hidden="false">
+    <div class="deck-wrap">
+      <button id="deck" class="deck empty" type="button" aria-label="抽取一张塔罗牌">
+        <span class="dl dl3"></span>
+        <span class="dl dl2"></span>
+        <span class="dl dl1">
+          <svg class="emblem" viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M30 8A15 15 0 1 0 30 40 11.5 11.5 0 1 1 30 8Z" fill="rgba(233,245,239,.85)"/>
+          </svg>
+        </span>
+      </button>
+      <p class="deck-hint" id="deckHint">牌堆沉眠于水下 · 待你开启仪式</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     月之卷 · 解读卷轴
+     ========================================================================== -->
+<section id="reading" class="sec">
+  <div class="sec-head">
+    <span class="sec-eyebrow">Moonlight Scroll</span>
+    <h2>月之卷 · 逐位解读</h2>
+    <p class="sec-sub">牌已落定，卷轴自水中升起——月光将逐段照亮每一段低语，月相亦随之由亏转盈。</p>
+  </div>
+  <div class="scroll-wrap">
+    <div class="rod" aria-hidden="true"></div>
+    <div class="read-list" id="readList"></div>
+    <div class="rod" aria-hidden="true"></div>
+  </div>
+  <div class="read-actions" id="readActions" hidden>
+    <button id="btnAgain" class="btn ghost" type="button">重新洗牌 · 再来一次</button>
+    <button id="btnNew" class="btn gold" type="button">换一个问题</button>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     沉水书架 · 牌义库
+     ========================================================================== -->
+<section id="library" class="sec">
+  <div class="sec-head">
+    <span class="sec-eyebrow">Sunken Arcana Shelf</span>
+    <h2>沉水书架 · 大阿卡纳二十二卷</h2>
+    <p class="sec-sub">牌卷沉于水底，悬停即浮起去朦——点击任意一卷，读取它的正位与逆位低语。</p>
+  </div>
+  <div class="lib-tools">
+    <input id="libSearch" type="text" placeholder="检索牌名或关键词，如：月亮 / 希望 / 转机">
+  </div>
+  <div class="shelf" id="shelf"></div>
+</section>
+
+<!-- 牌义详情浮层 -->
+<div class="modal-mask" id="modalMask" role="dialog" aria-modal="true" aria-label="牌义详情">
+  <div class="modal">
+    <button id="mClose" type="button" aria-label="关闭详情">✕</button>
+    <div class="m-art" id="mArt"></div>
+    <div class="m-body">
+      <h3 id="mName">牌名</h3>
+      <p class="m-en" id="mEn"></p>
+      <div class="m-kw" id="mKw"></div>
+      <div class="m-block"><b>正 位</b><p id="mUp"></p></div>
+      <div class="m-block"><b>逆 位</b><p id="mRev"></p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     页脚 · 月相时间轴
+     ========================================================================== -->
+<footer>
+  <div class="moonline" id="moonline" aria-label="月相时间轴：由新月至残月"></div>
+  <p class="foot-brand">水镜秘境 · 月影占卜</p>
+  <p class="foot-line">灵感与牌面仅供参照，真正的答案始终在你手中。</p>
+  <p class="foot-script">The mirror is still; the moon does the talking.</p>
+</footer>
+
+<script>
+/* ==========================================================================
+   水镜秘境 · 脚本
+   结构：工具 → SVG 生成器 → 22 大阿卡纳数据 → 牌阵/抽牌/解读/月相 → 牌义库 → 页脚
+   ========================================================================== */
+'use strict';
+const $  = (s, p) => (p || document).querySelector(s);
+const $$ = (s, p) => Array.from((p || document).querySelectorAll(s));
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function esc(str){  /* 用户输入插入 innerHTML 前转义 */
+  return String(str).replace(/[&<>"']/g, (ch) => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]
+  ));
+}
+
+/* ---------- SVG 生成器（线稿风） ---------- */
+function P(cx, cy, r, deg){           // deg=0 指向正上方，顺时针
+  const a = (deg - 90) * Math.PI / 180;
+  return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+}
+function fmt(v){ return (Math.round(v * 10) / 10).toString(); }
+function rays(cx, cy, r1, r2, n, cls, deg0){
+  let d = '';
+  for (let k = 0; k < n; k++){
+    const a = (deg0 || 0) + k * 360 / n;
+    const p1 = P(cx, cy, r1, a), p2 = P(cx, cy, r2, a);
+    d += 'M' + fmt(p1[0]) + ' ' + fmt(p1[1]) + 'L' + fmt(p2[0]) + ' ' + fmt(p2[1]);
+  }
+  return '<path' + (cls ? ' class="' + cls + '"' : '') + ' d="' + d + '"/>';
+}
+function star(cx, cy, r, ir, n, cls){
+  let d = '';
+  for (let k = 0; k < n; k++){
+    const a = k * 360 / n;
+    const p1 = P(cx, cy, r, a), p2 = P(cx, cy, ir, a + 180 / n);
+    d += (k ? 'L' : 'M') + fmt(p1[0]) + ' ' + fmt(p1[1]) + 'L' + fmt(p2[0]) + ' ' + fmt(p2[1]);
+  }
+  return '<path' + (cls ? ' class="' + cls + '"' : '') + ' d="' + d + 'Z"/>';
+}
+function crescent(cx, cy, r, cls){
+  return '<path' + (cls ? ' class="' + cls + '"' : '') +
+    ' d="M' + cx + ' ' + (cy - r) + 'A' + r + ' ' + r + ' 0 1 0 ' + cx + ' ' + (cy + r) +
+    'A' + fmt(r * 0.76) + ' ' + fmt(r * 0.76) + ' 0 1 1 ' + cx + ' ' + (cy - r) + 'Z"/>';
+}
+function ringEl(cx, cy, r, cls, extra){
+  return '<circle' + (cls ? ' class="' + cls + '"' : '') + ' cx="' + cx + '" cy="' + cy + '" r="' + r + '"' + (extra || '') + '/>';
+}
+/* 藤蔓包边（牌框通用） */
+const VINE =
+  '<rect class="vb" x="9" y="9" width="82" height="142" rx="4"/>' +
+  '<path class="vv" d="M9 26q0-17 17-17M91 26q0-17-17-17M9 134q0 17 17 17M91 134q0 17-17 17"/>' +
+  '<circle class="vd" cx="9" cy="80" r="1.5"/><circle class="vd" cx="91" cy="80" r="1.5"/>';
+function faceSVG(card, rev){
+  return '<svg class="cface" viewBox="0 0 100 160" role="img" aria-label="' + card.name + ' 牌面">' +
+    '<rect class="cb" x="3" y="3" width="94" height="154" rx="7"/>' + VINE +
+    '<text class="tnum" x="50" y="26">' + card.num + '</text>' +
+    '<path class="tdiv" d="M41 31h18"/>' +
+    '<g transform="' + (rev ? 'rotate(180 50 80)' : '') + '">' + card.art + '</g>' +
+    '<text class="tname" x="50" y="141">' + card.name + '</text>' +
+    '<text class="ten" x="50" y="151">' + card.en + '</text>' +
+  '</svg>';
+}
+const BACK_ART =
+  '<svg class="cface" viewBox="0 0 100 160" aria-hidden="true">' +
+  '<rect class="cb" x="3" y="3" width="94" height="154" rx="7"/>' + VINE +
+  ringEl(50, 80, 30, '', 'stroke-dasharray="2 7"') +
+  ringEl(50, 80, 24) +
+  rays(50, 80, 33, 38, 12, 'au') +
+  crescent(50, 80, 13) +
+  '<path d="M28 128c5-4 10 4 15 0s10 4 15 0" opacity=".7"/>' +
+  '<circle class="fl" cx="50" cy="34" r="1.6"/><circle class="fl" cx="34" cy="42" r="1.2"/><circle class="fl" cx="66" cy="42" r="1.2"/>' +
+  '</svg>';
+
+/* ---------- 22 张大阿卡纳 · 牌义与牌面（第六节素材） ---------- */
+const CARDS = [
+{num:'0', name:'愚者', en:'The Fool', kw:['新的开始','纯真','冒险','自由'],
+ up:'新的开始，纯真地踏上旅程', rev:'鲁莽行事，缺乏计划',
+ art: ringEl(68,26,9,'au') + rays(68,26,12,17,8,'au') +
+  '<path class="dash" d="M8 102c16-2 24-14 36-20s28-4 46-16"/>' +
+  ringEl(30,62,5) +
+  '<path d="M30 57c-1-6 4-9 8-8M30 57c2-5 8-5 10-1M30 57c-5-3-9 0-9 5"/>' +
+  '<path class="au" d="M22 108c10 4 26 4 36 0"/>'},
+{num:'I', name:'魔术师', en:'The Magician', kw:['资源齐备','心想事成','行动力','显化'],
+ up:'资源齐备，心想事成', rev:'空有才华，言辞操纵',
+ art: ringEl(41,30,9) + ringEl(59,30,9) +
+  '<path d="M50 48v30"/><path d="M50 48l14-9"/>' + star(67,35,6.5,2.8,4,'au') +
+  '<path class="au" d="M34 88h32"/><path class="dash" d="M42 88c-4-6 4-10 0-16"/>'},
+{num:'II', name:'女祭司', en:'The High Priestess', kw:['直觉','静观其变','潜意识','神秘'],
+ up:'倾听直觉，静观其变', rev:'忽视内心，秘密压抑',
+ art: '<path d="M22 102V36h11v66M78 102V36H67v66"/><path d="M33 36q17-13 34 0"/>' +
+  crescent(50,88,9) + ringEl(50,58,9) + '<path d="M45 58h10M50 53v10"/>'},
+{num:'III', name:'皇后', en:'The Empress', kw:['丰饶','孕育','感官','创造'],
+ up:'丰饶孕育，感官与创造', rev:'过度付出，忽视自我',
+ art: '<path class="au" d="M36 24l7 8 7-12 7 12 7-8"/>' +
+  ringEl(50,44,8) + '<path d="M50 52v14M44 60h12"/>' +
+  '<path d="M38 102V72M50 102V66M62 102V74"/>' +
+  '<path d="M38 78l-8-5M38 70l-8-5M62 80l8-5M62 72l8-5"/>'},
+{num:'IV', name:'皇帝', en:'The Emperor', kw:['秩序','稳固','权威','担当'],
+ up:'秩序稳固，权威与担当', rev:'控制欲强，僵化专断',
+ art: ringEl(50,26,7,'au') + '<path d="M50 33v10M45 39h10"/>' +
+  '<rect x="30" y="50" width="40" height="46" rx="6"/>' +
+  '<path d="M40 62c-7-1-9-10-2-12M60 62c7-1 9-10 2-12"/><path d="M50 68v18"/>' +
+  '<path class="au" d="M34 102h32"/>'},
+{num:'V', name:'教皇', en:'The Hierophant', kw:['传统','指引','正统','智慧'],
+ up:'传统指引，寻求正统智慧', rev:'墨守成规，质疑权威',
+ art: '<path d="M38 46q12-20 24 0"/><path d="M40 36q10-12 20 0"/><path d="M50 20v8M46 24h8"/>' +
+  '<path d="M40 46v12h20V46"/>' +
+  '<path d="M42 62l16 22M58 62L42 84"/>' + ringEl(41,59,4) + ringEl(59,59,4) +
+  '<path class="au" d="M24 98V52M76 98V52M20 102h60"/>'},
+{num:'VI', name:'恋人', en:'The Lovers', kw:['联结','选择','契合','真心'],
+ up:'真心联结，价值契合的选择', rev:'关系失衡，价值冲突',
+ art: ringEl(43,66,12) + ringEl(57,66,12) +
+  '<path class="au" d="M50 28c-3-6-12-6-12 1 0 5 7 9 12 13 5-4 12-8 12-13 0-7-9-7-12-1z"/>' +
+  '<path d="M20 100q30-10 60 0"/>'},
+{num:'VII', name:'战车', en:'The Chariot', kw:['意志','坚定','胜利','前行'],
+ up:'意志坚定，势如破竹', rev:'失控内耗，方向摇摆',
+ art: '<path d="M28 52q22-16 44 0"/>' + star(40,46,3.5,1.5,4) + star(52,42,4,1.7,4,'au') + star(64,46,3.5,1.5,4) +
+  '<path d="M30 66h40"/>' +
+  ringEl(38,84,11) + ringEl(62,84,11) + rays(38,84,2,11,6) + rays(62,84,2,11,6) +
+  '<path class="au" d="M32 72c2 4 6 6 10 6M68 72c-2 4-6 6-10 6"/>'},
+{num:'VIII', name:'力量', en:'Strength', kw:['温柔','勇气','以柔克刚','驯服'],
+ up:'以柔克刚，温柔而坚定', rev:'自我怀疑，被欲望牵制',
+ art: ringEl(44,24,5) + ringEl(54,24,5) +
+  ringEl(50,62,15) + rays(50,62,17,24,12) +
+  '<path d="M44 58q2-3 4 0M52 58q2-3 4 0"/><path d="M47 66h6l-3 5z"/><path d="M44 74q6 5 12 0"/>' +
+  '<path class="au" d="M36 82q14 10 28 0"/>'},
+{num:'IX', name:'隐士', en:'The Hermit', kw:['内省','独处','寻光','智慧'],
+ up:'独处内省，寻找内在之光', rev:'孤立封闭，逃避现实',
+ art: '<path d="M42 44h16l6 12v16l-6 12H42l-6-12V56z"/>' +
+  '<path d="M50 52l8 14H42zM50 80l-8-14h16z"/>' + '<path d="M46 44q4-8 8 0"/>' +
+  '<path class="au" d="M74 42v54"/>' + ringEl(74,37,3.5,'au') +
+  '<path class="dash" d="M20 102h60"/>'},
+{num:'X', name:'命运之轮', en:'Wheel of Fortune', kw:['转机','命运','周期','顺势'],
+ up:'转机降临，顺势而起', rev:'时运反复，抗拒变化',
+ art: ringEl(50,60,28) + ringEl(50,60,7) + rays(50,60,7,28,8) + rays(50,60,28,33,16,'au') +
+  '<path class="au" d="M50 22l5 8h-10z"/>' + ringEl(16,60,3,'au') + ringEl(84,60,3,'au')},
+{num:'XI', name:'正义', en:'Justice', kw:['公正','因果','抉择','平衡'],
+ up:'因果分明，公正抉择', rev:'偏颇逃避，责任未清',
+ art: ringEl(50,26,3) + '<path d="M50 29v60"/><path d="M42 38h16"/>' +
+  '<path d="M28 46h44"/>' +
+  '<path d="M28 46l-7 14M28 46l7 14M72 46l-7 14M72 46l7 14"/>' +
+  '<path d="M17 60a11 7 0 0 0 22 0M61 60a11 7 0 0 0 22 0"/>' +
+  '<path class="au" d="M40 96h20M44 92h12"/>'},
+{num:'XII', name:'倒吊人', en:'The Hanged Man', kw:['换位','暂停','臣服','洞见'],
+ up:'换个视角，暂停即智慧', rev:'无谓牺牲，停滞僵持',
+ art: '<path d="M24 32h52M30 32v6M70 32v6"/><path d="M50 38v10"/>' +
+  ringEl(50,60,10,'au','stroke-dasharray="3 4"') + ringEl(50,60,5.5) +
+  '<path d="M50 66v10"/><path d="M50 76l-9 9M50 76l11 5"/>'},
+{num:'XIII', name:'死神', en:'Death', kw:['终结','新生','放手','蜕变'],
+ up:'结束即新生，彻底放手', rev:'拒绝告别，勉强维持',
+ art: '<ellipse cx="50" cy="37" rx="5" ry="8"/>' +
+  '<ellipse cx="50" cy="37" rx="5" ry="8" transform="rotate(72 50 46)"/>' +
+  '<ellipse cx="50" cy="37" rx="5" ry="8" transform="rotate(144 50 46)"/>' +
+  '<ellipse cx="50" cy="37" rx="5" ry="8" transform="rotate(216 50 46)"/>' +
+  '<ellipse cx="50" cy="37" rx="5" ry="8" transform="rotate(288 50 46)"/>' +
+  ringEl(50,46,3,'au') +
+  '<path d="M50 54v34"/><path d="M50 68c-6-1-9-5-9-9 5 0 8 3 9 9z"/>' +
+  '<path class="au" d="M28 58q22-22 44-6"/><path d="M72 52l-5 34"/>'},
+{num:'XIV', name:'节制', en:'Temperance', kw:['平衡','调和','耐心','流动'],
+ up:'平衡调和，张弛有度', rev:'失衡极端，顾此失彼',
+ art: ringEl(50,24,8) + '<path d="M50 19l5 8h-10z"/>' +
+  '<path d="M60 36h18l-3 10h-12z"/><path d="M24 78h20l-3 12H27z"/>' +
+  '<path class="dash" d="M62 48C52 58 42 64 36 76"/>' +
+  '<path class="au" d="M32 100h14M58 100h12"/>'},
+{num:'XV', name:'恶魔', en:'The Devil', kw:['执念','诱惑','束缚','直面'],
+ up:'直面执念与诱惑', rev:'挣脱束缚，戒除依赖',
+ art: ringEl(50,58,26) +
+  '<path d="M50 78L38.2 41.8L69 64.2L31 64.2L61.8 41.8Z"/>' +
+  '<path d="M34 34q-4-10 4-14M66 34q4-10-4-14"/>' +
+  ringEl(38,96,4) + ringEl(50,99,4) + ringEl(62,96,4)},
+{num:'XVI', name:'高塔', en:'The Tower', kw:['骤变','破局','崩塌','觉醒'],
+ up:'骤变破局，旧秩序崩塌', rev:'余震未平，恐惧延宕',
+ art: '<path d="M38 100V50h24v50"/>' +
+  '<path d="M36 50v-8h7v8M46.5 50v-8h7v8M57 50v-8h7v8"/>' +
+  '<path class="au" d="M40 36l5-8 5 6 5-10 5 10 5-6 5 8z"/>' +
+  '<path class="lf" d="M62 14L52 30l7 3-9 15"/>' +
+  '<circle class="fl" cx="28" cy="70" r="1.8"/><circle class="fl" cx="72" cy="84" r="1.8"/>' +
+  '<path d="M46 100v-12h8v12"/>'},
+{num:'XVII', name:'星星', en:'The Star', kw:['希望','疗愈','愿景','灵感'],
+ up:'希望疗愈，愿景重现', rev:'失去信心，理想蒙尘',
+ art: star(46,36,15,6,8) +
+  star(20,26,3.5,1.4,4) + star(74,22,3.5,1.4,4) + star(84,44,3.5,1.4,4) +
+  star(24,48,3.5,1.4,4) + star(70,60,3.5,1.4,4) + star(30,62,3.5,1.4,4) + star(62,14,3.5,1.4,4) +
+  '<path d="M40 76h14l3 12H37z"/>' +
+  '<path class="dash" d="M40 80c-8 4-12 9-12 15M46 82c-4 6-4 9-2 13"/>' +
+  '<path d="M18 102q8-6 16 0t16 0t16 0t16 0"/>'},
+{num:'XVIII', name:'月亮', en:'The Moon', kw:['潜意识','迷雾','梦境','不安'],
+ up:'潜意识浮现，直面迷雾', rev:'谎言散去，迷雾渐开',
+ art: crescent(52,40,16) +
+  '<path d="M42 36q3-3 6 0"/><path d="M43 46q4 3 8 0"/>' +
+  '<circle class="fl" cx="28" cy="22" r="1.5"/><circle class="fl" cx="22" cy="34" r="1.5"/><circle class="fl" cx="34" cy="12" r="1.5"/>' +
+  '<path d="M20 96V72h8v24M72 96V72h8v24"/><path d="M20 72l4-7 4 7M72 72l4-7 4 7"/>' +
+  '<path class="dash" d="M36 100c8-8 16 2 28-8"/>'},
+{num:'XIX', name:'太阳', en:'The Sun', kw:['光明','成功','喜悦','活力'],
+ up:'光明成功，喜悦坦荡', rev:'骄阳灼人，延迟的喜悦',
+ art: ringEl(50,38,13) + rays(50,38,16,24,8) + rays(50,38,16,21,8,'au',22.5) +
+  '<path d="M45 36q2-2 4 0M53 36q2-2 4 0M46 43q4 3 8 0"/>' +
+  ringEl(50,84,6) + rays(50,84,7,12,8,'au') +
+  '<path d="M22 102h56"/>'},
+{num:'XX', name:'审判', en:'Judgement', kw:['觉醒','召唤','重启','自省'],
+ up:'觉醒召唤，重启人生篇章', rev:'自我苛责，错失召唤',
+ art: '<path d="M28 40l26 8M28 56l26-8"/><path d="M54 44q6 4 0 8"/>' +
+  '<path class="au" d="M30 38v18M30 38h12v8H30M36 39v7M33 42h6"/>' +
+  ringEl(30,76,4) + ringEl(50,70,4) + ringEl(70,76,4) +
+  '<path d="M30 80v8M50 74v12M70 80v8"/>' +
+  '<path d="M14 98q9-8 18 0t18 0t18 0t18 0"/>'},
+{num:'XXI', name:'世界', en:'The World', kw:['圆满','完成','里程碑','整合'],
+ up:'圆满完成，抵达里程碑', rev:'未竟之业，临门遗憾',
+ art: '<ellipse cx="50" cy="62" rx="26" ry="34" stroke-dasharray="5 5"/>' +
+  ringEl(50,52,5) +
+  '<path d="M50 57c6 4 2 10-2 14s2 10 8 8"/><path d="M48 62l-9 8M52 66l10 4"/>' +
+  star(50,20,4,1.6,4,'au') +
+  ringEl(14,20,3,'au') + ringEl(86,20,3,'au') + ringEl(14,104,3,'au') + ringEl(86,104,3,'au')}
+];
+
+/* ---------- 牌阵 / 领域 / 解读文案 ---------- */
+const SPREADS = {
+  1:{ name:'单张指引',
+      positions:[{name:'此刻指引', tip:'回应你问题核心的那张牌'}] },
+  3:{ name:'三张时间流',
+      positions:[{name:'过去', tip:'影响当下的来路与根源'},
+                 {name:'现在', tip:'你正处的能量与处境'},
+                 {name:'未来', tip:'趋势走向与可能的答案'}] },
+  4:{ name:'四方之环',
+      positions:[{name:'处境', tip:'事情当下的真实面貌'},
+                 {name:'行动', tip:'你该采取的姿态'},
+                 {name:'阻碍', tip:'需要正视的课题'},
+                 {name:'指引', tip:'月光给出的方向'}] }
+};
+const THEMES = {
+  love:  {name:'爱情', lead:'在你关心的感情之事上'},
+  career:{name:'事业', lead:'在你挂心的事业课题上'},
+  wealth:{name:'财运', lead:'在你想探问的财运流向里'},
+  study: {name:'学业', lead:'在你投入的学业之中'},
+  self:  {name:'自我', lead:'在你与自己的关系里'}
+};
+const ADVICE_UP = {
+  love:'先让真心被看见，再谈关系的走向——此刻的坦诚比任何技巧都更接近答案。',
+  career:'把手里的资源用足，路已经比你想的更近一步，别在门槛前停太久。',
+  wealth:'流向正在转好，稳住节奏、别急着加码，丰盈需要一点耐心来沉淀。',
+  study:'你积累的每一分都会开始回声，保持节奏，让理解跑在焦虑前面。',
+  self:'允许自己重新开始，轻一点、真一点，路会自己慢慢亮起来。'
+};
+const ADVICE_REV = {
+  love:'先别急着定义对错，把失衡的部分摊开来看——调整有时比坚持更需要勇气。',
+  career:'停下来校准方向并不是浪费，僵持的内耗才是最贵的成本。',
+  wealth:'警惕惯性支出与侥幸心理，先收紧、再谈增长，落袋的安稳最真实。',
+  study:'方法比时长更重要，换个视角重看那些卡住的地方，迷雾会散得快一些。',
+  self:'别把话压进心里，找一个出口——倾诉、书写，或一场足够好的睡眠。'
+};
+const GUIDES = [
+  '今天不必回答所有问题，允许一件事悬而未决。',
+  '你等待的转机，藏在一件你一直拖延的小事里。',
+  '把今天过成「减法日」：退出一段消耗，拒绝一个勉强。',
+  '直觉比逻辑先抵达——那个第一反应，值得认真对待。',
+  '告别不是失去，是为新章节腾出位置。',
+  '慢一点也没关系，月亮也不是一夜圆的。',
+  '今天适合记录：写下三件让你感到丰盈的瞬间。',
+  '越是害怕改变，越说明那件事已经被写进了你的日程。'
+];
+const PHASE_LABELS = ['新月','蛾眉月','上弦月','盈凸月','满月'];
+const PHASE_OFFSET = [0, .55, 1.05, 1.5, 2.3];
+const NUM_CN = ['壹','贰','叁','肆'];
+
+/* ---------- 全局状态 ---------- */
+const state = {
+  theme:'self', question:'', spread:3,
+  deck:[], drawn:0, busy:false,
+  moonStep:0, moonTotal:1,
+  results:[]
+};
+
+/* ---------- 月相盈亏 ---------- */
+function setMoon(step, total){
+  state.moonStep = step; state.moonTotal = Math.max(1, total);
+  const p = Math.min(1, step / state.moonTotal);
+  const i = Math.min(4, Math.floor(p * 4.999));
+  const shade = $('#hudShade');
+  if (shade) shade.setAttribute('cx', fmt(24 - PHASE_OFFSET[i] * 13));
+  const label = $('#hudPhase');
+  if (label) label.textContent = '月相 · ' + PHASE_LABELS[i] + ' · ' + Math.round(p * 100) + '%';
+}
+function moonSVG(d){
+  return '<svg class="mi" viewBox="0 0 48 48" aria-hidden="true">' +
+    '<circle class="mbody" cx="24" cy="24" r="13"/>' +
+    '<circle class="mshade" cx="' + fmt(24 + d) + '" cy="24" r="13"/>' +
+    '<circle class="mring" cx="24" cy="24" r="13"/></svg>';
+}
+
+/* ---------- 涟漪 ---------- */
+function spawnRipple(x, y, container, cls){
+  if (REDUCED || document.body.classList.contains('skip-anim')) return;
+  for (let k = 0; k < 3; k++){
+    const r = document.createElement('span');
+    r.className = 'ripple' + (cls ? ' ' + cls : '');
+    r.style.left = x + 'px'; r.style.top = y + 'px';
+    r.style.animationDelay = (k * 0.18) + 's';
+    container.appendChild(r);
+    setTimeout(((el) => () => el.remove())(r), 2300 + k * 180);
+  }
+}
+
+/* ---------- 星盘装饰刻度 ---------- */
+function buildAstroMarks(){
+  const g = $('#astroMarks');
+  if (!g) return;
+  let html = '';
+  for (let k = 0; k < 12; k++){
+    const p = P(280, 280, 272, k * 30);
+    html += '<rect class="a4" x="-3" y="-3" width="6" height="6" transform="translate(' +
+            fmt(p[0]) + ' ' + fmt(p[1]) + ') rotate(' + (k * 30 + 45) + ')"/>';
+  }
+  g.innerHTML = html;
+}
+
+/* ---------- 阵位沿圆环排布 ---------- */
+function ringRadius(wrapW){
+  const cw = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cw')) || 94;
+  return Math.max(118, Math.min(wrapW * 0.5 - cw * 0.92, 252));
+}
+function layoutSlots(){
+  const wrap = $('#ringWrap');
+  if (!wrap) return;
+  const n = state.spread;
+  const w = wrap.clientWidth;
+  const R = ringRadius(w);
+  const cx = w / 2, cy = wrap.clientHeight / 2 - 14;
+  $$('.slot', wrap).forEach((el) => {
+    const i = parseInt(el.dataset.i, 10);
+    const a = -90 + i * 360 / n;
+    const x = cx + R * Math.cos(a * Math.PI / 180);
+    const y = cy + R * Math.sin(a * Math.PI / 180);
+    el.style.left = x + 'px';
+    el.style.top  = y + 'px';
+  });
+}
+function buildSlots(){
+  const wrap = $('#ringWrap');
+  if (!wrap) return;
+  $$('.slot', wrap).forEach((el) => el.remove());
+  const positions = SPREADS[state.spread].positions;
+  positions.forEach((pos, i) => {
+    const el = document.createElement('div');
+    el.className = 'slot';
+    el.dataset.i = i;
+    el.innerHTML =
+      '<div class="slot-ghost">' +
+        '<span class="g-no">' + (NUM_CN[i] || (i + 1)) + '</span>' +
+        '<span class="g-pos">' + pos.name + '</span>' +
+        '<span class="g-tip">' + pos.tip + '</span>' +
+      '</div>';
+    wrap.appendChild(el);
+  });
+  layoutSlots();
+  const dots = $('#dots');
+  if (dots){
+    dots.innerHTML = positions.map(() => '<span class="dot"></span>').join('');
+  }
+}
+
+/* ---------- 星阵仪式状态机 ---------- */
+function stagePrepare(showNote){
+  buildSlots();
+  state.drawn = 0;
+  state.results = [];
+  state.busy = false;
+  state.moonTotal = state.spread * 2 + 1;   /* 每次翻牌 +1，每段解读 +1，卷尾 +1 */
+  const deck = $('#deck');
+  deck.classList.add('empty');
+  deck.classList.remove('busy');
+  const note = $('#stageNote');
+  note.classList.toggle('off', !showNote);
+  const readList = $('#readList');
+  if (readList) readList.innerHTML = '';
+  const actions = $('#readActions');
+  if (actions) actions.hidden = true;
+  setMoon(0, state.moonTotal);
+  updateDeckHint();
+}
+function shuffleDeck(n){
+  const pool = CARDS.slice();
+  for (let i = pool.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  state.deck = pool.slice(0, n).map((c) => ({card: c, rev: Math.random() < 0.35}));
+}
+function updateDeckHint(){
+  const hint = $('#deckHint');
+  if (!hint) return;
+  if (state.drawn >= state.spread){
+    hint.textContent = '星阵已满 · 月之卷正在展开';
+  } else if (state.deck.length === 0){
+    hint.textContent = '牌堆沉眠于水下 · 待你开启仪式';
+  } else {
+    hint.textContent = '轻点牌堆 · 抽取第 ' + (state.drawn + 1) + ' / ' + state.spread + ' 张';
+  }
+}
+function durations(){
+  const skip = REDUCED || document.body.classList.contains('skip-anim');
+  return skip
+    ? {rise: 60, flip: 40, fly: 60, gap: 40}
+    : {rise: 1150, flip: 820, fly: 900, gap: 160};
+}
+
+/* 标志性瞬间：卡牌自水下倒影升起 → 破水涟漪 → 悬停翻转揭示 → 落入星位 */
+function drawCard(idx){
+  if (state.busy || idx >= state.spread) return;
+  state.busy = true;
+  const D = durations();
+  const item = state.deck[idx];
+  const slot = $('#ringWrap .slot[data-i="' + idx + '"]');
+  const stageWater = $('#stageWater');
+  const deck = $('#deck');
+  deck.classList.add('busy');
+
+  const wRect = $('#ringWrap').getBoundingClientRect();
+  const dRect = deck.getBoundingClientRect();
+  const cw = dRect.width;
+  const startX = dRect.left - wRect.left + (dRect.width - cw) / 2;
+  const startY = dRect.top - wRect.top - 34;
+
+  const fly = document.createElement('div');
+  fly.className = 'fly-card rise';
+  fly.innerHTML =
+    '<div class="lift"><div class="inner">' +
+      '<div class="face back">' + BACK_ART + '</div>' +
+      '<div class="face front">' + faceSVG(item.card, item.rev) + '<span class="flash"></span></div>' +
+    '</div></div>';
+  fly.style.left = startX + 'px';
+  fly.style.top  = startY + 'px';
+  $('#ringWrap').appendChild(fly);
+
+  /* 阶段一：自水下模糊升起，中段破水，涟漪扩散 */
+  setTimeout(() => {
+    spawnRipple(startX + cw / 2, startY + 26, $('#ringWrap'), '');
+  }, D.rise * 0.52);
+
+  /* 阶段二：悬停水中 + 浮动 */
+  setTimeout(() => {
+    fly.classList.remove('rise');
+    fly.classList.add('bob');
+  }, D.rise);
+
+  /* 阶段三：悬停空中翻转揭示（逆位牌面内容旋转 180°） */
+  setTimeout(() => {
+    fly.classList.remove('bob');
+    fly.classList.add('flip');
+    setMoon(state.moonStep + 1, state.moonTotal);
+  }, D.rise + D.gap);
+
+  /* 阶段四：飞入阵位（阵位保持正立，仅平移归位） */
+  setTimeout(() => {
+    if (slot){
+      const fRect = fly.getBoundingClientRect();
+      const sRect = slot.getBoundingClientRect();
+      const dx = (sRect.left + sRect.width / 2) - (fRect.left + fRect.width / 2);
+      const dy = (sRect.top + sRect.height / 2) - (fRect.top + fRect.height / 2);
+      fly.style.transform = 'translate(' + fmt(dx) + 'px,' + fmt(dy) + 'px)';
+    }
+  }, D.rise + D.gap + D.flip);
+
+  /* 阶段五：落定，注入阵位 */
+  setTimeout(() => {
+    fly.remove();
+    fillSlot(idx, item);
+    state.drawn++;
+    updateDeckHint();
+    markDot(idx);
+    state.busy = false;
+    deck.classList.toggle('busy', state.drawn >= state.spread);
+    deck.classList.toggle('empty', state.drawn >= state.spread);
+    if (state.drawn >= state.spread) beginReading();
+  }, D.rise + D.gap + D.flip + D.fly);
+}
+function fillSlot(idx, item){
+  const slot = $('#ringWrap .slot[data-i="' + idx + '"]');
+  if (!slot) return;
+  const pos = SPREADS[state.spread].positions[idx];
+  slot.innerHTML =
+    '<div class="slot-card" tabindex="0" role="button" data-card="' + item.card.num + '" ' +
+      'aria-label="' + item.card.name + ' ' + (item.rev ? '逆位' : '正位') + '，点击查看牌义">' +
+      faceSVG(item.card, item.rev) +
+      '<span class="orient-tag' + (item.rev ? ' r' : '') + '">' + (item.rev ? '逆位' : '正位') + '</span>' +
+      '<span class="slot-lb">' + pos.name + '</span>' +
+    '</div>';
+  state.results[idx] = item;
+}
+function markDot(idx){
+  const dots = $$('#dots .dot');
+  if (dots[idx]) dots[idx].classList.add('done');
+}
+
+/* ---------- 解读卷轴 ---------- */
+function readText(item, pos, posTip){
+  const c = item.card;
+  const mean = item.rev ? c.rev : c.up;
+  const lead = THEMES[state.theme].lead;
+  const advice = item.rev ? ADVICE_REV[state.theme] : ADVICE_UP[state.theme];
+  return '「' + c.name + '」在此位以' + (item.rev ? '逆位' : '正位') + '浮现——' + mean +
+         '。' + lead + '，这张牌在提醒你：' + advice;
+}
+function panelHTML(item, idx){
+  const pos = SPREADS[state.spread].positions[idx];
+  const c = item.card;
+  return '<article class="read-panel" data-i="' + idx + '">' +
+    '<div class="rp-art">' + faceSVG(c, item.rev) + '</div>' +
+    '<div class="rp-main">' +
+      '<span class="rp-pos">' + pos.name + '</span>' +
+      '<h4>' + c.name + '<em class="' + (item.rev ? 'r' : 'u') + '">' + (item.rev ? '逆位' : '正位') + '</em></h4>' +
+      '<span class="rp-kw">' + c.kw.join(' · ') + '</span>' +
+      '<p class="rp-txt">' + readText(item, pos, pos.tip) + '</p>' +
+      '<p class="rp-tip">阵位低语：' + pos.tip + '</p>' +
+    '</div></article>';
+}
+function summaryHTML(){
+  const n = state.results.length;
+  let u = 0;
+  state.results.forEach((r) => { if (!r.rev) u++; });
+  const r = n - u;
+  const themeName = THEMES[state.theme].name;
+  const guide = GUIDES[Math.floor(Math.random() * GUIDES.length)];
+  return '<article class="read-panel summary" data-i="sum">' +
+    '<div class="rp-main">' +
+      '<h4>卷尾 · 综合解读</h4>' +
+      '<p>本次「' + SPREADS[state.spread].name + '」共落' + n + '张牌：正位 ' + u + ' 张、逆位 ' + r + ' 张。' +
+      (r === 0 ? '全盘正位，水面清澈见底——事情正顺着它该去的方向流动。'
+               : (u >= r ? '正位居多，月光占优——大局向好，逆位之处是你需要亲手拨开的雾。'
+                         : '逆位偏多，潭水深流暗——慢下来，把每一次提醒都当作护身的灯火。')) + '</p>' +
+      '<p>你以「' + themeName + '」为引问月：' + esc(state.question || '此刻我最需要知道什么') +
+      '。月亮不替你选择，它只是把水面照亮——接下来的一小步，由你走出。</p>' +
+      '<p class="gline">低语一则：' + guide + '</p>' +
+    '</div></article>';
+}
+function beginReading(){
+  const list = $('#readList');
+  if (!list) return;
+  const panels = state.results.map((item, i) => panelHTML(item, i)).concat([summaryHTML()]);
+  list.innerHTML = panels.join('');
+  state.moonTotal = state.spread + panels.length;
+  const D = durations();
+  const nodes = $$('.read-panel', list);
+  const note = $('#stageNote');
+  note.textContent = '星阵已满 · 水面泛起金色的涟漪';
+  note.classList.remove('off');
+
+  /* 完成瞬间：水面泛起一圈金色涟漪 */
+  const wrap = $('#ringWrap');
+  spawnRipple(wrap.clientWidth / 2, wrap.clientHeight / 2 + 130, wrap, 'gold');
+
+  nodes.forEach((node, i) => {
+    setTimeout(() => {
+      node.classList.add('shown');
+      setMoon(state.moonStep + 1, state.moonTotal);
+      if (i === 0) $('#reading').scrollIntoView({behavior: REDUCED ? 'auto' : 'smooth', block:'start'});
+      if (i === nodes.length - 1){
+        const actions = $('#readActions');
+        if (actions) actions.hidden = false;
+        note.classList.add('off');
+      }
+    }, i * (REDUCED ? 40 : 850));
+  });
+}
+
+/* ---------- 牌义库（沉水书架） ---------- */
+function buildShelf(filter){
+  const shelf = $('#shelf');
+  if (!shelf) return;
+  const kw = (filter || '').trim().toLowerCase();
+  shelf.innerHTML = CARDS.filter((c) => {
+    if (!kw) return true;
+    return (c.name + c.en + c.kw.join('') + c.up + c.rev).toLowerCase().indexOf(kw) > -1;
+  }).map((c) =>
+    '<button class="shelf-card" type="button" data-card="' + c.num + '" aria-label="查看' + c.name + '牌义">' +
+      '<span class="sc-in">' + faceSVG(c, false) +
+        '<span class="sc-name">' + c.name + '<i>' + c.num + '</i></span>' +
+        '<span class="hint"><span>浮出水面 · 看牌义</span></span>' +
+      '</span>' +
+    '</button>'
+  ).join('');
+}
+function openModal(num){
+  const c = CARDS.find((x) => x.num === num);
+  if (!c) return;
+  $('#mArt').innerHTML = faceSVG(c, false);
+  $('#mName').textContent = c.name;
+  $('#mEn').textContent = c.num + ' · ' + c.en;
+  $('#mKw').innerHTML = c.kw.map((k) => '<span>' + k + '</span>').join('');
+  $('#mUp').textContent = c.up;
+  $('#mRev').textContent = c.rev;
+  $('#modalMask').classList.add('open');
+}
+function closeModal(){ $('#modalMask').classList.remove('open'); }
+
+/* ---------- 事件绑定 ---------- */
+function bindEvents(){
+  /* 领域切换 */
+  $$('#themeRow .chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      $$('#themeRow .chip').forEach((c) => c.classList.remove('on'));
+      chip.classList.add('on');
+      state.theme = chip.dataset.t;
+    });
+  });
+  /* 牌阵切换 */
+  $$('#spreadRow .spread-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      $$('#spreadRow .spread-card').forEach((c) => c.classList.remove('on'));
+      card.classList.add('on');
+      state.spread = parseInt(card.dataset.n, 10);
+    });
+  });
+  /* 开启仪式 */
+  $('#btnStart').addEventListener('click', () => {
+    state.question = $('#qInput').value.trim();
+    $('#stageSpread').textContent = SPREADS[state.spread].name;
+    $('#stageQuestion').innerHTML = '所问 · <b>' +
+      esc(state.question || '此刻我最需要知道什么') + '</b>（' + THEMES[state.theme].name + '）';
+    stagePrepare(false);
+    shuffleDeck(state.spread);
+    const deck = $('#deck');
+    deck.classList.remove('empty');
+    deck.classList.add('shuffling');
+    setTimeout(() => deck.classList.remove('shuffling'), 1200);
+    $('#stage').scrollIntoView({behavior: REDUCED ? 'auto' : 'smooth', block:'start'});
+  });
+  /* 抽牌 */
+  $('#deck').addEventListener('click', () => drawCard(state.drawn));
+  /* 跳过动画 */
+  $('#btnSkip').addEventListener('click', (e) => {
+    const on = document.body.classList.toggle('skip-anim');
+    e.currentTarget.textContent = on ? '恢复动画' : '跳过动画';
+  });
+  /* 再来一次 / 换个问题 */
+  $('#btnAgain').addEventListener('click', () => {
+    $('#stageSpread').textContent = SPREADS[state.spread].name;
+    stagePrepare(false);
+    shuffleDeck(state.spread);
+    const deck = $('#deck');
+    deck.classList.remove('empty');
+    $('#stage').scrollIntoView({behavior: REDUCED ? 'auto' : 'smooth', block:'start'});
+  });
+  $('#btnNew').addEventListener('click', () => {
+    $('#qInput').focus();
+    $('#hero').scrollIntoView({behavior: REDUCED ? 'auto' : 'smooth', block:'start'});
+  });
+  /* 水面涟漪交互：点击水面产生扩散涟漪 */
+  $('#heroWater').addEventListener('pointerdown', (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    spawnRipple(e.clientX - r.left, e.clientY - r.top, e.currentTarget, 'dim');
+  });
+  $('#stageWater').addEventListener('pointerdown', (e) => {
+    if (e.target.closest('#deck')) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    spawnRipple(e.clientX - r.left, e.clientY - r.top, e.currentTarget, 'dim');
+  });
+  /* 阵位卡 / 书架卡 → 详情浮层（事件委托） */
+  $('#ringWrap').addEventListener('click', (e) => {
+    const card = e.target.closest('.slot-card');
+    if (card) openModal(card.dataset.card);
+  });
+  $('#ringWrap').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const card = e.target.closest('.slot-card');
+    if (card){ e.preventDefault(); openModal(card.dataset.card); }
+  });
+  $('#shelf').addEventListener('click', (e) => {
+    const card = e.target.closest('.shelf-card');
+    if (card) openModal(card.dataset.card);
+  });
+  /* 浮层关闭 */
+  $('#mClose').addEventListener('click', closeModal);
+  $('#modalMask').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+  /* 牌义检索 */
+  $('#libSearch').addEventListener('input', (e) => buildShelf(e.target.value));
+  /* 尺寸变化重排阵位 */
+  let rT;
+  window.addEventListener('resize', () => {
+    clearTimeout(rT);
+    rT = setTimeout(layoutSlots, 120);
+  });
+  /* 分区滚动显现 */
+  if (REDUCED || !('IntersectionObserver' in window)){
+    $$('.sec').forEach((s) => s.classList.add('vis'));
+  } else {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (en.isIntersecting){ en.target.classList.add('vis'); io.unobserve(en.target); }
+      });
+    }, {threshold: 0.08});
+    $$('.sec').forEach((s) => io.observe(s));
+  }
+  /* 降级：移除 SMIL 滤镜动画 */
+  if (REDUCED) $$('animate').forEach((a) => a.remove());
+}
+
+/* ---------- 初始化 ---------- */
+function init(){
+  buildAstroMarks();
+  buildShelf('');
+  stagePrepare(true);
+  setMoon(0, 1);
+  const moons = [['新月',0],['蛾眉月',-0.55],['上弦月',-1.05],['盈凸月',-1.5],['满月',-2.3],['亏凸月',1.5],['下弦月',1.05],['残月',0.55]];
+  $('#moonline').innerHTML = moons.map((m) =>
+    '<span class="ph' + (m[0] === '满月' ? ' full' : '') + '">' + moonSVG(fmt(m[1] * 13)) + '<span>' + m[0] + '</span></span>'
+  ).join('');
+  bindEvents();
+}
+init();
+</script>
+</body>
+</html>

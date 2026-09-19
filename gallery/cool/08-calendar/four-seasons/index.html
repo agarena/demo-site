@@ -1,0 +1,2310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="拾光历 · 四季流转 —— 春落樱、夏流萤、秋飞叶、冬飘雪的全屏季节粒子沉浸日历，2026 年节假日 / 节气 / 农历节日一览。">
+<meta name="theme-color" content="#FFF0F5">
+<title>拾光历 · 四季流转 | 2026 沉浸式季节日历</title>
+<style>
+/* ==========================================================
+   拾光历 · 四季流转（方向D · 炫酷方向）
+   全屏季节氛围粒子 + 玻璃拟态悬浮月历
+   配色与布局依据调研文档：春樱粉 / 夏夜流萤 / 秋叶橙 / 冬雪蓝白
+   ========================================================== */
+
+/* ---------- 1. 基础重置与主题变量 ---------- */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --radius-l: 24px;
+  --radius-m: 14px;
+  --radius-s: 9px;
+  --font-main: "Outfit", "Noto Sans SC", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-term: "ZCOOL XiaoWei", "Noto Serif SC", "STZhongsong", "SimSun", serif;
+  --shadow-soft: 0 18px 50px rgba(40, 30, 50, 0.16);
+  --shadow-deep: 0 30px 80px rgba(40, 30, 50, 0.22);
+  --ease-out: cubic-bezier(0.22, 0.7, 0.25, 1);
+}
+
+/* 四季主题：随 viewed month 切换（JS 写入 body[data-season]） */
+body[data-season="spring"] {
+  --bg-solid: #FFF0F5;
+  --glow-a: rgba(248, 187, 208, 0.55);
+  --glow-b: rgba(214, 51, 108, 0.14);
+  --primary: #D6336C;
+  --primary-soft: rgba(214, 51, 108, 0.14);
+  --particle: #F8BBD0;
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-brd: rgba(255, 255, 255, 0.78);
+  --hover: rgba(255, 255, 255, 0.62);
+  --ink: #46333C;
+  --ink-2: #96788A;
+  --term-color: #C2255C;
+}
+body[data-season="summer"] {
+  --bg-solid: #0F2027;
+  --glow-a: rgba(105, 219, 124, 0.16);
+  --glow-b: rgba(255, 224, 102, 0.10);
+  --primary: #FFE066;
+  --primary-soft: rgba(255, 224, 102, 0.14);
+  --particle: #FFE066;
+  --glass-bg: rgba(16, 34, 34, 0.52);
+  --glass-brd: rgba(180, 235, 205, 0.22);
+  --hover: rgba(160, 235, 190, 0.12);
+  --ink: #EAF6EE;
+  --ink-2: #9DBBAA;
+  --term-color: #8CE99A;
+  color-scheme: dark;
+}
+body[data-season="autumn"] {
+  --bg-solid: #FFF4E6;
+  --glow-a: rgba(240, 140, 0, 0.30);
+  --glow-b: rgba(201, 42, 42, 0.12);
+  --primary: #E8590C;
+  --primary-soft: rgba(232, 89, 12, 0.14);
+  --particle: #F08C00;
+  --glass-bg: rgba(255, 251, 243, 0.58);
+  --glass-brd: rgba(255, 255, 255, 0.8);
+  --hover: rgba(255, 250, 240, 0.75);
+  --ink: #4A3423;
+  --ink-2: #A08060;
+  --term-color: #D9480F;
+}
+body[data-season="winter"] {
+  --bg-solid: #F1F5FB;
+  --glow-a: rgba(116, 192, 252, 0.34);
+  --glow-b: rgba(25, 113, 194, 0.10);
+  --primary: #1971C2;
+  --primary-soft: rgba(25, 113, 194, 0.12);
+  --particle: #74C0FC;
+  --glass-bg: rgba(255, 255, 255, 0.60);
+  --glass-brd: rgba(255, 255, 255, 0.85);
+  --hover: rgba(255, 255, 255, 0.78);
+  --ink: #33404E;
+  --ink-2: #7B8CA1;
+  --term-color: #1864AB;
+}
+/* 夜空模式：18:00 后或手动切换，叠加极光 */
+body.night {
+  --bg-solid: #0B1026;
+  --glow-a: rgba(94, 234, 212, 0.12);
+  --glow-b: rgba(132, 94, 247, 0.14);
+  --glass-bg: rgba(14, 20, 40, 0.55);
+  --glass-brd: rgba(150, 180, 255, 0.18);
+  --hover: rgba(120, 160, 255, 0.12);
+  --ink: #E8EEFF;
+  --ink-2: #92A1C6;
+  color-scheme: dark;
+}
+body.night[data-season="spring"] { --primary: #F783AC; --primary-soft: rgba(247, 131, 172, 0.16); }
+body.night[data-season="autumn"] { --primary: #FFA94D; --primary-soft: rgba(255, 169, 77, 0.16); }
+body.night[data-season="winter"] { --primary: #74C0FC; --primary-soft: rgba(116, 192, 252, 0.16); }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-main);
+  color: var(--ink);
+  background-color: var(--bg-solid);
+  transition: background-color 1.2s ease, color 0.8s ease;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 2. 背景层：色晕 / 暗角 / 粒子画布 ---------- */
+.haze {
+  position: fixed;
+  inset: -12%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(58% 46% at 18% 8%, var(--glow-a), transparent 62%),
+    radial-gradient(52% 42% at 86% 88%, var(--glow-b), transparent 60%);
+  transition: opacity 0.9s ease;
+  will-change: transform;
+  animation: hazeDrift 26s ease-in-out infinite alternate;
+}
+@keyframes hazeDrift {
+  from { transform: translate3d(-1.5%, -1%, 0) scale(1); }
+  to   { transform: translate3d(1.8%, 1.4%, 0) scale(1.05); }
+}
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 40%, transparent 58%, rgba(20, 12, 24, 0.20) 100%);
+}
+#fx {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* 粒子不响应指针，避免干扰点击 */
+}
+
+/* ---------- 3. 顶部导航与时钟 ---------- */
+.topbar {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 18px clamp(14px, 3vw, 34px) 6px;
+}
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  user-select: none;
+}
+.brand .logo-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50% 50% 50% 4px;
+  background: linear-gradient(135deg, var(--primary), var(--particle));
+  align-self: center;
+  box-shadow: 0 0 14px var(--primary);
+  transition: background 0.8s ease;
+}
+.brand h1 {
+  font-size: 22px;
+  letter-spacing: 4px;
+  font-weight: 700;
+}
+.brand small {
+  font-size: 12px;
+  color: var(--ink-2);
+  letter-spacing: 2px;
+}
+.clock-wrap {
+  text-align: center;
+  user-select: none;
+}
+.clock {
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 600;
+  letter-spacing: 3px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  text-shadow: 0 2px 14px var(--primary-soft);
+}
+.date-line {
+  margin-top: 3px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+}
+.date-line b {
+  color: var(--term-color);
+  font-weight: 600;
+}
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.btn {
+  appearance: none;
+  border: 1px solid var(--glass-brd);
+  background: var(--glass-bg);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 13px;
+  letter-spacing: 1px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: transform 0.22s var(--ease-out), box-shadow 0.22s ease, background 0.35s ease, color 0.35s ease, opacity 0.3s ease;
+}
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px var(--primary-soft);
+}
+.btn:active { transform: translateY(0) scale(0.96); }
+.btn:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
+.btn-today {
+  background: var(--primary);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+body.night .btn-today { color: #10131f; }
+.btn-arrow {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  font-size: 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.month-label {
+  min-width: 118px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  font-variant-numeric: tabular-nums;
+  padding: 8px 6px;
+}
+.season-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  letter-spacing: 2px;
+  border: 1px solid var(--glass-brd);
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  user-select: none;
+}
+.season-chip i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 10px var(--primary);
+}
+
+/* ---------- 4. 主舞台布局 ---------- */
+.stage {
+  position: relative;
+  z-index: 5;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 12px clamp(14px, 3vw, 34px) 8px;
+  display: grid;
+  grid-template-columns: 108px minmax(0, 780px) 312px;
+  grid-template-areas: "term cal side";
+  justify-content: center;
+  align-items: start;
+  gap: 22px;
+}
+
+/* 竖排节气卡（左侧） */
+.term-card {
+  grid-area: term;
+  position: sticky;
+  top: 18px;
+  border-radius: var(--radius-l);
+  border: 1px solid var(--glass-brd);
+  background: var(--glass-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--shadow-soft);
+  padding: 20px 10px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  min-height: 380px;
+  transition: background 0.6s ease, border-color 0.6s ease;
+}
+.term-tag {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--ink-2);
+  writing-mode: vertical-rl;
+}
+.term-name {
+  writing-mode: vertical-rl;
+  font-family: var(--font-term);
+  font-size: clamp(38px, 4.2vw, 52px);
+  letter-spacing: 14px;
+  color: var(--term-color);
+  text-shadow: 0 4px 22px var(--primary-soft);
+  line-height: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  transition: color 0.8s ease;
+}
+.term-date {
+  font-size: 11.5px;
+  color: var(--ink-2);
+  writing-mode: vertical-rl;
+  letter-spacing: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.term-motto {
+  font-size: 10.5px;
+  color: var(--ink-2);
+  writing-mode: vertical-rl;
+  letter-spacing: 3px;
+  opacity: 0.85;
+}
+
+/* ---------- 5. 中央玻璃月历卡 ---------- */
+.cal-wrap {
+  grid-area: cal;
+  perspective: 1500px;
+  will-change: transform;
+}
+.cal-card {
+  position: relative;
+  border-radius: var(--radius-l);
+  border: 1px solid var(--glass-brd);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0.06) 42%),
+    var(--glass-bg);
+  backdrop-filter: blur(14px) saturate(1.25);
+  -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  box-shadow: var(--shadow-deep);
+  padding: clamp(16px, 2.4vw, 28px) clamp(14px, 2.2vw, 26px) clamp(14px, 2vw, 22px);
+  transform-style: preserve-3d;
+  transition: background 0.6s ease, border-color 0.6s ease;
+  overflow: hidden;
+}
+/* 玻璃卡上的纸白薄层，保证文字对比度（WCAG AA） */
+.cal-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.18);
+  pointer-events: none;
+}
+body[data-season="summer"] .cal-card::before,
+body.night .cal-card::before { background: rgba(255, 255, 255, 0.04); }
+.cal-card > * { position: relative; }
+
+.cal-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.cal-title {
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 700;
+  letter-spacing: 3px;
+  font-variant-numeric: tabular-nums;
+}
+.cal-title em {
+  font-style: normal;
+  color: var(--primary);
+}
+.cal-sub {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  letter-spacing: 2px;
+}
+.week-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.week-row span {
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--ink-2);
+  padding: 4px 0;
+}
+.week-row span.wend { color: var(--primary); opacity: 0.8; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: clamp(52px, 9.2vh, 80px);
+  gap: 6px;
+}
+.cell {
+  position: relative;
+  border-radius: var(--radius-s);
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 7px 8px 5px;
+  cursor: pointer;
+  overflow: hidden;
+  outline: none;
+  display: flex;
+  flex-direction: column;
+  transition:
+    background 0.24s ease,
+    transform 0.24s var(--ease-out),
+    box-shadow 0.24s ease,
+    border-color 0.24s ease;
+  /* 入场 stagger：JS 注入 --i */
+  opacity: 0;
+}
+body.ready .cell {
+  animation: cellIn 0.5s var(--ease-out) both;
+  animation-delay: calc(var(--i) * 14ms);
+}
+/* 静默重绘（事件增删后）：不重放入场 stagger */
+.grid.still .cell {
+  animation: none !important;
+  opacity: 1;
+}
+.grid.still .cell.dim {
+  opacity: 0.32;
+}
+@keyframes cellIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.cell .d {
+  font-size: clamp(14px, 1.35vw, 17px);
+  font-weight: 600;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.cell .sub {
+  margin-top: auto;
+  font-size: clamp(9px, 0.9vw, 11px);
+  line-height: 1.25;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cell .sub.fest { color: var(--primary); font-weight: 600; }
+.cell .sub.term { color: var(--term-color); font-weight: 600; }
+.cell .off {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  font-style: normal;
+  font-size: 9px;
+  line-height: 1;
+  padding: 3px 4px;
+  border-radius: 5px;
+  background: #E03131;
+  color: #fff;
+  letter-spacing: 0;
+  box-shadow: 0 2px 8px rgba(224, 49, 49, 0.4);
+}
+.cell .evd {
+  position: absolute;
+  bottom: 4px;
+  right: 5px;
+  display: flex;
+  gap: 3px;
+}
+.cell .evd i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ev-c, var(--primary));
+  box-shadow: 0 0 6px var(--ev-c, var(--primary));
+}
+.cell.dim { opacity: 0.32; cursor: default; }
+body.ready .cell.dim { animation: none; opacity: 0.32; }
+.cell.weekend .d { color: var(--primary); }
+body[data-season="summer"] .cell.weekend .d,
+body.night .cell.weekend .d { color: var(--primary); }
+.cell.today {
+  background: var(--primary);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 26px var(--primary-soft), 0 0 0 1px var(--primary) inset;
+}
+.cell.today .d,
+.cell.today .sub,
+.cell.today .sub.fest,
+.cell.today .sub.term { color: #fff; }
+body[data-season="summer"] .cell.today .d,
+body[data-season="summer"] .cell.today .sub,
+body.night .cell.today .d,
+body.night .cell.today .sub { color: #10131f; }
+/* hover 微交互：玻璃高亮 + 轻浮起 */
+.cell:not(.dim):hover,
+.cell:not(.dim):focus-visible {
+  background: var(--hover);
+  border-color: var(--glass-brd);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 24px rgba(30, 20, 40, 0.14);
+  z-index: 2;
+}
+body.night .cell:not(.dim):hover { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4); }
+
+/* 翻月 3D 轻翻转 */
+@keyframes flipNext {
+  0%   { transform: rotateY(0deg) rotateX(0deg); }
+  38%  { transform: rotateY(-11deg) rotateX(3deg) scale(0.985); }
+  100% { transform: rotateY(0deg) rotateX(0deg) scale(1); }
+}
+@keyframes flipPrev {
+  0%   { transform: rotateY(0deg) rotateX(0deg); }
+  38%  { transform: rotateY(11deg) rotateX(3deg) scale(0.985); }
+  100% { transform: rotateY(0deg) rotateX(0deg) scale(1); }
+}
+.cal-card.flip-next { animation: flipNext 0.62s var(--ease-out); }
+.cal-card.flip-prev { animation: flipPrev 0.62s var(--ease-out); }
+
+.cal-foot {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--glass-brd);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--ink-2);
+  letter-spacing: 1px;
+}
+.legend { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.lg-off {
+  font-style: normal;
+  font-size: 9px;
+  padding: 2px 3px;
+  border-radius: 4px;
+  background: #E03131;
+  color: #fff;
+}
+.lg-term { width: 8px; height: 8px; border-radius: 2px; background: var(--term-color); display: inline-block; }
+.lg-fest { width: 8px; height: 8px; border-radius: 2px; background: var(--primary); display: inline-block; }
+.lg-today { width: 10px; height: 10px; border-radius: 3px; background: var(--primary); display: inline-block; box-shadow: 0 0 8px var(--primary); }
+
+/* ---------- 6. 右侧信息列：倒计时 + 本月节点 ---------- */
+.side {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+.glass-card {
+  border-radius: var(--radius-l);
+  border: 1px solid var(--glass-brd);
+  background: var(--glass-bg);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: var(--shadow-soft);
+  padding: 20px 20px 18px;
+  transition: background 0.6s ease, border-color 0.6s ease;
+}
+.card-title {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--ink-2);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title::before {
+  content: "";
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+.cd-box {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.cd-ring {
+  --pct: 0.35;
+  width: 96px;
+  height: 96px;
+  flex: 0 0 96px;
+  border-radius: 50%;
+  background: conic-gradient(var(--primary) calc(var(--pct) * 360deg), var(--glass-brd) 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.6s ease;
+  position: relative;
+}
+.cd-ring::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: var(--bg-solid);
+  opacity: 0.92;
+  transition: background 0.8s ease;
+}
+.cd-num {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  line-height: 1;
+}
+.cd-num b {
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+.cd-num i {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--ink-2);
+  letter-spacing: 2px;
+  display: block;
+  margin-top: 3px;
+}
+.cd-info { min-width: 0; }
+.cd-name {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+.cd-meta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ink-2);
+  letter-spacing: 1px;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+}
+.fest-list { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow: auto; }
+.fest-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  padding: 7px 10px;
+  border-radius: var(--radius-s);
+  background: var(--hover);
+  border: 1px solid transparent;
+  transition: transform 0.2s var(--ease-out), border-color 0.2s ease;
+}
+.fest-list li:hover { transform: translateX(3px); border-color: var(--glass-brd); }
+.fest-list li b { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 40px; }
+.fest-list li span { color: var(--ink-2); font-size: 12px; margin-left: auto; }
+.fest-list .k-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 8px; }
+.k-holiday { background: #E03131; box-shadow: 0 0 8px rgba(224, 49, 49, 0.5); }
+.k-fest { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
+.k-term { background: var(--term-color); box-shadow: 0 0 8px var(--term-color); }
+.fest-empty { font-size: 12.5px; color: var(--ink-2); letter-spacing: 1px; }
+
+/* ---------- 7. 底部每日一句 ---------- */
+.quote-bar {
+  position: relative;
+  z-index: 5;
+  max-width: 1360px;
+  margin: 6px auto 0;
+  padding: 10px clamp(14px, 3vw, 34px) 26px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  text-align: center;
+}
+.quote-text {
+  font-family: var(--font-term);
+  font-size: clamp(15px, 1.7vw, 19px);
+  letter-spacing: 3px;
+  color: var(--term-color);
+  transition: color 0.8s ease;
+  text-shadow: 0 2px 16px var(--primary-soft);
+}
+.quote-by {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--ink-2);
+}
+.quote-by::before { content: "—— "; }
+
+/* ---------- 8. 事件抽屉 ---------- */
+.mask {
+  position: fixed;
+  inset: 0;
+  z-index: 18;
+  background: rgba(20, 12, 30, 0.35);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.mask.on { opacity: 1; pointer-events: auto; }
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 19;
+  width: min(360px, 92vw);
+  height: 100%;
+  background:
+    linear-gradient(200deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.04) 46%),
+    var(--glass-bg);
+  backdrop-filter: blur(22px) saturate(1.3);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  border-left: 1px solid var(--glass-brd);
+  box-shadow: -24px 0 70px rgba(20, 12, 30, 0.28);
+  transform: translateX(102%);
+  transition: transform 0.45s var(--ease-out), background 0.6s ease;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 20px;
+  overflow: hidden;
+}
+.drawer.on { transform: translateX(0); }
+.drawer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.drawer-date { font-size: 20px; font-weight: 700; letter-spacing: 2px; }
+.drawer-meta { margin-top: 6px; font-size: 12px; color: var(--ink-2); letter-spacing: 1px; line-height: 1.7; }
+.drawer-close {
+  appearance: none;
+  border: none;
+  background: var(--hover);
+  color: var(--ink);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform 0.25s var(--ease-out), background 0.3s ease;
+}
+.drawer-close:hover { transform: rotate(90deg) scale(1.06); }
+.ev-list { list-style: none; margin-top: 18px; flex: 1; overflow: auto; display: flex; flex-direction: column; gap: 9px; padding-right: 2px; }
+.ev-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-m);
+  background: var(--hover);
+  border: 1px solid var(--glass-brd);
+  animation: cellIn 0.35s var(--ease-out) both;
+}
+.ev-item .cat-dot { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 9px; background: var(--ev-c); box-shadow: 0 0 8px var(--ev-c); }
+.ev-item .ev-t { font-size: 13.5px; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ev-item .ev-time { font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; margin-left: auto; flex: 0 0 auto; }
+.ev-item .ev-del {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 13px;
+  cursor: pointer;
+  flex: 0 0 auto;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+.ev-item .ev-del:hover { color: #E03131; background: rgba(224, 49, 49, 0.1); }
+.ev-empty {
+  margin-top: 26px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  letter-spacing: 2px;
+  line-height: 2;
+}
+.ev-form {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--glass-brd);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ev-form input[type="text"],
+.ev-form input[type="time"],
+.ev-form select {
+  appearance: none;
+  width: 100%;
+  border: 1px solid var(--glass-brd);
+  background: var(--hover);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 13.5px;
+  padding: 10px 12px;
+  border-radius: var(--radius-m);
+  outline: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.ev-form input:focus, .ev-form select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+.ev-row { display: flex; gap: 10px; }
+.ev-row > * { flex: 1; min-width: 0; }
+.ev-form select option { color: #333; background: #fff; }
+.ev-submit {
+  appearance: none;
+  border: none;
+  border-radius: var(--radius-m);
+  background: var(--primary);
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  padding: 11px 0;
+  cursor: pointer;
+  transition: transform 0.22s var(--ease-out), box-shadow 0.25s ease;
+}
+body[data-season="summer"] .ev-submit,
+body.night .ev-submit { color: #10131f; }
+.ev-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 24px var(--primary-soft); }
+
+/* ---------- 9. 悬浮提示 ---------- */
+.tip {
+  position: fixed;
+  z-index: 30;
+  pointer-events: none;
+  max-width: 260px;
+  padding: 10px 13px;
+  border-radius: var(--radius-m);
+  border: 1px solid var(--glass-brd);
+  background: var(--glass-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--shadow-soft);
+  font-size: 12px;
+  line-height: 1.7;
+  letter-spacing: 0.5px;
+  color: var(--ink);
+  opacity: 0;
+  transform: translateY(6px) scale(0.97);
+  transition: opacity 0.22s ease, transform 0.22s var(--ease-out);
+}
+.tip.on { opacity: 1; transform: translateY(0) scale(1); }
+.tip .t-head { font-weight: 700; font-size: 12.5px; margin-bottom: 2px; }
+.tip .t-sub { color: var(--ink-2); }
+.tip .t-ev { color: var(--primary); }
+
+/* ---------- 10. 入场序列与通用 reveal ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+}
+body.ready .reveal {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.8s ease var(--rd, 0s), transform 0.8s var(--ease-out) var(--rd, 0s);
+}
+.intro-tip {
+  position: fixed;
+  left: 50%;
+  bottom: 6vh;
+  transform: translateX(-50%);
+  z-index: 8;
+  font-size: 12px;
+  letter-spacing: 6px;
+  color: var(--ink-2);
+  text-shadow: 0 1px 8px rgba(255, 255, 255, 0.4);
+  opacity: 0;
+  animation: introTip 3.2s ease 0.5s both;
+  pointer-events: none;
+  white-space: nowrap;
+}
+body.ready .intro-tip { display: none; }
+@keyframes introTip {
+  0% { opacity: 0; transform: translate(-50%, 10px); }
+  25% { opacity: 0.9; transform: translate(-50%, 0); }
+  80% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+/* ---------- 11. 滚动条与选区 ---------- */
+::selection { background: var(--primary); color: #fff; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--primary-soft); border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------- 12. 响应式：≥1200 / 768 / 375 ---------- */
+@media (max-width: 1199px) {
+  .stage {
+    grid-template-columns: minmax(0, 780px);
+    grid-template-areas: "cal" "term" "side";
+    justify-content: center;
+  }
+  .term-card {
+    position: static;
+    flex-direction: row;
+    justify-content: center;
+    min-height: 0;
+    padding: 14px 18px;
+    gap: 22px;
+  }
+  .term-name, .term-tag, .term-date, .term-motto { writing-mode: horizontal-tb; }
+  .term-name { flex: 0 0 auto; letter-spacing: 8px; }
+  .term-tag { writing-mode: horizontal-tb; }
+  .side { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
+}
+@media (max-width: 767px) {
+  .topbar { padding-top: 14px; }
+  .brand h1 { font-size: 19px; letter-spacing: 3px; }
+  .clock { font-size: 24px; }
+  .stage { gap: 16px; }
+  .side { grid-template-columns: 1fr; }
+  .grid { gap: 4px; }
+  .cell { padding: 5px 6px 4px; }
+  .cell .off { font-size: 8px; padding: 2px 3px; top: 3px; right: 3px; }
+  .cal-foot { justify-content: center; }
+}
+@media (max-width: 420px) {
+  .brand small { display: none; }
+  .month-label { min-width: 92px; font-size: 13.5px; }
+  .btn { padding: 7px 11px; font-size: 12px; }
+  .btn-arrow { width: 34px; height: 34px; }
+  .grid { grid-auto-rows: clamp(46px, 8.4vh, 60px); }
+  .cell .d { font-size: 13px; }
+  .cell .sub { font-size: 8.5px; }
+  .cd-ring { width: 84px; height: 84px; flex-basis: 84px; }
+  .cd-num b { font-size: 28px; }
+  .quote-text { letter-spacing: 2px; }
+}
+
+/* ---------- 13. prefers-reduced-motion 降级 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+  .reveal { opacity: 1; transform: none; }
+  .cell { opacity: 1; }
+  .cell.dim { opacity: 0.32; }
+  .haze { animation: none; }
+  /* 静态极光底：conic 渐变一张图 */
+  body.night .vignette {
+    background:
+      conic-gradient(from 220deg at 70% 18%, rgba(94, 234, 212, 0.14), transparent 22%, rgba(132, 94, 247, 0.12) 38%, transparent 55%),
+      radial-gradient(120% 90% at 50% 40%, transparent 58%, rgba(20, 12, 24, 0.2) 100%);
+  }
+}
+</style>
+</head>
+<body data-season="autumn">
+
+<!-- 背景层 -->
+<div class="haze" id="haze" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<!-- 顶部：品牌 / 实时时钟 / 导航 -->
+<header class="topbar">
+  <div class="brand reveal" style="--rd:.05s">
+    <span class="logo-dot" aria-hidden="true"></span>
+    <h1>拾光历</h1>
+    <small>把每一天，装订成册</small>
+  </div>
+  <div class="clock-wrap reveal" style="--rd:.15s">
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="date-line" id="dateLine">正在校准时间…</div>
+  </div>
+  <nav class="nav reveal" style="--rd:.25s" aria-label="日历导航">
+    <span class="season-chip" id="seasonChip"><i aria-hidden="true"></i><b id="seasonText">秋 · 红叶</b></span>
+    <button class="btn" id="btnNight" title="切换夜空模式（夜间可叠加极光）">夜空 · 自动</button>
+    <button class="btn btn-today" id="btnToday">今天</button>
+    <button class="btn btn-arrow" id="btnPrev" aria-label="上一月">‹</button>
+    <span class="btn month-label" id="monthLabel">2026年9月</span>
+    <button class="btn btn-arrow" id="btnNext" aria-label="下一月">›</button>
+  </nav>
+</header>
+
+<!-- 主舞台 -->
+<main class="stage">
+  <!-- 左：竖排节气 -->
+  <aside class="term-card reveal" style="--rd:.4s" aria-label="当前节气">
+    <span class="term-tag">当前节气</span>
+    <div class="term-name" id="termName">白露</div>
+    <div class="term-date" id="termDate">9月8日</div>
+    <div class="term-motto" id="termMotto">金风玉露 · 叶落知秋</div>
+  </aside>
+
+  <!-- 中：玻璃月历 -->
+  <section class="cal-wrap reveal" style="--rd:.3s" aria-label="月历">
+    <div class="cal-card" id="calCard">
+      <div class="cal-head">
+        <div class="cal-title" id="calTitle">2026年 <em>九月</em></div>
+        <div class="cal-sub" id="calSub">秋飞叶 · 点击日期可添加事件</div>
+      </div>
+      <div class="week-row" aria-hidden="true">
+        <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span>
+        <span class="wend">六</span><span class="wend">日</span>
+      </div>
+      <div class="grid" id="grid" role="grid" aria-label="2026 年月历"></div>
+      <div class="cal-foot">
+        <div class="legend">
+          <span><i class="lg-today"></i>今日</span>
+          <span><i class="lg-off"></i>法定休</span>
+          <span><i class="lg-fest"></i>节日</span>
+          <span><i class="lg-term"></i>节气</span>
+        </div>
+        <span>键盘 ← → 翻月 · T 回今日 · Esc 关闭</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 右：倒计时 + 本月节点 -->
+  <aside class="side">
+    <div class="glass-card reveal" style="--rd:.5s" aria-label="节日倒计时">
+      <div class="card-title">时间流沙 · 倒计时</div>
+      <div class="cd-box">
+        <div class="cd-ring" id="cdRing">
+          <div class="cd-num"><b id="cdDays">--</b><i>还有天数</i></div>
+        </div>
+        <div class="cd-info">
+          <div class="cd-name" id="cdName">载入中</div>
+          <div class="cd-meta" id="cdMeta">正在寻找下一个节日…</div>
+        </div>
+      </div>
+    </div>
+    <div class="glass-card reveal" style="--rd:.6s" aria-label="本月节日与节气">
+      <div class="card-title">本月节点</div>
+      <ul class="fest-list" id="festList"></ul>
+    </div>
+  </aside>
+</main>
+
+<!-- 底部每日一句 -->
+<footer class="quote-bar reveal" style="--rd:.7s">
+  <span class="quote-text" id="quoteText">把日子过成日历，一页一页，皆是收成。</span>
+  <span class="quote-by" id="quoteBy">拾光历 · 每日一句</span>
+</footer>
+
+<!-- 事件抽屉 -->
+<div class="mask" id="mask"></div>
+<aside class="drawer" id="drawer" aria-label="事件面板" role="dialog" aria-modal="true">
+  <div class="drawer-head">
+    <div>
+      <div class="drawer-date" id="dTitle">9月8日</div>
+      <div class="drawer-meta" id="dMeta">星期二 · 农历七月廿七</div>
+    </div>
+    <button class="drawer-close" id="dClose" aria-label="关闭面板">✕</button>
+  </div>
+  <ul class="ev-list" id="evList"></ul>
+  <form class="ev-form" id="evForm" autocomplete="off">
+    <input type="text" id="evTitle" maxlength="30" placeholder="事件标题（如：产品评审会）" required>
+    <div class="ev-row">
+      <input type="time" id="evTime" title="时间（可选）">
+      <select id="evCat" title="分类">
+        <option value="work">工作</option>
+        <option value="life">生活</option>
+        <option value="memo">纪念</option>
+        <option value="study">学习</option>
+        <option value="health">健康</option>
+      </select>
+    </div>
+    <button type="submit" class="ev-submit">添 加</button>
+  </form>
+</aside>
+
+<!-- 悬浮提示 -->
+<div class="tip" id="tip" role="tooltip"></div>
+
+<!-- 入场提示 -->
+<div class="intro-tip" id="introTip">四 季 流 转 · 粒 子 汇 聚 中</div>
+
+<noscript>
+  <p style="text-align:center;padding:20px;color:#a00">拾光历需要启用 JavaScript 才能呈现粒子动画与交互日历。</p>
+</noscript>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ==========================================================
+     一、2026 年数据（来源：调研文档第六节，内置数组）
+     ========================================================== */
+
+  // 2026 年法定/公历节假日（off: 法定休假日）
+  var HOLIDAYS_2026 = {
+    '01-01': { name: '元旦', off: true },
+    '02-16': { name: '除夕', off: true },
+    '02-17': { name: '春节', off: true },
+    '03-08': { name: '妇女节', off: false },
+    '04-05': { name: '清明节', off: true },
+    '05-01': { name: '劳动节', off: true },
+    '06-01': { name: '儿童节', off: false },
+    '09-10': { name: '教师节', off: false },
+    '10-01': { name: '国庆节', off: true },
+    '12-25': { name: '圣诞节', off: false }
+  };
+
+  // 2026 年二十四节气（日期 ±1 日）
+  var SOLAR_TERMS_2026 = {
+    '02-04': '立春', '02-19': '雨水', '03-05': '惊蛰', '03-20': '春分',
+    '04-05': '清明', '04-20': '谷雨', '05-05': '立夏', '05-21': '小满',
+    '06-06': '芒种', '06-21': '夏至', '07-07': '小暑', '07-23': '大暑',
+    '08-07': '立秋', '08-23': '处暑', '09-08': '白露', '09-23': '秋分',
+    '10-08': '寒露', '10-23': '霜降', '11-07': '立冬', '11-22': '小雪',
+    '12-07': '大雪', '12-22': '冬至'
+  };
+
+  // 2026 年农历节日（换算以调研文档为准）
+  var LUNAR_FESTIVALS_2026 = {
+    '02-17': '春节',
+    '03-03': '元宵节',
+    '06-19': '端午节',
+    '08-19': '七夕',
+    '09-25': '中秋节',
+    '10-18': '重阳节'
+  };
+
+  // 2026 农历月表（逐月首日 + 天数，用于格内农历小字）
+  var LUNAR_MONTHS_2026 = [
+    { y: 2025, m: 11, d: 20, name: '冬月', days: 30 },
+    { y: 2026, m: 0,  d: 19, name: '腊月', days: 29 },
+    { y: 2026, m: 1,  d: 17, name: '正月', days: 30 },
+    { y: 2026, m: 2,  d: 19, name: '二月', days: 29 },
+    { y: 2026, m: 3,  d: 17, name: '三月', days: 29 },
+    { y: 2026, m: 4,  d: 16, name: '四月', days: 30 },
+    { y: 2026, m: 5,  d: 15, name: '五月', days: 29 },
+    { y: 2026, m: 6,  d: 14, name: '六月', days: 30 },
+    { y: 2026, m: 7,  d: 13, name: '七月', days: 30 },
+    { y: 2026, m: 8,  d: 11, name: '八月', days: 29 },
+    { y: 2026, m: 9,  d: 10, name: '九月', days: 30 },
+    { y: 2026, m: 10, d: 9,  name: '十月', days: 30 },
+    { y: 2026, m: 11, d: 9,  name: '冬月', days: 30 }
+  ];
+
+  // 倒计时用的节日时间轴（公历排序）
+  var FESTIVAL_TIMELINE = [
+    { m: 1,  d: 1,  name: '元旦' },
+    { m: 2,  d: 16, name: '除夕' },
+    { m: 2,  d: 17, name: '春节' },
+    { m: 3,  d: 3,  name: '元宵节' },
+    { m: 3,  d: 8,  name: '妇女节' },
+    { m: 4,  d: 5,  name: '清明节' },
+    { m: 5,  d: 1,  name: '劳动节' },
+    { m: 6,  d: 1,  name: '儿童节' },
+    { m: 6,  d: 19, name: '端午节' },
+    { m: 8,  d: 19, name: '七夕' },
+    { m: 9,  d: 10, name: '教师节' },
+    { m: 9,  d: 25, name: '中秋节' },
+    { m: 10, d: 1,  name: '国庆节' },
+    { m: 10, d: 18, name: '重阳节' },
+    { m: 12, d: 25, name: '圣诞节' }
+  ];
+
+  // 每日一句（调研文档第六节）
+  var QUOTES = [
+    '把日子过成日历，一页一页，皆是收成。',
+    '时间不语，却回答了所有问题。',
+    '今日宜：把想做的事，做成今天的事。',
+    '撕去的是纸，留下的是经历。',
+    '节气不催人，人自赶路。',
+    '所有的明天，都会准时抵达。',
+    '认真记下的一天，才算真正来过。',
+    '翻页之间，春天就近了一格。'
+  ];
+
+  // 四季元信息
+  var SEASON_META = {
+    spring: { cn: '春', label: '春 · 樱粉', motto: '东风解冻 · 樱雨润城', greet: '春落樱' },
+    summer: { cn: '夏', label: '夏 · 流萤', motto: '流萤入夜 · 荷风送香', greet: '夏流萤' },
+    autumn: { cn: '秋', label: '秋 · 红叶', motto: '金风玉露 · 叶落知秋', greet: '秋飞叶' },
+    winter: { cn: '冬', label: '冬 · 飘雪', motto: '瑞雪兆丰 · 岁暮天寒', greet: '冬飘雪' }
+  };
+  var SEASON_ORDER = ['spring', 'summer', 'autumn', 'winter'];
+  var CN_MONTHS = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
+  var WEEKDAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+  var CATS = {
+    work:   { label: '工作', c: '#4DABF7' },
+    life:   { label: '生活', c: '#51CF66' },
+    memo:   { label: '纪念', c: '#FF6B6B' },
+    study:  { label: '学习', c: '#B197FC' },
+    health: { label: '健康', c: '#FFA94D' }
+  };
+
+  /* ==========================================================
+     二、通用工具
+     ========================================================== */
+
+  function $(id) { return document.getElementById(id); }
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function keyOf(y, m, d) { return y + '-' + pad2(m + 1) + '-' + pad2(d); }      // m: 0-based
+  function mdKey(m, d) { return pad2(m) + '-' + pad2(d); }                        // 'MM-DD'
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function dayDiff(a, b) {
+    return Math.round((b - a) / 86400000);
+  }
+  function dayOfYear(dt) {
+    var start = new Date(dt.getFullYear(), 0, 1);
+    return dayDiff(start, dt) + 1;
+  }
+  function lunarDayName(d) {
+    var ones = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+    if (d === 10) return '初十';
+    if (d === 20) return '二十';
+    if (d === 30) return '三十';
+    if (d < 10) return '初' + ones[d];
+    if (d < 20) return '十' + ones[d - 10];
+    return '廿' + ones[d - 20];
+  }
+  // 农历查询：返回如 { name: '八月', day: 15, text: '中秋节' 前置由调用方处理 }
+  function lunarOf(y, m, d) {
+    var target = new Date(y, m, d).getTime();
+    var seg = null;
+    for (var i = 0; i < LUNAR_MONTHS_2026.length; i++) {
+      var s = LUNAR_MONTHS_2026[i];
+      var st = new Date(s.y, s.m, s.d).getTime();
+      if (st <= target) seg = s; else break;
+    }
+    if (!seg) return { text: '' };
+    var idx = Math.round(dayDiff(new Date(seg.y, seg.m, seg.d), new Date(y, m, d))) + 1;
+    if (idx < 1 || idx > seg.days) return { text: '' };
+    return { name: seg.name, day: idx, text: idx === 1 ? seg.name : lunarDayName(idx) };
+  }
+  function seasonOfMonth(m0) { // m0: 0-based month
+    if (m0 >= 2 && m0 <= 4) return 'spring';
+    if (m0 >= 5 && m0 <= 7) return 'summer';
+    if (m0 >= 8 && m0 <= 10) return 'autumn';
+    return 'winter';
+  }
+  function store(key, val) {
+    try {
+      if (arguments.length === 2) { localStorage.setItem(key, JSON.stringify(val)); return val; }
+      var raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  /* ==========================================================
+     三、全局状态
+     ========================================================== */
+
+  var NOW = new Date();                                 // 真实今天
+  var TODAY_KEY = keyOf(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+  var view = {                                          // 当前浏览月（数据限定 2026）
+    y: 2026,
+    m: NOW.getFullYear() === 2026 ? NOW.getMonth() : clamp(NOW.getMonth(), 0, 11)
+  };
+  var season = seasonOfMonth(view.m);
+  var events = store('shiguangli_events_v1') || {};     // { '2026-09-08': [{t,time,cat}] }
+  var nightPref = store('shiguangli_night_v1') || 'auto'; // auto | on | off
+  var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var FINE_POINTER = window.matchMedia('(pointer: fine)').matches;
+
+  /* ==========================================================
+     四、月历渲染
+     ========================================================== */
+
+  var gridEl = $('grid');
+  var calCard = $('calCard');
+  var calTitle = $('calTitle');
+  var calSub = $('calSub');
+  var monthLabel = $('monthLabel');
+  var seasonText = $('seasonText');
+
+  function cellInfo(y, m, d) {
+    var k = keyOf(y, m, d);
+    var md = k.slice(5);
+    var info = { key: k, fest: null, term: null, off: false, sub: '', subType: 'lunar' };
+    if (LUNAR_FESTIVALS_2026[md]) { info.fest = LUNAR_FESTIVALS_2026[md]; info.sub = info.fest; info.subType = 'fest'; }
+    else if (HOLIDAYS_2026[md] && md !== '02-16') { info.fest = HOLIDAYS_2026[md].name; info.sub = info.fest; info.subType = 'fest'; }
+    else if (md === '02-16') { info.sub = '除夕'; info.subType = 'fest'; info.fest = '除夕'; }
+    else if (SOLAR_TERMS_2026[md]) { info.term = SOLAR_TERMS_2026[md]; info.sub = info.term; info.subType = 'term'; }
+    else { info.sub = lunarOf(y, m, d).text || ''; }
+    if (HOLIDAYS_2026[md] && HOLIDAYS_2026[md].off) info.off = true;
+    return info;
+  }
+
+  function renderCalendar(dir, animate) {
+    var y = view.y, m = view.m;
+    if (animate === undefined) animate = true;
+    gridEl.classList.toggle('still', !animate);
+    var first = new Date(y, m, 1);
+    var startOffset = (first.getDay() + 6) % 7;         // 周一开头
+    var monthDays = new Date(y, m + 1, 0).getDate();
+    var prevDays = new Date(y, m, 0).getDate();
+
+    calTitle.innerHTML = y + '年 <em>' + CN_MONTHS[m] + '月</em>';
+    calSub.textContent = SEASON_META[season].greet + ' · 共 ' + monthDays + ' 天 · 点击日期添加事件';
+    monthLabel.textContent = y + '年' + (m + 1) + '月';
+    $('btnPrev').disabled = (y === 2026 && m === 0);
+    $('btnNext').disabled = (y === 2026 && m === 11);
+
+    var frag = document.createDocumentFragment();
+    var todayInView = (NOW.getFullYear() === y && NOW.getMonth() === m);
+
+    for (var i = 0; i < 42; i++) {
+      var cell = document.createElement('div');
+      var dayNum, inMonth = true, cellY = y, cellM = m;
+      if (i < startOffset) {
+        dayNum = prevDays - startOffset + 1 + i;
+        inMonth = false;
+        cellM = m - 1;
+      } else if (i >= startOffset + monthDays) {
+        dayNum = i - startOffset - monthDays + 1;
+        inMonth = false;
+        cellM = m + 1;
+      } else {
+        dayNum = i - startOffset + 1;
+      }
+      var weekdayCol = i % 7;
+      cell.className = 'cell';
+      cell.style.setProperty('--i', i);
+      cell.setAttribute('role', 'gridcell');
+      cell.setAttribute('tabindex', '0');
+
+      if (!inMonth) {
+        var dimOk = (cellM >= 0 && cellM <= 11);        // 2027 年 1 月无数据，置灰禁用
+        if (!dimOk) { cell.className += ' dim'; }
+        var lbl = (cellM + 1) + '月' + dayNum + '日';
+        cell.setAttribute('aria-label', lbl);
+        cell.innerHTML = '<span class="d">' + dayNum + '</span>';
+        if (dimOk) cell.dataset.key = keyOf(y, cellM, dayNum);
+        if (weekdayCol >= 5) cell.className += ' weekend';
+      } else {
+        var info = cellInfo(y, m, dayNum);
+        var isToday = todayInView && dayNum === NOW.getDate();
+        if (isToday) cell.className += ' today';
+        if (weekdayCol >= 5) cell.className += ' weekend';
+        var subCls = info.subType === 'fest' ? 'sub fest' : (info.subType === 'term' ? 'sub term' : 'sub');
+        var evs = events[info.key] || [];
+        var dotHtml = '';
+        if (evs.length) {
+          dotHtml = '<span class="evd">';
+          for (var e = 0; e < Math.min(3, evs.length); e++) {
+            dotHtml += '<i style="--ev-c:' + (CATS[evs[e].cat] || CATS.work).c + '"></i>';
+          }
+          dotHtml += '</span>';
+        }
+        cell.dataset.key = info.key;
+        cell.setAttribute('aria-label', (m + 1) + '月' + dayNum + '日 ' +
+          (info.fest ? info.fest : '') + (info.term ? ' ' + info.term : '') + (info.off ? ' 休' : ''));
+        cell.innerHTML =
+          '<span class="d">' + dayNum + '</span>' +
+          (info.sub ? '<span class="' + subCls + '">' + esc(info.sub) + '</span>' : '<span class="sub"></span>') +
+          (info.off ? '<i class="off">休</i>' : '') + dotHtml;
+      }
+      frag.appendChild(cell);
+    }
+    gridEl.innerHTML = '';
+    gridEl.appendChild(frag);
+
+    if (!REDUCED && dir) {
+      var cls = dir > 0 ? 'flip-next' : 'flip-prev';
+      calCard.classList.remove('flip-next', 'flip-prev');
+      void calCard.offsetWidth;                          // 重置动画
+      calCard.classList.add(cls);
+      setTimeout(function () { calCard.classList.remove(cls); }, 700);
+    }
+    renderFestList();
+  }
+
+  function gotoMonth(dir) {
+    var nm = view.m + dir;
+    if (nm < 0 || nm > 11) return;
+    view.m = nm;
+    var ns = seasonOfMonth(nm);
+    FX.gust(dir);                                        // 翻月：粒子风向响应
+    if (ns !== season) { season = ns; applySeason(); }   // 跨季：粒子渐变迁移
+    renderCalendar(dir);
+  }
+  function gotoToday() {
+    var tm = NOW.getFullYear() === 2026 ? NOW.getMonth() : clamp(NOW.getMonth(), 0, 11);
+    var dir = tm > view.m ? 1 : (tm < view.m ? -1 : 0);
+    view.m = tm;
+    var ns = seasonOfMonth(tm);
+    if (ns !== season) { season = ns; applySeason(); }
+    renderCalendar(dir || 1);
+  }
+
+  // 季节应用：body 主题 + 粒子渐变迁移
+  function applySeason() {
+    document.body.setAttribute('data-season', season);
+    var meta = SEASON_META[season];
+    seasonText.textContent = meta.label;
+    renderTermCard();
+    FX.setSeason(season);
+  }
+
+  /* ==========================================================
+     五、左侧节气卡（竖排大字）
+     ========================================================== */
+
+  function termEntries() {
+    var list = [];
+    for (var md in SOLAR_TERMS_2026) {
+      var mm = parseInt(md.slice(0, 2), 10), dd = parseInt(md.slice(3), 10);
+      list.push({ m: mm, d: dd, name: SOLAR_TERMS_2026[md], t: new Date(2026, mm - 1, dd) });
+    }
+    list.sort(function (a, b) { return a.t - b.t; });
+    return list;
+  }
+  function renderTermCard() {
+    var all = termEntries();
+    var nowT = new Date();
+    var cur = null, next = null;
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].t <= nowT) cur = all[i];
+      else if (!next) next = all[i];
+    }
+    var show = next || cur || all[0];
+    var isToday = cur && cur.t.toDateString() === nowT.toDateString();
+    $('termName').textContent = show.name;
+    $('termDate').textContent = (show.m) + '月' + show.d + '日' + (isToday ? ' · 今日' : ' · 将至');
+    $('termMotto').textContent = SEASON_META[season].motto;
+  }
+
+  /* ==========================================================
+     六、倒计时（时间流沙）与本月节点
+     ========================================================== */
+
+  function nextFestival() {
+    var base = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+    for (var i = 0; i < FESTIVAL_TIMELINE.length; i++) {
+      var f = FESTIVAL_TIMELINE[i];
+      var t = new Date(2026, f.m - 1, f.d);
+      if (dayDiff(base, t) >= 0) return { f: f, date: t, days: dayDiff(base, t) };
+    }
+    return { f: { name: '元旦' }, date: new Date(2027, 0, 1), days: dayDiff(base, new Date(2027, 0, 1)) };
+  }
+  function renderCountdown() {
+    var nx = nextFestival();
+    $('cdName').textContent = nx.f.name;
+    $('cdDays').textContent = nx.days === 0 ? '今天' : nx.days;
+    $('cdMeta').textContent = '2026年' + (nx.date.getMonth() + 1) + '月' + nx.date.getDate() + '日 · ' +
+      WEEKDAYS[nx.date.getDay()] + (nx.days === 0 ? ' · 就在今天' : ' · 距今 ' + nx.days + ' 天');
+    var pct = clamp(1 - nx.days / 365, 0.04, 1);
+    $('cdRing').style.setProperty('--pct', pct.toFixed(3));
+  }
+  function renderFestList() {
+    var box = $('festList');
+    var items = [];
+    var m = view.m;
+    for (var d = 1; d <= 31; d++) {
+      var md = mdKey(m + 1, d);
+      var dt = new Date(2026, m, d);
+      if (dt.getMonth() !== m) break;
+      if (LUNAR_FESTIVALS_2026[md]) items.push({ d: d, name: LUNAR_FESTIVALS_2026[md], kind: 'fest', tag: '农历节日' });
+      else if (HOLIDAYS_2026[md]) items.push({ d: d, name: HOLIDAYS_2026[md].name, kind: 'holiday', tag: HOLIDAYS_2026[md].off ? '法定休假' : '纪念日' });
+      if (SOLAR_TERMS_2026[md]) items.push({ d: d, name: SOLAR_TERMS_2026[md], kind: 'term', tag: '节气' });
+    }
+    items.sort(function (a, b) { return a.d - b.d; });
+    if (!items.length) {
+      box.innerHTML = '<li class="fest-empty">本月暂无节日与节气，宜安静过日子。</li>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      html += '<li><span class="k-dot k-' + it.kind + '"></span><b>' + (m + 1) + '/' + it.d + '</b>' +
+        esc(it.name) + '<span>' + it.tag + '</span></li>';
+    }
+    box.innerHTML = html;
+  }
+
+  /* ==========================================================
+     七、事件面板（localStorage 持久化）
+     ========================================================== */
+
+  var drawer = $('drawer'), mask = $('mask');
+  var evListEl = $('evList');
+  var openKey = null;
+
+  function drawerMetaText(k) {
+    var p = k.split('-');
+    var y = +p[0], m = +p[1] - 1, d = +p[2];
+    var dt = new Date(y, m, d);
+    var md = k.slice(5);
+    var bits = [WEEKDAYS[dt.getDay()]];
+    var lu = lunarOf(y, m, d);
+    if (lu.text) bits.push('农历' + lu.text);
+    if (SOLAR_TERMS_2026[md]) bits.push(SOLAR_TERMS_2026[md]);
+    if (LUNAR_FESTIVALS_2026[md]) bits.push(LUNAR_FESTIVALS_2026[md]);
+    if (HOLIDAYS_2026[md] && HOLIDAYS_2026[md].off) bits.push('法定休假');
+    return bits.join(' · ');
+  }
+  function openDrawer(k) {
+    if (!k) return;
+    openKey = k;
+    var p = k.split('-');
+    $('dTitle').textContent = (+p[1]) + '月' + (+p[2]) + '日';
+    $('dMeta').textContent = drawerMetaText(k);
+    renderEvList();
+    drawer.classList.add('on');
+    mask.classList.add('on');
+    setTimeout(function () { $('evTitle').focus(); }, 320);
+  }
+  function closeDrawer() {
+    openKey = null;
+    drawer.classList.remove('on');
+    mask.classList.remove('on');
+  }
+  function renderEvList() {
+    var evs = events[openKey] || [];
+    if (!evs.length) {
+      evListEl.innerHTML = '<li class="ev-empty">这一天还空着<br>在下方写下要做的事吧</li>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < evs.length; i++) {
+      var ev = evs[i];
+      var cat = CATS[ev.cat] || CATS.work;
+      html += '<li class="ev-item" style="--ev-c:' + cat.c + '">' +
+        '<span class="cat-dot"></span>' +
+        '<span class="ev-t">' + esc(ev.t) + '</span>' +
+        (ev.time ? '<span class="ev-time">' + esc(ev.time) + '</span>' : '') +
+        '<button class="ev-del" data-i="' + i + '" aria-label="删除事件">✕</button>' +
+        '</li>';
+    }
+    evListEl.innerHTML = html;
+  }
+  function saveEvents() {
+    store('shiguangli_events_v1', events);
+    renderCalendar(0, false);
+  }
+  $('evForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var t = $('evTitle').value.trim();
+    if (!t || !openKey) return;
+    if (!events[openKey]) events[openKey] = [];
+    events[openKey].push({ t: t, time: $('evTime').value || '', cat: $('evCat').value });
+    $('evTitle').value = '';
+    $('evTime').value = '';
+    saveEvents();
+    renderEvList();
+  });
+  evListEl.addEventListener('click', function (e) {
+    var btn = e.target.closest('.ev-del');
+    if (!btn) return;
+    var idx = +btn.getAttribute('data-i');
+    var evs = events[openKey];
+    if (evs && evs[idx]) { evs.splice(idx, 1); if (!evs.length) delete events[openKey]; }
+    saveEvents();
+    renderEvList();
+  });
+  $('dClose').addEventListener('click', closeDrawer);
+  mask.addEventListener('click', closeDrawer);
+
+  /* ==========================================================
+     八、悬浮提示（hover 日期格预览）
+     ========================================================== */
+
+  var tipEl = $('tip');
+  gridEl.addEventListener('mouseover', function (e) {
+    var cell = e.target.closest('.cell');
+    if (!cell || !cell.dataset.key) return;
+    var k = cell.dataset.key;
+    var p = k.split('-');
+    var md = k.slice(5);
+    var evs = events[k] || [];
+    var head = (+p[1]) + '月' + (+p[2]) + '日 · ' + WEEKDAYS[new Date(+p[0], +p[1] - 1, +p[2]).getDay()];
+    var subBits = [];
+    if (LUNAR_FESTIVALS_2026[md]) subBits.push(LUNAR_FESTIVALS_2026[md]);
+    else if (HOLIDAYS_2026[md]) subBits.push(HOLIDAYS_2026[md].name + (HOLIDAYS_2026[md].off ? '（休）' : ''));
+    else if (md === '02-16') subBits.push('除夕（休）');
+    if (SOLAR_TERMS_2026[md]) subBits.push('节气 · ' + SOLAR_TERMS_2026[md]);
+    var lu = lunarOf(+p[0], +p[1] - 1, +p[2]);
+    if (lu.text && !LUNAR_FESTIVALS_2026[md]) subBits.push('农历' + lu.text);
+    var html = '<div class="t-head">' + esc(head) + '</div>';
+    if (subBits.length) html += '<div class="t-sub">' + esc(subBits.join(' · ')) + '</div>';
+    if (evs.length) {
+      html += '<div class="t-ev">';
+      for (var i = 0; i < Math.min(3, evs.length); i++) {
+        html += esc((evs[i].time ? evs[i].time + ' ' : '') + evs[i].t) + '<br>';
+      }
+      if (evs.length > 3) html += '还有 ' + (evs.length - 3) + ' 项…';
+      html += '</div>';
+    } else {
+      html += '<div class="t-sub">点击添加事件</div>';
+    }
+    tipEl.innerHTML = html;
+    tipEl.classList.add('on');
+  });
+  gridEl.addEventListener('mousemove', function (e) {
+    if (!tipEl.classList.contains('on')) return;
+    var x = clamp(e.clientX + 14, 8, window.innerWidth - 270);
+    var y = clamp(e.clientY + 16, 8, window.innerHeight - 120);
+    tipEl.style.left = x + 'px';
+    tipEl.style.top = y + 'px';
+  });
+  gridEl.addEventListener('mouseleave', function () { tipEl.classList.remove('on'); });
+  gridEl.addEventListener('click', function (e) {
+    var cell = e.target.closest('.cell');
+    if (cell && cell.dataset.key) { tipEl.classList.remove('on'); openDrawer(cell.dataset.key); }
+  });
+  gridEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      var cell = e.target.closest('.cell');
+      if (cell && cell.dataset.key) { e.preventDefault(); openDrawer(cell.dataset.key); }
+    }
+  });
+
+  /* ==========================================================
+     九、实时时钟 / 日期行 / 夜空模式
+     ========================================================== */
+
+  var lastQuoteDay = -1;
+  function nearestPastTerm() {
+    var all = termEntries(), cur = null;
+    for (var i = 0; i < all.length; i++) { if (all[i].t <= NOW) cur = all[i]; }
+    return cur;
+  }
+  function tick() {
+    var n = new Date();
+    $('clock').textContent = pad2(n.getHours()) + ':' + pad2(n.getMinutes()) + ':' + pad2(n.getSeconds());
+    var md = mdKey(n.getMonth() + 1, n.getDate());
+    var bits = n.getFullYear() + '年' + (n.getMonth() + 1) + '月' + n.getDate() + '日 · ' + WEEKDAYS[n.getDay()];
+    var lu = lunarOf(n.getFullYear(), n.getMonth(), n.getDate());
+    if (lu.text) bits += ' · 农历' + lu.text;
+    if (SOLAR_TERMS_2026[md]) bits += ' · 今日<b>' + SOLAR_TERMS_2026[md] + '</b>';
+    else {
+      var pt = nearestPastTerm();
+      if (pt) bits += ' · ' + pt.name + '已至';
+    }
+    $('dateLine').innerHTML = bits;
+
+    // 每日一句：按年内序数轮换
+    var doy = dayOfYear(n);
+    if (doy !== lastQuoteDay) {
+      lastQuoteDay = doy;
+      $('quoteText').textContent = QUOTES[doy % QUOTES.length];
+    }
+    // 夜空模式按分钟重估
+    var nightKey = n.getHours() * 60 + n.getMinutes();
+    if (nightKey !== tick._nk) { tick._nk = nightKey; applyNight(); }
+  }
+  function computeNight() {
+    if (nightPref === 'on') return true;
+    if (nightPref === 'off') return false;
+    var h = new Date().getHours();                       // 读取实时时间，页面常驻也能跨 18:00 自动切换
+    return h >= 18 || h < 6;
+  }
+  function applyNight() {
+    var on = computeNight();
+    document.body.classList.toggle('night', on);
+    FX.setNight(on);
+    var label = nightPref === 'auto' ? '夜空 · 自动' : (nightPref === 'on' ? '夜空 · 常开' : '夜空 · 关闭');
+    var btn = $('btnNight');
+    btn.textContent = label;
+    btn.style.color = nightPref === 'off' ? 'var(--ink-2)' : '';
+  }
+
+  /* ==========================================================
+     十、Canvas 粒子系统（四季 + 极光 + 积雪 + 星空）
+     性能：数量自适应 / DPR 钳制 / 页签隐藏暂停 / FPS 降载
+     ========================================================== */
+
+  var FX = (function () {
+    var canvas = $('fx');
+    var ctx = canvas.getContext('2d', { alpha: true });
+    var W = 0, H = 0, DPR = 1;
+    var particles = [];
+    var targetCount = 80;
+    var curSeason = 'autumn';
+    var rafId = null, last = 0, t = 0;
+    var running = false;
+    var fps = { acc: 0, n: 0 };
+    var gustX = 0;
+    var night = false, nightA = 0;                       // 夜空透明度渐变
+    var stars = [];
+    var snowMap = null, snowAlpha = 0, snowColW = 10;
+    var ribbons = [];
+    var sprites = null;
+
+    /* ----- 精灵预渲染：避免每帧绘制复杂路径 ----- */
+    function makeSprite(size, draw) {
+      var c = document.createElement('canvas');
+      c.width = size; c.height = size;
+      draw(c.getContext('2d'), size);
+      return c;
+    }
+    function buildSprites() {
+      var petalColors = ['#F8BBD0', '#F06595', '#FFDEEB', '#E64980'];
+      var leafColors = ['#E8590C', '#D9480F', '#F08C00', '#C92A2A'];
+      sprites = {
+        petals: petalColors.map(function (col) {
+          return makeSprite(26, function (g, s) {
+            var r = s / 2;
+            g.fillStyle = col;
+            g.beginPath();
+            g.moveTo(r, s * 0.06);
+            g.bezierCurveTo(s * 0.96, s * 0.2, s * 0.86, s * 0.82, r, s * 0.94);
+            g.bezierCurveTo(s * 0.14, s * 0.82, s * 0.04, s * 0.2, r, s * 0.06);
+            g.fill();
+            g.globalCompositeOperation = 'destination-out';
+            g.beginPath();
+            g.ellipse(r, s * 0.015, s * 0.17, s * 0.12, 0, 0, Math.PI * 2);
+            g.fill();
+          });
+        }),
+        leaves: leafColors.map(function (col) {
+          return makeSprite(30, function (g, s) {
+            g.fillStyle = col;
+            g.beginPath();
+            g.moveTo(s * 0.12, s * 0.88);
+            g.quadraticCurveTo(s * 0.05, s * 0.18, s * 0.5, s * 0.08);
+            g.quadraticCurveTo(s * 0.95, s * 0.18, s * 0.88, s * 0.88);
+            g.quadraticCurveTo(s * 0.5, s * 0.68, s * 0.12, s * 0.88);
+            g.fill();
+            g.strokeStyle = 'rgba(90,40,10,0.55)';
+            g.lineWidth = 1.2;
+            g.beginPath();
+            g.moveTo(s * 0.5, s * 0.14);
+            g.lineTo(s * 0.5, s * 0.92);
+            g.stroke();
+          });
+        }),
+        firefly: makeSprite(36, function (g, s) {
+          var grad = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+          grad.addColorStop(0, 'rgba(255,249,197,0.95)');
+          grad.addColorStop(0.28, 'rgba(255,224,102,0.65)');
+          grad.addColorStop(0.65, 'rgba(130,201,90,0.22)');
+          grad.addColorStop(1, 'rgba(130,201,90,0)');
+          g.fillStyle = grad;
+          g.fillRect(0, 0, s, s);
+        }),
+        mote: makeSprite(14, function (g, s) {
+          var grad = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+          grad.addColorStop(0, 'rgba(178,242,187,0.9)');
+          grad.addColorStop(1, 'rgba(178,242,187,0)');
+          g.fillStyle = grad;
+          g.fillRect(0, 0, s, s);
+        }),
+        snow: makeSprite(14, function (g, s) {
+          var grad = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+          grad.addColorStop(0, 'rgba(255,255,255,0.98)');
+          grad.addColorStop(0.55, 'rgba(255,255,255,0.7)');
+          grad.addColorStop(1, 'rgba(255,255,255,0)');
+          g.fillStyle = grad;
+          g.fillRect(0, 0, s, s);
+        }),
+        ice: makeSprite(26, function (g, s) {
+          var grad = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+          grad.addColorStop(0, 'rgba(199,236,255,0.9)');
+          grad.addColorStop(0.5, 'rgba(116,192,252,0.4)');
+          grad.addColorStop(1, 'rgba(116,192,252,0)');
+          g.fillStyle = grad;
+          g.fillRect(0, 0, s, s);
+        })
+      };
+    }
+    function buildRibbons() {
+      var defs = [
+        ['#5EF2C4', '#3BC9DB', '#845EF7'],
+        ['#63E6BE', '#4DABF7', '#5EF2C4'],
+        ['#B197FC', '#5EF2C4', '#4DABF7']
+      ];
+      ribbons = defs.map(function (cols) {
+        var c = document.createElement('canvas');
+        c.width = 600; c.height = 180;
+        var g = c.getContext('2d');
+        var lg = g.createLinearGradient(0, 0, 600, 0);
+        lg.addColorStop(0, 'rgba(255,255,255,0)');
+        lg.addColorStop(0.25, cols[0]);
+        lg.addColorStop(0.5, cols[1]);
+        lg.addColorStop(0.75, cols[2]);
+        lg.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = lg;
+        g.fillRect(0, 0, 600, 180);
+        g.globalCompositeOperation = 'destination-in';
+        var vg = g.createLinearGradient(0, 0, 0, 180);
+        vg.addColorStop(0, 'rgba(255,255,255,0)');
+        vg.addColorStop(0.35, 'rgba(255,255,255,1)');
+        vg.addColorStop(0.65, 'rgba(255,255,255,1)');
+        vg.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = vg;
+        g.fillRect(0, 0, 600, 180);
+        return c;
+      });
+    }
+
+    /* ----- 季节配方 ----- */
+    var CONF = {
+      spring: [{ sp: 'petal', w: 1 }],
+      summer: [{ sp: 'firefly', w: 0.62 }, { sp: 'mote', w: 0.38 }],
+      autumn: [{ sp: 'leaf', w: 0.58 }, { sp: 'mote', w: 0.42 }],
+      winter: [{ sp: 'snow', w: 0.82 }, { sp: 'ice', w: 0.18 }]
+    };
+    function pickType(s) {
+      var conf = CONF[s], r = Math.random(), acc = 0;
+      for (var i = 0; i < conf.length; i++) { acc += conf[i].w; if (r <= acc) return conf[i].sp; }
+      return conf[0].sp;
+    }
+    function pickSprite(sp) {
+      if (sp === 'petal') return sprites.petals[(Math.random() * sprites.petals.length) | 0];
+      if (sp === 'leaf') return sprites.leaves[(Math.random() * sprites.leaves.length) | 0];
+      return sprites[sp] || sprites.mote;
+    }
+
+    /* ----- 粒子 ----- */
+    function spawn(sp, atRandomY) {
+      var p = {
+        sp: sp,
+        x: Math.random() * W,
+        y: atRandomY ? Math.random() * H : -30 - Math.random() * 60,
+        ix: 0, iy: 0,
+        vx: 0, vy: 0,
+        rot: Math.random() * Math.PI * 2,
+        vr: (Math.random() - 0.5) * 0.05,
+        flip: Math.random() * Math.PI * 2,
+        size: 0.6 + Math.random() * 0.9,
+        alpha: 0,
+        ta: 0.55 + Math.random() * 0.45,
+        phase: Math.random() * Math.PI * 2,
+        freq: 0.4 + Math.random() * 0.8,
+        speed: 0.4 + Math.random() * 0.7,
+        bounces: 0,
+        dying: false,
+        sprite: pickSprite(sp)
+      };
+      if (sp === 'firefly') { p.size = 0.5 + Math.random() * 0.7; p.vy = (Math.random() - 0.5) * 0.4; }
+      if (sp === 'snow') p.size = 0.4 + Math.random() * 0.8;
+      if (sp === 'leaf') p.size = 0.7 + Math.random() * 0.9;
+      particles.push(p);
+      return p;
+    }
+    function respawnTop(p) {
+      p.x = Math.random() * W;
+      p.y = -30 - Math.random() * 50;
+      p.bounces = 0;
+      p.alpha = 0;
+    }
+
+    /* ----- 入场：粒子汇聚成月份文字 ----- */
+    var intro = { mode: 'none', pts: [], t0: 0 };
+    function buildTargets(text) {
+      var off = document.createElement('canvas');
+      off.width = Math.max(320, W); off.height = Math.max(240, H);
+      var g = off.getContext('2d');
+      var fs = Math.min(W * 0.52, H * 0.6, 430);
+      g.font = '700 ' + fs + 'px "Outfit","Noto Sans SC","Microsoft YaHei",sans-serif';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillStyle = '#fff';
+      g.fillText(text, off.width / 2, off.height * 0.45);
+      var data = g.getImageData(0, 0, off.width, off.height).data;
+      var step = Math.max(6, Math.round(Math.min(W, H) / 120));
+      var pts = [];
+      for (var yy = 0; yy < off.height; yy += step) {
+        for (var xx = 0; xx < off.width; xx += step) {
+          if (data[(yy * off.width + xx) * 4 + 3] > 120) pts.push({ x: xx, y: yy });
+        }
+      }
+      for (var i = pts.length - 1; i > 0; i--) {
+        var j = (Math.random() * (i + 1)) | 0;
+        var tmp = pts[i]; pts[i] = pts[j]; pts[j] = tmp;
+      }
+      return pts;
+    }
+    function startIntro(monthNum) {
+      intro.pts = buildTargets(monthNum + '月');
+      if (!intro.pts.length) { intro.mode = 'none'; finishIntro(); return; }
+      intro.mode = 'gather';
+      intro.t0 = t;
+      var n = Math.min(intro.pts.length, 240);
+      particles.length = 0;
+      var diag = Math.hypot(W, H);
+      for (var i = 0; i < n; i++) {
+        var ang = Math.random() * Math.PI * 2;
+        var rad = diag * (0.4 + Math.random() * 0.35);
+        var p = spawn('mote', false);
+        p.sx = W / 2 + Math.cos(ang) * rad;
+        p.sy = H / 2 + Math.sin(ang) * rad;
+        p.tx = intro.pts[i % intro.pts.length].x;
+        p.ty = intro.pts[i % intro.pts.length].y;
+        p.size = 0.75 + Math.random() * 0.6;
+        p.ta = 0.9;
+        p.delay = Math.random() * 0.25;
+        p.extra = i >= targetCount;                      // 多余粒子散开后淡出
+      }
+      FXIntro.mark();
+    }
+    function stepIntro() {
+      var et = t - intro.t0;
+      var k = Math.min(2, Math.max(0.5, FXIntro.dt / 16.7));
+      for (var i = 0; i < particles.length; i++) {
+        var p = particles[i];
+        var local = clamp((et - p.delay) / 1.6, 0, 1);
+        var ease = 1 - Math.pow(1 - local, 3);           // easeOutCubic
+        var jitter = (1 - local) * 6;
+        p.x = p.sx + (p.tx - p.sx) * ease + (Math.random() - 0.5) * jitter;
+        p.y = p.sy + (p.ty - p.sy) * ease + (Math.random() - 0.5) * jitter;
+        p.alpha += (p.ta - p.alpha) * 0.08 * k;
+        p.rot += p.vr * k;
+        if (et > 2.7 && p.extra) { p.ta = 0; }
+        // 释放：汇聚完成后化作季节氛围
+        if (et > 2.8 + p.delay) {
+          if (!p.released) {
+            p.released = true;
+            morph(p);
+            p.ix = (Math.random() - 0.5) * 6;
+            p.iy = (Math.random() - 0.5) * 4;
+          }
+        }
+      }
+      if (et > 2.45) FXIntro.ready();
+      if (et > 3.6) intro.mode = 'none';
+    }
+    function morph(p) {
+      p.sp = pickType(curSeason);
+      p.sprite = pickSprite(p.sp);
+      p.ta = 0.55 + Math.random() * 0.45;
+      p.speed = 0.4 + Math.random() * 0.7;
+      p.phase = Math.random() * Math.PI * 2;
+      p.freq = 0.4 + Math.random() * 0.8;
+      p.extra = false;
+    }
+
+    /* ----- 季节行为更新 ----- */
+    function updateParticle(p, k) {
+      var wind = Math.sin(t * 0.05) * 0.3 + gustX;
+      p.ix *= 0.94; p.iy *= 0.94;
+      if (p.sp === 'firefly') {
+        p.vx += (Math.random() - 0.5) * 0.14 * k;
+        p.vy += (Math.random() - 0.5) * 0.14 * k;
+        p.vx = clamp(p.vx * 0.985, -0.9, 0.9);
+        p.vy = clamp(p.vy * 0.985, -0.9, 0.9);
+        p.x += (p.vx + wind * 0.25 + p.ix) * k;
+        p.y += (p.vy + p.iy) * k;
+        if (p.x < -20) p.x = W + 20; if (p.x > W + 20) p.x = -20;
+        if (p.y < -20) p.y = H + 20; if (p.y > H + 20) p.y = -20;
+        var glow = 0.5 + 0.5 * Math.sin(t * p.freq * 2 + p.phase);
+        p.ta = 0.15 + glow * 0.85;
+      } else if (p.sp === 'snow') {
+        p.y += p.speed * 0.9 * k + p.iy * k;
+        p.x += (Math.sin(t * p.freq + p.phase) * 0.5 + wind * 0.6 + p.ix) * k;
+        p.rot += p.vr * k;
+        var ground = H - (snowMap ? snowMap[Math.min(snowMap.length - 1, Math.max(0, (p.x / snowColW) | 0))] : 0);
+        if (p.y >= ground) {
+          depositSnow(p.x, 0.5 + p.size * 0.7);
+          respawnTop(p);
+          return;
+        }
+      } else if (p.sp === 'leaf') {
+        p.y += (p.speed * 1.35 + 0.3) * k + p.iy * k;
+        p.x += (Math.sin(t * p.freq + p.phase) * 0.8 + wind + p.ix) * k;
+        p.rot += p.vr * 1.6 * k;
+        p.flip += 0.04 * k;
+        var floor = H - 6;
+        if (p.y >= floor) {
+          if (p.bounces < 2) { p.y = floor; p.vy = 0; p.bounces++; p.iy = -2.2 - Math.random(); }
+          else { p.ta -= 0.02; if (p.ta <= 0.05) { respawnTop(p); p.sprite = pickSprite('leaf'); p.ta = 0.6 + Math.random() * 0.4; } }
+        }
+      } else if (p.sp === 'petal') {
+        p.y += (p.speed + 0.25) * k + p.iy * k;
+        p.x += (Math.sin(t * p.freq + p.phase) * 0.7 + wind + p.ix) * k;
+        p.rot += p.vr * 1.4 * k;
+      } else { // mote：微尘光点
+        p.y += (p.speed * 0.5 - 0.12) * k + p.iy * k;
+        p.x += (Math.sin(t * p.freq * 0.6 + p.phase) * 0.35 + wind * 0.5 + p.ix) * k;
+      }
+      if (p.y > H + 40) respawnTop(p);
+      if (p.y < -80) { p.y = -80; }
+      p.alpha += ((p.dying ? 0 : p.ta) - p.alpha) * 0.045 * k;
+    }
+    function drawParticle(p) {
+      var s = p.sprite;
+      var size = s.width * p.size;
+      var a = clamp(p.alpha, 0, 1);
+      if (a <= 0.01) return;
+      ctx.globalAlpha = a;
+      if (p.sp === 'leaf') {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.scale(0.3 + 0.7 * Math.abs(Math.sin(p.flip)), 1);
+        ctx.drawImage(s, -size / 2, -size / 2, size, size);
+        ctx.restore();
+      } else if (p.sp === 'petal') {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.scale(1, 0.75 + 0.25 * Math.sin(p.flip));
+        ctx.drawImage(s, -size / 2, -size / 2, size, size);
+        ctx.restore();
+      } else {
+        ctx.drawImage(s, p.x - size / 2, p.y - size / 2, size, size);
+      }
+    }
+
+    /* ----- 积雪 ----- */
+    function initSnow() {
+      var cols = Math.ceil(W / snowColW) + 1;
+      snowMap = new Float32Array(cols);
+    }
+    function depositSnow(x, amt) {
+      if (!snowMap) return;
+      var i = clamp((x / snowColW) | 0, 0, snowMap.length - 1);
+      var max = H * 0.075;
+      snowMap[i] = Math.min(max, snowMap[i] + amt);
+      if (snowMap[i + 1] !== undefined) snowMap[i + 1] = Math.min(max, snowMap[i + 1] + amt * 0.3);
+      if (snowMap[i - 1] !== undefined) snowMap[i - 1] = Math.min(max, snowMap[i - 1] + amt * 0.3);
+    }
+    function smoothSnow() {
+      if (!snowMap) return;
+      for (var i = 1; i < snowMap.length - 1; i++) {
+        snowMap[i] = (snowMap[i - 1] + snowMap[i] * 2 + snowMap[i + 1]) / 4;
+      }
+    }
+    function drawSnowGround() {
+      if (!snowMap || snowAlpha <= 0.01) return;
+      ctx.globalAlpha = snowAlpha * 0.92;
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.beginPath();
+      ctx.moveTo(0, H + 4);
+      for (var i = 0; i < snowMap.length; i++) ctx.lineTo(i * snowColW, H - snowMap[i]);
+      ctx.lineTo(W + 4, H + 4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    /* ----- 星空与极光 ----- */
+    function initStars() {
+      stars = [];
+      var n = Math.round((W * H) / 26000);
+      for (var i = 0; i < n; i++) {
+        stars.push({ x: Math.random() * W, y: Math.random() * H * 0.72, r: 0.4 + Math.random() * 1.1, ph: Math.random() * Math.PI * 2 });
+      }
+    }
+    function drawStars() {
+      if (nightA <= 0.02) return;
+      for (var i = 0; i < stars.length; i++) {
+        var s = stars[i];
+        var a = nightA * (0.35 + 0.5 * Math.abs(Math.sin(t * 0.7 + s.ph)));
+        ctx.globalAlpha = a;
+        ctx.fillStyle = '#EAF3FF';
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+    function drawAurora() {
+      if (nightA <= 0.02) return;
+      ctx.globalCompositeOperation = 'screen';
+      for (var i = 0; i < ribbons.length; i++) {
+        var rb = ribbons[i];
+        var scale = W / 600;
+        var y0 = H * (0.06 + 0.13 * i) + Math.sin(t * 0.22 + i * 1.9) * H * 0.045;
+        var xoff = -((t * (10 + i * 7)) % (600 * scale));
+        var alpha = nightA * (0.22 + 0.09 * Math.sin(t * 0.35 + i * 2.1));
+        ctx.globalAlpha = Math.max(0, alpha);
+        ctx.drawImage(rb, xoff, y0, 600 * scale, 180 * scale * 0.9);
+        ctx.drawImage(rb, xoff + 600 * scale, y0, 600 * scale, 180 * scale * 0.9);
+      }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    /* ----- 主循环 ----- */
+    function frame(ts) {
+      if (!running) return;
+      var dt = clamp(ts - last, 4, 50);
+      last = ts;
+      t += dt / 1000;
+      var k = dt / 16.7;
+      FPS: {
+        fps.acc += dt; fps.n++;
+        if (fps.n >= 90) {
+          var avg = fps.acc / fps.n;
+          if (avg > 24 && targetCount > 42) targetCount = Math.floor(targetCount * 0.8);
+          fps.acc = 0; fps.n = 0;
+        }
+      }
+      ctx.clearRect(0, 0, W, H);
+      nightA += ((night ? 1 : 0) - nightA) * 0.02 * k;
+      gustX *= 0.96;
+      snowAlpha += (((curSeason === 'winter') ? 1 : 0) - snowAlpha) * 0.01 * k;
+      if (snowMap) { for (var mIdx = 0; mIdx < snowMap.length; mIdx++) snowMap[mIdx] = Math.max(0, snowMap[mIdx] - 0.004); }
+      if (((t * 60) | 0) % 90 === 0) smoothSnow();
+
+      drawStars();
+      drawAurora();
+      drawSnowGround();
+
+      if (intro.mode === 'gather') stepIntro();
+      else {
+        // 维持目标数量（渐入补充，避免同帧爆增）
+        if (particles.length < targetCount && Math.random() < 0.35) spawn(pickType(curSeason), true);
+        if (particles.length > targetCount + 30) particles[targetCount + 30].dying = true;
+      }
+
+      for (var i = particles.length - 1; i >= 0; i--) {
+        var p = particles[i];
+        if (intro.mode !== 'gather') updateParticle(p, k);
+        drawParticle(p);
+        if (p.dying && p.alpha <= 0.02) { particles.splice(i, 1); continue; }
+        if (intro.mode !== 'gather' && p.ta <= 0.02 && p.alpha <= 0.02) { particles.splice(i, 1); }
+      }
+      rafId = requestAnimationFrame(frame);
+    }
+    function start() {
+      if (running) return;
+      running = true;
+      last = performance.now();
+      rafId = requestAnimationFrame(frame);
+    }
+    function stop() {
+      running = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+
+    /* ----- 供 intro 与外部使用的桥接对象 ----- */
+    var FXIntro = { dt: 16.7, ready: function () {}, mark: function () {} };
+
+    function resize() {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      DPR = clamp(window.devicePixelRatio || 1, 1, 2);
+      if (W * H > 2200000) DPR = Math.min(DPR, 1.5);     // 超大屏降 DPR 保帧率
+      canvas.width = Math.round(W * DPR);
+      canvas.height = Math.round(H * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      targetCount = clamp(Math.round((W * H) / 16000), 46, 112);
+      initSnow();
+      initStars();
+    }
+
+    function setSeason(s) {
+      curSeason = s;
+      for (var i = 0; i < particles.length; i++) particles[i].dying = true; // 旧粒子渐隐，新粒子渐入 → 渐变过渡
+    }
+    function setNight(on) { night = on; }
+
+    function init(season0) {
+      buildSprites();
+      buildRibbons();
+      resize();
+      curSeason = season0;
+      if (REDUCED) {
+        // 降级：静态一帧稀疏粒子 + 静态极光，不启动循环
+        curSeason = season0;
+        for (var i = 0; i < 46; i++) {
+          var p = spawn(pickType(season0), true);
+          p.alpha = p.ta * 0.7;
+          updateParticle(p, 1);
+        }
+        night = computeNight();
+        nightA = night ? 1 : 0;
+        drawStars();
+        drawAurora();
+        drawSnowGround();
+        for (var j = 0; j < particles.length; j++) drawParticle(particles[j]);
+        return;
+      }
+      startIntro(view.m + 1);
+      start();
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) stop();
+        else start();
+      });
+      var rs;
+      window.addEventListener('resize', function () {
+        clearTimeout(rs);
+        rs = setTimeout(resize, 160);
+      });
+    }
+
+    return {
+      init: init,
+      setSeason: setSeason,
+      setNight: setNight,
+      gust: function (dir) {
+        for (var i = 0; i < particles.length; i++) {
+          particles[i].ix += dir * (2 + Math.random() * 2.6);
+          particles[i].iy += (Math.random() - 0.5) * 1.6;
+        }
+      },
+      bridge: function (fn) { FXIntro = fn; }
+    };
+  })();
+
+  // intro 期间向主循环暴露 ready/dt 信号
+  var introAPI = {
+    dt: 16.7,
+    ready: function () {
+      if (!document.body.classList.contains('ready')) document.body.classList.add('ready');
+    },
+    mark: function () {}
+  };
+  FX.bridge(introAPI);
+
+  /* ==========================================================
+     十一、视差微动（指针 + 滚动）
+     ========================================================== */
+
+  function initParallax() {
+    if (REDUCED || !FINE_POINTER) return;
+    var calCard = $('calCard');
+    var haze = $('haze');
+    var termCard = document.querySelector('.term-card');
+    var tx = 0, ty = 0, cx = 0, cy = 0;
+    window.addEventListener('pointermove', function (e) {
+      tx = (e.clientX / window.innerWidth - 0.5) * 2;
+      ty = (e.clientY / window.innerHeight - 0.5) * 2;
+    }, { passive: true });
+    (function loop() {
+      cx += (tx - cx) * 0.06;
+      cy += (ty - cy) * 0.06;
+      // 指针视差作用在月历卡上（与翻转动画同元素，动画期间由 keyframes 接管）
+      if (calCard) calCard.style.transform = 'rotateY(' + (cx * 2.2).toFixed(2) + 'deg) rotateX(' + (-cy * 1.6).toFixed(2) + 'deg)';
+      if (haze) haze.style.marginLeft = (-cx * 10).toFixed(1) + 'px';
+      requestAnimationFrame(loop);
+    })();
+    // 滚动视差：节气卡轻微反向漂移
+    window.addEventListener('scroll', function () {
+      var sy = window.scrollY || window.pageYOffset;
+      if (termCard) termCard.style.marginTop = (sy * -0.08).toFixed(1) + 'px';
+    }, { passive: true });
+  }
+
+  /* ==========================================================
+     十二、控制与初始化
+     ========================================================== */
+
+  $('btnPrev').addEventListener('click', function () { gotoMonth(-1); });
+  $('btnNext').addEventListener('click', function () { gotoMonth(1); });
+  $('btnToday').addEventListener('click', gotoToday);
+  $('btnNight').addEventListener('click', function () {
+    nightPref = nightPref === 'auto' ? 'on' : (nightPref === 'on' ? 'off' : 'auto');
+    store('shiguangli_night_v1', nightPref);
+    applyNight();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.target && /input|select|textarea/i.test(e.target.tagName)) return;
+    if (e.key === 'Escape') { closeDrawer(); return; }
+    if (e.key === 'ArrowLeft') gotoMonth(-1);
+    else if (e.key === 'ArrowRight') gotoMonth(1);
+    else if (e.key === 't' || e.key === 'T') gotoToday();
+  });
+
+  function init() {
+    applySeason();
+    renderCalendar(0);
+    renderCountdown();
+    renderTermCard();
+    FX.init(season);
+    applyNight();
+    tick();
+    setInterval(tick, 1000);
+    if (REDUCED) document.body.classList.add('ready');
+    initParallax();
+    // 定时刷新倒计时（跨天零点场景）
+    setInterval(renderCountdown, 60000);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

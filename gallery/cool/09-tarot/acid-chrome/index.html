@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="FATE // 命运作证 —— 酸性设计 × 液态金属塔罗占卜。选主题、洗牌、抽牌、翻牌，抽出属于你的金属证词。">
+<title>FATE // 命运作证 · 酸性液态塔罗</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Space+Grotesk:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   FATE // 命运作证 — Acid Graphics Tarot
+   酸性设计：铬金属字 / 液态 blob / 锐利几何 / 欧普纹理 / 酸绿点缀
+   ============================================================ */
+:root{
+  --bg:#0A0A0A;
+  --panel:#111111;
+  --panel2:#151515;
+  --acid:#C6FF00;
+  --uv:#7B2FFF;
+  --mag:#FF2E88;
+  --cyan:#00F0FF;
+  --ink:#EDEDED;
+  --dim:#A9B1B6;
+  --line:rgba(237,237,237,.14);
+  /* 铬金属渐变：银虹 multi-stop（银白-青-深灰-淡紫-银白） */
+  --chrome-grad:linear-gradient(105deg,
+    #F7FAFF 0%,#CBD7E9 12%,#8E9EAB 27%,#EFF5FF 43%,#39424F 50%,
+    #BFE9FF 58%,#78849A 71%,#E6D9FF 85%,#F7FAFF 100%);
+  /* Y2K 金属质感边框渐变 */
+  --metal-border:linear-gradient(150deg,#FAFCFF 0%,#93A1B5 22%,#EDF3FF 40%,
+    #4C586B 58%,#D7E2F2 78%,#8E9EAB 100%);
+  --f-disp:"Unbounded","Noto Sans SC",sans-serif;
+  --f-body:"Space Grotesk","Noto Sans SC",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion: no-preference){
+  html{scroll-behavior:smooth}
+}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--f-body);
+  font-size:16px;
+  line-height:1.75;
+  overflow-x:hidden;
+}
+::selection{background:var(--acid);color:#0A0A0A}
+:focus-visible{outline:2px solid var(--acid);outline-offset:3px}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+a{color:inherit;text-decoration:none}
+section{scroll-margin-top:86px}
+
+/* ---------- 噪点覆盖层（静态，低透明度） ---------- */
+.grain{
+  position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.05;
+  background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="160" height="160" filter="url(%23n)" opacity="0.55"/></svg>');
+}
+
+/* ---------- 铬金属字 ---------- */
+.chrome{
+  background:var(--chrome-grad);
+  background-size:220% 100%;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  -webkit-text-fill-color:transparent;
+  animation:chromeFlow 3s linear infinite;
+}
+@keyframes chromeFlow{
+  from{background-position:0% 0}
+  to{background-position:220% 0}
+}
+/* background-clip:text 失败兜底 */
+@supports not ((-webkit-background-clip:text) or (background-clip:text)){
+  .chrome{background:none !important;color:var(--acid);-webkit-text-fill-color:var(--acid);animation:none}
+}
+
+/* ---------- 滚动显现 ---------- */
+.rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
+.rv.in{opacity:1;transform:none}
+
+/* ---------- 顶部导航 ---------- */
+.site-head{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(16px,3vw,40px);height:64px;
+  background:rgba(10,10,10,.82);
+  border-bottom:1px solid var(--line);
+}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--f-disp);font-weight:800;font-size:17px;letter-spacing:.04em}
+.logo .dot{width:9px;height:9px;background:var(--acid);transform:rotate(45deg)}
+.logo .cn{font-size:14px;font-weight:700;color:var(--ink)}
+.site-nav{display:flex;gap:clamp(14px,2.4vw,34px)}
+.site-nav a{
+  font-size:13px;letter-spacing:.14em;color:var(--dim);
+  padding:6px 2px;position:relative;transition:color .2s;
+}
+.site-nav a b{color:var(--ink);font-weight:500;margin-right:6px}
+.site-nav a::after{
+  content:"";position:absolute;left:0;bottom:0;height:2px;width:0;
+  background:var(--acid);transition:width .25s;
+}
+.site-nav a:hover{color:var(--ink)}
+.site-nav a:hover::after{width:100%}
+.head-tag{
+  font-size:11px;letter-spacing:.2em;color:#0A0A0A;background:var(--acid);
+  padding:3px 10px;font-weight:700;
+}
+
+/* ---------- Hero ---------- */
+.hero{
+  position:relative;min-height:100vh;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:120px clamp(16px,4vw,56px) 0;
+  overflow:hidden;
+}
+.hero-grid{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(198,255,0,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(198,255,0,.05) 1px,transparent 1px);
+  background-size:44px 44px;
+  animation:gridMove 10s linear infinite;
+}
+@keyframes gridMove{from{background-position:0 0,0 0}to{background-position:0 44px,44px 0}}
+.hero-inner{position:relative;z-index:5;max-width:1180px}
+
+.kicker{
+  font-size:clamp(11px,1.2vw,14px);letter-spacing:.34em;color:var(--dim);
+  text-transform:uppercase;margin-bottom:18px;
+  display:flex;align-items:center;gap:14px;
+}
+.kicker::before{content:"";width:42px;height:1px;background:var(--acid)}
+
+.hero-title{font-family:var(--f-disp);line-height:.94;position:relative}
+.ht-wrap{position:relative;display:inline-block;overflow:hidden;padding:6px 10px 6px 0}
+.hero-title .l1{
+  display:block;
+  font-size:clamp(64px,12.5vw,172px);
+  font-weight:900;letter-spacing:.01em;
+  -webkit-text-stroke:1px rgba(255,255,255,.22);
+}
+.hero-title .l2{
+  display:block;
+  font-family:var(--f-disp);
+  font-size:clamp(34px,6.6vw,88px);
+  font-weight:900;letter-spacing:.06em;
+  margin-top:6px;
+}
+.hero-title .l2 .slash{
+  color:var(--acid);-webkit-text-fill-color:var(--acid);
+  -webkit-text-stroke:0;font-weight:800;
+}
+/* 入场：铬字反光扫过 */
+.sheenbar{
+  position:absolute;top:-12%;bottom:-12%;left:0;width:36%;
+  background:linear-gradient(100deg,transparent,
+    rgba(255,255,255,.72) 44%,rgba(191,233,255,.92) 50%,
+    rgba(255,255,255,.72) 56%,transparent);
+  transform:translateX(-180%) skewX(-18deg);
+  mix-blend-mode:screen;pointer-events:none;
+  animation:entrySheen 1.5s .35s cubic-bezier(.65,.05,.35,1) 1 both;
+}
+@keyframes entrySheen{to{transform:translateX(430%) skewX(-18deg)}}
+/* 间歇 glitch 色偏 */
+.glitch{position:relative;display:inline-block}
+.glitch::before,.glitch::after{
+  content:attr(data-text);position:absolute;inset:0;
+  background:none;-webkit-background-clip:initial;background-clip:initial;
+  pointer-events:none;opacity:.85;
+}
+.glitch::before{
+  color:var(--mag);-webkit-text-fill-color:var(--mag);-webkit-text-stroke:0;
+  animation:gA 7s steps(1) infinite;
+}
+.glitch::after{
+  color:var(--cyan);-webkit-text-fill-color:var(--cyan);-webkit-text-stroke:0;
+  animation:gB 7s steps(1) .12s infinite;
+}
+@keyframes gA{
+  0%,86%{clip-path:inset(50% 0 50% 0);transform:none;opacity:0}
+  87%{clip-path:inset(14% 0 58% 0);transform:translate(-5px,2px);opacity:.9}
+  90%{clip-path:inset(62% 0 10% 0);transform:translate(4px,-2px);opacity:.9}
+  93%,100%{clip-path:inset(50% 0 50% 0);transform:none;opacity:0}
+}
+@keyframes gB{
+  0%,86%{clip-path:inset(50% 0 50% 0);transform:none;opacity:0}
+  88%{clip-path:inset(48% 0 22% 0);transform:translate(5px,1px);opacity:.8}
+  91%{clip-path:inset(8% 0 66% 0);transform:translate(-4px,2px);opacity:.8}
+  94%,100%{clip-path:inset(50% 0 50% 0);transform:none;opacity:0}
+}
+
+.hero-sub{
+  max-width:560px;margin:26px 0 34px;color:var(--dim);font-size:clamp(14px,1.35vw,17px);
+}
+.hero-sub b{color:var(--ink);font-weight:700}
+.hero-sub em{color:var(--acid);font-style:normal;font-weight:700}
+
+.cta-row{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.btn{
+  position:relative;display:inline-flex;align-items:center;gap:10px;
+  padding:15px 30px;font-size:15px;font-weight:700;letter-spacing:.1em;
+  border-radius:2px;overflow:hidden;transition:transform .22s,box-shadow .22s;
+}
+.btn .en{font-size:11px;letter-spacing:.22em;opacity:.75}
+.btn-acid{
+  background:var(--acid);color:#0A0A0A;border:1px solid var(--acid);
+}
+.btn-acid::after{
+  content:"";position:absolute;top:0;bottom:0;left:0;width:44%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.85) 50%,transparent);
+  transform:translateX(-140%) skewX(-20deg);
+  transition:transform .5s ease;
+}
+.btn-acid:hover{transform:translateY(-4px);box-shadow:5px 6px 0 rgba(198,255,0,.28)}
+.btn-acid:hover::after{transform:translateX(320%) skewX(-20deg)}
+.btn-metal{
+  background:linear-gradient(#0f0f0f,#0f0f0f) padding-box,var(--metal-border) border-box;
+  border:2px solid transparent;color:var(--ink);
+  background-size:100% 100%,220% 100%;
+}
+.btn-metal:hover{transform:translateY(-4px);background-position:0 0,100% 0}
+.btn:active{transform:translateY(-1px)}
+
+/* 贴纸（白描边 + 硬投影） */
+.stickers{display:flex;gap:14px;flex-wrap:wrap;margin-top:44px}
+.sticker{
+  display:flex;align-items:center;gap:10px;
+  border:2px solid #F5F7FA;border-radius:2px;
+  padding:9px 16px;font-size:13px;font-weight:700;color:var(--ink);
+  background:var(--panel);box-shadow:5px 5px 0 rgba(245,247,250,.18);
+  transform:rotate(var(--r,0deg));transition:transform .25s,box-shadow .25s;
+}
+.sticker:hover{transform:rotate(0deg) translateY(-4px);box-shadow:7px 8px 0 rgba(198,255,0,.3)}
+.sticker .big{font-family:var(--f-disp);font-size:20px;color:var(--acid);-webkit-text-fill-color:var(--acid)}
+.sticker small{display:block;font-size:10px;letter-spacing:.2em;color:var(--dim);font-weight:500}
+
+/* 欧普条纹带 */
+.stripes{position:relative;z-index:5;margin-top:64px}
+.stripes .s1{height:24px;background:repeating-linear-gradient(-45deg,var(--acid) 0 10px,transparent 10px 20px);opacity:.16}
+.stripes .s2{height:12px;background:repeating-linear-gradient(90deg,#EDEDED 0 2px,transparent 2px 12px);opacity:.18;margin-top:6px}
+
+/* ---------- 液态 blob（≤3 个，feTurbulence + feDisplacementMap） ---------- */
+.blob{position:absolute;pointer-events:none;will-change:transform}
+.blob.b1{width:min(52vw,640px);top:-14%;right:-12%;opacity:.5;animation:blobDrift 16s ease-in-out infinite alternate}
+.blob.b2{width:min(38vw,470px);bottom:2%;left:-14%;opacity:.38;animation:blobDrift 21s ease-in-out infinite alternate-reverse}
+.blob.b3{width:min(46vw,560px);top:-8%;left:-10%;opacity:.3;animation:blobDrift 18s ease-in-out infinite alternate}
+@keyframes blobDrift{
+  from{transform:translate(0,0) rotate(0deg) scale(1)}
+  to{transform:translate(3%,-4%) rotate(9deg) scale(1.06)}
+}
+.blob.pulse{animation:blobPulse .7s cubic-bezier(.2,.85,.25,1)}
+@keyframes blobPulse{
+  0%{transform:scale(1) rotate(0deg)}
+  38%{transform:scale(1.14) rotate(-4deg)}
+  70%{transform:scale(.97) rotate(2deg)}
+  100%{transform:scale(1) rotate(0deg)}
+}
+
+/* ---------- 旋转文字环 + 锐刺星 ---------- */
+.ring{
+  position:absolute;right:clamp(-60px,4vw,120px);top:16%;z-index:4;
+  width:clamp(200px,22vw,300px);aspect-ratio:1;
+  animation:spin 26s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ring text{fill:#8E9EAB;font-family:var(--f-disp);font-size:13.5px;letter-spacing:3px;font-weight:600}
+.ring .ring-acid{fill:var(--acid)}
+.star-spin{
+  position:absolute;inset:26%;animation:spinRev 20s linear infinite;
+}
+@keyframes spinRev{to{transform:rotate(-360deg)}}
+.star-spin polygon{fill:none;stroke:#EDEDED;stroke-width:1.4}
+.star-spin circle{fill:var(--acid)}
+
+/* ---------- 跑马灯 ---------- */
+.marquee{
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  overflow:hidden;background:#0D0D0D;white-space:nowrap;position:relative;z-index:5;
+}
+.mq-track{display:inline-flex;animation:mq 22s linear infinite}
+.mq-track span{
+  font-family:var(--f-disp);font-weight:800;font-size:15px;letter-spacing:.14em;
+  padding:13px 0;color:transparent;background:var(--chrome-grad);
+  -webkit-background-clip:text;background-clip:text;
+}
+.mq-track i{font-style:normal;color:var(--acid);padding:13px 18px;font-size:13px}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+/* ---------- 通用分节 ---------- */
+.sec{padding:clamp(70px,9vw,120px) clamp(16px,4vw,56px);position:relative}
+.sec-inner{max-width:1180px;margin:0 auto}
+.sec-h{
+  display:flex;align-items:baseline;gap:clamp(12px,2vw,24px);flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.sec-no{
+  font-family:var(--f-disp);font-weight:900;font-size:clamp(40px,5vw,64px);
+  line-height:1;
+}
+.sec-cn{
+  font-family:var(--f-disp);font-weight:900;
+  font-size:clamp(24px,3.4vw,42px);letter-spacing:.05em;
+}
+.sec-en{
+  font-size:clamp(11px,1.1vw,13px);letter-spacing:.3em;color:var(--dim);
+  text-transform:uppercase;
+}
+.sec-lead{color:var(--dim);max-width:640px;margin-bottom:clamp(28px,4vw,48px)}
+.sec-lead b{color:var(--acid);font-weight:700}
+
+/* ---------- 抽牌仪式 ---------- */
+#draw{border-top:1px solid var(--line);overflow:hidden}
+.step{margin-bottom:clamp(30px,4vw,46px)}
+.step-tag{
+  display:inline-flex;align-items:center;gap:10px;margin-bottom:14px;
+  font-size:12px;letter-spacing:.24em;color:var(--acid);font-weight:700;
+}
+.step-tag::after{content:"";flex:0 0 40px;height:1px;background:rgba(198,255,0,.4)}
+.step-tag small{color:var(--dim);letter-spacing:.18em;font-weight:500}
+
+.chip-row{display:flex;gap:12px;flex-wrap:wrap}
+.chip{
+  background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  padding:12px 22px;font-size:15px;font-weight:700;border-radius:2px;
+  display:inline-flex;align-items:baseline;gap:9px;
+  transition:transform .2s,border-color .2s,background .2s;
+}
+.chip small{font-size:10px;letter-spacing:.2em;color:var(--dim)}
+.chip:hover{transform:translateY(-3px);border-color:#8E9EAB}
+.chip[aria-pressed="true"]{
+  background:var(--acid);border-color:var(--acid);color:#0A0A0A;
+}
+.chip[aria-pressed="true"] small{color:rgba(10,10,10,.62)}
+
+.spread-row{display:flex;gap:16px;flex-wrap:wrap}
+.spread-card{
+  flex:0 1 300px;background:var(--panel);border:1px solid var(--line);
+  border-radius:2px;padding:20px;text-align:left;color:var(--ink);
+  transition:transform .22s,border-color .22s,box-shadow .22s;position:relative;
+}
+.spread-card:hover{transform:translateY(-4px);border-color:#8E9EAB}
+.spread-card[aria-pressed="true"]{
+  border-color:var(--acid);
+  box-shadow:6px 6px 0 rgba(198,255,0,.22);
+}
+.spread-diagram{display:flex;align-items:center;gap:10px;height:44px;margin-bottom:12px}
+.spread-diagram i{
+  width:15px;height:24px;border:1.5px solid #8E9EAB;transform:skewX(-10deg);
+}
+.spread-diagram i.on{border-color:var(--acid);background:rgba(198,255,0,.16)}
+.spread-diagram .arr{color:var(--dim);font-size:12px;letter-spacing:.2em}
+.spread-card h3{font-size:17px;font-weight:700}
+.spread-card h3 small{font-size:10px;letter-spacing:.22em;color:var(--dim);margin-left:8px;font-weight:500}
+.spread-card p{font-size:13px;color:var(--dim);margin-top:6px}
+.spread-card .pick{position:absolute;top:14px;right:14px;font-size:10px;letter-spacing:.18em;color:#0A0A0A;background:var(--acid);padding:2px 8px;font-weight:700;display:none}
+.spread-card[aria-pressed="true"] .pick{display:block}
+
+.toolbar{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px;
+}
+.btn-shuffle{
+  background:linear-gradient(#101010,#101010) padding-box,var(--metal-border) border-box;
+  border:2px solid transparent;color:var(--ink);
+  padding:11px 24px;font-size:14px;font-weight:700;letter-spacing:.12em;border-radius:2px;
+  display:inline-flex;gap:9px;align-items:center;background-size:100% 100%,220% 100%;
+  transition:transform .2s,background-position .4s;
+}
+.btn-shuffle:hover{transform:translateY(-3px);background-position:0 0,100% 0}
+.btn-shuffle:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.status{
+  font-size:13px;color:var(--dim);letter-spacing:.06em;
+  border-left:2px solid var(--acid);padding-left:12px;
+}
+.status b{color:var(--acid)}
+
+/* 牌堆 */
+.deckgrid{
+  display:grid;grid-template-columns:repeat(8,1fr);gap:12px;
+  max-width:1020px;
+}
+.deckcard{
+  position:relative;aspect-ratio:120/200;border:0;border-radius:3px;
+  background:linear-gradient(160deg,#151515,#0B0B0B);
+  padding:0;overflow:hidden;isolation:isolate;
+  transition:transform .25s,filter .25s;
+}
+.deckcard svg{width:100%;height:100%;display:block}
+/* 铬面流光（牌背常驻流光） */
+.deckcard::after,.tback-face::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 32%,
+    rgba(255,255,255,.22) 45%,rgba(191,233,255,.5) 50%,
+    rgba(255,255,255,.22) 55%,transparent 68%);
+  background-size:260% 100%;
+  animation:backSheen 3.2s linear infinite;
+}
+@keyframes backSheen{from{background-position:130% 0}to{background-position:-130% 0}}
+.deckcard::before{
+  content:"";position:absolute;inset:0;z-index:2;border-radius:3px;padding:2px;
+  background:var(--metal-border);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;
+}
+.deckcard:not(:disabled):hover{transform:translateY(-9px)}
+.deckcard:not(:disabled):hover::after{animation-duration:1.1s}
+.deckcard.taken{opacity:.28;filter:grayscale(1);pointer-events:none}
+.deckgrid.done .deckcard:not(.taken){opacity:.35;filter:grayscale(.8);pointer-events:none}
+.deckgrid.shuffling .deckcard{animation:cardJit .5s steps(2) 2}
+@keyframes cardJit{
+  0%{transform:translate(0,0) rotate(0)}
+  25%{transform:translate(3px,-4px) rotate(2deg)}
+  50%{transform:translate(-3px,3px) rotate(-2deg)}
+  75%{transform:translate(2px,4px) rotate(1deg)}
+  100%{transform:translate(0,0) rotate(0)}
+}
+/* 抽中瞬间的爆发流光 */
+.deckcard.hot::after,.tback-face.hot::after{
+  animation:hotSheen .8s linear 2;background-size:260% 100%;
+}
+@keyframes hotSheen{from{background-position:130% 0}to{background-position:-130% 0}}
+
+/* 阵位 */
+.slots{
+  display:flex;gap:clamp(14px,3vw,36px);justify-content:flex-start;
+  flex-wrap:wrap;margin-top:34px;
+}
+.slot{width:clamp(150px,17vw,186px)}
+.slot-label{margin-bottom:10px;min-height:44px}
+.slot-label b{display:block;font-size:15px;letter-spacing:.14em}
+.slot-label b i{font-style:normal;color:var(--acid);margin-right:6px}
+.slot-label span{display:block;font-size:10.5px;letter-spacing:.16em;color:var(--dim)}
+.slot-stage{position:relative;aspect-ratio:120/200;border-radius:3px}
+.slot-empty{
+  position:absolute;inset:0;border:1.5px dashed rgba(142,158,171,.5);
+  border-radius:3px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--f-disp);font-size:26px;color:rgba(142,158,171,.55);
+  transition:border-color .3s,color .3s;
+}
+.slot.filled .slot-empty{display:none}
+
+/* 翻转牌 */
+.tcard{position:absolute;inset:0;perspective:900px;cursor:pointer;border:0;background:none;padding:0}
+.tinner{
+  position:absolute;inset:0;transform-style:preserve-3d;
+  transition:transform .5s cubic-bezier(.35,.1,.25,1);
+}
+.tcard.flipped .tinner{transform:rotateY(180deg)}
+.tface{
+  position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:3px;overflow:hidden;
+}
+.tback-face{background:linear-gradient(160deg,#151515,#0B0B0B)}
+.tback-face svg{width:100%;height:100%;display:block}
+.tback-face::before{
+  content:"";position:absolute;inset:0;border-radius:3px;padding:2px;z-index:2;
+  background:var(--metal-border);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;
+}
+.tfront-face{
+  transform:rotateY(180deg);
+  background:radial-gradient(120% 90% at 50% 8%,#1A1A1A 0%,#0D0D0D 70%);
+  display:flex;align-items:center;justify-content:center;
+}
+.tfront-face::before{
+  content:"";position:absolute;inset:0;border-radius:3px;padding:2px;z-index:3;
+  background:var(--metal-border);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;
+}
+.tfront-face svg{width:88%;height:96%}
+.tfront-face .dir-tag{
+  position:absolute;top:8px;left:8px;z-index:4;
+  font-size:10px;font-weight:700;letter-spacing:.18em;
+  padding:3px 8px;border-radius:2px;
+}
+.tfront-face .dir-tag.up{background:var(--acid);color:#0A0A0A}
+.tfront-face .dir-tag.revv{background:var(--uv);color:#F5F7FA}
+/* 逆位：牌面内容旋转 180° */
+.tfront-face.rev .cardface-svg{transform:rotate(180deg)}
+.cardface-svg{transition:none}
+.tcard:not(.flipped):hover .tinner{transform:translateY(-9px)}
+.tcard.flipped{cursor:default}
+
+/* ---------- 解读区（锐利边框 + 欧普纹理底，高可读） ---------- */
+.reading{margin-top:clamp(40px,5vw,60px)}
+.reading[hidden]{display:none}
+.read-h{
+  display:flex;align-items:baseline;gap:14px;margin-bottom:22px;
+  padding-top:28px;border-top:1px solid var(--line);
+}
+.read-h h3{font-family:var(--f-disp);font-size:clamp(19px,2.2vw,26px);font-weight:800}
+.read-h small{font-size:11px;letter-spacing:.26em;color:var(--dim)}
+.read-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.read-card{
+  position:relative;border:2px solid #E4E7EA;border-radius:2px;
+  background:
+    repeating-conic-gradient(from 0deg at 82% 18%,
+      rgba(237,237,237,.055) 0 9deg,transparent 9deg 18deg),
+    var(--panel);
+  padding:20px 20px 22px;
+}
+.read-card .rc-pos{
+  font-size:10.5px;letter-spacing:.24em;color:var(--acid);font-weight:700;
+}
+.read-card h4{
+  font-size:17px;font-weight:900;margin:8px 0 4px;letter-spacing:.02em;
+}
+.read-card h4 small{font-size:10px;color:var(--dim);letter-spacing:.18em;font-weight:500;display:block}
+.rc-dir{
+  display:inline-block;font-size:10px;font-weight:700;letter-spacing:.2em;
+  padding:2px 9px;margin:8px 0 10px;border-radius:2px;
+}
+.rc-dir.up{background:var(--acid);color:#0A0A0A}
+.rc-dir.revv{background:var(--uv);color:#F5F7FA}
+.rc-keys{font-size:12px;color:var(--dim);letter-spacing:.12em;margin-bottom:10px}
+.rc-keys b{color:var(--cyan);font-weight:500}
+.rc-body{font-size:14px;line-height:1.85;color:var(--ink)}
+.read-syn{
+  margin-top:16px;border:2px solid #E4E7EA;border-radius:2px;
+  background:
+    repeating-linear-gradient(45deg,rgba(237,237,237,.045) 0 8px,transparent 8px 16px),
+    var(--panel2);
+  padding:24px;
+}
+.read-syn h4{font-family:var(--f-disp);font-size:16px;letter-spacing:.14em;margin-bottom:10px}
+.read-syn h4 span{color:var(--acid)}
+.read-syn p{font-size:15px;color:var(--ink);max-width:900px}
+.read-actions{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap}
+.btn-ghost{
+  background:none;border:1px solid var(--line);color:var(--dim);
+  padding:12px 24px;font-size:13px;font-weight:700;letter-spacing:.14em;border-radius:2px;
+  transition:color .2s,border-color .2s,transform .2s;
+}
+.btn-ghost:hover{color:var(--acid);border-color:var(--acid);transform:translateY(-3px)}
+
+/* ---------- 二十二牌典 ---------- */
+#arcana{border-top:1px solid var(--line);background:#0C0C0C}
+.lib-bar{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:26px}
+.searchbox{position:relative;flex:1 1 300px;max-width:420px}
+.searchbox input{
+  width:100%;background:var(--panel);border:1px solid var(--line);border-radius:2px;
+  color:var(--ink);font-size:14px;padding:13px 16px 13px 42px;letter-spacing:.04em;
+  transition:border-color .2s;
+}
+.searchbox input::placeholder{color:#6E777C}
+.searchbox input:focus{outline:none;border-color:var(--acid)}
+.searchbox .ico{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  width:15px;height:15px;border:1.6px solid #6E777C;border-radius:50%;
+}
+.searchbox .ico::after{
+  content:"";position:absolute;width:7px;height:1.6px;background:#6E777C;
+  bottom:-4px;right:-5px;transform:rotate(45deg);
+}
+.fchip{
+  background:none;border:1px solid var(--line);color:var(--dim);
+  padding:10px 18px;font-size:13px;font-weight:700;border-radius:2px;
+  letter-spacing:.08em;transition:all .2s;
+}
+.fchip:hover{border-color:#8E9EAB;color:var(--ink)}
+.fchip[aria-pressed="true"]{background:var(--acid);border-color:var(--acid);color:#0A0A0A}
+.lib-count{font-size:12px;color:var(--dim);letter-spacing:.14em;margin-left:auto}
+.lib-count b{color:var(--acid)}
+
+.lib-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:16px;
+}
+.lib-item{
+  position:relative;background:var(--panel);border:1px solid var(--line);
+  border-radius:2px;padding:14px;text-align:left;color:var(--ink);
+  display:flex;gap:14px;align-items:stretch;
+  transition:transform .25s,border-color .25s,box-shadow .25s;overflow:hidden;
+}
+.lib-item::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.2) 48%,rgba(191,233,255,.35) 52%,rgba(255,255,255,.2) 56%,transparent 66%);
+  background-size:260% 100%;background-position:130% 0;
+  transition:background-position .6s ease;
+}
+.lib-item:hover{
+  transform:translateY(-7px);border-color:#C3CFE2;
+  box-shadow:0 14px 30px rgba(0,0,0,.5);
+}
+.lib-item:hover::after{background-position:-130% 0}
+.lib-thumb{
+  flex:0 0 62px;border:1px solid rgba(195,207,226,.4);border-radius:2px;
+  background:radial-gradient(120% 90% at 50% 8%,#1A1A1A,#0D0D0D);
+  padding:3px;
+}
+.lib-thumb svg{width:100%;height:auto;display:block}
+.lib-meta{min-width:0}
+.lib-meta .lnum{font-size:10px;letter-spacing:.2em;color:var(--acid);font-weight:700}
+.lib-meta .lh3{display:block;font-size:16px;font-weight:900;margin:2px 0 0}
+.lib-meta .len{font-size:9.5px;letter-spacing:.2em;color:var(--dim)}
+.lib-meta .lup,.lib-meta .lrev{font-size:11.5px;line-height:1.6;color:var(--dim);margin-top:7px}
+.lib-meta .lup b,.lib-meta .lrev b{font-weight:700;font-size:10px;letter-spacing:.14em}
+.lib-meta .lup b{color:var(--acid)}
+.lib-meta .lrev b{color:#B79CFF}
+.lib-open{
+  position:absolute;right:10px;bottom:8px;font-size:10px;letter-spacing:.2em;
+  color:#6E777C;transition:color .2s;
+}
+.lib-item:hover .lib-open{color:var(--acid)}
+.lib-empty{padding:40px 0;color:var(--dim);font-size:14px;letter-spacing:.1em}
+
+/* ---------- 每日证词 ---------- */
+#daily{border-top:1px solid var(--line)}
+.daily-panel{
+  position:relative;border:2px solid #E4E7EA;border-radius:2px;
+  background:
+    repeating-linear-gradient(-45deg,rgba(198,255,0,.045) 0 10px,transparent 10px 20px),
+    var(--panel);
+  padding:clamp(26px,4vw,48px);
+  display:flex;gap:clamp(18px,3vw,40px);align-items:center;flex-wrap:wrap;
+}
+.daily-mark{font-family:var(--f-disp);font-size:clamp(40px,6vw,72px);font-weight:900;line-height:1;color:var(--acid);-webkit-text-fill-color:var(--acid)}
+.daily-body{flex:1 1 380px}
+.daily-body small{font-size:11px;letter-spacing:.3em;color:var(--dim)}
+.daily-body p{font-size:clamp(17px,1.9vw,22px);font-weight:700;line-height:1.7;margin-top:10px}
+.daily-body p.swap{animation:dailyIn .45s ease}
+@keyframes dailyIn{from{opacity:0;transform:translateY(14px) rotate(.4deg)}to{opacity:1;transform:none}}
+
+/* ---------- 页脚 ---------- */
+footer{
+  border-top:1px solid var(--line);position:relative;overflow:hidden;
+  padding:clamp(50px,7vw,90px) clamp(16px,4vw,56px) 0;
+}
+.foot-mark{
+  font-family:var(--f-disp);font-weight:900;line-height:.85;
+  font-size:clamp(72px,14vw,210px);letter-spacing:.02em;
+  color:transparent;-webkit-text-stroke:1px rgba(195,207,226,.22);
+  user-select:none;pointer-events:none;white-space:nowrap;
+}
+.foot-cols{
+  display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:clamp(24px,4vw,60px);
+  max-width:1180px;margin:clamp(28px,4vw,50px) auto 0;
+}
+.foot-cols h4{font-size:12px;letter-spacing:.26em;color:var(--acid);margin-bottom:14px;font-weight:700}
+.foot-cols p{font-size:13px;color:var(--dim);max-width:360px}
+.foot-cols a{display:block;font-size:13px;color:var(--dim);padding:5px 0;transition:color .2s}
+.foot-cols a:hover{color:var(--acid)}
+.foot-cols a b{color:var(--ink);font-weight:500;margin-right:8px}
+.foot-bar{
+  max-width:1180px;margin:40px auto 0;border-top:1px solid var(--line);
+  padding:18px 0 22px;display:flex;justify-content:space-between;gap:14px;
+  flex-wrap:wrap;font-size:11.5px;color:#6E777C;letter-spacing:.08em;
+}
+.foot-bar .fa{color:var(--acid)}
+
+/* ---------- 牌义详情模态 ---------- */
+.modal{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal[hidden]{display:none}
+.modal-back{position:absolute;inset:0;background:rgba(5,5,5,.78)}
+.mbox{
+  position:relative;z-index:2;width:min(760px,100%);max-height:88vh;overflow:auto;
+  background:var(--panel);border-radius:2px;padding:clamp(22px,3.4vw,40px);
+  display:flex;gap:clamp(18px,3vw,36px);flex-wrap:wrap;
+  background-image:repeating-conic-gradient(from 0deg at 90% 8%,rgba(237,237,237,.04) 0 8deg,transparent 8deg 16deg);
+}
+.mbox::before{
+  content:"";position:absolute;inset:0;border-radius:2px;padding:2px;
+  background:var(--metal-border);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;
+}
+.mclose{
+  position:absolute;top:12px;right:12px;z-index:3;width:40px;height:40px;
+  background:none;border:1px solid var(--line);color:var(--dim);border-radius:2px;
+  font-size:17px;line-height:1;transition:all .2s;
+}
+.mclose:hover{border-color:var(--mag);color:var(--mag);transform:rotate(90deg)}
+.mface{flex:0 1 190px;border:1px solid rgba(195,207,226,.4);border-radius:2px;background:radial-gradient(120% 90% at 50% 8%,#1A1A1A,#0D0D0D);padding:6px;align-self:flex-start}
+.mface svg{width:100%;height:auto;display:block}
+.minfo{flex:1 1 320px;min-width:0}
+.minfo .mnum{font-size:11px;letter-spacing:.26em;color:var(--acid);font-weight:700}
+.minfo h3{font-family:var(--f-disp);font-size:clamp(22px,3vw,30px);font-weight:900;margin:6px 0 2px}
+.minfo .men{font-size:11px;letter-spacing:.3em;color:var(--dim)}
+.mkeys{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 4px}
+.mkeys span{
+  font-size:11.5px;border:1px solid rgba(0,240,255,.45);color:var(--cyan);
+  padding:4px 12px;border-radius:2px;letter-spacing:.1em;
+}
+.mblock{margin-top:16px;border-left:2px solid var(--acid);padding-left:14px}
+.mblock.rv-b{border-left-color:var(--uv)}
+.mblock h5{font-size:12px;letter-spacing:.22em;margin-bottom:6px}
+.mblock h5 b{color:var(--acid)}
+.mblock.rv-b h5 b{color:#B79CFF}
+.mblock h5 small{color:var(--dim);font-weight:500}
+.mblock p{font-size:14px;color:var(--ink);line-height:1.85}
+
+/* ---------- SVG 牌面文字 ---------- */
+.cf-num{fill:var(--acid);font-family:"Space Grotesk",monospace;font-size:13px;font-weight:700;letter-spacing:2px}
+.cf-name{fill:var(--ink);font-family:"Noto Sans SC",sans-serif;font-size:11.5px;font-weight:700;letter-spacing:1px}
+.cf-en{fill:#8E9EAB;font-family:"Space Grotesk",monospace;font-size:6.2px;font-weight:600;letter-spacing:2.4px}
+.cf .ga{stroke:var(--acid)}
+.cb-t{fill:#5E6A76;font-family:"Unbounded",monospace;font-size:9px;letter-spacing:3px;font-weight:600}
+
+/* ---------- 入场动画（首屏元素依次浮现） ---------- */
+.ein{opacity:0;transform:translateY(30px);animation:ein .8s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes ein{to{opacity:1;transform:none}}
+.ein.d1{animation-delay:.08s}
+.ein.d2{animation-delay:.2s}
+.ein.d3{animation-delay:.34s}
+.ein.d4{animation-delay:.48s}
+.ein.d5{animation-delay:.62s}
+.hero .blob{opacity:0;animation:blobIn 1.6s .3s ease forwards}
+.blob.b1{animation:blobIn 1.6s .3s ease forwards,blobDrift 16s ease-in-out 1.9s infinite alternate}
+.blob.b2{animation:blobIn 1.6s .5s ease forwards,blobDrift 21s ease-in-out 2.1s infinite alternate-reverse}
+.blob.b3{animation:blobIn 1.6s .4s ease forwards,blobDrift 18s ease-in-out 2s infinite alternate}
+.blob.b1.pulse,.blob.b2.pulse,.blob.b3.pulse{animation:blobPulse .7s cubic-bezier(.2,.85,.25,1) 1}
+@keyframes blobIn{from{opacity:0}to{opacity:.5}}
+
+/* ============================================================
+   响应式
+   ============================================================ */
+@media (max-width:1199px){
+  .deckgrid{grid-template-columns:repeat(6,1fr);max-width:800px}
+  .ring{top:auto;bottom:6%;right:2%;width:200px}
+  .read-grid{grid-template-columns:1fr 1fr}
+  .read-grid .read-card:first-child{grid-column:1/-1}
+}
+@media (max-width:767px){
+  .site-nav a small,.site-nav .en{display:none}
+  .head-tag{display:none}
+  .hero{padding-top:104px;min-height:auto}
+  .ring{display:none}
+  .blob.b2{display:none}
+  .deckgrid{grid-template-columns:repeat(5,1fr);gap:8px;max-width:none}
+  .slots{gap:16px}
+  .slot{width:calc(50% - 10px)}
+  .slot:only-child{width:min(62%,240px)}
+  .read-grid{grid-template-columns:1fr}
+  .read-grid .read-card:first-child{grid-column:auto}
+  .stickers{gap:10px}
+  .sticker{padding:8px 12px;font-size:12px}
+  .lib-count{margin-left:0;width:100%}
+  .foot-cols{grid-template-columns:1fr}
+  .daily-mark{display:none}
+}
+@media (max-width:380px){
+  .deckgrid{grid-template-columns:repeat(4,1fr)}
+  .slot{width:100%}
+  .btn{padding:13px 22px;font-size:14px}
+}
+
+/* ---------- 降级：prefers-reduced-motion ---------- */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+  /* 保留翻牌的必要过渡 */
+  .tinner{transition-duration:.5s !important}
+  .rv{opacity:1;transform:none}
+  .ein{opacity:1;transform:none;animation:none}
+  .sheenbar{display:none}
+  .grain{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- 共享 SVG 资源：铬描边渐变 + 牌背符号 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="chromeStroke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F7FAFF"/>
+      <stop offset=".35" stop-color="#8E9EAB"/>
+      <stop offset=".55" stop-color="#EDF3FF"/>
+      <stop offset=".78" stop-color="#4C586B"/>
+      <stop offset="1" stop-color="#C3CFE2"/>
+    </linearGradient>
+    <symbol id="tback" viewBox="0 0 120 200">
+      <rect x="4" y="4" width="112" height="192" fill="#0D0D0D" stroke="url(#chromeStroke)" stroke-width="2"/>
+      <g fill="none" stroke="rgba(198,255,0,.42)" stroke-width="1">
+        <path d="M60 32 96 100 60 168 24 100Z"/>
+        <path d="M60 54 82 100 60 146 38 100Z"/>
+        <path d="M60 76 69 100 60 124 51 100Z"/>
+        <path d="M4 4l18 18M116 4 98 22M4 196l18-18M116 196 98 178"/>
+      </g>
+      <circle cx="60" cy="100" r="7.5" fill="none" stroke="#C6FF00" stroke-width="1.5"/>
+      <circle cx="60" cy="100" r="2.6" fill="#C6FF00"/>
+      <text x="60" y="22" text-anchor="middle" class="cb-t">FATE</text>
+      <text x="60" y="187" text-anchor="middle" class="cb-t">// 证词</text>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ===================== 顶部导航 ===================== -->
+<header class="site-head">
+  <a class="logo" href="#top" aria-label="FATE 命运作证 首页">
+    <span class="dot" aria-hidden="true"></span>
+    <span class="chrome">FATE</span>
+    <span class="cn">命运作证</span>
+  </a>
+  <nav class="site-nav" aria-label="主导航">
+    <a href="#draw"><b>仪式</b><span class="en">RITUAL</span></a>
+    <a href="#arcana"><b>牌典</b><span class="en">ARCANA</span></a>
+    <a href="#daily"><b>证词</b><span class="en">DAILY</span></a>
+  </nav>
+  <span class="head-tag">ACID · V2.6</span>
+</header>
+
+<main id="top">
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero">
+    <div class="hero-grid" aria-hidden="true"></div>
+
+    <!-- 液态 blob ×2（feTurbulence + feDisplacementMap 液态形变） -->
+    <svg class="blob b1" viewBox="0 0 600 600" aria-hidden="true">
+      <defs>
+        <filter id="goo1" x="-25%" y="-25%" width="150%" height="150%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves="2" seed="7" result="n">
+            <animate id="goo1a" attributeName="baseFrequency" begin="indefinite"
+              dur="14s" values="0.009 0.013;0.016 0.008;0.009 0.013" repeatCount="indefinite"/>
+          </feTurbulence>
+          <feDisplacementMap id="goo1d" in="SourceGraphic" in2="n" scale="85"/>
+        </filter>
+        <linearGradient id="blobg1" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7B2FFF"/><stop offset=".55" stop-color="#B42FFF"/><stop offset="1" stop-color="#FF2E88"/>
+        </linearGradient>
+      </defs>
+      <path filter="url(#goo1)" fill="url(#blobg1)"
+        d="M305 70C430 55 525 160 505 290 488 400 405 505 285 512 170 518 80 415 92 285 104 158 185 84 305 70Z"/>
+    </svg>
+    <svg class="blob b2" viewBox="0 0 600 600" aria-hidden="true">
+      <defs>
+        <filter id="goo2" x="-25%" y="-25%" width="150%" height="150%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.011 0.007" numOctaves="2" seed="19" result="n">
+            <animate id="goo2a" attributeName="baseFrequency" begin="indefinite"
+              dur="17s" values="0.011 0.007;0.007 0.014;0.011 0.007" repeatCount="indefinite"/>
+          </feTurbulence>
+          <feDisplacementMap id="goo2d" in="SourceGraphic" in2="n" scale="70"/>
+          <feGaussianBlur stdDeviation="1.4"/>
+        </filter>
+        <linearGradient id="blobg2" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stop-color="#00F0FF"/><stop offset=".6" stop-color="#3B7BFF"/><stop offset="1" stop-color="#7B2FFF"/>
+        </linearGradient>
+      </defs>
+      <path filter="url(#goo2)" fill="url(#blobg2)"
+        d="M290 95C410 60 530 150 515 285 500 405 420 520 295 515 175 510 70 400 88 275 104 155 175 128 290 95Z"/>
+    </svg>
+
+    <!-- 旋转文字环 + 锐刺星形（自转 20s） -->
+    <div class="ring" aria-hidden="true">
+      <svg viewBox="0 0 200 200" width="100%" height="100%">
+        <defs>
+          <path id="circ" d="M100,100 m-80,0 a80,80 0 1,1 160,0 a80,80 0 1,1 -160,0"/>
+        </defs>
+        <text><textPath href="#circ">命运作证 FATE WITNESS ✦ 液态塔罗 LIQUID TAROT ✦ 酸性预言 ACID ORACLE ✦</textPath></text>
+      </svg>
+      <svg class="star-spin" viewBox="0 0 120 120" width="100%" height="100%">
+        <polygon points="112,60 78.5,67.7 96.8,96.8 67.7,78.5 60,112 52.3,78.5 23.2,96.8 41.5,67.7 8,60 41.5,52.3 23.2,23.2 52.3,41.5 60,8 67.7,41.5 96.8,23.2 78.5,52.3"/>
+        <circle cx="60" cy="60" r="4"/>
+      </svg>
+    </div>
+
+    <div class="hero-inner">
+      <p class="kicker ein d1">ACID TAROT ORACLE — 液态金属占卜终端</p>
+      <h1 class="hero-title">
+        <span class="ht-wrap ein d2">
+          <span class="l1 chrome glitch" data-text="FATE">FATE</span>
+          <span class="sheenbar" aria-hidden="true"></span>
+        </span>
+        <span class="l2 ein d3"><span class="slash">//</span> <span class="chrome">命运作证</span></span>
+      </h1>
+      <p class="hero-sub ein d4">
+        二十二张<b>大阿卡纳</b>在此列队。选一个主题，洗一副铬银牌堆，
+        抽出属于你的<em>金属证词</em>——正位顺流，逆位提醒，命运只作证，不审判。
+      </p>
+      <div class="cta-row ein d5">
+        <a class="btn btn-acid" href="#draw">开始占卜 <span class="en">START DRAW</span></a>
+        <a class="btn btn-metal" href="#arcana">翻牌典 <span class="en">ARCANA INDEX</span></a>
+      </div>
+      <div class="stickers ein d5" aria-hidden="true">
+        <div class="sticker" style="--r:-2deg"><span class="big">22</span><span>大阿卡纳<small>MAJOR ARCANA</small></span></div>
+        <div class="sticker" style="--r:1.5deg"><span class="big">±180°</span><span>正逆位随机<small>UP / REV 35%</small></span></div>
+        <div class="sticker" style="--r:-1deg"><span class="big">3步</span><span>抽取仪式<small>SHUFFLE·DRAW·FLIP</small></span></div>
+      </div>
+    </div>
+
+    <div class="stripes" aria-hidden="true">
+      <div class="s1"></div>
+      <div class="s2"></div>
+    </div>
+  </section>
+
+  <!-- 跑马灯 -->
+  <div class="marquee" aria-hidden="true">
+    <div class="mq-track" id="mqtrack">
+      <span>洗牌 SHUFFLE</span><i>✦</i><span>抽牌 DRAW</span><i>✦</i><span>翻牌 FLIP</span><i>✦</i><span>解读 READ</span><i>✦</i><span>命运作证 FATE WITNESS</span><i>✦</i>
+      <span>洗牌 SHUFFLE</span><i>✦</i><span>抽牌 DRAW</span><i>✦</i><span>翻牌 FLIP</span><i>✦</i><span>解读 READ</span><i>✦</i><span>命运作证 FATE WITNESS</span><i>✦</i>
+    </div>
+  </div>
+
+  <!-- ===================== 01 抽牌仪式 ===================== -->
+  <section class="sec" id="draw">
+    <svg class="blob b3" viewBox="0 0 600 600" aria-hidden="true">
+      <defs>
+        <filter id="goo3" x="-25%" y="-25%" width="150%" height="150%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.008 0.011" numOctaves="2" seed="33" result="n">
+            <animate id="goo3a" attributeName="baseFrequency" begin="indefinite"
+              dur="15s" values="0.008 0.011;0.013 0.007;0.008 0.011" repeatCount="indefinite"/>
+          </feTurbulence>
+          <feDisplacementMap id="goo3d" in="SourceGraphic" in2="n" scale="75"/>
+        </filter>
+        <linearGradient id="blobg3" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#C3CFE2"/><stop offset=".5" stop-color="#7B2FFF"/><stop offset="1" stop-color="#00F0FF"/>
+        </linearGradient>
+      </defs>
+      <path filter="url(#goo3)" fill="url(#blobg3)"
+        d="M300 85C415 70 520 170 500 295 482 410 410 495 290 505 175 515 85 410 95 280 105 155 190 99 300 85Z"/>
+    </svg>
+
+    <div class="sec-inner" style="position:relative;z-index:2">
+      <h2 class="sec-h rv">
+        <span class="sec-no chrome">01</span>
+        <span class="sec-cn">抽牌仪式</span>
+        <span class="sec-en">DRAW RITUAL</span>
+      </h2>
+      <p class="sec-lead rv" style="--d:.08s">
+        三步定音：<b>选主题 → 抽牌 → 翻牌</b>。正逆位在抽牌瞬间随机判定，
+        逆位牌面将旋转 180° 呈现——那不是坏消息，是命运的另一面证词。
+      </p>
+
+      <!-- 步骤 1 · 主题 -->
+      <div class="step rv" style="--d:.1s">
+        <p class="step-tag">STEP 1 · 提问主题 <small>QUESTION</small></p>
+        <div class="chip-row" id="topics" role="group" aria-label="选择提问主题">
+          <button class="chip" data-t="love" aria-pressed="false">爱情 <small>LOVE</small></button>
+          <button class="chip" data-t="career" aria-pressed="false">事业 <small>CAREER</small></button>
+          <button class="chip" data-t="wealth" aria-pressed="false">财运 <small>WEALTH</small></button>
+          <button class="chip" data-t="study" aria-pressed="false">学业 <small>STUDY</small></button>
+          <button class="chip" data-t="self" aria-pressed="false">自我 <small>SELF</small></button>
+        </div>
+      </div>
+
+      <!-- 步骤 2 · 牌阵 -->
+      <div class="step rv" style="--d:.14s">
+        <p class="step-tag">STEP 2 · 牌阵 <small>SPREAD</small></p>
+        <div class="spread-row" id="spreads" role="group" aria-label="选择牌阵">
+          <button class="spread-card" data-s="one" aria-pressed="false">
+            <span class="pick">已选 SELECTED</span>
+            <div class="spread-diagram" aria-hidden="true"><i data-i="one"></i></div>
+            <h3>单张指引 <small>DAILY / YES-NO</small></h3>
+            <p>只问一件事，抽一张牌。适合每日能量、是否题，或「此刻我最需要知道什么」。</p>
+          </button>
+          <button class="spread-card" data-s="thr" aria-pressed="false">
+            <span class="pick">已选 SELECTED</span>
+            <div class="spread-diagram" aria-hidden="true"><i></i><span class="arr">→</span><i></i><span class="arr">→</span><i></i></div>
+            <h3>三张时间流 <small>PAST · NOW · FUTURE</small></h3>
+            <p>过去-现在-未来。看清来路、立足当下、预见走向，最通用的时间流牌阵。</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- 步骤 3 · 洗牌 & 抽牌 -->
+      <div class="step rv" style="--d:.18s">
+        <p class="step-tag">STEP 3 · 洗牌与抽牌 <small>SHUFFLE &amp; DRAW</small></p>
+        <div class="toolbar">
+          <button class="btn-shuffle" id="shuffleBtn">
+            <svg width="15" height="15" viewBox="0 0 15 15" aria-hidden="true"><path d="M1 3h4l6 9h3M1 12h4l2-3M9 5l2-2h4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            洗牌 RESHUFFLE
+          </button>
+          <p class="status" id="status">先选择一个<b>提问主题</b>，命运才能开始记录。</p>
+        </div>
+        <div class="deckgrid" id="deck" aria-label="牌堆，点击抽牌"></div>
+        <div class="slots" id="slots"></div>
+        <div class="read-actions" style="margin-top:26px">
+          <button class="btn btn-acid" id="flipAllBtn" disabled>翻开命运 <span class="en">FLIP ALL</span></button>
+        </div>
+      </div>
+
+      <!-- 步骤 4 · 解读 -->
+      <div class="reading" id="reading" hidden>
+        <div class="read-h">
+          <h3 class="chrome">金属证词</h3>
+          <small>READING · 正位顺流 / 逆位提醒</small>
+        </div>
+        <div class="read-grid" id="readGrid"></div>
+        <article class="read-syn">
+          <h4><span>※</span> 综合证词 SYNTHESIS</h4>
+          <p id="synText"></p>
+        </article>
+        <div class="read-actions">
+          <button class="btn btn-metal" id="againBtn">再来一次 <span class="en">REDRAW</span></button>
+          <button class="btn-ghost" id="newBtn">换个问题 NEW QUESTION</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 02 二十二牌典 ===================== -->
+  <section class="sec" id="arcana">
+    <div class="sec-inner">
+      <h2 class="sec-h rv">
+        <span class="sec-no chrome">02</span>
+        <span class="sec-cn">二十二牌典</span>
+        <span class="sec-en">MAJOR ARCANA INDEX</span>
+      </h2>
+      <p class="sec-lead rv" style="--d:.08s">
+        大阿卡纳全程 0 → XXI，一场从<b>启程</b>到<b>圆满</b>的英雄之旅。
+        支持按牌名 / 英文名 / 关键词搜索，点击任意牌面查看正逆位详义。
+      </p>
+      <div class="lib-bar rv" style="--d:.12s">
+        <div class="searchbox">
+          <span class="ico" aria-hidden="true"></span>
+          <input type="search" id="libSearch" placeholder="搜索：愚者 / STAR / 命运之轮 / 转机 …" aria-label="搜索牌名或关键词">
+        </div>
+        <button class="fchip" data-arc="all" aria-pressed="true">全部 ALL</button>
+        <button class="fchip" data-arc="0" aria-pressed="false">启程 0–VII</button>
+        <button class="fchip" data-arc="1" aria-pressed="false">试炼 VIII–XIV</button>
+        <button class="fchip" data-arc="2" aria-pressed="false">觉醒 XV–XXI</button>
+        <span class="lib-count" id="libCount"></span>
+      </div>
+      <div class="lib-grid" id="libGrid"></div>
+    </div>
+  </section>
+
+  <!-- ===================== 03 每日证词 ===================== -->
+  <section class="sec" id="daily">
+    <div class="sec-inner">
+      <h2 class="sec-h rv">
+        <span class="sec-no chrome">03</span>
+        <span class="sec-cn">每日证词</span>
+        <span class="sec-en">DAILY SIGNAL</span>
+      </h2>
+      <div class="daily-panel rv" style="--d:.1s">
+        <span class="daily-mark" aria-hidden="true">✦</span>
+        <div class="daily-body">
+          <small>DAILY ORACLE · 今日一条</small>
+          <p id="dailyText">今天不必回答所有问题，允许一件事悬而未决。</p>
+        </div>
+        <button class="btn btn-metal" id="dailyBtn">换一条 <span class="en">NEXT</span></button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===================== 页脚 ===================== -->
+<footer>
+  <p class="foot-mark chrome" aria-hidden="true">FATE//作证</p>
+  <div class="foot-cols">
+    <div>
+      <h4>关于 FATE</h4>
+      <p>一张会动的酸性锐舞海报，一台液态金属占卜仪。我们把七十八张塔罗里的二十二张主牌，重铸成铬银色的命运证词——正位顺流，逆位提醒。</p>
+    </div>
+    <div>
+      <h4>导航 INDEX</h4>
+      <a href="#draw"><b>01</b>抽牌仪式 RITUAL</a>
+      <a href="#arcana"><b>02</b>二十二牌典 ARCANA</a>
+      <a href="#daily"><b>03</b>每日证词 DAILY</a>
+    </div>
+    <div>
+      <h4>小阿卡纳速记 SUITS</h4>
+      <a href="#arcana"><b>火</b>权杖 · 行动与驱动力</a>
+      <a href="#arcana"><b>水</b>圣杯 · 情感与直觉</a>
+      <a href="#arcana"><b>风</b>宝剑 · 思维与决断</a>
+      <a href="#arcana"><b>土</b>星币 · 务实与积累</a>
+    </div>
+  </div>
+  <div class="foot-bar">
+    <span>© 2026 FATE // 命运作证 — ACID CHROME TAROT</span>
+    <span>本站为风格演示，占卜内容仅供<span class="fa">自我觉察与娱乐</span>，不构成任何现实建议。</span>
+  </div>
+</footer>
+
+<!-- ===================== 牌义详情模态 ===================== -->
+<div class="modal" id="modal" hidden>
+  <div class="modal-back" id="modalBack"></div>
+  <div class="mbox" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <button class="mclose" id="mClose" aria-label="关闭详情">✕</button>
+    <div class="mface" id="mFace"></div>
+    <div class="minfo">
+      <p class="mnum" id="mNum"></p>
+      <h3 id="mTitle"></h3>
+      <p class="men" id="mEn"></p>
+      <div class="mkeys" id="mKeys"></div>
+      <div class="mblock">
+        <h5><b>正位</b> UPRIGHT</h5>
+        <p id="mUp"></p>
+      </div>
+      <div class="mblock rv-b">
+        <h5><b>逆位</b> REVERSED <small>· 逆位不是坏牌，是课题换了个方向</small></h5>
+        <p id="mRev"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<noscript><p style="text-align:center;padding:20px;color:#C6FF00">启用 JavaScript 以进行抽牌、翻牌与牌典筛选。</p></noscript>
+
+<script>
+/* ============================================================
+   FATE // 命运作证 — 交互脚本
+   ============================================================ */
+'use strict';
+var RM = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var $  = function(s){ return document.querySelector(s); };
+var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+
+/* ---------- 22 张大阿卡纳数据（牌义与锐利线稿牌面） ---------- */
+var CARDS = [
+{ n:0, num:'0', name:'愚者', en:'THE FOOL', keys:['开始','纯真','冒险','可能性'],
+  up:'新的开始，纯真地踏上旅程。', rev:'鲁莽行事，缺乏计划。',
+  g:'<circle cx="40" cy="66" r="9"/><path d="M40 51v6M40 75v6M25 66h6M49 66h6"/><path d="M22 152l26-58 18 26 32 32"/><circle cx="76" cy="82" r="6"/><path d="M76 88v38l-14 26M76 126l16 24"/><path class="ga" d="M76 96l14 5v11l-14-5z"/>' },
+{ n:1, num:'I', name:'魔术师', en:'THE MAGICIAN', keys:['行动力','资源','显化','掌控'],
+  up:'资源齐备，心想事成。', rev:'空有才华，流于巧言操纵。',
+  g:'<path d="M60 76C52 64 40 68 40 76 40 84 52 86 60 76 68 66 80 70 80 76 80 84 68 86 60 76Z"/><path d="M60 92v48M48 140h24"/><path d="M60 92l14-14"/><circle class="ga" cx="78" cy="74" r="4"/><path d="M40 128l-6 24M80 128l6 24"/>' },
+{ n:2, num:'II', name:'女祭司', en:'THE HIGH PRIESTESS', keys:['直觉','潜意识','静观','神秘'],
+  up:'倾听直觉，静观其变。', rev:'忽视内心，秘密压抑。',
+  g:'<path d="M40 72Q60 56 80 72"/><path d="M38 70v78h-8M82 70v78h8M38 70h-8M82 70h8"/><path class="ga" d="M66 88A22 22 0 1 0 66 132A30 30 0 0 1 66 88Z"/>' },
+{ n:3, num:'III', name:'皇后', en:'THE EMPRESS', keys:['丰饶','感官','创造','滋养'],
+  up:'丰饶孕育，感官与创造。', rev:'过度付出，忽视自我。',
+  g:'<circle cx="60" cy="76" r="12"/><path d="M60 88v24M48 100h24"/><path d="M34 150Q48 116 40 96M86 150Q72 116 80 96"/><path class="ga" d="M40 96l-6-6M40 96l6-8M80 96l6-6M80 96l-6-8"/>' },
+{ n:4, num:'IV', name:'皇帝', en:'THE EMPEROR', keys:['秩序','权威','稳定','担当'],
+  up:'秩序稳固，权威与担当。', rev:'控制欲强，僵化专断。',
+  g:'<path d="M40 150v-50Q40 88 52 88h16Q80 88 80 100v50"/><path d="M32 150h56"/><circle cx="60" cy="70" r="9"/><path class="ga" d="M46 100v24M74 100v24M46 112h28"/>' },
+{ n:5, num:'V', name:'教皇', en:'THE HIEROPHANT', keys:['传统','指引','信仰','学习'],
+  up:'传统指引，寻求正统智慧。', rev:'墨守成规，质疑权威。',
+  g:'<path d="M60 62v54M46 76h28M49 90h22M52 104h16"/><circle cx="34" cy="118" r="6"/><path d="M34 124v26M30 138h8"/><circle cx="86" cy="118" r="6"/><path d="M86 124v26M82 138h8"/><path class="ga" d="M42 150h36"/>' },
+{ n:6, num:'VI', name:'恋人', en:'THE LOVERS', keys:['联结','选择','契合','价值观'],
+  up:'真心联结，价值契合的选择。', rev:'关系失衡，价值冲突。',
+  g:'<circle cx="49" cy="104" r="19"/><circle cx="71" cy="104" r="19"/><path class="ga" d="M60 58v14M53 65h14"/><path d="M38 146Q60 134 82 146"/>' },
+{ n:7, num:'VII', name:'战车', en:'THE CHARIOT', keys:['意志','胜利','前进','自律'],
+  up:'意志坚定，势如破竹。', rev:'失控内耗，方向摇摆。',
+  g:'<path d="M34 92V72l26-10 26 10v20"/><path d="M34 92h52v32H34z"/><circle cx="44" cy="132" r="11"/><circle cx="76" cy="132" r="11"/><path class="ga" d="M60 68l4 10H56z"/>' },
+{ n:8, num:'VIII', name:'力量', en:'STRENGTH', keys:['温柔','勇气','驯服','耐心'],
+  up:'以柔克刚，温柔而坚定。', rev:'自我怀疑，被欲望牵制。',
+  g:'<path d="M60 70C52 58 40 62 40 70 40 78 52 80 60 70 68 60 80 64 80 70 80 78 68 80 60 70Z"/><path d="M46 108Q60 98 74 108 74 130 60 136 46 130 46 108Z"/><path class="ga" d="M52 118q8 6 16 0"/><path d="M42 108l-8-4M42 116l-8 2M78 108l8-4M78 116l8 2"/>' },
+{ n:9, num:'IX', name:'隐士', en:'THE HERMIT', keys:['内省','独处','智慧','寻光'],
+  up:'独处内省，寻找内在之光。', rev:'孤立封闭，逃避现实。',
+  g:'<path d="M56 70l14 10v22l-14 10-14-10V80z"/><path class="ga" d="M56 84l3 10-3-4-3 4z"/><path d="M84 74v74"/><path d="M30 148h22"/>' },
+{ n:10, num:'X', name:'命运之轮', en:'WHEEL OF FORTUNE', keys:['转机','周期','命运','流动'],
+  up:'转机降临，顺势而起。', rev:'时运反复，抗拒变化。',
+  g:'<circle cx="60" cy="106" r="30"/><circle cx="60" cy="106" r="9"/><path d="M60 76v21M60 115v21M30 106h21M69 106h21"/><path d="M39 85l8 8M81 85l-8 8M39 127l8-8M81 127l-8-8"/><path class="ga" d="M60 106l14-14"/>' },
+{ n:11, num:'XI', name:'正义', en:'JUSTICE', keys:['公平','因果','抉择','责任'],
+  up:'因果分明，公正抉择。', rev:'偏颇逃避，责任未清。',
+  g:'<path d="M60 66v74M44 146h32"/><path d="M30 84h60"/><path d="M30 84 20 110M30 84l10 26M18 110q12 10 24 0"/><path class="ga" d="M90 84 80 110M90 84l10 26M78 110q12 10 24 0"/>' },
+{ n:12, num:'XII', name:'倒吊人', en:'THE HANGED MAN', keys:['换位','悬置','洞察','暂停'],
+  up:'换个视角，暂停即智慧。', rev:'无谓牺牲，停滞僵持。',
+  g:'<path d="M36 72h48M60 72v70"/><circle cx="60" cy="134" r="6"/><path d="M60 128V98M60 98 48 84M60 98l12-14"/><circle class="ga" cx="60" cy="152" r="7"/>' },
+{ n:13, num:'XIII', name:'死神', en:'DEATH', keys:['结束','新生','放手','蜕变'],
+  up:'结束即新生，彻底放手。', rev:'拒绝告别，勉强维持。',
+  g:'<path d="M40 66q42 4 52 46"/><path d="M58 74l18 74"/><circle cx="42" cy="128" r="8"/><path class="ga" d="M42 118v-8M52 128h8M32 128h-8"/>' },
+{ n:14, num:'XIV', name:'节制', en:'TEMPERANCE', keys:['平衡','调和','耐心','中道'],
+  up:'平衡调和，张弛有度。', rev:'失衡极端，顾此失彼。',
+  g:'<path d="M32 84h20l-6 18h-8z"/><path d="M68 122h20l-6 18h-8z"/><path class="ga" d="M50 92q14-2 26 24"/><path d="M60 106l10 16H50z"/>' },
+{ n:15, num:'XV', name:'恶魔', en:'THE DEVIL', keys:['执念','诱惑','束缚','直面'],
+  up:'直面执念与诱惑。', rev:'挣脱束缚，戒除依赖。',
+  g:'<path d="M60 130 44 82l42 30H34L76 82z"/><path d="M40 128q0 14 12 16M80 128q0 14-12 16"/><circle cx="52" cy="144" r="3"/><circle cx="68" cy="144" r="3"/>' },
+{ n:16, num:'XVI', name:'高塔', en:'THE TOWER', keys:['骤变','破局','崩塌','真相'],
+  up:'骤变破局，旧秩序崩塌。', rev:'余震未平，恐惧延宕。',
+  g:'<path d="M46 150V88h28v62"/><path d="M40 88l6-12 8 8 6-10 6 10 8-8 6 12"/><path class="ga" d="M92 56 76 82l10 2-18 28"/><path d="M34 150h52M54 100h12M54 114h12"/>' },
+{ n:17, num:'XVII', name:'星星', en:'THE STAR', keys:['希望','疗愈','愿景','灵感'],
+  up:'希望疗愈，愿景重现。', rev:'失去信心，理想蒙尘。',
+  g:'<circle cx="60" cy="88" r="10"/><path class="ga" d="M60 56v16M60 104v16M28 88h16M76 88h16M38 66l10 10M82 66 72 76M38 110l10-10M82 110 72 100"/><path d="M36 140q12-8 24 0t24 0"/>' },
+{ n:18, num:'XVIII', name:'月亮', en:'THE MOON', keys:['潜意识','迷雾','梦境','不安'],
+  up:'潜意识浮现，直面迷雾。', rev:'谎言散去，迷雾渐开。',
+  g:'<path d="M70 80A24 24 0 1 0 70 128A30 30 0 0 1 70 80Z"/><path d="M36 150v-28h10v28M84 150v-28H74v28"/><circle class="ga" cx="54" cy="62" r="2"/><circle class="ga" cx="63" cy="56" r="2"/><circle class="ga" cx="67" cy="67" r="2"/>' },
+{ n:19, num:'XIX', name:'太阳', en:'THE SUN', keys:['光明','成功','喜悦','活力'],
+  up:'光明成功，喜悦坦荡。', rev:'骄阳灼人，喜悦延迟。',
+  g:'<circle cx="60" cy="98" r="20"/><path d="M60 66v-10M60 130v10M28 98h10M82 98h10M38 76l7 7M82 120l-7-7M38 120l7-7M82 76l-7 7"/><circle cx="54" cy="94" r="1.6"/><circle cx="66" cy="94" r="1.6"/><path class="ga" d="M52 104q8 6 16 0"/>' },
+{ n:20, num:'XX', name:'审判', en:'JUDGEMENT', keys:['觉醒','召唤','重启','复盘'],
+  up:'觉醒召唤，重启人生篇章。', rev:'自我苛责，错失召唤。',
+  g:'<path d="M32 76 72 94v16L32 92z"/><path d="M72 94l18-9v34l-18-9"/><path class="ga" d="M56 116h20v22H56z"/><path d="M32 148h56M42 148l4-12M56 148l4-12M70 148l4-12"/>' },
+{ n:21, num:'XXI', name:'世界', en:'THE WORLD', keys:['圆满','完成','里程碑','整合'],
+  up:'圆满完成，抵达里程碑。', rev:'未竟之业，临门遗憾。',
+  g:'<ellipse cx="60" cy="104" rx="20" ry="34"/><path d="M40 84q-6-6-4-14M80 84q6-6 4-14M40 124q-6 6-4 14M80 124q6 6 4 14"/><path class="ga" d="M24 64l4-4M96 64l-4-4M24 144l4 4M96 144l-4 4"/><circle cx="60" cy="104" r="4"/>' }
+];
+
+/* ---------- 提问主题（驱动解读文案分支） ---------- */
+var TOPICS = {
+  love:   { cn:'爱情', en:'LOVE',
+    up:'把心动落实为一次具体的靠近，坦诚会让关系明显升温。',
+    rev:'先别急着证明什么——把需求平静地说出口，关系自会找到调整的缝隙。',
+    closer:'感情不是证明题，是练习题：慢慢写，别停笔。' },
+  career: { cn:'事业', en:'CAREER',
+    up:'手头的项目正在聚拢势能，主动认领那个你一直想试的方向。',
+    rev:'卡住你的不是能力，是节奏——先收窄战线，把一件小事做到发光。',
+    closer:'事业如塔罗，翻到什么牌不重要，重要的是你敢把它读完。' },
+  wealth: { cn:'财运', en:'WEALTH',
+    up:'现金流出现松动的迹象，适合把模糊的账目理清，让每一分钱站到明处。',
+    rev:'冲动是钱包最大的漏点——大额决定先冷静四十八小时再落笔。',
+    closer:'财运的本质是关系：你和钱互相信任，它才愿意留下来。' },
+  study:  { cn:'学业', en:'STUDY',
+    up:'理解力正在线，把难点拆成小题逐个击破，进步会肉眼可见。',
+    rev:'别再和焦虑硬碰硬，换个入口重新理解它——错题本就是你的秘径。',
+    closer:'学问是慢火，今天翻过的每一页，都在替未来的你作证。' },
+  self:   { cn:'自我', en:'SELF',
+    up:'内在秩序正在重建，给自己留一段不被打扰的独处时间。',
+    rev:'不必急着回答所有问题，允许自己带着疑问生活一段时间。',
+    closer:'认识自己是唯一的长期主义——牌面只是镜子，走路的人是你。' }
+};
+
+var SPREADS = {
+  one: { count:1, slots:[ {k:'now', cn:'此刻', en:'HERE · NOW', hint:'当下的能量核心'} ] },
+  thr: { count:3, slots:[ {k:'past', cn:'过去', en:'PAST', hint:'来路与成因'},
+                          {k:'now',  cn:'现在', en:'NOW',  hint:'当前处境'},
+                          {k:'future', cn:'未来', en:'FUTURE', hint:'走向与结果'} ] }
+};
+var POS_INTRO = { past:'回望来路，', now:'立足此刻，', future:'眺向前方，' };
+var ROMAN = ['Ⅰ','Ⅱ','Ⅲ'];
+
+/* ---------- 状态 ---------- */
+var state = { topic:null, spread:null, sel:[], flippedCount:0, reading:false };
+var deckOrder = [];
+var deckEl = $('#deck'), slotsEl = $('#slots'), statusEl = $('#status');
+var flipAllBtn = $('#flipAllBtn'), readingEl = $('#reading');
+var need = 0;
+
+/* ---------- 铬字牌面 SVG（锐利线稿 + 罗马编号 + 牌名） ---------- */
+function faceSVG(c){
+  return '<svg class="cf cardface-svg" viewBox="0 0 120 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<rect x="4" y="4" width="112" height="192" fill="none" stroke="rgba(237,237,237,.5)" stroke-width="1.5"/>' +
+    '<rect x="9" y="9" width="102" height="182" fill="none" stroke="rgba(198,255,0,.32)" stroke-width="1"/>' +
+    '<path d="M9 34h102" stroke="rgba(237,237,237,.25)" stroke-width="1"/>' +
+    '<text x="60" y="27" text-anchor="middle" class="cf-num">' + c.num + '</text>' +
+    '<g fill="none" stroke="#E4E7EA" stroke-width="1.7" stroke-linecap="square" stroke-linejoin="miter">' + c.g + '</g>' +
+    '<path d="M9 163h102" stroke="rgba(237,237,237,.25)" stroke-width="1"/>' +
+    '<text x="60" y="177" text-anchor="middle" class="cf-name">' + c.name + '</text>' +
+    '<text x="60" y="187" text-anchor="middle" class="cf-en">' + c.en + '</text>' +
+  '</svg>';
+}
+
+/* ---------- 液态 blob：脉冲形变（标志性瞬间之一） ---------- */
+var blobSvgs = $$('.blob');
+var blobDisps = ['goo1d','goo2d','goo3d'].map(function(id){ return document.getElementById(id); });
+var blobAnimates = ['goo1a','goo2a','goo3a'].map(function(id){ return document.getElementById(id); });
+var BASE_SCALE = [85,70,75];
+var PULSE_SCALE = [150,135,140];
+function blobPulse(){
+  if (RM) return;
+  blobSvgs.forEach(function(b, i){
+    b.classList.remove('pulse');
+    void b.offsetWidth; /* 重启动画 */
+    b.classList.add('pulse');
+    var d = blobDisps[i];
+    if (d){
+      d.setAttribute('scale', String(PULSE_SCALE[i]));
+      setTimeout(function(){ d.setAttribute('scale', String(BASE_SCALE[i])); }, 520);
+    }
+  });
+}
+/* 启动 SMIL 液态形变；reduced-motion 时保持静态 */
+if (!RM){
+  blobAnimates.forEach(function(a){
+    if (a && typeof a.beginElement === 'function'){
+      try { a.beginElement(); } catch(e){}
+    }
+  });
+} else {
+  blobAnimates.forEach(function(a){ if (a && a.parentNode) a.parentNode.removeChild(a); });
+}
+
+/* ---------- 牌堆 ---------- */
+function shuffleDeck(){
+  deckOrder = CARDS.map(function(c){ return c.n; });
+  for (var i = deckOrder.length - 1; i > 0; i--){
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = deckOrder[i]; deckOrder[i] = deckOrder[j]; deckOrder[j] = t;
+  }
+}
+function renderDeck(){
+  var html = '';
+  for (var p = 0; p < deckOrder.length; p++){
+    html += '<button class="deckcard" data-pos="' + p + '" data-ci="' + deckOrder[p] + '"' +
+            ' aria-label="第' + (p + 1) + '张牌，点击抽取">' +
+            '<svg viewBox="0 0 120 200" aria-hidden="true"><use href="#tback"/></svg></button>';
+  }
+  deckEl.innerHTML = html;
+  deckEl.classList.remove('done');
+}
+
+/* ---------- 阵位 ---------- */
+function renderSlots(){
+  if (!state.spread){ slotsEl.innerHTML = ''; return; }
+  var sp = SPREADS[state.spread];
+  var html = '';
+  for (var i = 0; i < sp.slots.length; i++){
+    var s = sp.slots[i];
+    html += '<div class="slot" data-i="' + i + '">' +
+      '<div class="slot-label"><b><i>' + ROMAN[i] + '</i>' + s.cn + '</b><span>' + s.en + ' · ' + s.hint + '</span></div>' +
+      '<div class="slot-stage"><div class="slot-empty">' + ROMAN[i] + '</div><div class="slot-card"></div></div>' +
+    '</div>';
+  }
+  slotsEl.innerHTML = html;
+}
+function tcardHTML(item, i){
+  var c = CARDS[item.ci];
+  return '<button class="tcard" data-i="' + i + '" role="button" tabindex="0" aria-label="翻开第' + (i + 1) + '张牌">' +
+    '<span class="tinner">' +
+      '<span class="tface tback-face"><svg viewBox="0 0 120 200" aria-hidden="true"><use href="#tback"/></svg></span>' +
+      '<span class="tface tfront-face' + (item.rev ? ' rev' : '') + '">' +
+        faceSVG(c) +
+        '<span class="dir-tag ' + (item.rev ? 'revv' : 'up') + '">' + (item.rev ? '逆位 REVERSED' : '正位 UPRIGHT') + '</span>' +
+      '</span>' +
+    '</span>' +
+  '</button>';
+}
+
+/* ---------- 状态栏文案 ---------- */
+function updateStatus(){
+  if (!state.topic){ statusEl.innerHTML = '先选择一个<b>提问主题</b>，命运才能开始记录。'; return; }
+  if (!state.spread){ statusEl.innerHTML = '主题已记录：<b>' + TOPICS[state.topic].cn + '</b>。选择一种<b>牌阵</b>。'; return; }
+  if (state.sel.length === 0){
+    statusEl.innerHTML = '已洗牌——从牌堆中<b>点选 ' + need + ' 张</b>，正逆位将在抽中瞬间判定。';
+  } else if (state.sel.length < need){
+    statusEl.innerHTML = '已抽 <b>' + state.sel.length + ' / ' + need + '</b> 张，继续点选牌堆。';
+  } else if (state.flippedCount < need){
+    statusEl.innerHTML = '抽取完毕——<b>点击牌面翻开</b>，或使用「翻开命运」。';
+  } else {
+    statusEl.innerHTML = '证词已生成——<b>向下阅读解读</b>。';
+  }
+}
+
+/* ---------- 抽牌（正逆位抽中瞬间随机判定） ---------- */
+function drawCard(posBtn){
+  if (state.sel.length >= need) return;
+  var ci = parseInt(posBtn.getAttribute('data-ci'), 10);
+  var rev = Math.random() < 0.35; /* 逆位率 35%（20%–50% 区间） */
+  var idx = state.sel.length;
+  state.sel.push({ ci: ci, rev: rev });
+  posBtn.classList.add('taken');
+  posBtn.disabled = true;
+  var slot = slotsEl.querySelector('.slot[data-i="' + idx + '"]');
+  if (slot){
+    slot.classList.add('filled');
+    var holder = slot.querySelector('.slot-card');
+    holder.innerHTML = tcardHTML(state.sel[idx], idx);
+    var back = holder.querySelector('.tback-face');
+    if (back){
+      back.classList.add('hot');
+      setTimeout(function(){ back.classList.remove('hot'); }, 1800);
+    }
+  }
+  blobPulse(); /* 标志性瞬间：抽牌 → blob 突然形变脉冲 */
+  if (state.sel.length === need){
+    deckEl.classList.add('done');
+    flipAllBtn.disabled = false;
+  }
+  updateStatus();
+}
+
+/* ---------- 翻牌 ---------- */
+function flipCard(tc){
+  if (!tc || tc.classList.contains('flipped')) return;
+  tc.classList.add('flipped');
+  state.flippedCount++;
+  blobPulse();
+  updateStatus();
+  if (state.flippedCount >= need) buildReading();
+}
+function flipAll(){
+  var unflipped = $$('#slots .tcard:not(.flipped)');
+  unflipped.forEach(function(tc, i){
+    if (RM){ flipCard(tc); }
+    else { setTimeout(function(){ flipCard(tc); }, i * 260); }
+  });
+  flipAllBtn.disabled = true;
+}
+
+/* ---------- 解读 ---------- */
+function cardParagraph(item, slotDef){
+  var c = CARDS[item.ci];
+  var t = TOPICS[state.topic];
+  var intro = POS_INTRO[slotDef.k] || '此时此刻，';
+  var dir = item.rev ? '逆位' : '正位';
+  var meaning = item.rev ? c.rev : c.up;
+  var tail = item.rev ? t.rev : t.up;
+  return intro + '「' + c.name + ' ' + c.en + '」以' + dir + '显形——' + meaning + tail;
+}
+function buildReading(){
+  var sp = SPREADS[state.spread];
+  var t = TOPICS[state.topic];
+  var html = '';
+  for (var i = 0; i < state.sel.length; i++){
+    var item = state.sel[i];
+    var c = CARDS[item.ci];
+    var sDef = sp.slots[i];
+    html += '<article class="read-card rv in" style="--d:' + (i * 0.12) + 's">' +
+      '<span class="rc-pos">' + ROMAN[i] + ' · ' + sDef.cn + '位 ' + sDef.en + '</span>' +
+      '<h4>「' + c.name + '」<small>' + c.en + ' · ' + c.num + '</small></h4>' +
+      '<span class="rc-dir ' + (item.rev ? 'revv' : 'up') + '">' + (item.rev ? '逆位 REVERSED' : '正位 UPRIGHT') + '</span>' +
+      '<p class="rc-keys">' + c.keys.join(' <b>·</b> ') + '</p>' +
+      '<p class="rc-body">' + cardParagraph(item, sDef) + '</p>' +
+    '</article>';
+  }
+  $('#readGrid').innerHTML = html;
+  /* 综合证词 */
+  var syn;
+  if (state.sel.length === 1){
+    var c0 = CARDS[state.sel[0].ci];
+    syn = '孤牌定音——本次占卜只有一句证词，来自「' + c0.name + ' ' + c0.en + '」的' +
+          (state.sel[0].rev ? '逆位提醒' : '正位顺流') + '。' + t.closer;
+  } else {
+    var a = CARDS[state.sel[0].ci], b = CARDS[state.sel[1].ci], d = CARDS[state.sel[2].ci];
+    syn = '三张牌连成一条时间线：「' + a.name + '」交代来路，「' + b.name + '」立足当下，「' + d.name + '」指向去处。' + t.closer;
+  }
+  $('#synText').textContent = syn;
+  flipAllBtn.disabled = true;
+  readingEl.hidden = false;
+  state.reading = true;
+  updateStatus();
+  setTimeout(function(){
+    readingEl.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
+  }, RM ? 0 : 350);
+}
+
+/* ---------- 重置 ---------- */
+function resetDraw(keepPick){
+  state.sel = [];
+  state.flippedCount = 0;
+  state.reading = false;
+  need = state.spread ? SPREADS[state.spread].count : 0;
+  shuffleDeck();
+  renderDeck();
+  if (state.spread) renderSlots(); else slotsEl.innerHTML = '';
+  readingEl.hidden = true;
+  $('#readGrid').innerHTML = '';
+  $('#synText').textContent = '';
+  flipAllBtn.disabled = true;
+  if (!keepPick){ state.topic = null; state.spread = null; }
+  updateStatus();
+}
+
+/* ---------- 事件：主题 / 牌阵 ---------- */
+$('#topics').addEventListener('click', function(e){
+  var chip = e.target.closest('.chip');
+  if (!chip) return;
+  $$('#topics .chip').forEach(function(c){ c.setAttribute('aria-pressed', 'false'); });
+  chip.setAttribute('aria-pressed', 'true');
+  state.topic = chip.getAttribute('data-t');
+  resetDraw(true);
+});
+$('#spreads').addEventListener('click', function(e){
+  var sc = e.target.closest('.spread-card');
+  if (!sc) return;
+  $$('#spreads .spread-card').forEach(function(c){ c.setAttribute('aria-pressed', 'false'); });
+  sc.setAttribute('aria-pressed', 'true');
+  state.spread = sc.getAttribute('data-s');
+  resetDraw(true);
+});
+
+/* ---------- 事件：洗牌 / 抽牌 / 翻牌 ---------- */
+$('#shuffleBtn').addEventListener('click', function(){
+  if (!state.spread){ updateStatus(); return; }
+  resetDraw(true);
+  if (!RM){
+    deckEl.classList.add('shuffling');
+    setTimeout(function(){ deckEl.classList.remove('shuffling'); }, 950);
+  }
+});
+deckEl.addEventListener('click', function(e){
+  var btn = e.target.closest('.deckcard');
+  if (!btn || btn.disabled) return;
+  drawCard(btn);
+});
+slotsEl.addEventListener('click', function(e){
+  var tc = e.target.closest('.tcard');
+  if (tc) flipCard(tc);
+});
+slotsEl.addEventListener('keydown', function(e){
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  var tc = e.target.closest('.tcard');
+  if (tc){ e.preventDefault(); flipCard(tc); }
+});
+flipAllBtn.addEventListener('click', flipAll);
+$('#againBtn').addEventListener('click', function(){
+  resetDraw(true);
+  $('#draw').scrollIntoView({ behavior: RM ? 'auto' : 'smooth' });
+});
+$('#newBtn').addEventListener('click', function(){
+  resetDraw(false);
+  $$('#topics .chip').forEach(function(c){ c.setAttribute('aria-pressed', 'false'); });
+  $$('#spreads .spread-card').forEach(function(c){ c.setAttribute('aria-pressed', 'false'); });
+  updateStatus();
+  $('#draw').scrollIntoView({ behavior: RM ? 'auto' : 'smooth' });
+});
+
+/* ---------- 二十二牌典：搜索 / 筛选 / 详情 ---------- */
+var libGrid = $('#libGrid'), libSearch = $('#libSearch'), libCount = $('#libCount');
+var libArc = 'all';
+var ARC_RANGE = { '0':[0,7], '1':[8,14], '2':[15,21] };
+
+function libFilter(){
+  var q = libSearch.value.trim().toLowerCase();
+  return CARDS.filter(function(c){
+    if (libArc !== 'all'){
+      var r = ARC_RANGE[libArc];
+      if (c.n < r[0] || c.n > r[1]) return false;
+    }
+    if (!q) return true;
+    var hay = (c.name + c.en + c.num + c.keys.join('') + c.up + c.rev).toLowerCase();
+    return hay.indexOf(q) !== -1;
+  });
+}
+function renderLib(){
+  var list = libFilter();
+  var html = '';
+  for (var i = 0; i < list.length; i++){
+    var c = list[i];
+    html += '<button class="lib-item" data-ci="' + c.n + '" aria-label="查看 ' + c.name + ' 牌义详情">' +
+      '<span class="lib-thumb">' + faceSVG(c) + '</span>' +
+      '<span class="lib-meta">' +
+        '<span class="lnum">' + c.num + ' · MAJOR</span>' +
+        '<span class="lh3">' + c.name + '</span>' +
+        '<span class="len">' + c.en + '</span>' +
+        '<p class="lup"><b>正位</b> ' + c.up + '</p>' +
+        '<p class="lrev"><b>逆位</b> ' + c.rev + '</p>' +
+      '</span>' +
+      '<span class="lib-open">详情 DETAIL →</span>' +
+    '</button>';
+  }
+  libGrid.innerHTML = html || '<p class="lib-empty">没有匹配的牌——换个关键词，或问一问命运之轮。</p>';
+  libCount.innerHTML = '收录 <b>' + list.length + '</b> / 22 张大阿卡纳';
+}
+libSearch.addEventListener('input', renderLib);
+$$('.fchip').forEach(function(fc){
+  fc.addEventListener('click', function(){
+    $$('.fchip').forEach(function(x){ x.setAttribute('aria-pressed', 'false'); });
+    fc.setAttribute('aria-pressed', 'true');
+    libArc = fc.getAttribute('data-arc');
+    renderLib();
+  });
+});
+
+/* ---------- 模态 ---------- */
+var modal = $('#modal');
+function openModal(ci){
+  var c = CARDS[ci];
+  if (!c) return;
+  $('#mFace').innerHTML = faceSVG(c);
+  $('#mNum').textContent = '大阿卡纳 · ' + c.num + ' / XXI';
+  $('#mTitle').textContent = c.name;
+  $('#mTitle').id = 'mTitle';
+  $('#mEn').textContent = c.en;
+  $('#mKeys').innerHTML = c.keys.map(function(k){ return '<span>' + k + '</span>'; }).join('');
+  $('#mUp').textContent = c.up;
+  $('#mRev').textContent = c.rev + '调整的方向：放慢验证，别与趋势硬拗，把课题拆小再逐个回应。';
+  modal.hidden = false;
+  document.body.style.overflow = 'hidden';
+  $('#mClose').focus();
+}
+function closeModal(){
+  modal.hidden = true;
+  document.body.style.overflow = '';
+}
+libGrid.addEventListener('click', function(e){
+  var item = e.target.closest('.lib-item');
+  if (item) openModal(parseInt(item.getAttribute('data-ci'), 10));
+});
+$('#mClose').addEventListener('click', closeModal);
+$('#modalBack').addEventListener('click', closeModal);
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && !modal.hidden) closeModal();
+});
+
+/* ---------- 每日证词 ---------- */
+var DAILY = [
+  '今天不必回答所有问题，允许一件事悬而未决。',
+  '你等待的转机，藏在一件你一直拖延的小事里。',
+  '把今天过成「减法日」：退出一段消耗，拒绝一个勉强。',
+  '直觉比逻辑先抵达——那个第一反应，值得认真对待。',
+  '告别不是失去，是为新章节腾出位置。',
+  '慢一点也没关系，月亮也不是一夜圆的。',
+  '今天适合记录：写下三件让你感到丰盈的瞬间。',
+  '越是害怕改变，越说明那件事已经被写进了你的日程。'
+];
+var dailyIdx = Math.floor(Math.random() * DAILY.length);
+$('#dailyText').textContent = DAILY[dailyIdx];
+$('#dailyBtn').addEventListener('click', function(){
+  var next = dailyIdx;
+  while (next === dailyIdx){ next = Math.floor(Math.random() * DAILY.length); }
+  dailyIdx = next;
+  var p = $('#dailyText');
+  p.classList.remove('swap');
+  void p.offsetWidth;
+  p.textContent = DAILY[dailyIdx];
+  if (!RM) p.classList.add('swap');
+});
+
+/* ---------- 滚动显现 ---------- */
+if ('IntersectionObserver' in window && !RM){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){
+        en.target.classList.add('in');
+        io.unobserve(en.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  $$('.rv').forEach(function(el){ io.observe(el); });
+} else {
+  $$('.rv').forEach(function(el){ el.classList.add('in'); });
+}
+
+/* ---------- 初始化 ---------- */
+shuffleDeck();
+renderDeck();
+renderSlots();
+updateStatus();
+renderLib();
+</script>
+</body>
+</html>

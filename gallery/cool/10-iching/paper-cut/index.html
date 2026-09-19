@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>六爻影戏 · 周易占卜（剪纸皮影专场）</title>
+<meta name="description" content="以纸为幕，以影为卦——剪纸皮影风格的周易占卜：三掷成爻，六只影偶挑杆落位成卦，六十四卦戏目折。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;500&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================
+   六爻影戏 · 剪纸皮影 Paper-cut / Shadow Play
+   色板（锁死 6 色）：
+   正红 #C3272B / 深绛 #7E1D20 / 橙红 #D95B2E
+   幕布暖光 #F6E0AE / 皮影墨影 #35231C / 米白纸边 #F0E6CE
+   ========================================================== */
+:root{
+  --red:#C3272B;
+  --crimson:#7E1D20;
+  --orange:#D95B2E;
+  --light:#F6E0AE;
+  --ink:#35231C;
+  --paper:#F0E6CE;
+  --serif:"Noto Serif SC","Songti SC","SimSun",serif;
+  --disp:"Ma Shan Zheng","ZCOOL XiaoWei","STKaiti","KaiTi","Noto Serif SC",serif;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+html,body{overflow-x:hidden}
+body{
+  font-family:var(--serif);
+  color:var(--ink);
+  line-height:1.75;
+  background:
+    radial-gradient(120% 92% at 50% 38%,
+      #F6E0AE 0%, #E8C483 24%, #C05A38 52%, #8E2823 74%, #5E1416 92%, #4A0F12 100%)
+    fixed #5E1416;
+}
+::selection{background:var(--red);color:var(--paper)}
+a{color:inherit}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px dashed var(--red);outline-offset:3px}
+img,svg{display:block}
+
+/* ---------- 暖光幕布：中央亮四周暗，6s 呼吸 ---------- */
+.stage-light{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(46% 38% at 50% 34%, rgba(246,224,174,.55), rgba(246,224,174,0) 72%);
+  animation:lightBreathe 6s ease-in-out infinite alternate;
+}
+@keyframes lightBreathe{
+  from{opacity:.72;transform:scale(1)}
+  to{opacity:1;transform:scale(1.035)}
+}
+
+/* ---------- 三层剪纸景深（固定层，滚动/指针视差） ---------- */
+.pc-layer{
+  position:fixed;inset:-3.5%;z-index:1;pointer-events:none;
+  will-change:transform;
+  animation:layerIn 1.4s ease 1.8s both;
+}
+@keyframes layerIn{from{opacity:0}to{opacity:1}}
+.pc-far svg{filter:blur(2px)}
+.pc-far{opacity:.9}
+.pc-mid{opacity:.92}
+
+/* ---------- 开场幕布（加载入场，纯 CSS 拉开） ---------- */
+#intro{
+  position:fixed;inset:0;z-index:100;pointer-events:none;overflow:hidden;
+  animation:introGone .5s ease 2.7s both;
+}
+@keyframes introGone{to{visibility:hidden}}
+.intro-half{
+  position:absolute;top:0;bottom:0;width:50.6%;
+  background:
+    repeating-linear-gradient(90deg, rgba(53,15,10,.35) 0 5px, rgba(0,0,0,0) 5px 26px),
+    linear-gradient(180deg,#8E2823,#5E1416);
+  box-shadow:inset 0 0 140px rgba(30,8,6,.65);
+  animation:curtOpen 1.5s cubic-bezier(.77,0,.18,1) 1.05s both;
+}
+.intro-half.l{left:0}
+.intro-half.r{right:0;animation-name:curtOpenR}
+.intro-half::after{
+  content:"";position:absolute;top:0;bottom:0;width:8px;
+  background:linear-gradient(180deg,#F0E6CE,#E8C483 55%,#D95B2E);
+  opacity:.85;
+}
+.intro-half.l::after{right:0}
+.intro-half.r::after{left:0}
+@keyframes curtOpen{to{transform:translateX(-102%)}}
+@keyframes curtOpenR{to{transform:translateX(102%)}}
+.intro-mark{
+  position:absolute;inset:0;display:grid;place-items:center;z-index:2;
+  animation:introMark 1.1s ease .12s both;
+}
+.intro-mark b{
+  font-family:var(--disp);font-weight:400;font-size:clamp(38px,7vw,76px);
+  color:var(--paper);letter-spacing:.28em;text-indent:.28em;
+  text-shadow:0 0 34px rgba(246,224,174,.75),0 4px 12px rgba(53,15,10,.8);
+}
+.intro-mark i{
+  display:block;text-align:center;font-style:normal;color:var(--light);
+  font-size:14px;letter-spacing:.6em;text-indent:.6em;margin-top:14px;opacity:.85;
+}
+@keyframes introMark{
+  0%{opacity:0;transform:scale(.86)}
+  32%{opacity:1;transform:scale(1)}
+  72%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.06)}
+}
+
+/* ---------- 幕檐（戏台顶横幅：深绛 + 回纹镂空） ---------- */
+.valance{
+  position:fixed;top:0;left:0;right:0;z-index:40;height:64px;
+  background:#7E1D20;
+  box-shadow:0 6px 22px rgba(53,15,10,.5);
+  animation:valDrop .8s cubic-bezier(.3,1.1,.4,1) 1.5s both;
+}
+@keyframes valDrop{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+.val-bg{position:absolute;inset:0;width:100%;height:100%}
+.valance nav{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  gap:clamp(16px,4vw,46px);
+}
+.valance nav a{
+  color:var(--paper);text-decoration:none;font-family:var(--disp);
+  font-size:19px;letter-spacing:.22em;padding:2px 4px;position:relative;
+}
+.valance nav a::after{
+  content:"";position:absolute;left:50%;right:50%;bottom:-3px;height:2px;
+  background:var(--light);transition:left .3s,right .3s;
+}
+.valance nav a:hover::after{left:0;right:0}
+.val-scal{position:absolute;top:62px;left:0;width:100%;height:15px;z-index:41}
+.val-medal{
+  position:absolute;top:58px;left:50%;transform:translateX(-50%);z-index:42;
+  width:44px;height:44px;border-radius:50%;
+  background:var(--paper);border:3px solid var(--orange);
+  display:grid;place-items:center;
+  box-shadow:0 4px 12px rgba(53,15,10,.5);
+  transform-origin:top center;
+  animation:medalSway 5s ease-in-out infinite alternate;
+}
+.val-medal span{font-family:var(--disp);color:var(--red);font-size:24px;line-height:1}
+@keyframes medalSway{from{transform:translateX(-50%) rotate(-3.5deg)}to{transform:translateX(-50%) rotate(3.5deg)}}
+
+/* ---------- 悬挂影偶（蝴蝶皮影，hover 摆动） ---------- */
+.flut{position:fixed;z-index:1;pointer-events:auto;transform-origin:top center}
+.flut svg{width:100%;height:100%;transform-origin:top center;animation:flutSway 5.5s ease-in-out infinite alternate}
+.flut:hover svg{animation-duration:1.6s}
+@keyframes flutSway{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
+.flut-a{top:76px;left:7%;width:96px;height:136px}
+.flut-b{top:96px;right:8%;width:82px;height:118px}
+.flut-c{top:520px;left:2.5%;width:64px;height:92px;opacity:.85}
+
+/* ---------- 版面骨架 ---------- */
+main{position:relative;z-index:2}
+.act{max-width:1160px;margin:0 auto;padding:96px 24px 40px;scroll-margin-top:96px}
+.act-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+.act-tag{
+  font-family:var(--disp);color:var(--paper);background:var(--crimson);
+  border:1px solid rgba(240,230,206,.4);border-radius:6px;
+  padding:4px 12px;letter-spacing:.24em;text-indent:.24em;font-size:15px;
+  transform:rotate(-2deg);box-shadow:2px 3px 0 rgba(74,15,18,.4);
+}
+.act-head h2{
+  font-family:var(--disp);font-weight:400;color:var(--ink);
+  font-size:clamp(30px,4.4vw,46px);letter-spacing:.12em;
+  text-shadow:0 0 22px rgba(246,224,174,.6);
+}
+.act-sub{color:rgba(53,35,28,.78);font-size:15px;margin-bottom:26px;max-width:640px}
+.act-rule{display:flex;align-items:center;gap:12px;margin:6px 0 18px}
+.act-rule i{flex:1;height:2px;background:linear-gradient(90deg,rgba(126,29,32,.0),rgba(126,29,32,.55),rgba(126,29,32,0))}
+.act-rule svg{width:74px;height:26px;color:var(--red);flex:none}
+
+/* 滚动显现（JS 加 .rv，无 JS 时不隐藏） */
+.rv{opacity:0;transform:translateY(26px);transition:opacity .8s ease,transform .8s ease}
+.rv.vis{opacity:1;transform:none}
+
+/* ---------- 第一幕 · 开场 ---------- */
+#kai{min-height:94vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-top:120px;position:relative}
+.kai-kicker{
+  font-family:var(--sans);font-size:13px;letter-spacing:.55em;text-indent:.55em;
+  color:rgba(53,35,28,.72);border:1px solid rgba(126,29,32,.45);
+  padding:5px 16px;border-radius:999px;background:rgba(240,230,206,.4);
+  opacity:0;animation:fadeUp .8s ease 1.75s both;
+}
+.kai-title{
+  margin:26px 0 8px;font-family:var(--disp);font-weight:400;
+  font-size:clamp(64px,13vw,158px);line-height:1.06;color:var(--ink);
+  text-shadow:0 0 30px rgba(246,224,174,.65),0 3px 0 rgba(240,230,206,.35);
+}
+.kai-title .tc{display:inline-block;opacity:0;animation:charUp .7s cubic-bezier(.3,1.2,.4,1) var(--d,1.8s) both,floaty 6s ease-in-out calc(var(--d,1.8s) + .9s) infinite alternate}
+.kai-title .tc:nth-child(odd){--tilt:-1.6deg}
+.kai-title .tc:nth-child(even){--tilt:1.4deg}
+@keyframes charUp{from{opacity:0;transform:translateY(46px) rotate(var(--tilt,0deg)) scale(.92)}to{opacity:1;transform:translateY(0) rotate(var(--tilt,0deg)) scale(1)}}
+@keyframes floaty{from{transform:translateY(0) rotate(var(--tilt,0deg))}to{transform:translateY(-7px) rotate(var(--tilt,0deg))}}
+.kai-seal{
+  display:inline-block;font-family:var(--disp);color:var(--paper);background:var(--red);
+  border-radius:5px;padding:6px 10px;font-size:15px;letter-spacing:.24em;text-indent:.24em;
+  transform:rotate(-4deg);box-shadow:2px 3px 0 rgba(74,15,18,.45);
+  opacity:0;animation:fadeUp .7s ease 2.35s both;
+}
+.kai-sub{
+  margin:20px auto 6px;font-size:clamp(16px,2.2vw,20px);color:rgba(53,35,28,.9);
+  letter-spacing:.1em;opacity:0;animation:fadeUp .8s ease 2.15s both;
+}
+.kai-desc{
+  max-width:560px;margin:8px auto 0;color:rgba(53,35,28,.72);font-size:15px;
+  opacity:0;animation:fadeUp .8s ease 2.3s both;
+}
+.kai-cta{display:flex;align-items:flex-end;gap:34px;margin-top:40px;flex-wrap:wrap;justify-content:center;opacity:0;animation:fadeUp .8s ease 2.5s both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+.taiji-btn{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:10px}
+.taiji-disc{
+  width:104px;height:104px;border-radius:50%;display:grid;place-items:center;
+  box-shadow:0 0 0 6px rgba(240,230,206,.4),0 0 44px rgba(246,224,174,.8),0 12px 28px rgba(74,15,18,.4);
+  transition:transform .35s ease,box-shadow .35s ease;
+}
+.taiji-disc svg{width:84px;height:84px;animation:spin 26s linear infinite}
+.taiji-btn:hover .taiji-disc{transform:scale(1.07) rotate(6deg);box-shadow:0 0 0 6px rgba(240,230,206,.55),0 0 66px rgba(246,224,174,1),0 12px 28px rgba(74,15,18,.4)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.taiji-label{font-family:var(--disp);font-size:21px;letter-spacing:.3em;text-indent:.3em;color:var(--ink)}
+.kai-link{
+  font-family:var(--disp);font-size:18px;letter-spacing:.14em;color:var(--crimson);
+  text-decoration:none;border-bottom:2px solid rgba(126,29,32,.5);padding-bottom:4px;
+  transition:color .3s,border-color .3s;
+}
+.kai-link:hover{color:var(--red);border-color:var(--red)}
+.kai-hint{margin-top:56px;display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(53,35,28,.6);font-size:13px;letter-spacing:.3em;text-indent:.3em;animation:fadeUp .8s ease 2.8s both}
+.kai-hint svg{width:22px;height:30px;color:var(--crimson);animation:hintBob 1.6s ease-in-out infinite alternate}
+@keyframes hintBob{from{transform:translateY(-3px)}to{transform:translateY(4px)}}
+.vside{position:absolute;top:50%;transform:translateY(-50%);writing-mode:vertical-rl;letter-spacing:.4em;font-size:14px;color:rgba(53,35,28,.62);opacity:0;animation:fadeUp 1s ease 2.6s both}
+.vside.l{left:4vw}
+.vside.r{right:4vw}
+
+/* ---------- 第二幕 · 起卦仪式（戏台） ---------- */
+.stage-frame{
+  position:relative;max-width:880px;margin:24px auto 0;
+  border:12px solid var(--crimson);outline:3px solid rgba(240,230,206,.22);
+  border-radius:22px;padding:96px clamp(14px,4%,34px) 30px;
+  background:radial-gradient(88% 68% at 50% 30%, rgba(246,224,174,.5), rgba(246,224,174,0) 72%);
+  box-shadow:0 26px 64px rgba(53,15,10,.5), inset 0 0 70px rgba(126,29,32,.24);
+  transition:box-shadow 1s ease;
+}
+.stage-frame.done{
+  box-shadow:0 26px 64px rgba(53,15,10,.5), 0 0 90px rgba(246,224,174,.6),
+    inset 0 0 80px rgba(246,224,174,.3);
+}
+.stg-top{position:absolute;top:0;left:0;right:0;height:48px;overflow:visible}
+.stg-top svg{position:absolute;top:0;left:0;width:100%;height:48px}
+.stg-scal{position:absolute;top:46px;left:0;width:100%;height:13px}
+.stg-plaque{
+  position:absolute;top:9px;left:50%;transform:translateX(-50%);z-index:3;
+  background:var(--red);color:var(--paper);font-family:var(--disp);
+  font-size:16px;letter-spacing:.34em;text-indent:.34em;
+  padding:4px 16px;border-radius:6px;border:1px solid rgba(240,230,206,.45);
+  box-shadow:0 3px 10px rgba(53,15,10,.5);
+}
+.scurt{position:absolute;top:0;bottom:0;width:72px;z-index:2;pointer-events:none;
+  background:repeating-linear-gradient(90deg,#5E1416 0 10px,#8E2823 10px 24px);
+  box-shadow:inset 0 0 30px rgba(30,8,6,.55);
+}
+.scurt.l{left:0;border-right:3px solid rgba(240,230,206,.16);border-radius:8px 0 0 8px}
+.scurt.r{right:0;border-left:3px solid rgba(240,230,206,.16);border-radius:0 8px 8px 0}
+.stage-inner{position:relative;z-index:3;text-align:center}
+
+/* 掷币台 */
+.coin-rig{display:flex;justify-content:center;align-items:flex-end;gap:26px;height:96px;margin-top:4px}
+.coin{position:relative;width:62px;height:62px;opacity:.96}
+.coin svg{width:100%;height:100%}
+.coin .face{
+  position:absolute;left:50%;bottom:-24px;transform:translateX(-50%) scale(.5);
+  font-family:var(--sans);font-size:11px;font-weight:500;white-space:nowrap;
+  background:var(--paper);color:var(--crimson);border:1px solid rgba(126,29,32,.5);
+  padding:1px 7px;border-radius:4px;opacity:0;transition:opacity .25s,transform .25s;
+}
+.coin .face.show{opacity:1;transform:translateX(-50%) scale(1)}
+.coin.toss{animation:coinToss .55s cubic-bezier(.24,1.3,.4,1) both}
+@keyframes coinToss{
+  0%{transform:translateY(-300px) rotateX(0deg) rotate(-38deg);opacity:0}
+  45%{opacity:1}
+  100%{transform:translateY(0) rotateX(720deg) rotate(0deg);opacity:1}
+}
+.toss-sum{
+  align-self:center;min-width:150px;text-align:center;
+  font-family:var(--disp);font-size:22px;letter-spacing:.14em;color:var(--crimson);
+  border:2px solid rgba(126,29,32,.45);border-radius:10px;
+  background:rgba(240,230,206,.66);padding:10px 16px;
+}
+
+/* 横杆 + 六爻影偶槽位 */
+.crossbar{
+  position:relative;width:min(480px,88%);height:10px;margin:34px auto 6px;
+  background:linear-gradient(180deg,#4A2A1C,#35231C);border-radius:5px;
+  box-shadow:0 3px 8px rgba(53,15,10,.5);
+}
+.crossbar::before,.crossbar::after{
+  content:"";position:absolute;top:50%;width:16px;height:16px;border-radius:50%;
+  transform:translateY(-50%);background:var(--orange);border:3px solid var(--ink);
+}
+.crossbar::before{left:-8px}
+.crossbar::after{right:-8px}
+.slots{list-style:none;display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.slot{position:relative;height:54px;display:flex;align-items:center;justify-content:center}
+.slot .hook{
+  width:min(420px,80%);height:24px;border-radius:7px;
+  border:2px dashed rgba(126,29,32,.42);opacity:.65;transition:opacity .4s;
+}
+.slot.filled .hook{display:none}
+.slot.live .hook{
+  border-color:rgba(246,224,174,.95);opacity:1;
+  box-shadow:0 0 18px rgba(246,224,174,.6);animation:hookGlow 1.1s ease-in-out infinite alternate;
+}
+@keyframes hookGlow{from{box-shadow:0 0 8px rgba(246,224,174,.4)}to{box-shadow:0 0 22px rgba(246,224,174,.85)}}
+.pos-tag{position:absolute;left:2%;font-family:var(--sans);font-size:12px;color:rgba(53,35,28,.66);letter-spacing:.14em}
+.res-chip{
+  position:absolute;right:2%;font-family:var(--sans);font-size:12px;color:var(--ink);
+  background:rgba(240,230,206,.85);border:1px solid rgba(126,29,32,.45);
+  padding:2px 9px;border-radius:5px;white-space:nowrap;
+}
+.puppet{position:relative;width:min(420px,80%);opacity:0}
+.puppet.drop{animation:puppetDrop .8s cubic-bezier(.26,.9,.32,1.18) both}
+.puppet.placed{opacity:1}
+@keyframes puppetDrop{
+  0%{opacity:0;transform:rotate(-24deg) translate(-46px,-96px)}
+  55%{opacity:1;transform:rotate(-6deg) translate(-4px,-10px)}
+  78%{transform:rotate(2.4deg) translate(0,2px)}
+  100%{opacity:1;transform:rotate(0deg) translate(0,0)}
+}
+.puppet .rod{position:absolute;left:-56px;top:-58px;width:150px;height:110px;pointer-events:none}
+.puppet.drop .rod{animation:rodWave .95s ease both}
+@keyframes rodWave{
+  0%{transform:translate(-70px,-120px) rotate(-42deg);opacity:0}
+  35%{opacity:1;transform:translate(0,0) rotate(0deg)}
+  70%{transform:translate(0,0) rotate(0deg);opacity:1}
+  100%{transform:translate(54px,-132px) rotate(36deg);opacity:0}
+}
+.puppet-body{position:relative;transform-origin:12% 50%}
+.slot .puppet.placed:hover .puppet-body{animation:yaoWiggle .65s ease-in-out}
+@keyframes yaoWiggle{
+  0%,100%{transform:rotate(0deg)}
+  25%{transform:rotate(-2.6deg)}
+  55%{transform:rotate(2.2deg)}
+  80%{transform:rotate(-1deg)}
+}
+/* 爻 = 皮影影偶横杆：阳爻整杆 / 阴爻两段，两端铜环 */
+.yao{position:relative}
+.bar-yang{
+  height:24px;width:100%;border-radius:7px;
+  background:
+    repeating-linear-gradient(115deg, rgba(126,29,32,.14) 0 3px, rgba(0,0,0,0) 3px 12px),
+    linear-gradient(180deg,#E06A38 0%,#D95B2E 42%,#C24E24 100%);
+  box-shadow:inset 0 0 0 2px rgba(126,29,32,.4), inset 0 -5px 6px rgba(126,29,32,.35), 0 3px 8px rgba(74,15,18,.35);
+}
+.bar-yang::before,.bar-yang::after,
+.seg.sl::before,.seg.sr::after{
+  content:"";position:absolute;top:50%;transform:translateY(-50%);
+  width:11px;height:11px;border-radius:50%;
+  border:3px solid var(--light);background:rgba(126,29,32,.35);
+  box-shadow:0 0 6px rgba(246,224,174,.55);
+}
+.bar-yang::before{left:6px}
+.bar-yang::after{right:6px}
+.bar-yin{display:flex;justify-content:space-between;gap:26px}
+.seg{flex:1;height:24px;border-radius:7px;
+  background:
+    repeating-linear-gradient(115deg, rgba(126,29,32,.14) 0 3px, rgba(0,0,0,0) 3px 12px),
+    linear-gradient(180deg,#E06A38 0%,#D95B2E 42%,#C24E24 100%);
+  box-shadow:inset 0 0 0 2px rgba(126,29,32,.4), inset 0 -5px 6px rgba(126,29,32,.35), 0 3px 8px rgba(74,15,18,.35);
+}
+.seg.sl::before{left:6px}
+.seg.sr::after{right:6px}
+.seg.sl::after,.seg.sr::before{
+  content:"";position:absolute;top:4px;bottom:4px;width:6px;border-radius:4px;
+  background:rgba(126,29,32,.5);
+}
+.seg.sl::after{right:2px}
+.seg.sr::before{left:2px}
+.move-dot{
+  position:absolute;top:-13px;right:-14px;width:23px;height:23px;border-radius:50%;
+  background:var(--light);color:var(--red);font-style:normal;
+  font:700 13px/23px var(--sans);text-align:center;
+  box-shadow:0 0 0 2px var(--red);animation:movePulse 1.6s ease-in-out infinite;
+}
+@keyframes movePulse{
+  0%,100%{box-shadow:0 0 0 2px var(--red),0 0 4px rgba(246,224,174,.4)}
+  50%{box-shadow:0 0 0 3px var(--red),0 0 16px rgba(246,224,174,.95)}
+}
+.puppet.is-move .bar-yang,.puppet.is-move .seg{
+  box-shadow:inset 0 0 0 2px rgba(126,29,32,.4), 0 0 16px rgba(246,224,174,.85), 0 3px 8px rgba(74,15,18,.35);
+}
+/* 锣鼓点视觉 */
+.gong-ring{
+  position:absolute;left:50%;top:42%;width:60px;height:60px;margin:-30px 0 0 -30px;
+  border:3px solid var(--orange);border-radius:50%;opacity:0;pointer-events:none;
+}
+.gong-ring.on{animation:ringOut .7s ease-out}
+@keyframes ringOut{
+  0%{opacity:.95;transform:scale(.5)}
+  100%{opacity:0;transform:scale(4.6)}
+}
+.dong{
+  position:absolute;left:50%;top:-6px;transform:translateX(-50%);
+  font-family:var(--disp);font-size:32px;color:var(--crimson);pointer-events:none;
+  text-shadow:0 0 14px rgba(246,224,174,.9);
+  animation:dongFloat .95s ease-out both;
+}
+@keyframes dongFloat{
+  0%{opacity:0;transform:translateX(-50%) translateY(8px) scale(.7)}
+  28%{opacity:1}
+  100%{opacity:0;transform:translateX(-50%) translateY(-50px) scale(1.28)}
+}
+
+/* 戏台控制与状态 */
+.stage-ctl{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:22px}
+.btn-main{
+  font-family:var(--disp);font-size:19px;letter-spacing:.28em;text-indent:.28em;
+  color:var(--paper);background:var(--red);border:2px solid var(--crimson);
+  border-radius:8px;padding:10px 30px;
+  box-shadow:inset 0 0 0 1px rgba(240,230,206,.35), 0 6px 16px rgba(74,15,18,.45);
+  transition:transform .15s,box-shadow .3s,filter .3s;
+}
+.btn-main:hover{filter:brightness(1.12);box-shadow:inset 0 0 0 1px rgba(240,230,206,.55),0 8px 22px rgba(74,15,18,.5)}
+.btn-main:active{transform:translateY(2px)}
+.btn-main:disabled{opacity:.55;cursor:not-allowed}
+.btn-ghost{
+  font-family:var(--sans);font-size:13px;letter-spacing:.16em;
+  color:var(--ink);background:rgba(240,230,206,.55);
+  border:1.5px solid rgba(126,29,32,.55);border-radius:7px;padding:8px 16px;
+  transition:background .3s,color .3s;
+}
+.btn-ghost:hover{background:var(--crimson);color:var(--paper)}
+.btn-ghost:disabled{opacity:.4;cursor:not-allowed}
+.ritual-status{
+  margin-top:16px;min-height:26px;font-size:14px;color:rgba(53,35,28,.85);letter-spacing:.06em;
+}
+
+/* ---------- 戏折子（结果卷轴） ---------- */
+.scroll-wrap{max-width:880px;margin:30px auto 0}
+.roller{
+  position:relative;height:26px;margin:0 2px;border-radius:13px;
+  background:linear-gradient(180deg,#8E2823,#5E1416 60%,#4A0F12);
+  box-shadow:0 4px 12px rgba(53,15,10,.5);
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.roller i{position:absolute;top:50%;width:18px;height:18px;border-radius:50%;
+  transform:translateY(-50%);background:var(--orange);border:3px solid var(--ink)}
+.roller i.l{left:-6px}
+.roller i.r{right:-6px}
+.roller span{font-family:var(--disp);color:var(--paper);font-size:16px;letter-spacing:.3em;text-indent:.3em}
+.scroll-paper{
+  margin:0 12px;background:linear-gradient(180deg,#F5EDDA,#F0E6CE);
+  border-left:2px solid rgba(126,29,32,.4);border-right:2px solid rgba(126,29,32,.4);
+  max-height:0;opacity:0;overflow:hidden;padding:0 30px;
+  transition:max-height 1.1s cubic-bezier(.6,0,.3,1),opacity .7s ease .15s,padding .8s ease;
+}
+.scroll-wrap.open .scroll-paper{max-height:1500px;opacity:1;padding:28px 30px}
+.rs-grid{display:grid;grid-template-columns:290px 1fr;gap:30px}
+.rs-hexbox{text-align:center;border-right:2px dashed rgba(126,29,32,.3);padding-right:24px}
+.rs-hexbox .hexsvg{width:132px;height:143px;margin:0 auto;color:var(--red)}
+.rs-name{font-family:var(--disp);font-size:40px;color:var(--ink);line-height:1.2}
+.rs-xiang{font-size:13px;color:rgba(53,35,28,.7);letter-spacing:.2em;margin-top:2px}
+.rs-moves{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.chip{
+  font-family:var(--sans);font-size:12px;border-radius:5px;padding:2px 9px;
+  background:rgba(195,39,43,.1);border:1px solid rgba(195,39,43,.5);color:var(--red);
+}
+.chip.warn{background:rgba(126,29,32,.12);border-color:rgba(126,29,32,.55);color:var(--crimson)}
+.rs-bian{margin-top:14px;border:1.5px solid rgba(126,29,32,.4);border-radius:10px;padding:10px 8px 12px;background:rgba(246,224,174,.35)}
+.rs-bian b{display:block;font-family:var(--sans);font-size:12px;letter-spacing:.3em;color:var(--crimson);margin-bottom:4px}
+.rs-bian .hexsvg{width:56px;height:61px;margin:0 auto;color:var(--orange)}
+.rs-bian p{font-size:13px;color:var(--ink)}
+.rs-text h3{
+  font-family:var(--disp);font-weight:400;font-size:22px;color:var(--crimson);
+  letter-spacing:.14em;margin-bottom:4px;
+}
+.rs-ci{font-size:19px;color:var(--ink);letter-spacing:.08em}
+.rs-hua{margin-top:8px;font-size:14.5px;color:rgba(53,35,28,.85)}
+.rs-yj{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 4px}
+.yj-tag{display:flex;align-items:stretch;border-radius:7px;overflow:hidden;border:1.5px solid rgba(126,29,32,.5)}
+.yj-tag b{
+  font-family:var(--disp);color:var(--paper);background:var(--red);
+  padding:4px 10px;font-weight:400;font-size:15px;
+}
+.yj-tag.j b{background:var(--crimson)}
+.yj-tag span{background:rgba(240,230,206,.7);padding:4px 12px;font-size:13.5px;color:var(--ink)}
+.rs-table{width:100%;border-collapse:collapse;margin-top:14px;font-family:var(--sans);font-size:12.5px}
+.rs-table th,.rs-table td{border:1px solid rgba(126,29,32,.3);padding:4px 8px;text-align:center;font-variant-numeric:tabular-nums}
+.rs-table th{background:rgba(195,39,43,.1);color:var(--crimson);font-weight:500;letter-spacing:.12em}
+.rs-note{margin-top:14px;font-size:12.5px;color:rgba(53,35,28,.62);text-align:right;letter-spacing:.1em}
+
+/* ---------- 幕间 · 观戏指南 ---------- */
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-top:24px}
+.step{
+  position:relative;background:rgba(240,230,206,.92);border:2px solid var(--red);
+  border-radius:12px;padding:26px 14px 16px;text-align:center;
+  box-shadow:0 8px 20px rgba(74,15,18,.25);transition:transform .3s,box-shadow .3s;
+}
+.step:hover{transform:translateY(-5px);box-shadow:0 14px 28px rgba(74,15,18,.35)}
+.step .no{
+  position:absolute;top:-14px;left:50%;transform:translateX(-50%) rotate(-4deg);
+  width:34px;height:34px;background:var(--red);color:var(--paper);
+  font-family:var(--disp);font-size:17px;line-height:34px;border-radius:6px;
+  box-shadow:2px 3px 0 rgba(74,15,18,.4);
+}
+.step h4{font-family:var(--disp);font-weight:400;font-size:22px;color:var(--crimson);letter-spacing:.2em}
+.step p{font-size:13px;color:rgba(53,35,28,.8);margin-top:6px}
+
+/* ---------- 第四幕 · 六十四卦戏目折 ---------- */
+.mu-tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:18px 0 8px}
+.mu-search{
+  font-family:var(--sans);font-size:14px;color:var(--ink);
+  background:rgba(240,230,206,.92);border:2px solid var(--red);border-radius:8px;
+  padding:9px 14px;width:min(260px,60vw);letter-spacing:.06em;
+}
+.mu-search::placeholder{color:rgba(53,35,28,.45)}
+.mu-count{font-family:var(--sans);font-size:12.5px;color:rgba(53,35,28,.7);letter-spacing:.1em}
+.tri-row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 20px}
+.tri-chip{
+  font-family:var(--disp);font-size:15px;letter-spacing:.12em;color:var(--crimson);
+  background:rgba(240,230,206,.7);border:1.5px solid rgba(126,29,32,.5);
+  border-radius:6px;padding:4px 13px;transition:all .25s;
+}
+.tri-chip:hover{border-color:var(--red);color:var(--red)}
+.tri-chip.on{background:var(--red);color:var(--paper);border-color:var(--crimson)}
+.mu-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:16px;margin-top:14px;
+}
+.hcard{
+  position:relative;background:rgba(240,230,206,.95);border:2px solid var(--red);
+  border-radius:11px;padding:18px 10px 14px;text-align:center;
+  box-shadow:0 6px 16px rgba(74,15,18,.22);
+  transition:transform .3s,box-shadow .3s,border-color .3s;
+}
+.hcard:hover{transform:translateY(-5px);box-shadow:0 14px 30px rgba(74,15,18,.4);border-color:var(--orange)}
+.hcard .hexsvg{width:52px;height:57px;margin:0 auto 6px;color:var(--red)}
+.hname{display:block;font-family:var(--disp);font-size:23px;color:var(--ink);line-height:1.3}
+.hxiang{display:block;font-size:11px;color:rgba(53,35,28,.6);letter-spacing:.1em}
+.hquote{display:block;font-size:12px;color:rgba(53,35,28,.78);margin-top:5px}
+.hnum{position:absolute;top:7px;left:10px;font-family:var(--sans);font-size:11px;color:rgba(126,29,32,.8);font-variant-numeric:tabular-nums}
+.cflower{position:absolute;top:-13px;right:-13px;width:46px;height:46px;color:var(--orange);transition:color .35s,filter .35s}
+.hcard:hover .cflower{color:var(--light);filter:drop-shadow(0 0 7px rgba(246,224,174,.95))}
+.mu-empty{grid-column:1/-1;text-align:center;color:rgba(53,35,28,.6);padding:40px 0;font-size:14px;letter-spacing:.2em}
+
+/* ---------- 卦详情幕布弹层 ---------- */
+.modal{position:fixed;inset:0;z-index:90}
+.modal[hidden]{display:none}
+.m-back{position:absolute;inset:0;background:rgba(43,10,8,.72);opacity:0;transition:opacity .4s}
+.modal.open .m-back{opacity:1}
+.m-stage{position:absolute;inset:0;display:grid;place-items:center;padding:20px}
+.m-curt{
+  position:absolute;top:0;bottom:0;width:50.5%;z-index:2;
+  background:
+    repeating-linear-gradient(90deg, rgba(53,15,10,.4) 0 5px, rgba(0,0,0,0) 5px 24px),
+    linear-gradient(180deg,#8E2823,#5E1416);
+  transition:transform .85s cubic-bezier(.7,0,.25,1) .08s;
+  box-shadow:inset 0 0 80px rgba(30,8,6,.5);
+}
+.m-curt.l{left:0;border-right:5px solid rgba(240,230,206,.35)}
+.m-curt.r{right:0;border-left:5px solid rgba(240,230,206,.35)}
+.modal.open .m-curt.l{transform:translateX(-89%)}
+.modal.open .m-curt.r{transform:translateX(89%)}
+.m-paper{
+  position:relative;z-index:3;width:min(780px,94vw);max-height:86vh;overflow:auto;
+  background:linear-gradient(180deg,#F5EDDA,#F0E6CE);
+  border:3px solid var(--red);border-radius:16px;
+  box-shadow:0 30px 80px rgba(30,8,6,.7);
+  padding:34px 34px 28px;
+  opacity:0;transform:scale(.9) translateY(24px);
+  transition:opacity .45s ease .38s,transform .5s cubic-bezier(.3,1.2,.4,1) .38s;
+}
+.modal.open .m-paper{opacity:1;transform:none}
+.m-close{
+  position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;
+  background:var(--red);color:var(--paper);border:2px solid var(--crimson);
+  display:grid;place-items:center;transition:transform .25s,filter .25s;
+}
+.m-close:hover{transform:rotate(90deg);filter:brightness(1.15)}
+.m-close svg{width:14px;height:14px}
+.m-grid{display:grid;grid-template-columns:200px 1fr;gap:30px}
+.m-hexbox{text-align:center;border-right:2px dashed rgba(126,29,32,.3);padding-right:22px}
+.m-hexbox .hexsvg{width:120px;height:130px;margin:0 auto;color:var(--red)}
+.m-no{font-family:var(--sans);font-size:12px;color:rgba(126,29,32,.8);letter-spacing:.2em;margin-top:8px}
+.m-name{font-family:var(--disp);font-size:46px;color:var(--ink);line-height:1.15}
+.m-xiang{font-size:13px;color:rgba(53,35,28,.7);letter-spacing:.18em}
+.m-ci{font-size:20px;color:var(--ink);margin-top:14px;letter-spacing:.08em}
+.m-hua{font-size:14.5px;color:rgba(53,35,28,.85);margin-top:8px}
+.m-yj{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.m-foot-tip{margin-top:18px;font-size:12px;color:rgba(53,35,28,.55);letter-spacing:.12em}
+
+/* ---------- 页脚 · 台沿 ---------- */
+footer{position:relative;z-index:2;margin-top:90px}
+.foot-scal{width:100%;height:26px;display:block}
+.foot-body{background:#5E1416;color:rgba(240,230,206,.85);padding:40px 24px 30px}
+.foot-in{max-width:1160px;margin:0 auto;display:flex;flex-wrap:wrap;gap:28px;align-items:center;justify-content:space-between}
+.foot-brand{display:flex;align-items:center;gap:16px}
+.foot-seal{
+  width:56px;height:56px;background:var(--red);color:var(--paper);border-radius:7px;
+  transform:rotate(-4deg);display:grid;place-items:center;
+  font-family:var(--disp);font-size:19px;line-height:1.15;text-align:center;
+  box-shadow:2px 3px 0 rgba(30,8,6,.5);letter-spacing:.1em;
+}
+.foot-brand b{font-family:var(--disp);font-weight:400;font-size:22px;letter-spacing:.2em;color:var(--paper)}
+.foot-brand small{display:block;font-family:var(--sans);font-size:12px;color:rgba(240,230,206,.6);letter-spacing:.16em}
+.foot-txt{max-width:520px;font-size:12.5px;line-height:1.9;color:rgba(240,230,206,.66)}
+.foot-nav{display:flex;gap:18px}
+.foot-nav a{font-size:13px;color:rgba(240,230,206,.8);text-decoration:none;border-bottom:1px solid rgba(240,230,206,.3);padding-bottom:2px}
+.foot-nav a:hover{color:var(--light)}
+.foot-copy{text-align:center;font-family:var(--sans);font-size:12px;color:rgba(240,230,206,.5);margin-top:24px;letter-spacing:.12em}
+
+/* ---------- 响应式：1200 / 768 / 375 三档 ---------- */
+@media (max-width:1199px){
+  .mu-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .steps{grid-template-columns:repeat(3,1fr);row-gap:26px}
+  .vside{display:none}
+  .rs-grid{grid-template-columns:250px 1fr}
+}
+@media (max-width:767px){
+  .valance{height:52px}
+  .val-scal{top:50px;height:12px}
+  .val-medal{top:48px;width:38px;height:38px}
+  .val-medal span{font-size:20px}
+  .valance nav{gap:14px}
+  .valance nav a{font-size:15px;letter-spacing:.1em}
+  .flut-c{display:none}
+  .flut-a{width:64px;height:92px;left:4%}
+  .flut-b{width:56px;height:80px;right:5%}
+  #kai{min-height:88vh;padding-top:96px}
+  .stage-frame{border-width:8px;padding:80px 12px 24px;border-radius:16px}
+  .scurt{width:36px}
+  .coin-rig{gap:12px;height:84px}
+  .coin{width:48px;height:48px}
+  .toss-sum{min-width:110px;font-size:17px;padding:8px 10px}
+  .slot{height:46px}
+  .puppet,.slot .hook{width:min(330px,74%)}
+  .bar-yang,.seg{height:19px}
+  .bar-yin{gap:18px}
+  .puppet .rod{left:-34px;top:-46px;width:110px;height:82px}
+  .res-chip{display:none}
+  .pos-tag{left:1%;font-size:10.5px}
+  .rs-grid{grid-template-columns:1fr}
+  .rs-hexbox{border-right:none;border-bottom:2px dashed rgba(126,29,32,.3);padding:0 0 18px}
+  .steps{grid-template-columns:repeat(2,1fr)}
+  .mu-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px}
+  .hname{font-size:19px}
+  .hquote{display:none}
+  .hxiang{display:none}
+  .hcard .hexsvg{width:40px;height:44px}
+  .m-grid{grid-template-columns:1fr}
+  .m-hexbox{border-right:none;border-bottom:2px dashed rgba(126,29,32,.3);padding:0 0 16px}
+  .m-paper{padding:26px 18px 22px}
+  .m-name{font-size:36px}
+  .foot-in{flex-direction:column;align-items:flex-start}
+  .act{padding:78px 16px 30px}
+}
+@media (max-width:374px){
+  .steps{grid-template-columns:1fr}
+  .mu-grid{grid-template-columns:repeat(3,1fr)}
+  .coin-rig{gap:8px}
+  .stage-ctl .btn-main{width:100%}
+}
+
+/* ---------- prefers-reduced-motion：全静 ---------- */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important}
+  html{scroll-behavior:auto}
+  #intro{display:none}
+  .kai-title .tc,.kai-kicker,.kai-seal,.kai-sub,.kai-desc,.kai-cta,.kai-hint,.vside{opacity:1}
+  .puppet{opacity:1}
+  .pc-layer{animation:none}
+  .rv{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ====== 全站共用 SVG 库（纹样 symbol） ====== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- 回纹（幕檐镂空纹样单元） -->
+    <pattern id="pMeander" width="56" height="30" patternUnits="userSpaceOnUse">
+      <rect width="56" height="30" fill="#7E1D20"/>
+      <path d="M5,25 V6 H44 V19 H18 V12 H36" fill="none" stroke="#E8C483" stroke-width="3.2"/>
+      <circle cx="50" cy="6" r="2.2" fill="#E8C483"/>
+      <circle cx="6" cy="6" r="2.2" fill="#E8C483"/>
+    </pattern>
+    <!-- 幕檐下垂弧（波浪幔帐单元） -->
+    <pattern id="pScal" width="44" height="16" patternUnits="userSpaceOnUse">
+      <path d="M0,16 Q22,-11 44,16 Z" fill="#7E1D20"/>
+      <circle cx="22" cy="9" r="2" fill="#D95B2E"/>
+    </pattern>
+    <!-- 缠枝纹（中景侧栏单元） -->
+    <pattern id="pVine" width="110" height="220" patternUnits="userSpaceOnUse">
+      <path d="M55,0 C25,36 85,74 55,110 C25,146 85,184 55,220" fill="none" stroke="#C3272B" stroke-width="9" stroke-linecap="round"/>
+      <circle cx="55" cy="55" r="5" fill="#C3272B"/>
+      <circle cx="55" cy="165" r="5" fill="#C3272B"/>
+      <path d="M55,55 q-27,-6 -31,-29 q27,3 31,29 Z" fill="#C3272B"/>
+      <path d="M55,165 q27,-6 31,-29 q-27,3 -31,29 Z" fill="#C3272B"/>
+    </pattern>
+    <!-- 窗花花瓣（带镂空，evenodd 挖洞） -->
+    <path id="rPetal" fill-rule="evenodd" d="M0,-10 C18,-28 22,-60 7,-96 C3,-105 -3,-105 -7,-96 C-22,-60 -18,-28 0,-10 Z M0,-26 C9,-40 9,-62 0,-80 C-9,-62 -9,-40 0,-26 Z"/>
+    <!-- 皮影铜钱 -->
+    <symbol id="symCoin" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="29" fill="#D95B2E" stroke="#35231C" stroke-width="3"/>
+      <circle cx="32" cy="32" r="22.5" fill="none" stroke="rgba(126,29,32,.55)" stroke-width="2"/>
+      <rect x="24" y="24" width="16" height="16" fill="#7E1D20" stroke="#35231C" stroke-width="2.5"/>
+      <circle cx="32" cy="11" r="2" fill="#7E1D20"/>
+      <circle cx="32" cy="53" r="2" fill="#7E1D20"/>
+      <circle cx="11" cy="32" r="2" fill="#7E1D20"/>
+      <circle cx="53" cy="32" r="2" fill="#7E1D20"/>
+    </symbol>
+    <!-- 悬挂影偶 · 蝴蝶 -->
+    <symbol id="symFly" viewBox="0 0 120 170">
+      <rect x="44" y="0" width="32" height="6" rx="3" fill="#35231C"/>
+      <line x1="60" y1="6" x2="60" y2="78" stroke="#35231C" stroke-width="2.5"/>
+      <g transform="translate(60,112)">
+        <path fill="#D95B2E" stroke="#35231C" stroke-width="2.5" fill-rule="evenodd" d="
+          M-3,-10 C-26,-38 -62,-34 -60,-6 C-59,16 -30,22 -3,10 Z
+          M-16,-12 C-28,-20 -42,-16 -40,-4 C-38,6 -24,6 -16,-4 Z
+          M3,-10 C26,-38 62,-34 60,-6 C59,16 30,22 3,10 Z
+          M16,-12 C28,-20 42,-16 40,-4 C38,6 24,6 16,-4 Z
+          M-2,8 C-16,18 -34,36 -20,46 C-10,52 -2,38 0,24 Z
+          M2,8 C16,18 34,36 20,46 C10,52 2,38 0,24 Z"/>
+        <ellipse cx="0" cy="2" rx="5.5" ry="22" fill="#35231C"/>
+        <path d="M-3,-20 C-8,-30 -14,-34 -20,-36 M3,-20 C8,-30 14,-34 20,-36" stroke="#35231C" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ====== 开场幕布 ====== -->
+<div id="intro" aria-hidden="true">
+  <div class="intro-half l"></div>
+  <div class="intro-half r"></div>
+  <div class="intro-mark"><div><b>鑼鼓響</b><i>六爻影戏 · 开演</i></div></div>
+</div>
+
+<!-- ====== 暖光幕布（呼吸） ====== -->
+<div class="stage-light" aria-hidden="true"></div>
+
+<!-- ====== 远景剪纸层：深绛山峦 + 淡云（blur 2px，视差最慢） ====== -->
+<div class="pc-layer pc-far" id="layerFar" aria-hidden="true">
+  <svg width="100%" height="100%" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMax slice">
+    <defs>
+      <symbol id="symCloud" viewBox="0 0 240 120">
+        <path fill-rule="evenodd" fill="currentColor" d="
+          M6,116 C-2,92 6,64 30,52 C30,28 52,12 76,18 C86,0 116,-2 130,12 C154,2 180,12 186,36 C214,36 234,58 232,84 C231,104 214,116 194,116 Z
+          M56,90 C62,74 82,68 96,76 C108,68 124,74 126,88 C136,88 142,96 138,104 L66,104 C56,102 52,96 56,90 Z
+          M156,66 a13,13 0 1,1 26,0 a13,13 0 1,0 -26,0 Z
+          M96,40 a10,10 0 1,1 20,0 a10,10 0 1,0 -20,0 Z"/>
+      </symbol>
+    </defs>
+    <use href="#symCloud" width="380" height="190" x="70" y="56" opacity=".5" style="color:#7E1D20"/>
+    <use href="#symCloud" width="300" height="150" x="1190" y="110" opacity=".42" style="color:#7E1D20"/>
+    <use href="#symCloud" width="220" height="110" x="640" y="30" opacity=".34" style="color:#7E1D20"/>
+    <path fill="#7E1D20" opacity=".55" fill-rule="evenodd" d="
+      M0,1000 V780 L140,650 L260,760 L390,610 L520,745 L640,660 L780,770 L910,640 L1050,760 L1180,665 L1320,780 L1440,690 L1600,760 V1000 Z
+      M1305,600 a46,46 0 1,0 .1,0 Z"/>
+    <path fill="#7E1D20" opacity=".78" d="
+      M0,1000 V860 L180,770 L340,860 L520,760 L700,855 L880,770 L1080,865 L1260,780 L1440,860 L1600,800 V1000 Z"/>
+  </svg>
+</div>
+
+<!-- ====== 中景剪纸层：正红缠枝 + 角部团花（视差中速） ====== -->
+<div class="pc-layer pc-mid" id="layerMid" aria-hidden="true">
+  <svg width="100%" height="100%" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMax slice">
+    <rect x="0" y="0" width="70" height="1000" fill="url(#pVine)" opacity=".5"/>
+    <rect x="1530" y="0" width="70" height="1000" fill="url(#pVine)" opacity=".5"/>
+    <g style="color:#C3272B" fill="currentColor">
+      <g opacity=".62">
+        <circle cx="-40" cy="1040" r="150" fill="none" stroke="#C3272B" stroke-width="26" stroke-dasharray="4 18" opacity=".7"/>
+        <use href="#rPetal"/>
+        <use href="#rPetal" transform="rotate(45)"/>
+        <use href="#rPetal" transform="rotate(90)"/>
+        <use href="#rPetal" transform="rotate(135)"/>
+        <use href="#rPetal" transform="rotate(180)"/>
+        <use href="#rPetal" transform="rotate(225)"/>
+        <use href="#rPetal" transform="rotate(270)"/>
+        <use href="#rPetal" transform="rotate(315)"/>
+        <path fill-rule="evenodd" d="M-24,1024 a26,26 0 1,0 52,0 a26,26 0 1,0 -52,0 Z M-10,1024 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0 Z"/>
+      </g>
+      <g opacity=".62" transform="translate(1600,0)">
+        <circle cx="40" cy="1040" r="150" fill="none" stroke="#C3272B" stroke-width="26" stroke-dasharray="4 18" opacity=".7"/>
+        <use href="#rPetal"/>
+        <use href="#rPetal" transform="rotate(45)"/>
+        <use href="#rPetal" transform="rotate(90)"/>
+        <use href="#rPetal" transform="rotate(135)"/>
+        <use href="#rPetal" transform="rotate(180)"/>
+        <use href="#rPetal" transform="rotate(225)"/>
+        <use href="#rPetal" transform="rotate(270)"/>
+        <use href="#rPetal" transform="rotate(315)"/>
+        <path fill-rule="evenodd" d="M-24,1024 a26,26 0 1,0 52,0 a26,26 0 1,0 -52,0 Z M-10,1024 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0 Z"/>
+      </g>
+    </g>
+  </svg>
+</div>
+
+<!-- ====== 近景剪纸层：橙红窗花角花 + 台沿（视差最快） ====== -->
+<div class="pc-layer pc-near" id="layerNear" aria-hidden="true">
+  <svg width="100%" height="100%" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMax slice">
+    <g style="color:#D95B2E" fill="currentColor">
+      <g transform="translate(10,6) scale(.72)" opacity=".95">
+        <use href="#rPetal"/><use href="#rPetal" transform="rotate(45)"/><use href="#rPetal" transform="rotate(90)"/><use href="#rPetal" transform="rotate(135)"/>
+        <use href="#rPetal" transform="rotate(180)"/><use href="#rPetal" transform="rotate(225)"/><use href="#rPetal" transform="rotate(270)"/><use href="#rPetal" transform="rotate(315)"/>
+        <path fill-rule="evenodd" d="M-22,0 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0 Z M-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0 Z"/>
+        <circle r="104" fill="none" stroke="#D95B2E" stroke-width="3" stroke-dasharray="2 11" opacity=".8"/>
+      </g>
+      <g transform="translate(1590,6) scale(-.72,.72)" opacity=".95">
+        <use href="#rPetal"/><use href="#rPetal" transform="rotate(45)"/><use href="#rPetal" transform="rotate(90)"/><use href="#rPetal" transform="rotate(135)"/>
+        <use href="#rPetal" transform="rotate(180)"/><use href="#rPetal" transform="rotate(225)"/><use href="#rPetal" transform="rotate(270)"/><use href="#rPetal" transform="rotate(315)"/>
+        <path fill-rule="evenodd" d="M-22,0 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0 Z M-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0 Z"/>
+        <circle r="104" fill="none" stroke="#D95B2E" stroke-width="3" stroke-dasharray="2 11" opacity=".8"/>
+      </g>
+      <g transform="translate(14,994) scale(.5)" opacity=".8">
+        <use href="#rPetal"/><use href="#rPetal" transform="rotate(45)"/><use href="#rPetal" transform="rotate(90)"/><use href="#rPetal" transform="rotate(135)"/>
+        <use href="#rPetal" transform="rotate(180)"/><use href="#rPetal" transform="rotate(225)"/><use href="#rPetal" transform="rotate(270)"/><use href="#rPetal" transform="rotate(315)"/>
+        <path fill-rule="evenodd" d="M-22,0 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0 Z M-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0 Z"/>
+      </g>
+      <g transform="translate(1586,994) scale(-.5,.5)" opacity=".8">
+        <use href="#rPetal"/><use href="#rPetal" transform="rotate(45)"/><use href="#rPetal" transform="rotate(90)"/><use href="#rPetal" transform="rotate(135)"/>
+        <use href="#rPetal" transform="rotate(180)"/><use href="#rPetal" transform="rotate(225)"/><use href="#rPetal" transform="rotate(270)"/><use href="#rPetal" transform="rotate(315)"/>
+        <path fill-rule="evenodd" d="M-22,0 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0 Z M-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0 Z"/>
+      </g>
+      <!-- 台沿：橙红波浪 + 镂空圆点 -->
+      <path opacity=".96" fill-rule="evenodd" d="
+        M0,1000 V944 Q80,896 160,944 Q240,896 320,944 Q400,896 480,944 Q560,896 640,944 Q720,896 800,944 Q880,896 960,944 Q1040,896 1120,944 Q1200,896 1280,944 Q1360,896 1440,944 Q1520,896 1600,944 V1000 Z
+        M66,930 a14,14 0 1,0 28,0 a14,14 0 1,0 -28,0 Z
+        M226,930 a14,14 0 1,0 28,0 a14,14 0 1,0 -28,0 Z
+        M386,930 a14,14 0 1,0 28,0 a14,14 0 1,0 -28,0 Z
+        M546,930 a14,14 0 1,0 28,0 a14,14 0 1,0 -28,0 Z
+        M706,930 a14,14 0 1,0 28,0 a14,14 0 1,0 -28,0 Z
+        M866,930 a14,14 0 1,0 28,0 a14,14 0 1,0 -28,0 Z
+        M1026,930 a14,14 0 1,0 28,0 a14,14 0 1,0 -28,0 Z
+        M1186,930 a14,14 0 1,0 28,0 a14,14 0 1,0 -28,0 Z
+        M1346,930 a14,14 0 1,0 28,0 a14,14 0 1,0 -28,0 Z
+        M1506,930 a14,14 0 1,0 28,0 a14,14 0 1,0 -28,0 Z"/>
+    </g>
+  </svg>
+</div>
+
+<!-- ====== 悬挂影偶（可 hover 摆动） ====== -->
+<div class="flut flut-a" aria-hidden="true"><svg viewBox="0 0 120 170"><use href="#symFly"/></svg></div>
+<div class="flut flut-b" aria-hidden="true"><svg viewBox="0 0 120 170"><use href="#symFly"/></svg></div>
+<div class="flut flut-c" aria-hidden="true"><svg viewBox="0 0 120 170"><use href="#symFly"/></svg></div>
+
+<!-- ====== 幕檐导航 ====== -->
+<header class="valance">
+  <svg class="val-bg" aria-hidden="true"><rect width="100%" height="100%" fill="url(#pMeander)"/></svg>
+  <nav aria-label="主导航">
+    <a href="#kai">开场</a>
+    <a href="#cast">起卦</a>
+    <a href="#guide">门道</a>
+    <a href="#mu">戏目</a>
+  </nav>
+</header>
+<svg class="val-scal" aria-hidden="true"><rect width="100%" height="100%" fill="url(#pScal)"/></svg>
+<div class="val-medal" aria-hidden="true"><span>易</span></div>
+
+<main>
+  <!-- ============ 第一幕 · 开场 ============ -->
+  <section class="act" id="kai">
+    <span class="vside l">以纸为幕 · 以影为卦</span>
+    <span class="vside r">观象授时 · 一戏一卦</span>
+    <p class="kai-kicker">皮影戏 · 周易占卜专场</p>
+    <h1 class="kai-title" aria-label="六爻影戏">
+      <span class="tc" style="--d:1.8s">六</span><span class="tc" style="--d:1.92s">爻</span><span class="tc" style="--d:2.04s">影</span><span class="tc" style="--d:2.16s">戏</span>
+    </h1>
+    <span class="kai-seal">剪纸 · 皮影 · 六十四卦</span>
+    <p class="kai-sub">三枚铜钱，六根爻杆 —— 你心中所问，由一场纸影戏替你摆开局面。</p>
+    <p class="kai-desc">灯亮处，皮影升台。三掷定一爻，六爻成一卦：深绛的山、正红的云、橙红的窗花层层退开，六只影偶被挑杆逐一吊入戏台，落定，便是你的卦。</p>
+    <div class="kai-cta">
+      <button class="taiji-btn" id="btnHero" aria-label="开戏起卦">
+        <span class="taiji-disc">
+          <svg viewBox="-60 -60 120 120" aria-hidden="true">
+            <circle r="56" fill="#F0E6CE"/>
+            <path d="M0,-56 A56,56 0 0 1 0,56 A28,28 0 0 1 0,0 A28,28 0 0 0 0,-56 Z" fill="#7E1D20"/>
+            <circle cx="0" cy="-28" r="8" fill="#F0E6CE"/>
+            <circle cx="0" cy="28" r="8" fill="#7E1D20"/>
+            <circle r="56" fill="none" stroke="#D95B2E" stroke-width="5"/>
+          </svg>
+        </span>
+        <span class="taiji-label">开戏起卦</span>
+      </button>
+      <a class="kai-link" href="#mu">翻看六十四卦戏目折 →</a>
+    </div>
+    <div class="kai-hint" aria-hidden="true">
+      <svg viewBox="0 0 22 30" fill="none"><path d="M4,4 L11,12 L18,4 M4,13 L11,21 L18,13 M4,22 L11,27 L18,22" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>下拉入场</span>
+    </div>
+  </section>
+
+  <!-- ============ 第二幕 · 开戏起卦 ============ -->
+  <section class="act" id="cast">
+    <div class="act-head" data-rv>
+      <span class="act-tag">第二幕</span>
+      <h2>开戏起卦</h2>
+    </div>
+    <p class="act-sub" data-rv>三掷成爻：三枚铜钱各计正面三、背面二，求和得六七八九——六为老阴、九为老阳，逢动必变；六爻自下而上，影偶逐个落位成卦。</p>
+    <div class="act-rule" aria-hidden="true" data-rv>
+      <i></i>
+      <svg viewBox="0 0 240 120"><use href="#symCloud" style="color:#C3272B" width="240" height="120"/></svg>
+      <i></i>
+    </div>
+
+    <div class="stage-frame" id="stageFrame" data-rv>
+      <div class="stg-top" aria-hidden="true">
+        <svg><rect width="100%" height="100%" fill="url(#pMeander)"/></svg>
+      </div>
+      <svg class="stg-scal" aria-hidden="true"><rect width="100%" height="100%" fill="url(#pScal)"/></svg>
+      <div class="stg-plaque">一 戏 一 卦</div>
+      <div class="scurt l" aria-hidden="true"></div>
+      <div class="scurt r" aria-hidden="true"></div>
+      <div class="stage-inner">
+        <div class="coin-rig" id="coinRig" aria-label="掷币台">
+          <div class="coin"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#symCoin"/></svg><b class="face"></b></div>
+          <div class="coin"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#symCoin"/></svg><b class="face"></b></div>
+          <div class="coin"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#symCoin"/></svg><b class="face"></b></div>
+          <div class="toss-sum" id="tossSum">未 起</div>
+        </div>
+        <div class="crossbar" aria-hidden="true"></div>
+        <ol class="slots" id="slots">
+          <li class="slot" data-pos="5"><span class="pos-tag">上爻</span><div class="hook"></div></li>
+          <li class="slot" data-pos="4"><span class="pos-tag">五爻</span><div class="hook"></div></li>
+          <li class="slot" data-pos="3"><span class="pos-tag">四爻</span><div class="hook"></div></li>
+          <li class="slot" data-pos="2"><span class="pos-tag">三爻</span><div class="hook"></div></li>
+          <li class="slot" data-pos="1"><span class="pos-tag">二爻</span><div class="hook"></div></li>
+          <li class="slot" data-pos="0"><span class="pos-tag">初爻</span><div class="hook"></div></li>
+        </ol>
+        <div class="gong-ring" id="gongRing" aria-hidden="true"></div>
+        <div class="stage-ctl">
+          <button class="btn-main" id="btnCast">开 戏 起 卦</button>
+          <button class="btn-ghost" id="btnSkip" disabled>跳过仪式</button>
+          <button class="btn-ghost" id="btnSound" aria-pressed="false">锣鼓 · 关</button>
+        </div>
+        <p class="ritual-status" id="ritualStatus">灯已亮、幕已开 —— 凝神默想所问之事，再点「开戏起卦」。</p>
+      </div>
+    </div>
+
+    <!-- 戏折子：结果卷轴 -->
+    <div class="scroll-wrap" id="resultScroll">
+      <div class="roller"><i class="l"></i><span id="rsTitle">戏 折 · 待 拆</span><i class="r"></i></div>
+      <div class="scroll-paper">
+        <div class="rs-grid">
+          <div class="rs-hexbox">
+            <div id="rsHex"></div>
+            <div class="rs-name" id="rsName">—</div>
+            <div class="rs-xiang" id="rsXiang">—</div>
+            <div class="rs-moves" id="rsMoves"></div>
+            <div class="rs-bian" id="rsBian" hidden>
+              <b>之 卦（变卦）</b>
+              <div id="rsBianHex"></div>
+              <p id="rsBianName">—</p>
+            </div>
+          </div>
+          <div class="rs-text">
+            <h3>卦 辞</h3>
+            <p class="rs-ci" id="rsCi">—</p>
+            <h3 style="margin-top:14px">白 话</h3>
+            <p class="rs-hua" id="rsHua">—</p>
+            <div class="rs-yj">
+              <div class="yj-tag"><b>宜</b><span id="rsYi">—</span></div>
+              <div class="yj-tag j"><b>忌</b><span id="rsJi">—</span></div>
+            </div>
+            <h3 style="margin-top:14px">掷 爻 录</h3>
+            <table class="rs-table">
+              <thead><tr><th>爻位</th><th>三掷铜钱</th><th>爻值</th><th>判定</th></tr></thead>
+              <tbody id="rsTbody"></tbody>
+            </table>
+            <p class="rs-note">卦辞是镜子，照见的是你心里已有的答案。</p>
+          </div>
+        </div>
+      </div>
+      <div class="roller"><i class="l"></i><span>戏 折 收 官 · 宜 细 读</span><i class="r"></i></div>
+    </div>
+  </section>
+
+  <!-- ============ 幕间 · 观戏门道 ============ -->
+  <section class="act" id="guide">
+    <div class="act-head" data-rv>
+      <span class="act-tag">幕 间</span>
+      <h2>观戏门道</h2>
+    </div>
+    <p class="act-sub" data-rv>占卜五步，台上一分钟，台下先看懂——</p>
+    <div class="steps">
+      <div class="step" data-rv><span class="no">一</span><h4>凝神</h4><p>默念所问之事，一事一占，心诚则明。</p></div>
+      <div class="step" data-rv><span class="no">二</span><h4>择法</h4><p>铜钱摇卦最合古法，本戏采用三掷成爻。</p></div>
+      <div class="step" data-rv><span class="no">三</span><h4>成卦</h4><p>三枚铜钱连掷六次，自下而上而成卦。</p></div>
+      <div class="step" data-rv><span class="no">四</span><h4>显象</h4><p>本卦、动爻、变卦三联同台显影。</p></div>
+      <div class="step" data-rv><span class="no">五</span><h4>解卦</h4><p>读卦辞白话，参宜忌断语，存为戏折。</p></div>
+    </div>
+  </section>
+
+  <!-- ============ 第四幕 · 六十四卦戏目折 ============ -->
+  <section class="act" id="mu">
+    <div class="act-head" data-rv>
+      <span class="act-tag">第 四 幕</span>
+      <h2>六十四卦戏目折</h2>
+    </div>
+    <p class="act-sub" data-rv>六十四出大戏皆已排定，按卦名检索、按上卦点戏；点击任意一出，幕布为你拉开。</p>
+    <div class="mu-tools" data-rv>
+      <input class="mu-search" id="muSearch" type="search" placeholder="检索卦名，如：泰、既济、同人…" aria-label="检索卦名">
+      <span class="mu-count" id="muCount"></span>
+    </div>
+    <div class="tri-row" id="triRow" data-rv aria-label="按上卦筛选"></div>
+    <div class="mu-grid" id="muGrid" data-rv></div>
+  </section>
+</main>
+
+<!-- ====== 卦详情弹层（幕布展开） ====== -->
+<div class="modal" id="hexModal" role="dialog" aria-modal="true" aria-label="卦象详情" hidden>
+  <div class="m-back" id="mBack"></div>
+  <div class="m-stage">
+    <div class="m-curt l" aria-hidden="true"></div>
+    <div class="m-curt r" aria-hidden="true"></div>
+    <div class="m-paper">
+      <button class="m-close" id="mClose" aria-label="关闭详情">
+        <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2,2 L12,12 M12,2 L2,12" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+      </button>
+      <div class="m-grid">
+        <div class="m-hexbox">
+          <div id="mHex"></div>
+          <p class="m-no" id="mNo">—</p>
+        </div>
+        <div>
+          <div class="m-name" id="mName">—</div>
+          <p class="m-xiang" id="mXiang">—</p>
+          <p class="m-ci" id="mCi">—</p>
+          <p class="m-hua" id="mHua">—</p>
+          <div class="m-yj">
+            <div class="yj-tag"><b>宜</b><span id="mYi">—</span></div>
+            <div class="yj-tag j"><b>忌</b><span id="mJi">—</span></div>
+          </div>
+          <p class="m-foot-tip">出入无疾，朋来无咎 —— 观象之后，事在人为。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 页脚 · 台沿 ====== -->
+<footer>
+  <svg class="foot-scal" viewBox="0 0 1600 26" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,26 V14 Q40,-8 80,14 Q120,-8 160,14 Q200,-8 240,14 Q280,-8 320,14 Q360,-8 400,14 Q440,-8 480,14 Q520,-8 560,14 Q600,-8 640,14 Q680,-8 720,14 Q760,-8 800,14 Q840,-8 880,14 Q920,-8 960,14 Q1000,-8 1040,14 Q1080,-8 1120,14 Q1160,-8 1200,14 Q1240,-8 1280,14 Q1320,-8 1360,14 Q1400,-8 1440,14 Q1480,-8 1520,14 Q1560,-8 1600,14 V26 Z" fill="#D95B2E"/>
+  </svg>
+  <div class="foot-body">
+    <div class="foot-in">
+      <div class="foot-brand">
+        <span class="foot-seal">易影<br>班</span>
+        <div>
+          <b>六爻影戏</b>
+          <small>剪纸皮影 · 周易占卜专场</small>
+        </div>
+      </div>
+      <p class="foot-txt">本站内容仅供传统文化研究与娱乐参考，重大决策请理性判断。卦辞是镜子，照见的是你心里已有的答案；六爻摆开的是局面，落子仍在人手。</p>
+      <nav class="foot-nav" aria-label="页脚导航">
+        <a href="#kai">开场</a>
+        <a href="#cast">起卦</a>
+        <a href="#mu">戏目</a>
+      </nav>
+    </div>
+    <p class="foot-copy">© 2026 易影班 · 六爻影戏 —— 幕布之后，光透红纸。</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= 工具 ================= */
+var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function el(id){ return document.getElementById(id); }
+function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+/* ================= 六十四卦数据（爻序自下而上，1 阳爻 0 阴爻） =================
+   n 卦名 / p 卦画 / u 上卦 / d 下卦 / c 卦辞 / w 白话 / y 宜 / j 忌 */
+var HEX = [
+{n:"乾",p:"111111",u:"乾",d:"乾",c:"元亨利贞",w:"天行刚健，创始亨通，如日上行天，自成体系。",y:"开创 · 进取 · 自强",j:"骄亢 · 独断"},
+{n:"坤",p:"000000",u:"坤",d:"坤",c:"元亨，利牝马之贞",w:"柔顺承载，先迷后得主，厚德所以载物。",y:"承载 · 顺势 · 积淀",j:"抢先 · 领头冒进"},
+{n:"屯",p:"100010",u:"坎",d:"震",c:"勿用有攸往",w:"草木初生，万事起头难，宜先扎根蓄力。",y:"蓄力 · 求辅 · 立根基",j:"冒进 · 远行"},
+{n:"蒙",p:"010001",u:"艮",d:"坎",c:"童蒙求我",w:"蒙昧待启，诚心求教则亨通。",y:"求教 · 学习 · 启蒙",j:"自负 · 盲动"},
+{n:"需",p:"111010",u:"坎",d:"乾",c:"有孚，光亨，贞吉",w:"云上于天，时机未熟，等待即是进取。",y:"等待 · 筹备 · 宴乐养身",j:"急躁 · 涉险远征"},
+{n:"讼",p:"010111",u:"乾",d:"坎",c:"有孚窒，惕中吉",w:"天水违行，争讼得起，适可而止为吉。",y:"调解 · 退让 · 持中",j:"争胜 · 缠讼 · 结怨"},
+{n:"师",p:"010000",u:"坤",d:"坎",c:"贞丈人吉",w:"地中有水，行险而顺，师出有名者胜。",y:"严明 · 持重 · 名正出师",j:"穷兵 · 轻战"},
+{n:"比",p:"000010",u:"坎",d:"坤",c:"原筮元永贞",w:"水行地上，亲附相依，择善而从。",y:"结盟 · 亲附 · 互助",j:"迟疑 · 亲附匪人"},
+{n:"小畜",p:"111011",u:"巽",d:"乾",c:"密云不雨",w:"风行天上，力量暂蓄，小有阻留不成气候。",y:"积蓄 · 修文 · 以柔济刚",j:"大举 · 图快"},
+{n:"履",p:"110111",u:"乾",d:"兑",c:"履虎尾，不咥人",w:"如踩虎尾，循礼谨慎前行则无伤。",y:"谨慎 · 循礼 · 稳进",j:"踩线 · 恃势妄为"},
+{n:"泰",p:"111000",u:"坤",d:"乾",c:"小往大来，吉亨",w:"天地气交，上下相通，通达安泰之时。",y:"合作 · 通达 · 乘势",j:"安逸 · 骄纵"},
+{n:"否",p:"000111",u:"乾",d:"坤",c:"不利君子贞",w:"天地不交，闭塞之时，守正静待其变。",y:"守静 · 退避 · 俭德避难",j:"妄动 · 强行进击"},
+{n:"同人",p:"101111",u:"乾",d:"离",c:"同人于野，亨",w:"天火同明，与志同者坦荡相聚则亨。",y:"协同 · 公开 · 结义",j:"结私党 · 固执"},
+{n:"大有",p:"111101",u:"离",d:"乾",c:"元亨",w:"火在天上，普照万物，盛大丰有之象。",y:"分享 · 守正 · 用贤",j:"独占 · 骄奢"},
+{n:"谦",p:"001000",u:"坤",d:"艮",c:"君子有终",w:"山藏地下，虚怀谦退，谦受益满招损。",y:"谦退 · 让功 · 自省",j:"自满 · 露锋"},
+{n:"豫",p:"000100",u:"震",d:"坤",c:"利建侯行师",w:"雷出地奋，顺理而动，喜乐须知节制。",y:"顺势 · 庆赏 · 预备",j:"沉溺享乐 · 懈怠"},
+{n:"随",p:"100110",u:"兑",d:"震",c:"元亨利贞，无咎",w:"泽随雷动，随时而变，择善而从。",y:"顺势 · 随缘 · 纳言",j:"固执己见 · 盲从"},
+{n:"蛊",p:"011001",u:"艮",d:"巽",c:"利涉大川",w:"山下风滞，积弊待治，治蛊即是革新。",y:"整顿 · 革新 · 除弊",j:"因循 · 讳疾忌医"},
+{n:"临",p:"110000",u:"坤",d:"兑",c:"至于八月有凶",w:"泽上有地，居高临下，盛时当知戒惧。",y:"亲临 · 督导 · 宽容",j:"放任 · 苛急"},
+{n:"观",p:"000011",u:"巽",d:"坤",c:"有孚颙若",w:"风行地上，观仰示范，省视各方而后动。",y:"观察 · 学习 · 垂范",j:"浅见 · 盲从"},
+{n:"噬嗑",p:"100101",u:"离",d:"震",c:"亨，利用狱",w:"雷电交作，齿啮而合，明罚敕法去梗阻。",y:"明断 · 立规 · 除梗",j:"姑息 · 酷虐"},
+{n:"贲",p:"101001",u:"艮",d:"离",c:"小利有攸往",w:"山下有火，文饰有道，质朴方是本色。",y:"修饰 · 增色 · 尚文",j:"奢饰 · 忘本"},
+{n:"剥",p:"000001",u:"艮",d:"坤",c:"不利有攸往",w:"山附于地，阴盛剥阳，宜安坐待时变。",y:"守待 · 厚下 · 安宅",j:"贸然前进"},
+{n:"复",p:"100000",u:"坤",d:"震",c:"出入无疾",w:"雷在地中，一阳来复，迷途知返其道大通。",y:"改过 · 蓄阳 · 返本",j:"急进 · 重蹈覆辙"},
+{n:"无妄",p:"100111",u:"乾",d:"震",c:"其匪正有眚",w:"天下雷行，万物依时，循正道行者无妄。",y:"守本 · 循正 · 任自然",j:"妄念 · 侥幸"},
+{n:"大畜",p:"111001",u:"艮",d:"乾",c:"利艰贞",w:"山中藏天，笃实蓄德，止而后动能成大。",y:"养贤 · 蓄势 · 历练",j:"轻进 · 冒险"},
+{n:"颐",p:"100001",u:"艮",d:"震",c:"自求口实",w:"山下有雷，慎言节食，养身亦养德。",y:"节制 · 养正 · 慎言",j:"失节 · 贪求"},
+{n:"大过",p:"011110",u:"兑",d:"巽",c:"栋桡，利有攸往",w:"泽灭木，刚过之中，非常之时行非常之举。",y:"非常之举 · 刚柔相济",j:"墨守 · 独自硬撑"},
+{n:"坎",p:"010010",u:"坎",d:"坎",c:"有孚维心亨",w:"重水叠险，守诚不移，行险而不失其信。",y:"守常 · 守信 · 谨慎",j:"侥幸 · 涉险硬闯"},
+{n:"离",p:"101101",u:"离",d:"离",c:"利贞，亨",w:"明两作离，附丽光明，柔顺守正则亨。",y:"依附正道 · 显明",j:"急躁 · 附势趋炎"},
+{n:"咸",p:"001110",u:"兑",d:"艮",c:"取女吉",w:"山上有泽，二气交感，以诚相应则吉。",y:"真诚 · 交感 · 婚聘",j:"虚情 · 三心二意"},
+{n:"恒",p:"011100",u:"震",d:"巽",c:"利贞，无咎",w:"雷风相与，持恒守常，久于其道而成。",y:"持恒 · 守常 · 专一",j:"反复无常 · 半途而废"},
+{n:"遁",p:"001111",u:"乾",d:"艮",c:"亨，小利贞",w:"天下有山，阴长阳退，全身而退即是智。",y:"韬光 · 抽身 · 避锋",j:"恋栈 · 硬撑"},
+{n:"大壮",p:"111100",u:"震",d:"乾",c:"利贞",w:"雷在天上，刚盛壮大，以正持壮方无咎。",y:"循理而进 · 果决",j:"恃强 · 蛮干"},
+{n:"晋",p:"000101",u:"离",d:"坤",c:"昼日三接",w:"日出地上，柔进上行，晋见自有荣光。",y:"晋升 · 进取 · 显达",j:"急功 · 贪进"},
+{n:"明夷",p:"101000",u:"坤",d:"离",c:"利艰贞",w:"明入地中，晦而转明，藏锋守志待天明。",y:"韬光养晦 · 守志",j:"锋芒毕露"},
+{n:"家人",p:"101011",u:"巽",d:"离",c:"利女贞",w:"风自火出，内外有序，正家而天下定。",y:"正位 · 齐家 · 守信",j:"溺爱 · 失矩"},
+{n:"睽",p:"110101",u:"离",d:"兑",c:"小事吉",w:"火泽异趋，同中存异，小图则吉大图凶。",y:"求同存异 · 沟通",j:"强求一致 · 猜忌"},
+{n:"蹇",p:"001010",u:"坎",d:"艮",c:"利西南，不利东北",w:"山高水险，前路蹇难，反身修德待援。",y:"停步反省 · 求助贤者",j:"硬闯险地"},
+{n:"解",p:"010100",u:"震",d:"坎",c:"利西南",w:"雷雨大作，险散则解，宽宥为怀得人心。",y:"解纷 · 赦过 · 宽缓",j:"穷究不已 · 久缠"},
+{n:"损",p:"110001",u:"艮",d:"兑",c:"曷之用？二簋可用享",w:"泽深山高，损己利人，惩忿窒欲为要。",y:"简省 · 节制 · 让利",j:"贪多 · 铺张"},
+{n:"益",p:"100011",u:"巽",d:"震",c:"利涉大川",w:"风雷相益，损上益下，厚施于众者得众。",y:"施惠 · 惠民 · 迁善",j:"吝啬 · 自肥"},
+{n:"夬",p:"111110",u:"兑",d:"乾",c:"孚号有厉",w:"泽上于天，光明决断，决而去之能和众。",y:"果决 · 明断 · 扬善",j:"姑息 · 侥幸"},
+{n:"姤",p:"011111",u:"乾",d:"巽",c:"勿用取女",w:"天下有风，一阴初遇，防微杜渐要趁早。",y:"早察苗头 · 防患",j:"放任滋长"},
+{n:"萃",p:"000110",u:"兑",d:"坤",c:"利见大人",w:"泽上于地，聚人以正，汇而成事需首领。",y:"聚拢人心 · 结集",j:"散漫 · 无纪"},
+{n:"升",p:"011000",u:"坤",d:"巽",c:"用见大人，勿恤",w:"地中生木，循序上长，积小成高自上升。",y:"积累 · 晋升 · 进取",j:"躐等 · 急升"},
+{n:"困",p:"010110",u:"兑",d:"坎",c:"亨，贞，大人吉",w:"泽中无水，身处困顿，守正少言自亨。",y:"守正 · 少言 · 蓄力",j:"怨天尤人 · 巧言脱责"},
+{n:"井",p:"011010",u:"坎",d:"巽",c:"改邑不改井",w:"木上有水，养人不穷，守位不废其功。",y:"修养 · 济人 · 守常",j:"半途废井 · 迁怒"},
+{n:"革",p:"101110",u:"兑",d:"离",c:"巳日乃孚",w:"泽中有火，顺天应人，去故取新而大亨。",y:"变革 · 顺时 · 取新",j:"仓促改制 · 失信"},
+{n:"鼎",p:"011101",u:"离",d:"巽",c:"元吉，亨",w:"木上有火，鼎新凝命，养贤成器之象。",y:"鼎新 · 养贤 · 成器",j:"因循 · 倾覆失衡"},
+{n:"震",p:"100100",u:"震",d:"震",c:"笑言哑哑",w:"雷声叠至，镇定自若，惊而不乱者得福。",y:"沉着 · 应变 · 修省",j:"惊慌失措"},
+{n:"艮",p:"001001",u:"艮",d:"艮",c:"艮其背",w:"两山相重，知止而安，各当其位则无尤。",y:"适可而止 · 守静",j:"妄动 · 贪进"},
+{n:"渐",p:"001011",u:"巽",d:"艮",c:"女归吉",w:"山上有木，鸿渐于陆，循序渐进则吉。",y:"循序 · 渐进 · 婚嫁",j:"躐等 · 冒进"},
+{n:"归妹",p:"110100",u:"震",d:"兑",c:"征凶，无攸利",w:"泽上有雷，名分未正，守分待时为宜。",y:"守分 · 正名 · 待时",j:"仓促结合 · 越位"},
+{n:"丰",p:"101100",u:"震",d:"离",c:"勿忧，宜日中",w:"雷电皆至，明动相资，盛大之时宜守中。",y:"当机立断 · 大开大合",j:"自蔽 · 骄阳生昏"},
+{n:"旅",p:"001101",u:"离",d:"艮",c:"小亨，旅贞吉",w:"山上有火，行旅之道，谨慎从简则安。",y:"谨慎 · 从简 · 小事可为",j:"大举 · 久居"},
+{n:"巽",p:"011011",u:"巽",d:"巽",c:"利有攸往，利见大人",w:"随风相入，以柔行事，申命而后事行。",y:"柔顺 · 沟通 · 行事",j:"优柔寡断 · 随波逐流"},
+{n:"兑",p:"110110",u:"兑",d:"兑",c:"亨，利贞",w:"丽泽相说，以和为贵，朋友讲习共进。",y:"和颜悦色 · 讲习",j:"谄媚 · 苟合"},
+{n:"涣",p:"010011",u:"巽",d:"坎",c:"利涉大川",w:"风行水上，涣散冰释，散小聚大济险。",y:"散小聚大 · 济险",j:"墨守成群"},
+{n:"节",p:"110010",u:"坎",d:"兑",c:"苦节不可贞",w:"泽上有水，节制有度，过苦则伤其生。",y:"量入为出 · 有度",j:"纵欲 · 苛苦自虐"},
+{n:"中孚",p:"110011",u:"巽",d:"兑",c:"豚鱼吉",w:"泽上有风，诚信及物，感而遂通可涉险。",y:"以诚待人 · 立信",j:"虚诈 · 猜疑"},
+{n:"小过",p:"001100",u:"震",d:"艮",c:"可小事，不可大事",w:"山上有雷，小事可为，大举则不宜高飞。",y:"谨小慎微 · 务小",j:"好高骛远 · 大举"},
+{n:"既济",p:"101010",u:"坎",d:"离",c:"初吉终乱",w:"水火既济，功德初成，慎终如始方保成。",y:"守成 · 防患 · 复盘",j:"松懈 · 大意"},
+{n:"未济",p:"010101",u:"离",d:"坎",c:"小狐汔济",w:"火水未济，事未竟成，慎择所行终得济。",y:"慎择所行 · 善始善终",j:"贸然收尾"}
+];
+var MAP = {};
+for (var hi = 0; hi < HEX.length; hi++) { MAP[HEX[hi].p] = HEX[hi]; HEX[hi].no = hi + 1; }
+var TRICH = {"乾":"天","坤":"地","坎":"水","离":"火","震":"雷","艮":"山","巽":"风","兑":"泽"};
+
+/* ================= 起卦算法（6 老阴 / 7 少阳 / 8 少阴 / 9 老阳） ================= */
+function coinFace(){ return Math.random() < 0.5 ? 3 : 2; }
+function valInfo(v){
+  if (v === 6) return { yang:false, move:true,  mark:"✕", label:"老阴" };
+  if (v === 7) return { yang:true,  move:false, mark:"",  label:"少阳" };
+  if (v === 8) return { yang:false, move:false, mark:"",  label:"少阴" };
+  return            { yang:true,  move:true,  mark:"○", label:"老阳" };
+}
+var POSN = ["初","二","三","四","五","上"];
+function yaoName(i, v){
+  var yang = valInfo(v).yang;
+  if (i === 0) return yang ? "初九" : "初六";
+  if (i === 5) return yang ? "上九" : "上六";
+  return (yang ? "九" : "六") + POSN[i];
+}
+function xiang(h){
+  if (h.u === h.d) return TRICH[h.u] + "为" + h.n;
+  return TRICH[h.u] + TRICH[h.d] + h.n;
+}
+function hexSVG(p, cls, vals){
+  var s = '<svg class="hexsvg ' + (cls || "") + '" viewBox="0 0 140 152" role="img" aria-label="卦画">';
+  for (var i = 0; i < 6; i++){
+    var y = 4 + i * 25;
+    if (p.charAt(i) === "1"){
+      s += '<rect x="8" y="' + y + '" width="104" height="13" rx="4"/>';
+    } else {
+      s += '<rect x="8" y="' + y + '" width="38" height="13" rx="4"/><rect x="74" y="' + y + '" width="38" height="13" rx="4"/>';
+    }
+    if (vals && (vals[i] === 9 || vals[i] === 6)){
+      s += '<text x="121" y="' + (y + 12) + '" class="mk">' + (vals[i] === 9 ? "○" : "✕") + '</text>';
+    }
+  }
+  return s + "</svg>";
+}
+
+/* ================= 锣鼓音效（Web Audio 合成，默认关） ================= */
+var AC = null, soundOn = false;
+function audioCtx(){
+  if (!AC){
+    try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ AC = null; }
+  }
+  if (AC && AC.state === "suspended"){ try { AC.resume(); } catch(e){} }
+  return AC;
+}
+function sfx(kind){
+  if (!soundOn) return;
+  var ctx = audioCtx(); if (!ctx) return;
+  var t = ctx.currentTime;
+  try {
+    if (kind === "gong"){
+      var g = ctx.createGain();
+      var o = ctx.createOscillator(), o2 = ctx.createOscillator();
+      o.type = "sine";     o.frequency.setValueAtTime(392, t); o.frequency.exponentialRampToValueAtTime(140, t + 0.7);
+      o2.type = "triangle";o2.frequency.setValueAtTime(587, t); o2.frequency.exponentialRampToValueAtTime(220, t + 0.5);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.4, t + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.85);
+      o.connect(g); o2.connect(g); g.connect(ctx.destination);
+      o.start(t); o.stop(t + 0.9); o2.start(t); o2.stop(t + 0.6);
+    } else {
+      var g2 = ctx.createGain(), o3 = ctx.createOscillator();
+      o3.type = "square";
+      o3.frequency.setValueAtTime(1500, t); o3.frequency.exponentialRampToValueAtTime(700, t + 0.08);
+      g2.gain.setValueAtTime(0.0001, t);
+      g2.gain.exponentialRampToValueAtTime(0.15, t + 0.01);
+      g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+      o3.connect(g2); g2.connect(ctx.destination);
+      o3.start(t); o3.stop(t + 0.14);
+    }
+  } catch(e){}
+}
+
+/* ================= 起卦仪式 ================= */
+var slotEls = Array.prototype.slice.call(document.querySelectorAll("#slots .slot"));
+var stageFrame = el("stageFrame"), gongRing = el("gongRing");
+var tossSum = el("tossSum"), statusEl = el("ritualStatus");
+var btnCast = el("btnCast"), btnSkip = el("btnSkip"), btnSound = el("btnSound");
+var coins = Array.prototype.slice.call(document.querySelectorAll("#coinRig .coin"));
+var scrollWrap = el("resultScroll");
+var busy = false, token = 0, curVals = null, curFaces = null;
+var ROD = '<svg class="rod" viewBox="0 0 150 110" aria-hidden="true">' +
+  '<line x1="12" y1="12" x2="126" y2="96" stroke="#35231C" stroke-width="6" stroke-linecap="round"/>' +
+  '<line x1="12" y1="5" x2="126" y2="89" stroke="#D95B2E" stroke-width="2.5" stroke-linecap="round"/>' +
+  '<circle cx="12" cy="12" r="5.5" fill="#F6E0AE" stroke="#35231C" stroke-width="2"/></svg>';
+
+function setStatus(t){ statusEl.textContent = t; }
+function puppetHTML(i, v){
+  var info = valInfo(v);
+  var inner = info.yang
+    ? '<div class="yao bar-yang"></div>'
+    : '<div class="yao bar-yin"><span class="seg sl"></span><span class="seg sr"></span></div>';
+  var mark = info.move ? '<em class="move-dot">' + info.mark + "</em>" : "";
+  return '<div class="puppet' + (info.move ? " is-move" : "") + '">' + ROD +
+         '<div class="puppet-body">' + inner + mark + "</div></div>";
+}
+function clearStage(){
+  slotEls.forEach(function(s){
+    s.classList.remove("filled","live");
+    var chips = s.querySelectorAll(".puppet,.res-chip,.dong");
+    for (var i = 0; i < chips.length; i++) chips[i].remove();
+  });
+  coins.forEach(function(c){
+    c.classList.remove("toss");
+    var f = c.querySelector(".face");
+    f.textContent = ""; f.classList.remove("show");
+  });
+  tossSum.textContent = "未 起";
+  stageFrame.classList.remove("done");
+  scrollWrap.classList.remove("open");
+  btnCast.textContent = "开 戏 起 卦";
+}
+function resetCoins(){
+  coins.forEach(function(c, k){
+    c.classList.remove("toss");
+    void c.offsetWidth;
+    c.style.animationDelay = (k * 0.12) + "s";
+    var f = c.querySelector(".face");
+    f.textContent = ""; f.classList.remove("show");
+    c.classList.add("toss");
+  });
+  sfx("coin");
+}
+async function doToss(my, i, val, faces){
+  setStatus("第 " + (i + 1) + " 爻（" + POSN[i] + "爻）· 三掷铜钱……");
+  resetCoins();
+  await sleep(880); if (my !== token) return;
+  coins.forEach(function(c, k){
+    var f = c.querySelector(".face");
+    f.textContent = faces[k] === 3 ? "正 · 3" : "背 · 2";
+    f.classList.add("show");
+  });
+  sfx("coin");
+  var info = valInfo(val);
+  tossSum.textContent = "得 " + val + " · " + info.label + (info.mark ? " " + info.mark : "");
+  await sleep(430);
+}
+function gongBeat(slot){
+  gongRing.classList.remove("on");
+  void gongRing.offsetWidth;
+  gongRing.classList.add("on");
+  sfx("gong");
+  var d = document.createElement("span");
+  d.className = "dong"; d.textContent = "咚";
+  slot.appendChild(d);
+  setTimeout(function(){ d.remove(); }, 1000);
+}
+async function dropYao(my, i, val){
+  var slot = slotEls[5 - i];
+  slot.classList.add("filled","live");
+  slot.insertAdjacentHTML("beforeend", puppetHTML(i, val));
+  slot.insertAdjacentHTML("beforeend",
+    '<span class="res-chip">' + yaoName(i, val) + " · " + valInfo(val).label + "</span>");
+  var puppet = slot.querySelector(".puppet");
+  puppet.classList.add("drop");
+  setStatus("挑杆落位 —— " + yaoName(i, val) + "（" + valInfo(val).label + "）");
+  setTimeout(function(){ if (my === token) gongBeat(slot); }, 380);
+  await sleep(840); if (my !== token) return;
+  slot.classList.remove("live");
+  puppet.classList.remove("drop");
+  puppet.classList.add("placed");
+}
+function fillScroll(vals){
+  var pattern = vals.map(function(v){ return (v === 7 || v === 9) ? "1" : "0"; }).join("");
+  var changed = vals.map(function(v){
+    if (v === 9) return "0";
+    if (v === 6) return "1";
+    return (v === 7 || v === 9) ? "1" : "0";
+  }).join("");
+  var h = MAP[pattern], hc = MAP[changed];
+  el("rsHex").innerHTML = hexSVG(pattern, "", vals);
+  el("rsName").textContent = h.n + " 卦";
+  el("rsXiang").textContent = xiang(h) + " · 第" + h.no + "卦";
+  el("rsCi").textContent = "「" + h.c + "」";
+  el("rsHua").textContent = h.w;
+  el("rsYi").textContent = h.y;
+  el("rsJi").textContent = h.j;
+  var movesHtml = "", hasMove = false;
+  for (var i = 0; i < 6; i++){
+    if (vals[i] === 9 || vals[i] === 6){
+      hasMove = true;
+      movesHtml += '<span class="chip">' + yaoName(i, vals[i]) + " · " + valInfo(vals[i]).label + " " + valInfo(vals[i]).mark + "</span>";
+    }
+  }
+  el("rsMoves").innerHTML = hasMove ? movesHtml : '<span class="chip warn">六爻安静 · 以本卦卦辞断</span>';
+  var bianBox = el("rsBian");
+  if (hasMove){
+    bianBox.hidden = false;
+    el("rsBianHex").innerHTML = hexSVG(changed, "", null);
+    el("rsBianName").textContent = "变而为 " + xiang(hc) + "（" + hc.n + "）";
+  } else {
+    bianBox.hidden = true;
+  }
+  var rows = "";
+  for (var j = 0; j < 6; j++){
+    rows += "<tr><td>" + yaoName(j, vals[j]) + "</td><td>" + curFaces[j].join("·") +
+            "</td><td>" + vals[j] + "</td><td>" + valInfo(vals[j]).label + "</td></tr>";
+  }
+  el("rsTbody").innerHTML = rows;
+  el("rsTitle").textContent = hasMove ? ("戏折 · " + h.n + " 之 " + hc.n) : ("戏折 · " + xiang(h));
+}
+function finishHex(vals){
+  fillScroll(vals);
+  stageFrame.classList.add("done");
+  setTimeout(function(){
+    scrollWrap.classList.add("open");
+    scrollWrap.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "nearest" });
+  }, 350);
+  btnCast.textContent = "再 占 一 卦";
+  btnSkip.disabled = true;
+  busy = false;
+  setStatus("本卦已成 —— 戏折已展开，请观象细读。");
+}
+function placeInstant(vals, faces){
+  clearStage();
+  curVals = vals; curFaces = faces;
+  for (var i = 0; i < 6; i++){
+    var slot = slotEls[5 - i];
+    slot.classList.add("filled");
+    slot.insertAdjacentHTML("beforeend", puppetHTML(i, vals[i]));
+    slot.insertAdjacentHTML("beforeend",
+      '<span class="res-chip">' + yaoName(i, vals[i]) + " · " + valInfo(vals[i]).label + "</span>");
+    var p = slot.querySelector(".puppet");
+    p.classList.add("placed");
+    coins.forEach(function(c, k){
+      var f = c.querySelector(".face");
+      f.textContent = faces[i][k] === 3 ? "正 · 3" : "背 · 2";
+      f.classList.add("show");
+    });
+  }
+  tossSum.textContent = "得 " + vals[5] + " · " + valInfo(vals[5]).label;
+  finishHex(vals);
+}
+async function startRitual(){
+  if (busy) return;
+  busy = true;
+  token++;
+  var my = token;
+  clearStage();
+  var vals = [], faces = [];
+  for (var i = 0; i < 6; i++){
+    var f3 = [coinFace(), coinFace(), coinFace()];
+    faces.push(f3);
+    vals.push(f3[0] + f3[1] + f3[2]);
+  }
+  curVals = vals; curFaces = faces;
+  btnSkip.disabled = false;
+  if (REDUCED){ placeInstant(vals, faces); setStatus("本卦已成 —— 戏折已展开。"); return; }
+  for (var j = 0; j < 6; j++){
+    if (my !== token) return;
+    await doToss(my, j, vals[j], faces[j]); if (my !== token) return;
+    await dropYao(my, j, vals[j]); if (my !== token) return;
+    await sleep(180); if (my !== token) return;
+  }
+  if (my !== token) return;
+  finishHex(vals);
+}
+btnCast.addEventListener("click", startRitual);
+btnSkip.addEventListener("click", function(){
+  if (!curVals) return;
+  token++;
+  placeInstant(curVals, curFaces);
+});
+btnSound.addEventListener("click", function(){
+  soundOn = !soundOn;
+  btnSound.textContent = soundOn ? "锣鼓 · 开" : "锣鼓 · 关";
+  btnSound.setAttribute("aria-pressed", soundOn ? "true" : "false");
+  if (soundOn){ audioCtx(); sfx("coin"); }
+});
+el("btnHero").addEventListener("click", function(){
+  el("cast").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
+  setTimeout(function(){ if (!busy) startRitual(); }, REDUCED ? 60 : 750);
+});
+
+/* ================= 六十四卦戏目折 ================= */
+var muGrid = el("muGrid"), triRow = el("triRow"), muSearch = el("muSearch"), muCount = el("muCount");
+var curTri = "";
+var hexModal = el("hexModal");
+var cardsHtml = "";
+for (var ci = 0; ci < HEX.length; ci++){
+  var h = HEX[ci];
+  cardsHtml += '<button class="hcard" data-p="' + h.p + '" aria-label="查看' + xiang(h) + '详情">' +
+    '<i class="hnum">' + h.no + "</i>" +
+    hexSVG(h.p, "", null) +
+    '<b class="hname">' + h.n + "</b>" +
+    '<span class="hxiang">' + xiang(h) + "</span>" +
+    '<span class="hquote">「' + h.c + "」</span>" +
+    '<svg class="cflower" viewBox="-120 -120 240 240" aria-hidden="true">' +
+    '<use href="#rPetal"/><use href="#rPetal" transform="rotate(90)"/>' +
+    '<use href="#rPetal" transform="rotate(180)"/><use href="#rPetal" transform="rotate(270)"/>' +
+    '<path fill-rule="evenodd" d="M-22,0 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0 Z M-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0 Z"/>' +
+    "</svg></button>";
+}
+muGrid.innerHTML = cardsHtml;
+var triNames = ["乾","兑","离","震","巽","坎","艮","坤"];
+var triHtml = '<button class="tri-chip on" data-t="">全部</button>';
+for (var ti = 0; ti < triNames.length; ti++){
+  triHtml += '<button class="tri-chip" data-t="' + triNames[ti] + '">' + triNames[ti] + "</button>";
+}
+triRow.innerHTML = triHtml;
+function applyFilter(){
+  var q = (muSearch.value || "").replace(/\s/g, "");
+  var shown = 0;
+  var cards = muGrid.querySelectorAll(".hcard");
+  for (var i = 0; i < cards.length; i++){
+    var h = MAP[cards[i].getAttribute("data-p")];
+    var ok = (!curTri || h.u === curTri) && (!q || h.n.indexOf(q) > -1 || xiang(h).indexOf(q) > -1);
+    cards[i].style.display = ok ? "" : "none";
+    if (ok) shown++;
+  }
+  muCount.textContent = "现存 " + shown + " 出 / 共 64 出";
+}
+muSearch.addEventListener("input", applyFilter);
+triRow.addEventListener("click", function(e){
+  var b = e.target.closest(".tri-chip");
+  if (!b) return;
+  curTri = b.getAttribute("data-t");
+  var chips = triRow.querySelectorAll(".tri-chip");
+  for (var i = 0; i < chips.length; i++) chips[i].classList.toggle("on", chips[i] === b);
+  applyFilter();
+});
+
+/* ---------- 详情幕布弹层 ---------- */
+var lastFocus = null;
+function openModal(h){
+  lastFocus = document.activeElement;
+  el("mHex").innerHTML = hexSVG(h.p, "", null);
+  el("mNo").textContent = "第 " + h.no + " 卦";
+  el("mName").textContent = h.n;
+  el("mXiang").textContent = xiang(h) + " · 上" + h.u + "下" + h.d;
+  el("mCi").textContent = "「" + h.c + "」";
+  el("mHua").textContent = h.w;
+  el("mYi").textContent = h.y;
+  el("mJi").textContent = h.j;
+  hexModal.hidden = false;
+  void hexModal.offsetWidth;
+  hexModal.classList.add("open");
+  document.body.style.overflow = "hidden";
+  el("mClose").focus();
+}
+function closeModal(){
+  hexModal.classList.remove("open");
+  document.body.style.overflow = "";
+  setTimeout(function(){ hexModal.hidden = true; }, 420);
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+muGrid.addEventListener("click", function(e){
+  var card = e.target.closest(".hcard");
+  if (!card) return;
+  var h = MAP[card.getAttribute("data-p")];
+  if (h) openModal(h);
+});
+el("mClose").addEventListener("click", closeModal);
+el("mBack").addEventListener("click", closeModal);
+document.addEventListener("keydown", function(e){
+  if (e.key === "Escape" && !hexModal.hidden) closeModal();
+});
+
+/* ================= 多层视差（指针 + 滚动，lerp 0.08，幅度 ≤24px） ================= */
+if (!REDUCED){
+  var tx = 0, ty = 0, cx = 0, cy = 0;
+  var layers = [
+    { elm: el("layerFar"),  px: 8,  py: 5,  sr: 0.04 },
+    { elm: el("layerMid"),  px: 16, py: 9,  sr: 0.10 },
+    { elm: el("layerNear"), px: 24, py: 13, sr: 0.20 }
+  ];
+  var fine = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
+  if (fine){
+    window.addEventListener("pointermove", function(e){
+      tx = (e.clientX / window.innerWidth - 0.5) * 2;
+      ty = (e.clientY / window.innerHeight - 0.5) * 2;
+    }, { passive: true });
+  }
+  (function loop(){
+    cx += (tx - cx) * 0.08;
+    cy += (ty - cy) * 0.08;
+    var sy = window.pageYOffset || document.documentElement.scrollTop || 0;
+    for (var i = 0; i < layers.length; i++){
+      var l = layers[i];
+      var dx = (-cx * l.px).toFixed(2);
+      var dy = (-cy * l.py + sy * l.sr).toFixed(2);
+      l.elm.style.transform = "translate3d(" + dx + "px," + dy + "px,0)";
+    }
+    requestAnimationFrame(loop);
+  })();
+}
+
+/* ================= 滚动显现 ================= */
+if (!REDUCED && "IntersectionObserver" in window){
+  var targets = document.querySelectorAll("[data-rv]");
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){
+        en.target.classList.add("rv","vis");
+        io.unobserve(en.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  targets.forEach(function(t){ io.observe(t); });
+}
+
+/* ================= 开场幕布清理 ================= */
+setTimeout(function(){
+  var intro = el("intro");
+  if (intro) intro.remove();
+}, 3400);
+
+applyFilter();
+})();
+</script>
+</body>
+</html>

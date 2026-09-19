@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>漫屿 MANYU · 立体藏书馆 — 每座孤岛，都有格子靠岸</title>
+<meta name="description" content="漫屿 MANYU 立体藏书馆：深夜书房里的 3D coverflow 书架与 CSS 3D 翻书阅读器，内页全部由程序化 SVG 绘制。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23B5442D'/%3E%3Ctext x='16' y='23' font-size='17' text-anchor='middle' fill='%23F2E7CE' font-family='serif'%3E漫%3C/text%3E%3C/svg%3E">
+<style>
+/* ============================================================
+   漫屿 MANYU · 立体藏书馆
+   方向C：CSS 3D 翻书 × Coverflow 书架（炫酷方向）
+   配色：书房深褐 #1C1410 / 架木 #3A2A1C / 朱砂 #B5442D
+        旧纸 #EFE6D4 / 烫金 #D9A441 / 夜影黑 #0E0A07
+   ============================================================ */
+:root{
+  --bg0:#0E0A07; --bg1:#1C1410; --wood:#3A2A1C; --wood2:#2A1D12;
+  --cinnabar:#B5442D; --paper:#EFE6D4; --paper2:#F7F1E3; --gold:#D9A441;
+  --ink:#17110B; --dim:#B9A888; --dim2:#8E7C60;
+  --serif:'Noto Serif SC','Source Han Serif SC','SimSun',serif;
+  --sans:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  --num:'Cinzel',Georgia,'Times New Roman',serif;
+  --pw:min(330px, calc((100vw - 56px)/2)); --ph:calc(var(--pw)*1.375);
+  --sbw:200px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans); color:var(--paper); background:var(--bg0);
+  background-image:
+    radial-gradient(900px 520px at 50% -80px, rgba(217,164,65,.10), transparent 70%),
+    radial-gradient(1200px 800px at 80% 110%, rgba(58,42,28,.35), transparent 60%);
+  overflow-x:hidden;
+}
+body.locked{overflow:hidden}
+::selection{background:var(--cinnabar);color:var(--paper)}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+img,svg{max-width:100%}
+a{color:inherit;text-decoration:none}
+.vignette{position:fixed;inset:0;pointer-events:none;z-index:60;
+  background:radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(6,4,2,.55) 100%);}
+/* ---------- 滚动条 ---------- */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:#120c07}
+::-webkit-scrollbar-thumb{background:#3a2a1c;border-radius:6px;border:2px solid #120c07}
+::-webkit-scrollbar-thumb:hover{background:#5a4128}
+
+/* ---------- 顶栏 ---------- */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:70;display:flex;align-items:center;gap:22px;
+  padding:0 clamp(16px,3vw,40px);height:64px;
+  background:linear-gradient(180deg, rgba(14,10,7,.92), rgba(14,10,7,.78));
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(217,164,65,.22)}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-weight:900;font-size:22px;letter-spacing:3px;color:var(--paper)}
+.brand .mark{width:34px;height:34px;color:var(--gold);flex:0 0 auto}
+.brand small{font-family:var(--num);font-size:11px;letter-spacing:4px;color:var(--gold);font-weight:400;margin-top:6px}
+.topnav{display:flex;gap:26px;font-size:14px;color:var(--dim)}
+.topnav a{position:relative;padding:6px 2px;letter-spacing:2px;transition:color .25s}
+.topnav a::after{content:'';position:absolute;left:0;right:100%;bottom:0;height:2px;background:var(--gold);transition:right .3s}
+.topnav a:hover{color:var(--paper)} .topnav a:hover::after{right:0}
+.search{margin-left:auto;display:flex;align-items:center;gap:8px;background:#1d140c;border:1px solid #4a3417;border-radius:999px;padding:7px 14px;min-width:210px}
+.search svg{width:16px;height:16px;color:var(--gold);flex:0 0 auto}
+.search input{background:none;border:none;outline:none;color:var(--paper);font-size:13px;width:100%;letter-spacing:1px}
+.search input::placeholder{color:#7d6c50}
+.ghost{display:flex;align-items:center;gap:8px;border:1px solid #5a4128;border-radius:999px;padding:8px 16px;font-size:13px;letter-spacing:1px;color:var(--dim);transition:.25s}
+.ghost:hover{border-color:var(--gold);color:var(--gold)}
+.ghost b{font-family:var(--num);color:var(--gold);min-width:16px;text-align:center}
+@media (max-width:900px){.topnav{display:none}.search{min-width:130px}}
+
+/* ---------- Hero 深夜书房 ---------- */
+.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+  padding:120px 20px 90px;overflow:hidden;
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.28) 0 2px, transparent 2px 150px),
+    linear-gradient(180deg,#160f09 0%, #1C1410 46%, #120c07 100%)}
+.hero::after{content:'';position:absolute;inset:auto 0 0 0;height:180px;
+  background:linear-gradient(180deg, transparent, rgba(10,7,4,.9))}
+.lamp{position:absolute;top:-180px;left:50%;width:640px;height:640px;transform:translateX(-50%);pointer-events:none;
+  background:radial-gradient(closest-side, rgba(217,164,65,.17), rgba(217,164,65,.06) 46%, transparent 72%);
+  animation:flicker 7s ease-in-out infinite}
+@keyframes flicker{0%,100%{opacity:1}42%{opacity:.82}46%{opacity:.95}70%{opacity:.85}}
+.dust i{position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(217,164,65,.5);filter:blur(.4px);opacity:0;animation:drift 14s linear infinite}
+.dust i:nth-child(1){left:12%;top:60%;animation-delay:0s}
+.dust i:nth-child(2){left:22%;top:38%;animation-delay:-4s;animation-duration:18s}
+.dust i:nth-child(3){left:33%;top:70%;animation-delay:-8s}
+.dust i:nth-child(4){left:47%;top:30%;animation-delay:-2s;animation-duration:20s}
+.dust i:nth-child(5){left:58%;top:64%;animation-delay:-10s}
+.dust i:nth-child(6){left:68%;top:42%;animation-delay:-6s;animation-duration:16s}
+.dust i:nth-child(7){left:78%;top:58%;animation-delay:-12s}
+.dust i:nth-child(8){left:88%;top:36%;animation-delay:-3s;animation-duration:19s}
+@keyframes drift{0%{opacity:0;transform:translateY(30px)}20%{opacity:.8}80%{opacity:.5}100%{opacity:0;transform:translateY(-70px)}}
+.kicker{font-size:13px;letter-spacing:6px;color:var(--gold);margin-bottom:26px}
+.kicker::before,.kicker::after{content:'✦';margin:0 14px;font-size:10px;opacity:.7}
+.hero h1{font-family:var(--serif);font-weight:900;font-size:clamp(64px,11vw,132px);letter-spacing:clamp(8px,2vw,26px);line-height:1;
+  text-shadow:0 6px 40px rgba(0,0,0,.6);position:relative}
+.hero h1 em{display:block;font-style:normal;font-family:var(--num);font-weight:400;font-size:clamp(11px,1.4vw,15px);letter-spacing:10px;color:var(--gold);margin-top:20px}
+.slogan{font-family:var(--serif);font-size:clamp(19px,2.6vw,28px);letter-spacing:6px;color:var(--paper);margin-top:30px}
+.slogan b{color:var(--gold)}
+.lead{max-width:620px;margin-top:22px;font-size:14.5px;line-height:2;color:var(--dim);letter-spacing:1px}
+.cta{display:flex;gap:18px;margin-top:40px;flex-wrap:wrap;justify-content:center}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 30px;border-radius:999px;font-size:15px;letter-spacing:3px;transition:.3s}
+.btn.primary{background:linear-gradient(135deg,#C4502F,#9E3A24);color:#FBF3E2;box-shadow:0 10px 30px rgba(181,68,45,.35);border:1px solid rgba(217,164,65,.5)}
+.btn.primary:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(181,68,45,.5)}
+.btn.line{border:1px solid #6b5233;color:var(--dim)}
+.btn.line:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-3px)}
+.hero-meta{display:flex;gap:12px;margin-top:44px;flex-wrap:wrap;justify-content:center}
+.hero-meta li{list-style:none;font-size:12px;letter-spacing:2px;color:var(--dim2);border:1px solid rgba(217,164,65,.25);border-radius:999px;padding:7px 16px;background:rgba(20,13,8,.5)}
+.scrolldown{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:4px;color:var(--dim2)}
+.scrolldown::after{content:'';display:block;width:1px;height:34px;margin:10px auto 0;background:linear-gradient(180deg,var(--gold),transparent);animation:drop 1.8s ease-in-out infinite}
+@keyframes drop{0%{transform:scaleY(0);transform-origin:top}55%{transform:scaleY(1);transform-origin:top}56%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* ---------- 滚动显现 ---------- */
+.rv{opacity:0;transform:translateY(30px);transition:opacity .8s ease var(--d,0s), transform .8s cubic-bezier(.2,.7,.25,1) var(--d,0s)}
+.rv.on{opacity:1;transform:none}
+
+/* ---------- 主书架 coverflow ---------- */
+.shelfsec{position:relative;padding:100px 0 60px;background:
+  linear-gradient(180deg,#120c07, #1C1410 30%, #17100a)}
+.sec-head{text-align:center;margin-bottom:34px;padding:0 20px}
+.sec-head h2{font-family:var(--serif);font-size:clamp(26px,3.4vw,38px);letter-spacing:8px;font-weight:900}
+.sec-head h2 i{font-style:normal;color:var(--gold);font-family:var(--num);font-size:.55em;letter-spacing:5px;display:block;margin-top:10px;font-weight:400}
+.sec-head p{margin-top:14px;font-size:13.5px;color:var(--dim2);letter-spacing:2px}
+.catalog{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;padding:0 16px;margin-bottom:44px}
+.chip{font-size:12.5px;letter-spacing:2px;color:var(--dim);border:1px solid #4a3417;background:linear-gradient(180deg,#241a10,#1c130b);
+  padding:8px 18px;border-radius:8px 8px 3px 3px;position:relative;transition:.25s}
+.chip::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:transparent;border-radius:8px 8px 0 0;transition:.25s}
+.chip:hover{color:var(--paper);border-color:#6b5233}
+.chip.on{color:#1d1206;background:linear-gradient(180deg,#E8C87F,#C89B4B);border-color:var(--gold);font-weight:700}
+.chip.on::before{background:#fff3d6}
+.count{font-size:12px;color:var(--dim2);letter-spacing:2px;margin-left:8px}
+.count b{font-family:var(--num);color:var(--gold)}
+.stage{position:relative;height:400px;perspective:1600px;margin-top:8px}
+.shelf{position:relative;width:100%;max-width:1150px;height:100%;margin:0 auto;transform-style:preserve-3d}
+.slot{position:absolute;left:50%;top:50%;width:var(--sbw);height:calc(var(--sbw)*1.33);
+  margin-left:calc(var(--sbw)/-2);margin-top:calc(var(--sbw)*-.62);
+  transform:translateX(var(--x,0px)) translateZ(var(--z,0px)) rotateY(var(--ry,0deg)) scale(var(--s,1));
+  transform-style:preserve-3d;
+  transition:transform .65s cubic-bezier(.22,.75,.25,1), opacity .45s ease, filter .45s ease;
+  opacity:0;pointer-events:none}
+.slot.on{opacity:1;pointer-events:auto}
+.slot::before{content:'';position:absolute;left:6%;right:6%;bottom:-30px;height:26px;border-radius:50%;
+  background:radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.6), transparent 72%);transform:translateZ(-60px)}
+.book3d{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .35s ease;-webkit-tap-highlight-color:transparent}
+.slot.on:hover .book3d{transform:translateY(-16px)}
+.slot.c:hover .book3d{transform:translateY(-22px) scale(1.02)}
+.bin{position:absolute;inset:0;transform-style:preserve-3d;opacity:0;transform:translateY(110px) rotateZ(-6deg)}
+.shelf.placed .slot.on .bin{opacity:1;transform:none;
+  transition:opacity .6s ease var(--d,0s), transform .75s cubic-bezier(.18,.7,.25,1.06) var(--d,0s)}
+.float{position:absolute;inset:0;transform-style:preserve-3d}
+.slot.c .float{animation:breathe 4.6s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.bface{position:absolute;inset:0;overflow:hidden;border-radius:3px 6px 6px 3px}
+.bface svg{display:block;width:100%;height:100%}
+.bfront{transform:translateZ(9px);box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.bback{transform:translateZ(-7px);background:var(--wood2)}
+.bspine{top:0;bottom:0;left:0;width:16px;inset:auto;transform-origin:left center;transform:translateZ(9px) rotateY(-90deg)}
+.bedge{top:0;bottom:0;right:0;width:16px;inset:auto;transform-origin:right center;transform:translateZ(9px) rotateY(90deg);
+  background:repeating-linear-gradient(90deg,#f2ead8 0 2px,#d8ccb2 2px 4px)}
+.hotdot{position:absolute;top:-7px;right:-7px;width:13px;height:13px;border-radius:50%;background:#E5472F;border:2px solid #1C1410;
+  box-shadow:0 0 10px rgba(229,71,47,.9);animation:pulse 1.6s infinite;z-index:5}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.28)}}
+.navArrow{position:absolute;top:44%;z-index:20;width:52px;height:52px;border-radius:50%;font-size:26px;color:var(--gold);
+  border:1px solid rgba(217,164,65,.4);background:rgba(20,13,8,.7);transition:.25s;line-height:1}
+.navArrow:hover{background:var(--gold);color:#1d1206;transform:scale(1.08)}
+.navArrow.prev{left:4vw}.navArrow.next{right:4vw}
+.shelf-ledger{height:16px;max-width:1060px;margin:-6px auto 0;border-radius:4px;
+  background:linear-gradient(180deg,#4a3524,#2A1D12 70%,#1a1109);
+  box-shadow:0 14px 30px rgba(0,0,0,.55), inset 0 1px 0 rgba(217,164,65,.35)}
+.pos-ind{display:flex;justify-content:center;gap:6px;margin-top:34px;align-items:center}
+.pos-ind .dot{width:8px;height:8px;border-radius:2px;background:#3d2c1a;transition:.3s;cursor:pointer;border:none;padding:0}
+.pos-ind .dot.on{background:var(--gold);width:22px}
+.pos-num{font-family:var(--num);font-size:13px;letter-spacing:3px;color:var(--dim2);margin-left:14px}
+.pos-num b{color:var(--gold);font-size:18px}
+/* 作品信息卡 */
+.info-card{display:flex;gap:26px;max-width:860px;margin:44px auto 0;padding:24px 28px;border-radius:14px;
+  background:linear-gradient(160deg, rgba(42,29,18,.92), rgba(24,16,10,.94));
+  border:1px solid rgba(217,164,65,.28);border-left:4px solid var(--gold);
+  box-shadow:0 24px 60px rgba(0,0,0,.45);text-align:left;position:relative;overflow:hidden}
+.info-card.swap .ic-main{animation:fadeSwap .45s ease}
+@keyframes fadeSwap{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.ic-cover{flex:0 0 128px;width:128px;height:170px;border-radius:4px 8px 8px 4px;overflow:hidden;
+  box-shadow:6px 10px 24px rgba(0,0,0,.55), 0 0 0 1px rgba(217,164,65,.35);transform:rotateZ(-2deg);transition:.3s}
+.info-card:hover .ic-cover{transform:rotateZ(0) translateY(-6px)}
+.ic-cover svg{width:100%;height:100%;display:block}
+.ic-main{flex:1;min-width:0}
+.ic-top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.ic-top h3{font-family:var(--serif);font-size:25px;letter-spacing:3px;font-weight:900}
+.ic-status{font-size:12px;color:var(--gold);border:1px solid rgba(217,164,65,.45);border-radius:999px;padding:3px 12px;letter-spacing:1px}
+.ic-author{margin-top:8px;font-size:13px;color:var(--dim2);letter-spacing:1.5px}
+.ic-desc{margin-top:12px;font-size:14px;line-height:1.9;color:var(--dim);letter-spacing:.5px}
+.ic-quote{margin-top:10px;font-size:12.5px;color:#9b8a6c;font-style:italic;letter-spacing:.5px}
+.ic-data{display:flex;gap:26px;margin-top:14px;font-size:12.5px;color:var(--dim2);letter-spacing:1px;flex-wrap:wrap}
+.ic-data b{font-family:var(--num);color:var(--gold);font-size:17px;margin-left:6px}
+.ic-actions{display:flex;gap:14px;margin-top:18px;flex-wrap:wrap}
+.ic-actions .btn{padding:10px 26px;font-size:13.5px}
+.btn.followed{border-color:#4d7a4a;color:#9ed29a}
+
+/* ---------- 数据条 ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(217,164,65,.16);
+  border-top:1px solid rgba(217,164,65,.16);border-bottom:1px solid rgba(217,164,65,.16)}
+.stat{background:#150e08;padding:38px 10px;text-align:center}
+.stat b{display:block;font-family:var(--num);font-size:clamp(28px,3.6vw,44px);color:var(--gold);letter-spacing:2px}
+.stat span{display:block;margin-top:10px;font-size:12.5px;letter-spacing:4px;color:var(--dim2)}
+@media (max-width:768px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+/* ---------- 新书上架 ---------- */
+.newsec{padding:90px 0 30px}
+.newrow{display:flex;gap:26px;overflow-x:auto;padding:30px clamp(20px,6vw,90px) 40px;scroll-snap-type:x proximity}
+.newitem{flex:0 0 178px;scroll-snap-align:center;text-align:center}
+.newitem .mini{position:relative;width:132px;height:176px;margin:0 auto;transform-style:preserve-3d;transition:transform .35s}
+.newitem:hover .mini{transform:translateY(-12px) rotateZ(-1.5deg)}
+.newitem .mini .bface{border-radius:3px 5px 5px 3px}
+.newitem .mini .bfront{transform:translateZ(6px);box-shadow:0 12px 26px rgba(0,0,0,.55)}
+.newitem .mini .bspine{width:11px;transform:translateZ(6px) rotateY(-90deg)}
+.newitem .mini .bedge{width:11px;transform:translateZ(6px) rotateY(90deg)}
+.newitem h4{margin-top:16px;font-family:var(--serif);font-size:16px;letter-spacing:2px}
+.newitem p{margin-top:5px;font-size:11.5px;color:var(--dim2);letter-spacing:1px}
+.newtag{display:inline-block;margin-top:9px;font-size:10.5px;letter-spacing:2px;color:#1d1206;background:linear-gradient(180deg,#E8C87F,#C89B4B);border-radius:999px;padding:3px 12px;font-weight:700}
+
+/* ---------- 馆内指南 ---------- */
+.guide{padding:80px 20px 70px;max-width:1050px;margin:0 auto}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:44px}
+.step{background:linear-gradient(165deg,rgba(42,29,18,.8),rgba(22,15,9,.9));border:1px solid rgba(217,164,65,.22);
+  border-radius:14px;padding:30px 26px;position:relative;transition:.3s}
+.step:hover{transform:translateY(-8px);border-color:rgba(217,164,65,.55)}
+.step i{font-style:normal;font-family:var(--num);font-size:40px;color:rgba(217,164,65,.4)}
+.step h4{font-family:var(--serif);font-size:19px;letter-spacing:3px;margin-top:12px}
+.step h4 b{color:var(--gold)}
+.step p{margin-top:12px;font-size:13px;line-height:1.95;color:var(--dim)}
+.kbd{display:inline-block;border:1px solid #5a4128;border-bottom-width:3px;border-radius:6px;padding:1px 8px;font-size:11.5px;color:var(--gold);margin:0 2px}
+@media (max-width:900px){.steps{grid-template-columns:1fr}}
+.quote{max-width:760px;margin:0 auto;padding:60px 24px 110px;text-align:center}
+.quote p{font-family:var(--serif);font-size:clamp(17px,2.2vw,22px);line-height:2.2;letter-spacing:2px;color:var(--paper)}
+.quote cite{display:block;margin-top:22px;font-style:normal;font-size:12.5px;letter-spacing:3px;color:var(--gold)}
+.quote::before{content:'❝';display:block;font-size:44px;color:rgba(217,164,65,.4);margin-bottom:16px}
+
+/* ---------- 页脚 ---------- */
+footer{border-top:1px solid rgba(217,164,65,.2);background:#0b0704;padding:64px 20px 30px}
+.fwrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px}
+.fbrand h3{font-family:var(--serif);font-size:24px;letter-spacing:4px}
+.fbrand h3 span{font-family:var(--num);font-size:11px;letter-spacing:5px;color:var(--gold);display:block;margin-top:8px;font-weight:400}
+.fbrand p{margin-top:16px;font-size:13px;line-height:2;color:var(--dim2)}
+.fcol h5{font-size:13px;letter-spacing:3px;color:var(--gold);margin-bottom:16px}
+.fcol a,.fcol li{display:block;list-style:none;font-size:13px;color:var(--dim2);margin-bottom:10px;letter-spacing:1px;transition:.25s}
+.fcol a:hover{color:var(--paper);transform:translateX(4px)}
+.fbottom{max-width:1100px;margin:44px auto 0;padding-top:22px;border-top:1px solid rgba(217,164,65,.14);
+  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:12px;color:#6d5d44;letter-spacing:1.5px}
+@media (max-width:800px){.fwrap{grid-template-columns:1fr}}
+
+/* ---------- 阅读器（3D 翻书） ---------- */
+.reader{position:fixed;inset:0;z-index:90;opacity:0;visibility:hidden;transition:opacity .45s ease,visibility .45s}
+.reader.show{opacity:1;visibility:visible}
+.reader .veil{position:absolute;inset:0;
+  background:radial-gradient(120% 100% at 50% 0%, #241a10 0%, #100a06 55%, #070503 100%)}
+.rhead{position:relative;z-index:5;display:flex;align-items:center;gap:16px;padding:14px clamp(14px,3vw,30px);color:var(--paper)}
+.rbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid #5a4128;border-radius:999px;padding:9px 20px;
+  font-size:13px;letter-spacing:2px;color:var(--dim);transition:.25s;background:rgba(20,13,8,.6)}
+.rbtn:hover{border-color:var(--gold);color:var(--gold)}
+.rbtn:disabled{opacity:.35;cursor:not-allowed}
+.rtitle{flex:1;min-width:0;text-align:center}
+.rtitle b{font-family:var(--serif);font-size:17px;letter-spacing:3px}
+.rtitle span{display:block;font-size:11.5px;color:var(--dim2);letter-spacing:2px;margin-top:4px}
+.rprog{font-family:var(--num);font-size:12px;letter-spacing:2px;color:var(--dim2);min-width:120px;text-align:right}
+.rstage{position:relative;z-index:4;display:flex;align-items:center;justify-content:center;gap:16px;
+  height:calc(100vh - 176px);min-height:420px;perspective:1600px}
+.ptabs{display:flex;flex-direction:column;gap:7px;max-height:var(--ph);overflow:auto;padding:4px;scrollbar-width:none}
+.ptabs::-webkit-scrollbar{display:none}
+.ptab{flex:0 0 auto;min-width:76px;text-align:left;padding:8px 12px;font-size:12px;letter-spacing:2px;color:var(--dim2);
+  background:rgba(32,22,13,.85);border:1px solid #3d2c1a;border-left:3px solid #6b5233;border-radius:0 8px 8px 0;transition:.2s}
+.ptab:hover{color:var(--paper);border-color:var(--gold)}
+.ptab.cur{color:#1d1206;background:var(--gold);border-color:var(--gold);font-weight:700}
+.ptabs.right .ptab{border-radius:8px 0 0 8px;border-left:none;border-right:3px solid #6b5233;text-align:right}
+.bookwrap{position:relative;width:calc(var(--pw)*2);height:var(--ph);touch-action:none}
+.bookwrap .bookshadow{position:absolute;left:4%;right:4%;bottom:-34px;height:36px;border-radius:50%;
+  background:radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.65), transparent 72%);z-index:0}
+.book{position:absolute;inset:0;transform-style:preserve-3d;z-index:2}
+.book.enter{animation:bookin .85s cubic-bezier(.2,.7,.3,1) both}
+@keyframes bookin{from{opacity:0;transform:rotateY(26deg) translateZ(-180px) scale(.86)}to{opacity:1;transform:none}}
+.sheet{position:absolute;top:0;left:50%;width:50%;height:100%;transform-origin:left center;transform-style:preserve-3d;
+  transition:transform .72s cubic-bezier(.4,0,.2,1)}
+.sheet.fast{transition-duration:.45s}
+.sheet.flipped{transform:rotateY(-180deg)}
+.pface{position:absolute;inset:0;overflow:hidden;background:var(--paper2);
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;
+  box-shadow:0 4px 18px rgba(0,0,0,.35)}
+.pface.front{transform:rotateY(0deg) translateZ(.6px)}
+.pface.back{transform:rotateY(180deg) translateZ(.6px)}
+.pface svg{display:block;width:100%;height:100%}
+.pshade{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .72s ease}
+.pface.front .pshade{background:linear-gradient(90deg, rgba(24,14,4,.38), rgba(24,14,4,.08) 20%, transparent 42%)}
+.pface.back .pshade{background:linear-gradient(270deg, rgba(24,14,4,.38), rgba(24,14,4,.08) 20%, transparent 42%)}
+.sheet.flipped .front .pshade{opacity:.9}
+.sheet:not(.flipped) .back .pshade{opacity:.9}
+.ribbon{position:absolute;left:calc(50% - 7px);top:0;width:15px;height:56px;z-index:40;pointer-events:none;
+  background:linear-gradient(180deg,#C0392B,#7e241a);clip-path:polygon(0 0,100% 0,100% 100%,50% 80%,0 100%);
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.4));transition:top .5s ease}
+.rfoot{position:relative;z-index:5;display:flex;align-items:center;justify-content:center;gap:16px;padding:8px 14px 18px}
+.fchips{display:flex;gap:8px;overflow-x:auto;max-width:min(60vw,560px);padding:6px 4px;scrollbar-width:none}
+.fchips::-webkit-scrollbar{display:none}
+.fchip{flex:0 0 auto;font-size:11.5px;letter-spacing:1px;color:var(--dim2);border:1px solid #3d2c1a;border-radius:999px;padding:6px 14px;background:rgba(24,16,9,.8);transition:.2s}
+.fchip:hover{color:var(--paper);border-color:var(--gold)}
+.fchip.cur{color:#1d1206;background:var(--gold);border-color:var(--gold);font-weight:700}
+/* 纸张弧度感：翻动中的页面叠加高光 */
+.sheet .pgleam{position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:linear-gradient(105deg, transparent 30%, rgba(255,252,240,.16) 46%, transparent 62%)}
+/* 降级：单页滑动模式 */
+body.slide3d .book{display:none}
+body:not(.slide3d) .flat{display:none}
+.flat{position:absolute;inset:0;z-index:2}
+.flat .fp{position:absolute;inset:0;opacity:0;transform:translateX(34px);transition:opacity .4s ease,transform .4s ease;
+  background:var(--paper2);box-shadow:0 14px 44px rgba(0,0,0,.55);overflow:hidden;pointer-events:none}
+.flat .fp.active{opacity:1;transform:none;pointer-events:auto}
+.flat .fp svg{display:block;width:100%;height:100%}
+
+/* ---------- Toast ---------- */
+.toast{position:fixed;left:50%;bottom:38px;transform:translate(-50%,20px);z-index:120;opacity:0;pointer-events:none;
+  background:rgba(24,16,9,.95);border:1px solid rgba(217,164,65,.5);color:var(--paper);
+  padding:12px 26px;border-radius:999px;font-size:13px;letter-spacing:2px;transition:.35s;box-shadow:0 14px 40px rgba(0,0,0,.5)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- 降级：prefers-reduced-motion ---------- */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .rv{opacity:1;transform:none}
+  .stage{perspective:none}
+  .slot{transform:none!important;opacity:1!important;position:static;flex:0 0 auto}
+  .shelf{display:flex;overflow-x:auto;gap:16px;padding:10px 6px 26px}
+}
+
+/* ---------- 响应式：≤1200 ---------- */
+@media (max-width:1200px){
+  :root{--sbw:180px}
+  .stage{height:360px}
+  .navArrow.prev{left:2vw}.navArrow.next{right:2vw}
+}
+/* ---------- 响应式：≤768（书架横滑卡片） ---------- */
+@media (max-width:768px){
+  :root{--pw:min(300px, calc((100vw - 44px)/2))}
+  .stage{perspective:none;height:auto}
+  .shelf{display:flex;overflow-x:auto;gap:16px;max-width:none;padding:16px 20px 26px;transform-style:flat}
+  .slot{position:static;flex:0 0 auto;margin:0;transform:none!important;scroll-snap-align:center;opacity:1!important;filter:none!important}
+  .slot::before{display:none}
+  .slot.c .float{animation:none}
+  .navArrow{display:none}
+  .shelf-ledger{display:none}
+  .info-card{flex-direction:column;align-items:center;text-align:center;margin:34px 16px 0}
+  .ic-top{justify-content:center}
+  .ic-data{justify-content:center}
+  .ic-actions{justify-content:center}
+  .ptabs{display:none}
+  .rprog{display:none}
+  .rtitle span{display:none}
+  .newrow{gap:18px}
+}
+/* ---------- 响应式：≤375 ---------- */
+@media (max-width:375px){
+  :root{--pw:calc((100vw - 40px)/2);--sbw:150px}
+  .hero h1{letter-spacing:6px}
+  .lead{font-size:13px}
+  .search{display:none}
+  .rbtn{padding:8px 13px;font-size:12px;letter-spacing:1px}
+  .ic-top h3{font-size:20px}
+  .step{padding:24px 18px}
+}
+</style>
+</head>
+<body>
+<div class="vignette" aria-hidden="true"></div>
+
+<!-- ===================== 顶栏 ===================== -->
+<header class="topbar">
+  <a class="brand" href="#hero" aria-label="漫屿 首页">
+    <svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M3 5c3-1.6 6-1.6 9 0 3-1.6 6-1.6 9 0v13.4c-3-1.6-6-1.6-9 0-3-1.6-6-1.6-9 0Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M12 5v13.4" stroke="currentColor" stroke-width="1.1"/>
+      <path d="M6 9h3M6 12h3M15 9h3M15 12h3" stroke="currentColor" stroke-width="1" opacity=".7"/>
+    </svg>
+    漫屿<small>MANYU</small>
+  </a>
+  <nav class="topnav">
+    <a href="#shelf">主书架</a>
+    <a href="#new">新书上架</a>
+    <a href="#guide">馆内指南</a>
+    <a href="#about">馆长手记</a>
+  </nav>
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <input id="kw" type="text" placeholder="搜书名 / 作者 / 题材…" aria-label="搜索漫画">
+  </div>
+  <button class="ghost" id="followBtn" type="button">追更书架 <b id="followN">0</b></button>
+</header>
+
+<main>
+<!-- ===================== 首屏 · 深夜书房 ===================== -->
+<section class="hero" id="hero">
+  <div class="lamp" aria-hidden="true"></div>
+  <div class="dust" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <p class="kicker rv">午夜 23:41 · 藏书馆还亮着一盏灯</p>
+  <h1 class="rv" style="--d:.12s">漫屿<em>MANYU · THE 3D COMIC LIBRARY</em></h1>
+  <p class="slogan rv" style="--d:.24s">每座孤岛，都有<b>格子</b>靠岸。</p>
+  <p class="lead rv" style="--d:.36s">
+    这里收藏着十座会翻页的岛：宇宙尽头的信、凌晨两点的面、修仙界社畜的加班记录、雨夜多出的车厢……
+    封面如实体书插架，翻开便是格子的世界。挑一本，让深夜替你续页。
+  </p>
+  <div class="cta rv" style="--d:.48s">
+    <button class="btn primary" id="goShelf" type="button">走进主书架</button>
+    <button class="btn line" id="luckyBook" type="button">随手翻一本</button>
+  </div>
+  <ul class="hero-meta rv" style="--d:.6s">
+    <li>纯 CSS 3D 翻页</li>
+    <li>内页全程序化 SVG</li>
+    <li>零外部图片 · 零依赖</li>
+  </ul>
+  <div class="scrolldown">书架在下面</div>
+</section>
+
+<!-- ===================== 主书架 · Coverflow ===================== -->
+<section class="shelfsec" id="shelf">
+  <header class="sec-head rv">
+    <h2>主 书 架<i>COVERFLOW · THE MAIN SHELF</i></h2>
+    <p>拖拽书架 / 方向键 / 点击两侧书脊，把想看的岛转到正中——再点它，翻开。</p>
+  </header>
+  <div class="catalog rv" id="catalog" aria-label="分类索引签"></div>
+  <div class="stage" id="stage">
+    <button class="navArrow prev" id="prevBtn" type="button" aria-label="上一本">‹</button>
+    <div class="shelf" id="shelf" aria-label="3D 书架"></div>
+    <button class="navArrow next" id="nextBtn" type="button" aria-label="下一本">›</button>
+  </div>
+  <div class="shelf-ledger" aria-hidden="true"></div>
+  <div class="pos-ind rv" id="posInd"></div>
+  <div class="info-card rv" id="infoCard" aria-live="polite"></div>
+</section>
+
+<!-- ===================== 馆藏数据 ===================== -->
+<section class="stats" id="stats" aria-label="馆藏数据">
+  <div class="stat rv"><b data-n="10">0</b><span>馆藏作品 · 部</span></div>
+  <div class="stat rv" style="--d:.1s"><b data-n="213">0</b><span>在架话数 · 话</span></div>
+  <div class="stat rv" style="--d:.2s"><b data-n="42801">0</b><span>深夜读者 · 人</span></div>
+  <div class="stat rv" style="--d:.3s"><b data-n="24">0</b><span>馆灯常明 · 时</span></div>
+</section>
+
+<!-- ===================== 新书上架 ===================== -->
+<section class="newsec" id="new">
+  <header class="sec-head rv">
+    <h2>新 书 上 架<i>NEW ARRIVALS</i></h2>
+    <p>本周入库的小书，横排一列，随手抽一本。</p>
+  </header>
+  <div class="newrow" id="newRow"></div>
+</section>
+
+<!-- ===================== 馆内指南 ===================== -->
+<section class="guide" id="guide">
+  <header class="sec-head rv">
+    <h2>馆 内 指 南<i>HOW TO READ</i></h2>
+    <p>三步，把一本漫画真正捧在手里。</p>
+  </header>
+  <div class="steps">
+    <div class="step rv"><i>01</i><h4><b>选书</b> · 移到正中</h4>
+      <p>在 coverflow 书架上拖拽、点击两侧书脊，或按 <span class="kbd">←</span><span class="kbd">→</span> 方向键，把想看的书转到正中。</p></div>
+    <div class="step rv" style="--d:.12s"><i>02</i><h4><b>翻开</b> · 封面自启</h4>
+      <p>点正中的封面，馆灯亮起，书本悬浮入场，封面自动掀开——扉页上盖着漫屿的藏书印。</p></div>
+    <div class="step rv" style="--d:.24s"><i>03</i><h4><b>翻页</b> · 跟手翻读</h4>
+      <p>点书页左右半边、拖着书角翻，或用 <span class="kbd">←</span><span class="kbd">→</span> 逐页翻读；书签丝带记录进度，读完合书归架。</p></div>
+  </div>
+</section>
+
+<!-- ===================== 馆长手记 ===================== -->
+<section class="quote rv" id="about">
+  <p>「漫画是把时间切成格子的手艺。<br>在漫屿，我们让每一格都站起来，像一本可以真实翻动的书。」</p>
+  <cite>—— 首席馆员 · 白鹿原上 《开馆第一夜》</cite>
+</section>
+</main>
+
+<!-- ===================== 页脚 ===================== -->
+<footer id="footer">
+  <div class="fwrap">
+    <div class="fbrand">
+      <h3>漫屿<span>MANYU · THE 3D COMIC LIBRARY</span></h3>
+      <p>深夜私人藏书馆。封面如实体书插架，内页由程序化 SVG 逐格绘制，CSS 3D 翻书，零外部图片。<br>每座孤岛，都有格子靠岸。</p>
+    </div>
+    <div class="fcol">
+      <h5>岛屿导航</h5>
+      <a href="#shelf">主书架 · Coverflow</a>
+      <a href="#new">新书上架</a>
+      <a href="#guide">馆内指南</a>
+      <a href="#about">馆长手记</a>
+    </div>
+    <div class="fcol">
+      <h5>本馆栏目</h5>
+      <ul>
+        <li>今日上岛 · 每日更新</li>
+        <li>编辑的心头好</li>
+        <li>本周黑马榜</li>
+        <li>完结安心看</li>
+        <li>番外小剧场</li>
+      </ul>
+    </div>
+  </div>
+  <div class="fbottom">
+    <span>© 2026 漫屿 MANYU · 深夜也亮灯的漫画藏书馆</span>
+    <span>本站为前端设计演示 · 所有作品与人物均属虚构</span>
+  </div>
+</footer>
+
+<!-- ===================== 3D 翻书阅读器 ===================== -->
+<div class="reader" id="reader" role="dialog" aria-modal="true" aria-label="翻书阅读器">
+  <div class="veil" id="veil"></div>
+  <div class="rhead">
+    <button class="rbtn" id="rBack" type="button">‹ 合上书 · 回书架</button>
+    <div class="rtitle"><b id="rBook">—</b><span id="rChap">—</span></div>
+    <div class="rprog" id="rProg">封面</div>
+  </div>
+  <div class="rstage">
+    <div class="ptabs left" id="tabsL" aria-label="已读页面"></div>
+    <div class="bookwrap" id="bookwrap">
+      <div class="bookshadow" aria-hidden="true"></div>
+      <div class="book" id="book"></div>
+      <div class="flat" id="flat" aria-label="单页模式"></div>
+      <div class="ribbon" id="ribbon" aria-hidden="true"></div>
+    </div>
+    <div class="ptabs right" id="tabsR" aria-label="未读页面"></div>
+  </div>
+  <div class="rfoot">
+    <button class="rbtn" id="rPrev" type="button">‹ 上一页</button>
+    <div class="fchips" id="fchips" aria-label="页面缩略签"></div>
+    <button class="rbtn" id="rNext" type="button">下一页 ›</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+'use strict';
+/* ============================================================
+   工具
+============================================================ */
+const $=(s,el)=> (el||document).querySelector(s);
+const $$=(s,el)=> Array.prototype.slice.call((el||document).querySelectorAll(s));
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function RNG(seed){let t=seed>>>0;return function(){t+=0x6D2B79F5;let r=Math.imul(t^t>>>15,1|t);r^=r+Math.imul(r^r>>>7,61|r);return((r^r>>>14)>>>0)/4294967296}}
+let UIDN=0; function uid(){return 'u'+(UIDN++).toString(36)}
+function wrap(t,n){const o=[];for(let i=0;i<t.length;i+=n)o.push(t.slice(i,i+n));return o}
+function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2400)}
+
+/* ============================================================
+   SVG 绘图小件库（分格画面 / 封面共用）
+============================================================ */
+function stars(R,n,W,H,color,op,mr){let s='';for(let i=0;i<n;i++){const x=R()*W,y=R()*H,r=(mr||2)*(0.4+R()*0.9);
+  s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+r.toFixed(1)+'" fill="'+color+'" opacity="'+(op*(0.5+R()*0.5)).toFixed(2)+'"/>'}return s}
+function rain(R,n,W,H,color){let s='';for(let i=0;i<n;i++){const x=R()*W,y=R()*H,l=16+R()*30;
+  s+='<line x1="'+x.toFixed(1)+'" y1="'+y.toFixed(1)+'" x2="'+(x-6).toFixed(1)+'" y2="'+(y+l).toFixed(1)+'" stroke="'+color+'" stroke-width="2" opacity=".45" stroke-linecap="round"/>'}return s}
+function speed(R,cx,cy,n,len,color){let s='';for(let i=0;i<n;i++){const a=i/n*Math.PI*2+R()*0.3,l=len*(0.6+R()*0.7);
+  const x1=cx+Math.cos(a)*len*0.35,y1=cy+Math.sin(a)*len*0.28,x2=cx+Math.cos(a)*(len*0.35+l),y2=cy+Math.sin(a)*(len*0.28+l*0.8);
+  s+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+color+'" stroke-width="'+(1.6+R()*2).toFixed(1)+'" stroke-linecap="round"/>'}return s}
+function gear(cx,cy,r,teeth,color,rot,sw){let s='<g transform="rotate('+(rot||0)+' '+cx+' '+cy+')">';const t=teeth||10;
+  s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="'+(sw||r*0.3)+'"/>';
+  for(let i=0;i<t;i++){const a=i/t*2*Math.PI,x1=cx+Math.cos(a)*r*1.04,y1=cy+Math.sin(a)*r*1.04,x2=cx+Math.cos(a)*r*1.24,y2=cy+Math.sin(a)*r*1.24;
+    s+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+color+'" stroke-width="'+(r*0.17).toFixed(1)+'" stroke-linecap="round"/>'}
+  s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(r*0.3).toFixed(1)+'" fill="none" stroke="'+color+'" stroke-width="'+(r*0.1).toFixed(1)+'"/></g>';return s}
+const POSES={
+  stand:'<circle cx="0" cy="-78" r="13"/><path d="M-14 -62 Q0 -70 14 -62 L17 -14 Q0 -8 -17 -14 Z"/><path d="M-12 -12 L-13 0 L-4 0 L-3 -12 Z"/><path d="M12 -12 L13 0 L4 0 L3 -12 Z"/>',
+  run:'<circle cx="6" cy="-76" r="13"/><path d="M-8 -60 Q8 -68 15 -57 L19 -20 L7 -15 L1 -30 L-6 -12 L-19 -17 L-11 -42 Z"/><path d="M15 -20 L30 -8 L25 0 L11 -10 Z"/><path d="M-6 -12 L-20 2 L-13 6 L-1 -6 Z"/>',
+  punch:'<circle cx="-6" cy="-76" r="13"/><path d="M-20 -60 Q-4 -68 6 -58 L10 -20 L-2 -16 L-8 -34 L-16 -14 L-28 -20 L-16 -44 Z"/><path d="M6 -58 L36 -68 L38 -57 L10 -46 Z"/>',
+  reach:'<circle cx="0" cy="-78" r="13"/><path d="M-14 -62 Q0 -70 14 -62 L16 -14 Q0 -8 -16 -14 Z"/><path d="M10 -60 L28 -96 L36 -90 L16 -52 Z"/><path d="M-12 -12 L-13 0 L-4 0 L-3 -12 Z"/><path d="M12 -12 L13 0 L4 0 L3 -12 Z"/>'};
+function figure(x,y,s,c,pose,flip){return '<g transform="translate('+x+' '+y+') scale('+((flip?-1:1)*s)+' '+s+')" fill="'+c+'">'+POSES[pose||'stand']+'</g>'}
+function penguin(x,y,s,scarf){return '<g transform="translate('+x+' '+y+') scale('+s+')"><ellipse cx="0" cy="0" rx="24" ry="30" fill="#23303C"/><ellipse cx="0" cy="6" rx="14" ry="19" fill="#F4F8FB"/><circle cx="-9" cy="-10" r="3.4" fill="#0B0F14"/><circle cx="9" cy="-10" r="3.4" fill="#0B0F14"/><circle cx="-8" cy="-11" r="1.2" fill="#fff"/><circle cx="10" cy="-11" r="1.2" fill="#fff"/><polygon points="0,-4 -7,2 7,2" fill="#F2A93B"/><rect x="-13" y="27" width="10" height="5" rx="2.5" fill="#F2A93B"/><rect x="3" y="27" width="10" height="5" rx="2.5" fill="#F2A93B"/>'+((scarf)?'<path d="M-14 -2 q14 8 28 0" stroke="'+scarf+'" stroke-width="7" fill="none"/><rect x="8" y="2" width="8" height="14" rx="3" fill="'+scarf+'"/>':'')+'</g>'}
+function bubble(x,y,w,text,o){o=o||{};const fs=o.fs||18,lines=wrap(text,o.max||7),lh=fs+5,h=lines.length*lh+22,cx=x+w/2,cy=y+h/2,
+  fill=o.fill||'#FFFDF2',st=o.stroke||'#1A130B';let s='<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+(w/2)+'" ry="'+(h/2)+'" fill="'+fill+'" stroke="'+st+'" stroke-width="3"/>';
+  const tw=15,th=20;
+  if((o.tail||'bl')==='bl')s+='<path d="M'+(cx-w*0.2)+' '+(cy+h*0.32)+' L'+(cx-w*0.28-tw)+' '+(cy+h*0.5+th)+' L'+(cx-w*0.2+tw)+' '+(cy+h*0.42)+' Z" fill="'+fill+'" stroke="'+st+'" stroke-width="3"/>';
+  else if(o.tail==='br')s+='<path d="M'+(cx+w*0.2)+' '+(cy+h*0.32)+' L'+(cx+w*0.28+tw)+' '+(cy+h*0.5+th)+' L'+(cx+w*0.2-tw)+' '+(cy+h*0.42)+' Z" fill="'+fill+'" stroke="'+st+'" stroke-width="3"/>';
+  else if(o.tail==='l')s+='<path d="M'+(cx-w*0.4)+' '+(cy-4)+' L'+(cx-w*0.58-tw)+' '+(cy+6)+' L'+(cx-w*0.36)+' '+(cy+13)+' Z" fill="'+fill+'" stroke="'+st+'" stroke-width="3"/>';
+  s+='<text x="'+cx+'" y="'+(cy-lh*(lines.length-1)/2+fs*0.32)+'" text-anchor="middle" font-family="\'Noto Sans SC\',sans-serif" font-weight="700" font-size="'+fs+'" fill="'+(o.color||'#1A130B')+'">'+
+    lines.map(function(L,i){return '<tspan x="'+cx+'" dy="'+(i?lh:0)+'">'+esc(L)+'</tspan>'}).join('')+'</text>';return s}
+function sfx(t,x,y,o){o=o||{};return '<text x="'+x+'" y="'+y+'" transform="rotate('+(o.rot!=null?o.rot:-7)+' '+x+' '+y+')" text-anchor="middle" font-family="\'Noto Serif SC\',\'SimSun\',serif" font-weight="900" font-size="'+(o.fs||56)+'" fill="'+(o.fill||'#B5442D')+'" stroke="'+(o.stroke||'#17110B')+'" stroke-width="'+(o.sw||8)+'" paint-order="stroke" letter-spacing="4" opacity="'+(o.op!=null?o.op:1)+'">'+esc(t)+'</text>'}
+function vtext(x,y,str,size,gap,o){o=o||{};let t='<text x="'+x+'" y="'+y+'" text-anchor="middle" font-family="\'Noto Serif SC\',\'SimSun\',serif" font-weight="900" font-size="'+size+'" fill="'+(o.fill||'#F2E7CE')+'" stroke="'+(o.stroke||'#17110B')+'" stroke-width="'+(o.sw||6)+'" paint-order="stroke">';
+  str.split('').forEach(function(ch,i){t+='<tspan x="'+x+'" dy="'+(i?gap:0)+'">'+esc(ch)+'</tspan>'});return t+'</text>'}
+
+/* ============================================================
+   十部漫画 · 每部独立画风（程序化分格场景）
+   kind: est 大远景 / fig 动作 / cu 特写 / obj 静物
+============================================================ */
+const ART={
+/* 1 星屑信使 · 深空蓝 */
+star:function(R,k,W,H,C,U){
+  const A=C.accent;
+  if(k==='est'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#0B1322"/>'+stars(R,60,W,H,'#D8E8FF',.9,2.2);
+    s+='<circle cx="'+W*0.5+'" cy="'+H*1.55+'" r="'+H*1.1+'" fill="#13203A"/>';
+    s+='<circle cx="'+W*0.5+'" cy="'+H*1.55+'" r="'+H*1.1+'" fill="none" stroke="'+A+'" stroke-width="3" opacity=".6"/>';
+    s+='<circle cx="'+W*0.78+'" cy="'+H*0.2+'" r="'+H*0.1+'" fill="#E8F1FF"/><circle cx="'+W*0.75+'" cy="'+H*0.18+'" r="'+H*0.1+'" fill="#0B1322" opacity=".3"/>';
+    s+='<path d="M'+W*0.1+' '+H*0.74+' q '+W*0.18+' -'+H*0.32+' '+W*0.4+' -'+H*0.14+' q '+W*0.16+' '+H*0.1+' '+W*0.3+' -'+H*0.18+'" fill="none" stroke="'+A+'" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round"/>';
+    s+='<polygon points="'+W*0.78+','+H*0.42+' '+(W*0.78+W*0.07)+','+(H*0.42-H*0.02)+' '+(W*0.78+W*0.03)+','+(H*0.42+H*0.07)+'" fill="#EFE6D4"/>';
+    return s}
+  if(k==='fig'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#0B1322"/>'+stars(R,40,W,H,'#D8E8FF',.8);
+    s+=speed(R,W*0.46,H*0.52,14,W*0.16,'rgba(216,232,255,.45)');
+    s+=figure(W*0.42,H*0.9,1.5,'#E8EFFA','reach');
+    s+='<path d="M'+W*0.42+' '+H*0.42+' q -34 -60 30 -92" fill="none" stroke="'+A+'" stroke-width="3" stroke-dasharray="4 7"/>';
+    s+=sfx('失重',W*0.74,H*0.32,{fs:44,fill:'#D8E8FF',stroke:'#0B1322',sw:6});
+    return s}
+  if(k==='cu'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#0B1322"/>'+stars(R,30,W,H,'#D8E8FF',.55);
+    s+='<circle cx="'+W/2+'" cy="'+H*0.68+'" r="'+H*0.52+'" fill="#152238" stroke="#DCE9FB" stroke-width="5"/>';
+    s+='<path d="M'+W*0.2+' '+H*0.52+' a '+H*0.42+' '+H*0.42+' 0 0 1 '+W*0.18+' -'+H*0.3+'" stroke="rgba(255,255,255,.7)" stroke-width="6" fill="none" stroke-linecap="round"/>';
+    s+='<ellipse cx="'+W*0.43+'" cy="'+H*0.64+'" rx="9" ry="13" fill="'+A+'"/><ellipse cx="'+W*0.57+'" cy="'+H*0.64+'" rx="9" ry="13" fill="'+A+'"/>';
+    s+='<rect width="'+W+'" height="'+H+'" fill="url(#ht'+U+')" opacity=".12"/>';
+    return '<defs><pattern id="ht'+U+'" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.4" fill="#D8E8FF"/></pattern></defs>'+s}
+  let s='<rect width="'+W+'" height="'+H+'" fill="#0B1322"/>'+stars(R,36,W,H,'#D8E8FF',.7);
+  s+='<g transform="rotate(-8 '+W/2+' '+H/2+')"><rect x="'+W*0.28+'" y="'+H*0.3+'" width="'+W*0.44+'" height="'+H*0.4+'" rx="6" fill="#EFE6D4" stroke="#17110B" stroke-width="4"/>';
+  s+='<path d="M'+W*0.28+' '+H*0.3+' L'+W*0.5+' '+H*0.53+' L'+W*0.72+' '+H*0.3+'" fill="none" stroke="#17110B" stroke-width="4"/>';
+  s+='<circle cx="'+W*0.63+'" cy="'+H*0.62+'" r="12" fill="'+A+'" stroke="#17110B" stroke-width="3"/></g>';
+  s+='<path d="M'+W*0.1+' '+H*0.86+' q '+W*0.3+' 44 '+W*0.8+' -8" stroke="'+A+'" stroke-width="3" fill="none" stroke-dasharray="3 8"/>';
+  return s},
+/* 2 深夜面馆 · 暖橙夜市 */
+noodle:function(R,k,W,H,C,U){
+  const A=C.accent;
+  if(k==='est'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#191009"/><rect x="0" y="'+H*0.56+'" width="'+W+'" height="'+H*0.44+'" fill="#221409"/>';
+    for(let b=0;b<3;b++){const bx=W*(0.02+b*0.3),bw=W*0.24,bh=H*(0.34+(b%2)*0.1);
+      s+='<rect x="'+bx+'" y="'+(H*0.58-bh)+'" width="'+bw+'" height="'+bh+'" fill="#2C1B12"/>';
+      for(let i=0;i<5;i++){if(R()>0.45)s+='<rect x="'+(bx+8+R()*(bw-24))+'" y="'+(H*0.58-bh+10+R()*(bh-30))+'" width="9" height="12" fill="#F5B453" opacity=".8"/>'}}
+    s+='<circle cx="'+W*0.72+'" cy="'+H*0.24+'" r="'+H*0.13+'" fill="'+A+'"/><circle cx="'+W*0.72+'" cy="'+H*0.24+'" r="'+H*0.22+'" fill="'+A+'" opacity=".22"/>';
+    s+='<rect x="'+W*0.36+'" y="'+H*0.6+'" width="'+W*0.3+'" height="'+H*0.22+'" fill="#3A2417" stroke="'+A+'" stroke-width="3"/>';
+    s+='<rect x="'+W*0.4+'" y="'+H*0.63+'" width="'+W*0.22+'" height="'+H*0.05+'" fill="'+A+'" opacity=".85"/>';
+    s+=sfx('暖',W*0.5,H*0.76,{fs:34,fill:'#221409',stroke:'#F5B453',sw:4,rot:0});
+    return s}
+  if(k==='fig'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#1D120B"/>';
+    s+='<rect x="0" y="'+H*0.66+'" width="'+W+'" height="'+H*0.34+'" fill="#312015"/><rect x="0" y="'+H*0.66+'" width="'+W+'" height="5" fill="#F5B453" opacity=".6"/>';
+    s+=figure(W*0.42,H*0.68,1.4,'#0E0805','stand');
+    s+='<rect x="'+(W*0.42-16)+'" y="'+(H*0.68-138)+'" width="32" height="16" rx="4" fill="#0E0805"/>';
+    s+='<rect x="'+(W*0.56)+'" y="'+(H*0.56)+'" width="52" height="22" rx="10" fill="#EFE6D4"/><path d="M'+(W*0.56+8)+' '+(H*0.56-8)+' q 6 -16 12 0 M'+(W*0.56+22)+' '+(H*0.56-10)+' q 6 -18 12 0" stroke="#F5B453" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    s+=sfx('咚',W*0.78,H*0.3,{fs:48});
+    return s}
+  if(k==='cu'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#221510"/>';
+    s+='<path d="M'+W*0.16+' '+H*0.44+' q '+W*0.34+' '+H*0.6+' '+W*0.68+' 0 Z" fill="'+C.accent+'" stroke="#17110B" stroke-width="5"/>';
+    s+='<ellipse cx="'+W*0.5+'" cy="'+H*0.44+'" rx="'+W*0.34+'" ry="'+H*0.09+'" fill="#EFE6D4" stroke="#17110B" stroke-width="4"/>';
+    for(let i=0;i<4;i++)s+='<path d="M'+(W*0.3+i*W*0.11)+' '+(H*0.44)+' q 12 -12 24 0 q 12 12 24 0" stroke="#C98F3D" stroke-width="4" fill="none"/>';
+    s+='<path d="M'+W*0.36+' '+H*0.3+' q -10 -26 4 -44 M'+W*0.48+' '+H*0.26+' q -8 -30 8 -48 M'+W*0.6+' '+H*0.3+' q 10 -24 -2 -44" stroke="#EFE6D4" stroke-width="4" fill="none" stroke-linecap="round" opacity=".8"/>';
+    s+='<line x1="'+W*0.72+'" y1="'+H*0.16+'" x2="'+W*0.56+'" y2="'+H*0.5+'" stroke="#8a5a2b" stroke-width="6" stroke-linecap="round"/><line x1="'+W*0.78+'" y1="'+H*0.18+'" x2="'+W*0.62+'" y2="'+H*0.52+'" stroke="#8a5a2b" stroke-width="6" stroke-linecap="round"/>';
+    return s}
+  let s='<rect width="'+W+'" height="'+H+'" fill="#1D120B"/>';
+  s+='<rect x="'+W*0.16+'" y="'+H*0.2+'" width="'+W*0.3+'" height="'+H*0.62+'" fill="#2E4057" stroke="#17110B" stroke-width="4"/><rect x="'+(W*0.16+W*0.3)+'" y="'+H*0.2+'" width="'+W*0.3+'" height="'+H*0.62+'" fill="#2E4057" stroke="#17110B" stroke-width="4"/>';
+  s+=sfx('面',W*0.31,H*0.58,{fs:44,fill:'#F5B453',stroke:'#17110B',sw:5,rot:0})+sfx('夜',W*0.61,H*0.58,{fs:44,fill:'#F5B453',stroke:'#17110B',sw:5,rot:0});
+  s+='<ellipse cx="'+W*0.84+'" cy="'+H*0.86+'" rx="26" ry="12" fill="#0E0805"/><circle cx="'+(W*0.84+16)+'" cy="'+(H*0.86-16)+'" r="12" fill="#0E0805"/><polygon points="'+(W*0.84-24)+','+(H*0.86-4)+' '+(W*0.84-36)+','+(H*0.86-14)+' '+(W*0.84-24)+','+(H*0.86-16)+'" fill="#0E0805"/>';
+  return s},
+/* 3 剑客不下班 · 修仙绿 */
+sword:function(R,k,W,H,C,U){
+  const A=C.accent;
+  if(k==='est'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#101B14"/>';
+    s+='<polygon points="0,'+H+' 0,'+H*0.62+' '+W*0.3+','+H*0.34+' '+W*0.62+','+H*0.72+' '+W+','+H*0.5+' '+W+','+H+'" fill="#16261B"/>';
+    s+='<polygon points="0,'+H+' 0,'+H*0.82+' '+W*0.34+','+H*0.6+' '+W*0.7+','+H*0.86+' '+W+','+H*0.7+' '+W+','+H+'" fill="#1D3224"/>';
+    s+='<circle cx="'+W*0.24+'" cy="'+H*0.2+'" r="'+H*0.11+'" fill="#D9E8C8" opacity=".9"/>';
+    for(let i=0;i<3;i++){const px=W*(0.7+i*0.06),py=H*(0.42+i*0.07),pw=W*0.07;
+      s+='<rect x="'+px+'" y="'+py+'" width="'+pw+'" height="6" fill="#0D0805"/><polygon points="'+px+','+py+' '+(px+pw/2)+','+(py-10)+' '+(px+pw)+','+py+'" fill="#0D0805"/><rect x="'+(px+pw/2-3)+'" y="'+py+'" width="6" height="'+(16-i*3)+'" fill="#0D0805"/>'}
+    return s}
+  if(k==='fig'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#0F1A12"/>'+speed(R,W*0.5,H*0.5,16,W*0.18,'rgba(143,227,136,.4)');
+    s+=figure(W*0.42,H*0.92,1.55,'#EAF6E6','punch');
+    s+='<line x1="'+W*0.5+'" y1="'+H*0.62+'" x2="'+W*0.92+'" y2="'+H*0.3+'" stroke="#DFF3D8" stroke-width="6" stroke-linecap="round"/>';
+    s+='<path d="M'+W*0.3+' '+H*0.28+' q '+W*0.3+' -18 '+W*0.56+' 22" stroke="'+A+'" stroke-width="5" fill="none" opacity=".9"/>';
+    s+='<rect x="'+(W*0.42+18)+'" y="'+(H*0.92-64)+'" width="30" height="22" rx="4" fill="#5A4128" stroke="#17110B" stroke-width="3"/>';
+    s+=sfx('铮',W*0.76,H*0.72,{fs:52,fill:'#DFF3D8'});
+    return s}
+  if(k==='cu'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#0F1A12"/>'+stars(R,14,W,H,'#D9E8C8',.35);
+    s+='<rect x="0" y="'+H*0.2+'" width="'+W+'" height="'+H*0.12+'" fill="'+A+'"/>';
+    s+='<polygon points="'+W*0.3+','+H*0.46+' '+W*0.46+','+H*0.52+' '+W*0.3+','+H*0.56+'" fill="#EAF6E6"/>';
+    s+='<polygon points="'+(W*0.7)+','+H*0.46+' '+(W*0.54)+','+H*0.52+' '+(W*0.7)+','+H*0.56+'" fill="#EAF6E6"/>';
+    s+='<line x1="'+W*0.24+'" y1="'+H*0.4+'" x2="'+W*0.48+'" y2="'+H*0.44+'" stroke="#EAF6E6" stroke-width="5" stroke-linecap="round"/>';
+    s+='<line x1="'+W*0.76+'" y1="'+H*0.4+'" x2="'+W*0.52+'" y2="'+H*0.44+'" stroke="#EAF6E6" stroke-width="5" stroke-linecap="round"/>';
+    s+=sfx('凝',W*0.5,H*0.86,{fs:40,fill:'#0F1A12',stroke:A,sw:5,rot:0});
+    return s}
+  let s='<rect width="'+W+'" height="'+H+'" fill="#101B14"/>';
+  s+='<g transform="rotate(-30 '+W/2+' '+H/2+')"><rect x="'+W*0.2+'" y="'+(H*0.5-7)+'" width="'+W*0.5+'" height="14" rx="3" fill="#D9E8C8" stroke="#17110B" stroke-width="3"/>';
+  s+='<rect x="'+(W*0.7)+'" y="'+(H*0.5-11)+'" width="12" height="22" rx="3" fill="'+A+'" stroke="#17110B" stroke-width="3"/>';
+  s+='<rect x="'+(W*0.72)+'" y="'+(H*0.5-6)+'" width="'+W*0.16+'" height="12" rx="6" fill="#3A2A1C" stroke="#17110B" stroke-width="3"/></g>';
+  s+='<rect x="'+W*0.62+'" y="'+H*0.12+'" width="'+W*0.28+'" height="'+H*0.34+'" rx="6" fill="#EFE6D4" stroke="#17110B" stroke-width="4"/>';
+  s+='<line x1="'+W*0.76+'" y1="'+H*0.12+'" x2="'+W*0.76+'" y2="'+(H*0.02)+'" stroke="#5A4128" stroke-width="4"/>';
+  s+='<rect x="'+(W*0.66)+'" y="'+(H*0.22)+'" width="'+W*0.2+'" height="18" fill="'+A+'" opacity=".85"/><text x="'+(W*0.76)+'" y="'+(H*0.22+15)+'" text-anchor="middle" font-size="15" font-weight="700" fill="#101B14">修仙工牌</text>';
+  return s},
+/* 4 我在高三当魔王 · 昼夜紫 */
+school:function(R,k,W,H,C,U){
+  const A=C.accent;
+  if(k==='est'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#241A33"/>';
+    s+='<rect x="'+W*0.66+'" y="'+H*0.12+'" width="'+W*0.28+'" height="'+H*0.4+'" fill="#120C1C" stroke="#4A3763" stroke-width="4"/>';
+    s+='<circle cx="'+W*0.84+'" cy="'+H*0.24+'" r="16" fill="#EFE6D4"/><path d="M'+(W*0.84-16)+' '+(H*0.24)+' a16 16 0 0 0 22 10 a18 18 0 0 1 -22 -10" fill="#120C1C"/>';
+    s+=stars(R,10,W*0.3+W,H*0.5,'#CBB8E8',.7,1.6);
+    for(let r2=0;r2<2;r2++)for(let i=0;i<3;i++){const dx=W*(0.06+i*0.19),dy=H*(0.56+r2*0.22);
+      s+='<rect x="'+dx+'" y="'+dy+'" width="'+W*0.14+'" height="10" fill="#3A2B4E"/><rect x="'+(dx+4)+'" y="'+(dy-18)+'" width="10" height="18" fill="#3A2B4E"/>'}
+    s+='<rect x="'+W*0.04+'" y="'+H*0.1+'" width="'+W*0.4+'" height="'+H*0.26+'" fill="#182430" stroke="#0D0805" stroke-width="4"/>';
+    s+='<text x="'+(W*0.24)+'" y="'+(H*0.27)+'" text-anchor="middle" font-size="20" fill="#D8E8FF" opacity=".8" font-family="serif">晚自习 · 勿扰</text>';
+    return s}
+  if(k==='fig'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#F3E9D8"/><polygon points="0,'+H+' '+W+',0 '+W+','+H+'" fill="#241A33"/>';
+    s+='<polygon points="'+(W*0.42-46)+','+(H*0.92-10)+' '+W*0.42+','+(H*0.92-150)+' '+(W*0.42+46)+','+(H*0.92-10)+'" fill="'+A+'" opacity=".85"/>';
+    s+=figure(W*0.42,H*0.92,1.5,'#17110B','reach');
+    s+='<line x1="'+(W*0.42+34)+'" y1="'+(H*0.92-140)+'" x2="'+(W*0.42+52)+'" y2="'+(H*0.92-188)+'" stroke="#EFE6D4" stroke-width="7" stroke-linecap="round"/><polygon points="'+(W*0.42+52)+','+(H*0.92-188)+' '+(W*0.42+64)+','+(H*0.92-206)+' '+(W*0.42+58)+','+(H*0.92-184)+'" fill="#EFE6D4"/>';
+    s+=sfx('觉醒',W*0.74,H*0.34,{fs:46,fill:'#EFE6D4',stroke:'#241A33',sw:6});
+    return s}
+  if(k==='cu'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#1C1428"/>';
+    s+='<polygon points="'+(W*0.5-70)+','+(H*0.3)+' '+(W*0.5-30)+','+(H*0.14)+' '+(W*0.5-8)+','+(H*0.32)+'" fill="#17110B"/><polygon points="'+(W*0.5+10)+','+(H*0.32)+' '+(W*0.5+34)+','+(H*0.14)+' '+(W*0.5+70)+','+(H*0.3)+'" fill="#17110B"/>';
+    s+='<circle cx="'+W*0.5+'" cy="'+H*0.62+'" r="'+H*0.34+'" fill="#17110B"/>';
+    s+='<ellipse cx="'+(W*0.5-22)+'" cy="'+H*0.58+'" rx="9" ry="12" fill="#EFE6D4"/><circle cx="'+(W*0.5-22)+'" cy="'+H*0.58+'" r="4" fill="#17110B"/>';
+    s+='<ellipse cx="'+(W*0.5+22)+'" cy="'+H*0.58+'" rx="9" ry="12" fill="'+A+'"/><circle cx="'+(W*0.5+22)+'" cy="'+H*0.58+'" r="4" fill="#17110B"/>';
+    s+='<path d="M'+(W*0.5-10)+' '+(H*0.82)+' q10 8 20 0" stroke="#EFE6D4" stroke-width="4" fill="none" stroke-linecap="round"/>';
+    return s}
+  let s='<rect width="'+W+'" height="'+H+'" fill="#EFE6D4"/>';
+  s+='<g transform="rotate(-4 '+W/2+' '+H/2+')"><rect x="'+W*0.2+'" y="'+H*0.14+'" width="'+W*0.42+'" height="'+H*0.66+'" fill="#FBF6EA" stroke="#17110B" stroke-width="3"/>';
+  for(let i=0;i<4;i++)s+='<line x1="'+(W*0.24)+'" y1="'+(H*0.24+i*H*0.1)+'" x2="'+(W*0.56)+'" y2="'+(H*0.24+i*H*0.1)+'" stroke="#B9A888" stroke-width="2"/>';
+  s+='<circle cx="'+(W*0.36)+'" cy="'+(H*0.34)+'" r="14" fill="none" stroke="#D6453A" stroke-width="3"/><circle cx="'+(W*0.5)+'" cy="'+(H*0.54)+'" r="11" fill="none" stroke="#D6453A" stroke-width="3"/></g>';
+  s+='<g opacity=".95"><circle cx="'+(W*0.74)+'" cy="'+(H*0.62)+'" r="34" fill="none" stroke="'+A+'" stroke-width="4"/><circle cx="'+(W*0.74)+'" cy="'+(H*0.62)+'" r="22" fill="none" stroke="'+A+'" stroke-width="2.5"/>';
+  s+='<path d="M'+(W*0.74)+' '+(H*0.62-30)+' L'+(W*0.74+26)+' '+(H*0.62+16)+' L'+(W*0.74-26)+' '+(H*0.62+16)+' Z" fill="none" stroke="'+A+'" stroke-width="3"/></g>';
+  return s},
+/* 5 午夜列车14号 · 雨夜青 */
+train:function(R,k,W,H,C,U){
+  const A=C.accent;
+  if(k==='est'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#0A0F14"/>'+rain(R,26,W,H,'#6FE3D0');
+    s+='<line x1="0" y1="'+H*0.82+'" x2="'+W+'" y2="'+H*0.82+'" stroke="#22323C" stroke-width="4"/>';
+    s+='<rect x="'+W*0.2+'" y="'+H*0.2+'" width="'+W*0.9+'" height="'+H*0.52+'" fill="#10181F" stroke="#1E2C36" stroke-width="4"/>';
+    for(let i=0;i<6;i++){const wx=W*(0.3+i*0.12);s+='<rect x="'+wx+'" y="'+(H*0.3)+'" width="'+W*0.06+'" height="'+H*0.16+'" fill="'+(R()>0.4?A:'#17222B')+'" opacity=".9"/>'}
+    s+='<polygon points="'+W*0.2+','+(H*0.46)+' 0,'+(H*0.28)+' 0,'+(H*0.72)+'" fill="rgba(230,255,250,.14)"/>';
+    s+='<circle cx="'+W*0.2+'" cy="'+H*0.46+'" r="12" fill="#F4FFFB"/>';
+    s+='<path d="M0 '+H*0.92+' L'+W+' '+(H*0.86)+'" stroke="#22323C" stroke-width="3"/><path d="M0 '+H+' L'+W+' '+(H*0.94)+'" stroke="#22323C" stroke-width="3"/>';
+    return s}
+  if(k==='fig'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#0A0F14"/>'+rain(R,34,W,H,'#6FE3D0');
+    s+='<ellipse cx="'+W*0.44+'" cy="'+(H*0.96)+'" rx="'+W*0.2+'" ry="8" fill="#17222B"/>';
+    s+=figure(W*0.44,H*0.94,1.45,'#05090C','stand');
+    s+='<path d="M'+(W*0.44-42)+' '+(H*0.94-118)+' q42 -40 84 0 Z" fill="#0E1A1E" stroke="'+A+'" stroke-width="3"/>';
+    s+='<line x1="'+W*0.44+'" y1="'+(H*0.94-118)+'" x2="'+W*0.44+'" y2="'+(H*0.94-70)+'" stroke="'+A+'" stroke-width="3"/>';
+    s+=sfx('雨',W*0.78,H*0.26,{fs:44,fill:'#6FE3D0',stroke:'#0A0F14',sw:5});
+    return s}
+  if(k==='cu'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#070B0E"/>'+rain(R,16,W,H,'#6FE3D0');
+    s+='<circle cx="'+W*0.5+'" cy="'+H*0.52+'" r="'+H*0.3+'" fill="rgba(230,255,250,.12)"/>';
+    s+='<circle cx="'+W*0.5+'" cy="'+H*0.52+'" r="'+H*0.18+'" fill="#F4FFFB"/>';
+    s+='<rect x="'+(W*0.5-40)+'" y="'+(H*0.52-26)+'" width="80" height="52" rx="8" fill="#10181F" stroke="'+A+'" stroke-width="4"/>';
+    s+='<text x="'+W*0.5+'" y="'+(H*0.52+15)+'" text-anchor="middle" font-size="36" font-weight="900" fill="'+A+'" font-family="Georgia,serif">14</text>';
+    return s}
+  let s='<rect width="'+W+'" height="'+H+'" fill="#0A0F14"/>'+rain(R,18,W,H,'#6FE3D0');
+  s+='<g transform="rotate(6 '+W/2+' '+H/2+')"><rect x="'+W*0.24+'" y="'+H*0.28+'" width="'+W*0.52+'" height="'+H*0.44+'" rx="6" fill="#EFE6D4" stroke="#17110B" stroke-width="4"/>';
+  s+='<line x1="'+(W*0.56)+'" y1="'+(H*0.28)+'" x2="'+(W*0.56)+'" y2="'+(H*0.72)+'" stroke="#17110B" stroke-width="3" stroke-dasharray="6 6"/>';
+  s+='<text x="'+(W*0.4)+'" y="'+(H*0.58)+'" text-anchor="middle" font-size="40" font-weight="900" fill="#17110B" font-family="Georgia,serif">14</text>';
+  s+='<text x="'+(W*0.4)+'" y="'+(H*0.38)+'" text-anchor="middle" font-size="12" fill="#6d5d44">雨夜限定 · 乘车凭证</text>';
+  s+='<circle cx="'+(W*0.48)+'" cy="'+(H*0.66)+'" r="6" fill="#0A0F14"/></g>';
+  return s},
+/* 6 企鹅事务所 · 冰蓝明快 */
+penguin:function(R,k,W,H,C,U){
+  const A=C.accent;
+  if(k==='est'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#DFF0FA"/>';
+    s+='<circle cx="'+W*0.16+'" cy="'+H*0.18+'" r="26" fill="#FFF6D8" stroke="#F2A93B" stroke-width="4"/>';
+    s+='<polygon points="'+W*0.6+','+H*0.7+' '+W*0.74+','+H*0.34+' '+W*0.9+','+H*0.72+'" fill="#BFE0F2"/>';
+    s+='<path d="M0 '+(H*0.82)+' q '+W*0.5+' -30 '+W+' 0 L'+W+' '+H+' L0 '+H+' Z" fill="#F4FAFE"/>';
+    s+='<rect x="'+W*0.4+'" y="'+(H*0.5)+'" width="'+W*0.2+'" height="'+H*0.32+'" rx="8" fill="'+A+'" stroke="#17110B" stroke-width="4"/>';
+    s+='<rect x="'+(W*0.42)+'" y="'+(H*0.53)+'" width="'+W*0.16+'" height="'+H*0.06+'" fill="#F4F8FB"/><text x="'+(W*0.5)+'" y="'+(H*0.58)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#17110B">营业中</text>';
+    return s}
+  if(k==='fig'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#EAF6FD"/><path d="M0 '+(H*0.86)+' q '+W*0.5+' -24 '+W+' 0 L'+W+' '+H+' L0 '+H+' Z" fill="#F4FAFE"/>';
+    s+=penguin(W*0.26,H*0.78,1.15,'#E5472F')+penguin(W*0.5,H*0.72,1.35,'#4CAF50')+penguin(W*0.74,H*0.8,1.05,'#F2A93B');
+    s+='<text x="'+W*0.5+'" y="'+(H*0.2)+'" text-anchor="middle" font-size="17" font-weight="700" fill="#23303C">企鹅侦探团 · 出勤</text>';
+    return s}
+  if(k==='cu'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#DFF0FA"/>';
+    s+=penguin(W*0.44,H*0.78,2.6,null);
+    s+='<circle cx="'+(W*0.72)+'" cy="'+(H*0.3)+'" r="'+H*0.2+'" fill="rgba(255,255,255,.5)" stroke="#23303C" stroke-width="6"/>';
+    s+='<line x1="'+(W*0.72)+'" y1="'+(H*0.3)+'" x2="'+(W*0.84)+'" y2="'+(H*0.62)+'" stroke="#23303C" stroke-width="10" stroke-linecap="round"/>';
+    return s}
+  let s='<rect width="'+W+'" height="'+H+'" fill="#EAF6FD"/>';
+  s+='<rect x="'+W*0.12+'" y="'+H*0.18+'" width="'+W*0.4+'" height="'+H*0.56+'" rx="8" fill="'+A+'" stroke="#17110B" stroke-width="4"/>';
+  s+='<rect x="'+W*0.14+'" y="'+(H*0.18-12)+'" width="'+W*0.16+'" height="14" rx="4" fill="'+A+'" stroke="#17110B" stroke-width="4"/>';
+  s+='<text x="'+(W*0.32)+'" y="'+(H*0.52)+'" text-anchor="middle" font-size="18" font-weight="700" fill="#0B0F14">案卷 · 鱼</text>';
+  s+='<ellipse cx="'+(W*0.74)+'" cy="'+(H*0.6)+'" rx="42" ry="20" fill="#7FD1F5" stroke="#17110B" stroke-width="4"/>';
+  s+='<polygon points="'+(W*0.74+40)+','+(H*0.6)+' '+(W*0.74+66)+','+(H*0.6-18)+' '+(W*0.74+66)+','+(H*0.6+18)+'" fill="#7FD1F5" stroke="#17110B" stroke-width="4"/>';
+  s+='<circle cx="'+(W*0.74-26)+'" cy="'+(H*0.57)+'" r="4" fill="#17110B"/>';
+  return s},
+/* 7 蒸汽长安 · 铜金 */
+steam:function(R,k,W,H,C,U){
+  const A=C.accent;
+  if(k==='est'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#191008"/>';
+    s+='<circle cx="'+W*0.2+'" cy="'+H*0.2+'" r="'+H*0.12+'" fill="#E8C87F" opacity=".85"/>';
+    for(let i=0;i<4;i++){const py=H*(0.34+i*0.1),pw=W*(0.3-i*0.05),px=W*0.6-pw/2;
+      s+='<polygon points="'+px+','+py+' '+(px+pw)+','+py+' '+(px+pw*0.86)+','+(py+H*0.09)+' '+(px+pw*0.14)+','+(py+H*0.09)+'" fill="#0D0805" stroke="'+A+'" stroke-width="2"/>'}
+    s+='<rect x="'+(W*0.56)+'" y="'+(H*0.74)+'" width="'+W*0.08+'" height="'+H*0.2+'" fill="#0D0805" stroke="'+A+'" stroke-width="2"/>';
+    s+=gear(W*0.2,H*0.66,H*0.14,10,A,20)+gear(W*0.34,H*0.8,H*0.09,8,'rgba(217,164,65,.6)',-40);
+    s+='<circle cx="'+W*0.44+'" cy="'+H*0.2+'" r="16" fill="rgba(232,200,127,.25)"/><circle cx="'+W*0.5+'" cy="'+H*0.14+'" r="12" fill="rgba(232,200,127,.18)"/>';
+    return s}
+  if(k==='fig'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#1A1108"/>';
+    s+='<rect x="0" y="'+H*0.18+'" width="'+W+'" height="14" fill="#3A2A1C"/><rect x="'+W*0.3+'" y="'+(H*0.18-6)+'" width="10" height="26" fill="'+A+'"/><rect x="'+W*0.7+'" y="'+(H*0.18-6)+'" width="10" height="26" fill="'+A+'"/>';
+    s+=speed(R,W*0.48,H*0.5,10,W*0.14,'rgba(232,200,127,.35)');
+    s+=figure(W*0.46,H*0.94,1.5,'#0D0805','reach',true);
+    s+='<rect x="'+(W*0.46-36)+'" y="'+(H*0.94-206)+'" width="14" height="34" rx="6" fill="'+A+'" transform="rotate(-24 '+(W*0.46-29)+' '+(H*0.94-189)+')"/>';
+    s+=sfx('轰',W*0.76,H*0.4,{fs:54,fill:'#E8C87F'});
+    return s}
+  if(k==='cu'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#140D06"/>';
+    s+='<circle cx="'+W/2+'" cy="'+H*0.5+'" r="'+H*0.44+'" fill="rgba(232,200,127,.1)"/>';
+    s+=gear(W/2,H*0.5,H*0.3,12,A,0)+gear(W*0.18,H*0.78,H*0.12,8,'rgba(217,164,65,.7)',30)+gear(W*0.84,H*0.24,H*0.1,8,'rgba(217,164,65,.7)',-15);
+    s+='<circle cx="'+W/2+'" cy="'+H*0.5+'" r="8" fill="'+A+'"/>';
+    return s}
+  let s='<rect width="'+W+'" height="'+H+'" fill="#1A1108"/>';
+  s+='<g transform="rotate(3 '+W/2+' '+H/2+')"><rect x="'+W*0.22+'" y="'+H*0.12+'" width="'+W*0.56+'" height="'+H*0.76+'" fill="#EFE6D4" stroke="#17110B" stroke-width="4"/>';
+  s+='<polygon points="'+(W*0.32)+','+(H*0.6)+' '+(W*0.5)+','+(H*0.3)+' '+(W*0.68)+','+(H*0.6)+'" fill="none" stroke="#17110B" stroke-width="3"/>';
+  s+=gear(W*0.5,H*0.68,20,8,'#B5442D',0,6);
+  s+='<line x1="'+(W*0.28)+'" y1="'+(H*0.24)+'" x2="'+(W*0.72)+'" y2="'+(H*0.24)+'" stroke="#B9A888" stroke-width="2"/>';
+  s+='<text x="'+(W*0.5)+'" y="'+(H*0.2)+'" text-anchor="middle" font-size="13" fill="#6d5d44">钟楼重修图 · 甲</text></g>';
+  return s},
+/* 8 量子恋爱观察报告 · 粉白实验 */
+quantum:function(R,k,W,H,C,U){
+  const A=C.accent;
+  if(k==='est'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#F6ECF4"/>';
+    s+='<rect x="'+W*0.05+'" y="'+H*0.1+'" width="'+W*0.5+'" height="'+H*0.34+'" fill="#2E3440" stroke="#17110B" stroke-width="4"/>';
+    s+='<path d="M'+(W*0.1)+' '+(H*0.26)+' q 20 -22 40 0 q 18 18 36 -4 M'+(W*0.36)+' '+(H*0.18)+' l 0 24 m -12 -12 l 24 0" stroke="#F6ECF4" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    for(let i=0;i<3;i++)s+='<rect x="'+(W*(0.08+i*0.24))+'" y="'+(H*0.62)+'" width="'+W*0.18+'" height="12" fill="#D9C3CE"/><rect x="'+(W*(0.08+i*0.24)+6)+'" y="'+(H*0.62-16)+'" width="9" height="16" fill="#D9C3CE"/>';
+    s+='<ellipse cx="'+(W*0.82)+'" cy="'+(H*0.3)+'" rx="34" ry="13" fill="none" stroke="'+A+'" stroke-width="3" transform="rotate(24 '+(W*0.82)+' '+(H*0.3)+')"/><ellipse cx="'+(W*0.82)+'" cy="'+(H*0.3)+'" rx="34" ry="13" fill="none" stroke="'+A+'" stroke-width="3" transform="rotate(-24 '+(W*0.82)+' '+(H*0.3)+')"/>';
+    s+='<circle cx="'+(W*0.82)+'" cy="'+(H*0.3)+'" r="6" fill="'+A+'"/>';
+    return s}
+  if(k==='fig'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#F6ECF4"/>';
+    s+=figure(W*0.3,H*0.92,1.45,'#2E3440','stand')+figure(W*0.7,H*0.92,1.45,'#B5442D','stand',true);
+    s+='<line x1="'+(W*0.3+20)+'" y1="'+(H*0.92-80)+'" x2="'+(W*0.7-20)+'" y2="'+(H*0.92-80)+'" stroke="'+A+'" stroke-width="3" stroke-dasharray="5 7"/>';
+    s+='<path d="M'+W*0.5+' '+(H*0.92-96)+' c -8 -14 -26 -4 -12 10 l 12 10 l 12 -10 c 14 -14 -4 -24 -12 -10 Z" fill="'+A+'"/>';
+    return s}
+  if(k==='cu'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#F6ECF4"/>';
+    s+='<path d="M'+W*0.1+' '+(H*0.7)+' q '+(W*0.2)+' -60 '+(W*0.4)+' 0 q '+(W*0.2)+' 60 '+(W*0.4)+' 0" stroke="'+A+'" stroke-width="4" fill="none"/>';
+    s+='<rect x="'+(W*0.32)+'" y="'+(H*0.5)+'" width="'+W*0.36+'" height="'+H*0.38+'" fill="#C89B4B" stroke="#17110B" stroke-width="4"/>';
+    s+='<polygon points="'+(W*0.32)+','+(H*0.5)+' '+(W*0.32-14)+','+(H*0.38)+' '+(W*0.5)+','+(H*0.5)+'" fill="#B5442D" opacity="0"/>';
+    s+='<circle cx="'+(W*0.5)+'" cy="'+(H*0.42)+'" r="30" fill="#2E3440"/><polygon points="'+(W*0.5-26)+','+(H*0.42-18)+' '+(W*0.5-16)+','+(H*0.42-40)+' '+(W*0.5-4)+','+(H*0.42-20)+'" fill="#2E3440"/><polygon points="'+(W*0.5+4)+','+(H*0.42-20)+' '+(W*0.5+16)+','+(H*0.42-40)+' '+(W*0.5+26)+','+(H*0.42-18)+'" fill="#2E3440"/>';
+    s+='<circle cx="'+(W*0.5-10)+'" cy="'+(H*0.42)+'" r="4" fill="#F6ECF4"/><circle cx="'+(W*0.5+10)+'" cy="'+(H*0.42)+'" r="4" fill="#F6ECF4"/>';
+    s+='<text x="'+(W*0.68)+'" y="'+(H*0.3)+'" font-size="40" font-weight="900" fill="'+A+'" font-family="Georgia,serif">?</text>';
+    return s}
+  let s='<rect width="'+W+'" height="'+H+'" fill="#EFE6D4"/>';
+  s+='<rect x="'+W*0.16+'" y="'+H*0.1+'" width="'+W*0.52+'" height="'+H*0.76+'" rx="8" fill="#FBF6EA" stroke="#17110B" stroke-width="4"/>';
+  s+='<rect x="'+(W*0.38)+'" y="'+(H*0.06)+'" width="'+W*0.08+'" height="14" rx="4" fill="'+A+'"/>';
+  s+='<line x1="'+(W*0.24)+'" y1="'+(H*0.74)+'" x2="'+(W*0.6)+'" y2="'+(H*0.74)+'" stroke="#17110B" stroke-width="3"/>';
+  s+='<line x1="'+(W*0.24)+'" y1="'+(H*0.74)+'" x2="'+(W*0.24)+'" y2="'+(H*0.24)+'" stroke="#17110B" stroke-width="3"/>';
+  s+='<path d="M'+(W*0.24)+' '+(H*0.7)+' q '+(W*0.1)+' -6 '+(W*0.16)+' -18 q '+(W*0.08)+' -22 '+(W*0.2)+' -28" fill="none" stroke="'+A+'" stroke-width="5" stroke-linecap="round"/>';
+  s+='<path d="M'+(W*0.61)+' '+(H*0.2)+' c -6 -10 -18 -3 -8 7 l 8 7 l 8 -7 c 10 -10 -2 -17 -8 -7 Z" fill="'+A+'"/>';
+  s+='<text x="'+(W*0.56)+'" y="'+(H*0.16)+'" font-size="13" fill="#6d5d44">样本 01 · 心动曲线</text>';
+  return s},
+/* 9 山海便利店 · 夜绿 */
+shanhai:function(R,k,W,H,C,U){
+  const A=C.accent;
+  if(k==='est'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#0D1F1B"/>'+stars(R,20,W,H,'#BFE8D8',.5,1.6);
+    s+='<rect x="'+W*0.08+'" y="'+H*0.16+'" width="'+W*0.84+'" height="'+H*0.68+'" fill="#123128" stroke="'+A+'" stroke-width="4"/>';
+    s+='<rect x="'+W*0.08+'" y="'+H*0.16+'" width="'+W*0.84+'" height="'+H*0.12+'" fill="'+A+'"/>';
+    s+='<text x="'+W*0.5+'" y="'+(H*0.25)+'" text-anchor="middle" font-size="'+Math.min(24,W*0.05)+'" font-weight="900" fill="#0D1F1B">山海便利店 · 24H</text>';
+    for(let i=0;i<4;i++)s+='<rect x="'+(W*(0.14+i*0.19))+'" y="'+(H*0.36)+'" width="'+W*0.14+'" height="'+H*0.3+'" fill="#17352C" stroke="'+A+'" stroke-width="2" opacity=".9"/>';
+    s+='<rect x="'+W*0.42+'" y="'+(H*0.6)+'" width="'+W*0.16+'" height="'+H*0.24+'" fill="#2E4A40" stroke="'+A+'" stroke-width="3"/>';
+    return s}
+  if(k==='fig'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#0F2620"/>';
+    s+='<rect x="0" y="'+H*0.72+'" width="'+W+'" height="'+H*0.28+'" fill="#123128"/>';
+    s+=figure(W*0.5,H*0.74,1.5,'#0A1613','stand');
+    s+='<polygon points="'+(W*0.5-16)+','+(H*0.74-112)+' '+(W*0.5-6)+','+(H*0.74-138)+' '+(W*0.5+2)+','+(H*0.74-112)+'" fill="#0A1613"/>';
+    s+='<polygon points="'+(W*0.5+4)+','+(H*0.74-112)+' '+(W*0.5+14)+','+(H*0.74-136)+' '+(W*0.5+22)+','+(H*0.74-110)+'" fill="#0A1613"/>';
+    s+='<path d="M'+(W*0.5+22)+' '+(H*0.74-46)+' q 44 6 36 52 q -22 -18 -40 -12" fill="#0A1613"/>';
+    s+='<ellipse cx="'+(W*0.5-10)+'" cy="'+(H*0.74-84)+'" rx="6" ry="8" fill="#EFE6D4"/><circle cx="'+(W*0.5-11)+'" cy="'+(H*0.74-86)+'" r="2" fill="#0A1613"/>';
+    s+=sfx('呼—',W*0.76,H*0.3,{fs:42,fill:'#4FD8A6',stroke:'#0A1613',sw:5});
+    return s}
+  if(k==='cu'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#123128"/>';
+    s+='<rect x="'+W*0.24+'" y="'+(H*0.46)+'" width="'+W*0.52+'" height="'+H*0.34+'" rx="10" fill="#2E4A40" stroke="#17110B" stroke-width="5"/>';
+    s+='<ellipse cx="'+W*0.5+'" cy="'+(H*0.46)+'" rx="'+W*0.26+'" ry="'+H*0.05+'" fill="#4FD8A6" stroke="#17110B" stroke-width="4"/>';
+    for(let i=0;i<3;i++){const sx=W*(0.36+i*0.14);
+      s+='<line x1="'+sx+'" y1="'+(H*0.16)+'" x2="'+sx+'" y2="'+(H*0.48)+'" stroke="#B08D57" stroke-width="5"/>';
+      s+='<circle cx="'+sx+'" cy="'+(H*0.4)+'" r="11" fill="#E8B4B4" stroke="#17110B" stroke-width="3"/>'}
+    s+='<path d="M'+W*0.32+' '+(H*0.34)+' q -8 -22 4 -38 M'+W*0.5+' '+(H*0.3)+' q -6 -24 6 -40 M'+W*0.68+' '+(H*0.34)+' q 8 -22 -2 -38" stroke="#BFE8D8" stroke-width="4" fill="none" stroke-linecap="round" opacity=".75"/>';
+    return s}
+  let s='<rect width="'+W+'" height="'+H+'" fill="#0F2620"/>';
+  s+='<rect x="'+W*0.1+'" y="'+(H*0.24)+'" width="'+W*0.8+'" height="12" fill="'+A+'" opacity=".7"/>';
+  for(let i=0;i<4;i++){const jx=W*(0.16+i*0.19);
+    s+='<rect x="'+jx+'" y="'+(H*0.24-34)+'" width="30" height="34" rx="6" fill="#17352C" stroke="#BFE8D8" stroke-width="2.5"/>';
+    s+='<rect x="'+(jx+4)+'" y="'+(H*0.24-42)+'" width="22" height="9" rx="3" fill="'+A+'"/>'}
+  s+='<rect x="'+(W*0.72)+'" y="'+(H*0.4)+'" width="34" height="66" rx="6" fill="#B5442D" stroke="#17110B" stroke-width="3"/>';
+  s+=sfx('安',W*0.72+17,H*0.4+48,{fs:34,fill:'#EFE6D4',stroke:'#17110B',sw:4,rot:0});
+  return s},
+/* 10 拳与花 · 热血红 */
+fist:function(R,k,W,H,C,U){
+  const A=C.accent;
+  if(k==='est'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#F3E4DC"/>';
+    for(let r2=0;r2<3;r2++)for(let i=0;i<12;i++)s+='<circle cx="'+(R()*W)+'" cy="'+(H*0.1+R()*H*0.2)+'" r="'+(3+R()*3).toFixed(1)+'" fill="#4A2F28" opacity="'+(0.3+R()*0.4).toFixed(2)+'"/>';
+    s+='<polygon points="0,'+H+' '+W*0.2+','+H*0.42+' '+W*0.8+','+H*0.42+' '+W+','+H+'" fill="#EAD2C6"/>';
+    s+='<rect x="'+(W*0.16)+'" y="'+(H*0.24)+'" width="12" height="'+H*0.5+'" fill="'+A+'"/><rect x="'+(W*0.82)+'" y="'+(H*0.24)+'" width="12" height="'+H*0.5+'" fill="'+A+'"/>';
+    for(let i=0;i<3;i++)s+='<path d="M'+(W*0.16+12)+' '+(H*0.34+i*H*0.12)+' Q '+W*0.5+' '+(H*0.3+i*H*0.12)+' '+(W*0.82)+' '+(H*0.34+i*H*0.12)+'" stroke="#B5442D" stroke-width="5" fill="none"/>';
+    return s}
+  if(k==='fig'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#F3E4DC"/>'+speed(R,W*0.52,H*0.5,15,W*0.17,'rgba(181,68,45,.35)');
+    s+=figure(W*0.4,H*0.94,1.55,'#17110B','punch');
+    s+='<polygon points="'+(W*0.72)+','+(H*0.3)+' '+(W*0.76)+','+(H*0.42)+' '+(W*0.88)+','+(H*0.4)+' '+(W*0.8)+','+(H*0.48)+' '+(W*0.86)+','+(H*0.58)+' '+(W*0.73)+','+(H*0.52)+' '+(W*0.64)+','+(H*0.62)+' '+(W*0.67)+','+(H*0.48)+' '+(W*0.58)+','+(H*0.44)+' '+(W*0.68)+','+(H*0.4)+'" fill="'+A+'" stroke="#17110B" stroke-width="4"/>';
+    s+=sfx('呯!',W*0.3,H*0.32,{fs:50});
+    return s}
+  if(k==='cu'){
+    let s='<rect width="'+W+'" height="'+H+'" fill="#EFE0D6"/>';
+    s+='<circle cx="'+W*0.5+'" cy="'+H*0.56+'" r="'+H*0.3+'" fill="#B5442D" stroke="#17110B" stroke-width="6"/>';
+    s+='<circle cx="'+(W*0.4)+'" cy="'+(H*0.4)+'" r="'+H*0.12+'" fill="#C4502F" stroke="#17110B" stroke-width="5"/>';
+    s+='<circle cx="'+W*0.56+'" cy="'+(H*0.36)+'" r="'+H*0.12+'" fill="#C4502F" stroke="#17110B" stroke-width="5"/>';
+    s+='<circle cx="'+(W*0.68)+'" cy="'+(H*0.46)+'" r="'+H*0.11+'" fill="#C4502F" stroke="#17110B" stroke-width="5"/>';
+    for(let i=0;i<3;i++)s+='<line x1="'+(W*0.34+i*10)+'" y1="'+(H*0.9)+'" x2="'+(W*0.6+i*12)+'" y2="'+(H*0.66)+'" stroke="#EFE6D4" stroke-width="7" stroke-linecap="round"/>';
+    s+='<path d="M'+W*0.16+' '+(H*0.3)+' q 30 -20 58 -6 M'+W*0.12+' '+(H*0.44)+' q 26 -12 48 -2" stroke="#B5442D" stroke-width="4" fill="none" opacity=".7"/>';
+    return s}
+  let s='<rect width="'+W+'" height="'+H+'" fill="#F3E4DC"/>';
+  s+='<line x1="'+(W*0.32)+'" y1="'+(H*0.86)+'" x2="'+(W*0.46)+'" y2="'+(H*0.36)+'" stroke="#3E5C3A" stroke-width="6"/>';
+  s+='<line x1="'+(W*0.46)+'" y1="'+(H*0.36)+'" x2="'+(W*0.28)+'" y2="'+(H*0.2)+'" stroke="#3E5C3A" stroke-width="6"/>';
+  s+='<ellipse cx="'+(W*0.26)+'" cy="'+(H*0.24)+'" rx="12" ry="6" fill="#3E5C3A" transform="rotate(-36 '+(W*0.26)+' '+(H*0.24)+')"/>';
+  s+='<circle cx="'+(W*0.5)+'" cy="'+(H*0.3)+'" r="26" fill="'+A+'"/><circle cx="'+(W*0.5)+'" cy="'+(H*0.3)+'" r="16" fill="#D6776A"/><circle cx="'+(W*0.5)+'" cy="'+(H*0.3)+'" r="8" fill="'+A+'"/>';
+  s+='<path d="M'+(W*0.6)+' '+(H*0.56)+' q 40 6 34 44 q -30 6 -44 -14 q 6 -18 10 -30 Z" fill="#B5442D" stroke="#17110B" stroke-width="4"/>';
+  s+='<text x="'+(W*0.78)+'" y="'+(H*0.24)+'" text-anchor="middle" font-size="15" fill="#6d4438">店休日</text>';
+  return s}
+};
+
+/* ============================================================
+   十部漫画 · 数据（名称/作者/标签/简介，全部虚构）
+============================================================ */
+const BOOKS=[
+{id:'star',title:'星屑信使',en:'STARDUST COURIER',author:'白鹿原上',cat:'科幻',tags:['科幻','治愈'],big:['星屑信使'],
+ status:'已完结 · 全 36 话',chapter:'第 36 话 · 最后一封信',seed:11,c1:'#20304F',c2:'#0B1220',accent:'#8FC1FF',
+ rating:9.4,pop:'12.8万',eps:36,desc:'宇宙末班的邮差，替人类投递最后一封手写信。当引擎熄火、星海落雪，他仍然相信：只要还有一个收件人，航线就不能停。',
+ quote:'读完像被星光轻轻抱了一下。—— 读者 @轨道下的猫',
+ sfx:['嗡——','哗','啾—','闪'],
+ lines:['末班车进站前，把信交给我。','这封信的收件人……已经不在了。','那就在星海里，替他读完。','引擎声停了，只剩雪。','人类的最后一句话，是谢谢。','邮差永不缺席。','下一站：猎户悬臂。','信封上有旧太阳的温度。']},
+{id:'noodle',title:'深夜面馆',en:'MIDNIGHT NOODLE BAR',author:'陈一勺',cat:'美食',tags:['美食','都市'],big:['深夜面馆'],
+ status:'连载中 · 每周五更新',chapter:'第 12 话 · 打烊之后',seed:23,c1:'#3A2417',c2:'#1A0F08',accent:'#F5B453',
+ rating:9.1,pop:'9.6万',eps:52,desc:'凌晨两点开门，只招待有故事的食客。一碗热汤下肚，白天的委屈就先靠边站——本店规矩：故事免费续杯。',
+ quote:'看饿了，也看暖了。—— 读者 @加个蛋',
+ sfx:['咕嘟','唰啦啦','吸溜——','滋'],
+ lines:['深夜两点，灯还亮着。','老板，一碗豚骨，多加葱花。','加班的人，汤要浓一点。','这碗面，治好了我的周一。','打烊前，故事免费续杯。','汤底熬了十八年。','雨天的客人，坐窗边。','明日休市，去钓鱼。']},
+{id:'sword',title:'剑客不下班',en:'OFF-DUTY SWORDSMAN',author:'老猫头',cat:'玄幻',tags:['玄幻','搞笑'],big:['剑客不下班'],
+ status:'连载中 · 每周三更新',chapter:'第 07 话 · 加班斩妖实录',seed:35,c1:'#1D3224',c2:'#0C1510',accent:'#8FE388',
+ rating:8.8,pop:'11.2万',eps:78,desc:'修仙界社畜的五险一金保卫战。斩妖要打卡，御剑算工时，师父画的饼比妖还难缠——但这份工，他偏要打到飞升。',
+ quote:'打工人看了会沉默，掌门看了会流泪。—— 读者 @御剑迟到',
+ sfx:['铮——','咣','哐当','嗖'],
+ lines:['第 996 次斩妖，申请加班费。','宗门社保，一分不能少。','师父，我想请年假。','妖怪也要交房租的！','剑气……先打卡再出。','修仙界，也要劳动法！','这只妖欠我三天调休。','飞升前，先把年假休完。']},
+{id:'school',title:'我在高三当魔王',en:'DEMON KING, GRADE 3',author:'阿蔓',cat:'校园',tags:['校园','奇幻','恋爱'],big:['我在高三','当魔王'],
+ status:'连载中 · 每周六更新',chapter:'第 15 话 · 月考与魔界',seed:47,c1:'#3A2B4E',c2:'#17102A',accent:'#C58BFF',
+ rating:9.0,pop:'15.4万',eps:64,desc:'转学生白天刷题，晚上统治魔界。五三比勇者难缠，月考比天劫可怕；而同桌好像，隐约发现了什么。',
+ quote:'一边刷题一边称帝，谁懂啊。—— 读者 @同桌别回头',
+ sfx:['哗——','咚!','刷','叮'],
+ lines:['白天刷题，晚上统治魔界。','同学，你的五三掉了。','魔王大人，月考来了。','这道题，比勇者难缠。','晚自习结束，战争开始。','魔界也要期中排名吗？','同桌的目光，像审判。','毕业那天，两个世界都安静了。']},
+{id:'train',title:'午夜列车14号',en:'MIDNIGHT TRAIN No.14',author:'双子星',cat:'悬疑',tags:['悬疑','惊悚'],big:['午夜列车','14 号'],
+ status:'连载中 · 每周五更新',chapter:'EP.05 · 雨夜乘车须知',seed:59,c1:'#15242E',c2:'#070C10',accent:'#6FE3D0',
+ rating:9.2,pop:'13.9万',eps:41,desc:'每周五晚多出的一节车厢，只出现在雨夜。车票上印着你的名字，广播念到第三站时——请务必数清同行的人。',
+ quote:'不敢在周五晚出门了。—— 读者 @末班车常客',
+ sfx:['轰隆——','滴答','吱——','叮'],
+ lines:['雨夜，末班车多出一节车厢。','车票上印着我的名字。','别回头，数到七。','14 号车厢没有司机。','到站的乘客，都没有下车。','广播在念第三站……','车窗上，有一道划痕。','下一位，是你吗？']},
+{id:'penguin',title:'企鹅事务所',en:'PENGUIN & PARTNERS',author:'南极洲代表',cat:'日常',tags:['日常','萌宠','四格'],big:['企鹅事务所'],
+ status:'连载中 · 每日四格',chapter:'第 22 格 · 沙丁鱼失窃案',seed:71,c1:'#7FD1F5',c2:'#BFE0F2',accent:'#23648F',
+ rating:8.6,pop:'7.8万',eps:120,desc:'三只企鹅接的案件，没有一单正常：帮冰山搬家、给极光调色、寻找失踪的第三罐沙丁鱼。报酬随缘，摸鱼第一。',
+ quote:'每天一格，快乐合法。—— 读者 @冰山搬运工',
+ sfx:['噗叽','冈冈','啪嗒','哗啦'],
+ lines:['委托一：帮冰山搬个家。','报酬是三罐沙丁鱼。','企鹅的字典里没有『不可能』。','只有『鱼』和『更多鱼』。','案子破了！凶手是海豹。','今日营业，打烊随缘。','冰面太滑，证据溜走了。','下班！去滑梯集合。']},
+{id:'steam',title:'蒸汽长安',en:'STEAM CHANG\u2019AN',author:'墨小仟',cat:'热血',tags:['热血','蒸汽朋克','历史'],big:['蒸汽长安'],
+ status:'连载中 · 周五 20:00 开闸',chapter:'第 40 话 · 钟楼之心',seed:83,c1:'#4A3517',c2:'#191008',accent:'#E0A23F',
+ rating:9.3,pop:'14.1万',eps:88,desc:'齿轮驱动的盛唐，机关师少年重铸长安钟楼。当整座城的时间停摆，能拧紧历史的，只有一双不肯松手的手。',
+ quote:'把长安画出了黄铜的重量。—— 读者 @上元灯坊',
+ sfx:['轰——','咔嗒','滋滋','咣'],
+ lines:['齿轮一响，长安醒来。','钟楼停摆，全城的时间都慢了。','师父说，机关有心。','今夜，重铸钟楼！','蒸汽升腾，盛世重启。','少年，接住这份匠心。','图纸在灯下发烫。','上弦，十二时辰，一格不差。']},
+{id:'quantum',title:'量子恋爱观察报告',en:'QUANTUM LOVE REPORT',author:'薛定谔的猫窝',cat:'恋爱',tags:['恋爱','科幻','轻喜剧'],big:['量子恋爱','观察报告'],
+ status:'连载中 · 每周日更新',chapter:'观测记录 09 · 坍缩时刻',seed:95,c1:'#8F5F7E',c2:'#3A2436',accent:'#FF9FBF',
+ rating:8.9,pop:'10.7万',eps:33,desc:'在被观测之前，我们既在一起也没在一起。实验室里两个嘴硬的物理生，把心动写成了误差最大的那组数据。',
+ quote:'科研人的暧昧，公式都发着糖。—— 读者 @对照组',
+ sfx:['咻','咚咚','啪','哐'],
+ lines:['在被观测之前，我们既在一起也没在一起。','实验组：心动概率 87%。','对照组：装作不喜欢。','坍缩的那一刻，是你先笑的。','结论：喜欢需要证据吗？','误差范围内，全是借口。','今天的变量，只有你。','本报告长期更新，样本只有一个你。']},
+{id:'shanhai',title:'山海便利店',en:'SHANHAI CONVENIENCE STORE',author:'山海君',cat:'奇幻',tags:['奇幻','温情'],big:['山海便利店'],
+ status:'连载中 · 每周四更新',chapter:'第 18 话 · 狐狸的赊账本',seed:107,c1:'#1C4038',c2:'#0B1D19',accent:'#4FD8A6',
+ rating:9.2,pop:'12.2万',eps:57,desc:'24 小时营业，人类与非人一视同仁。狐狸小姐的赊账本越来越厚，关东煮里煮着山与海的风，收留每一个迷路的灵魂。',
+ quote:'想给全世界的夜班一个家。—— 读者 @凌晨四点半',
+ sfx:['叮咚','咕噜','呼——','哗'],
+ lines:['24 小时营业，非人也欢迎。','今晚的关东煮，加了山海的风。','狐狸小姐，赊账记得还。','夜班的客人，都不太普通。','收留每一个迷路的灵魂。','欢迎光临，山海便利店。','山那边的雨，明早到货。','打烊？不存在的。']},
+{id:'fist',title:'拳与花',en:'FIST & FLOWER',author:'一根葱',cat:'格斗',tags:['格斗','少女','热血'],big:['拳与花'],
+ status:'连载中 · 每周一更新',chapter:'第 09 话 · 左勾拳与玫瑰花',seed:119,c1:'#8F3A30',c2:'#2E1712',accent:'#E8B4A0',
+ rating:9.0,pop:'9.9万',eps:45,desc:'花店老板娘的左勾拳，比玫瑰更先送达。白天包扎花束，晚上包扎对手——她说：花要好好开，人要好好输。',
+ quote:'又飒又软，是我的电子花。—— 读者 @第三回合',
+ sfx:['呯!','咚!!','唰','砰'],
+ lines:['玫瑰与左勾拳，同时送达。','店休日，打一场排位。','老板娘的拳头，比花先到。','这一拳，为了花瓣不落。','对手倒下时，花还在开。','拳击台，也是花园。','缠好绷带，像包一束花。','第七回合，花瓣别谢。']}
+];
+
+/* ============================================================
+   封面 SVG（800×1100）：渐变底 + 画风场景 + 烫金框 + 大字书名
+============================================================ */
+function coverSVG(b,idx){
+  const U=uid(),R=RNG(b.seed*7+3);
+  let s='<svg viewBox="0 0 800 1100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">';
+  s+='<defs><linearGradient id="cg'+U+'" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="'+b.c1+'"/><stop offset="1" stop-color="'+b.c2+'"/></linearGradient>';
+  s+='<pattern id="cd'+U+'" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.5" fill="rgba(255,255,255,.55)"/></pattern>';
+  s+='<radialGradient id="vg'+U+'" cx="0.5" cy="0.42" r="0.75"><stop offset="0.55" stop-color="rgba(0,0,0,0)"/><stop offset="1" stop-color="rgba(5,3,1,.55)"/></radialGradient></defs>';
+  s+='<rect width="800" height="1100" fill="url(#cg'+U+')"/>';
+  s+=ART[b.id](R,'est',800,1100,b,U);
+  s+='<rect width="800" height="1100" fill="url(#cd'+U+')" opacity=".14"/>';
+  s+='<rect width="800" height="1100" fill="url(#vg'+U+')"/>';
+  // 烫金双框 + 角饰
+  s+='<rect x="26" y="26" width="748" height="1048" fill="none" stroke="#D9A441" stroke-width="3" opacity=".9"/>';
+  s+='<rect x="40" y="40" width="720" height="1020" fill="none" stroke="#D9A441" stroke-width="1" opacity=".45"/>';
+  [[26,26],[774,26],[26,1074],[774,1074]].forEach(function(p){
+    s+='<rect x="'+(p[0]-7)+'" y="'+(p[1]-7)+'" width="14" height="14" fill="#D9A441" transform="rotate(45 '+p[0]+' '+p[1]+')"/>';});
+  // 馆藏编号牌
+  s+='<rect x="58" y="58" width="226" height="42" rx="21" fill="rgba(14,10,7,.6)" stroke="#D9A441" stroke-width="1.5"/>';
+  s+='<text x="171" y="86" text-anchor="middle" font-size="20" fill="#E8CE8F" font-family="\'Noto Serif SC\',serif" letter-spacing="2">漫屿藏书 · No.'+String(idx+1).padStart(2,'0')+'</text>';
+  // 书名
+  if(b.big.length===1&&b.big[0].length<=6){
+    s+=vtext(668,214,b.big[0],92,104,{});
+  }else{
+    s+='<text x="400" y="'+(770)+'" text-anchor="middle" font-family="\'Noto Serif SC\',serif" font-weight="900" font-size="88" fill="#F2E7CE" stroke="#17110B" stroke-width="8" paint-order="stroke">'+esc(b.big[0])+'</text>';
+    s+='<text x="400" y="'+(872)+'" text-anchor="middle" font-family="\'Noto Serif SC\',serif" font-weight="900" font-size="88" fill="#F2E7CE" stroke="#17110B" stroke-width="8" paint-order="stroke">'+esc(b.big[1])+'</text>';
+  }
+  // 英文题名 + 作者
+  s+='<line x1="150" y1="916" x2="650" y2="916" stroke="#D9A441" stroke-width="1.5" opacity=".7"/>';
+  s+='<text x="400" y="948" text-anchor="middle" font-family="Georgia,serif" font-size="21" letter-spacing="6" fill="#D9A441" opacity=".95">'+esc(b.en)+'</text>';
+  s+='<text x="400" y="990" text-anchor="middle" font-size="24" fill="#EFE6D4" opacity=".92" font-family="\'Noto Sans SC\',sans-serif">原作 · '+esc(b.author)+'</text>';
+  // 状态带
+  s+='<rect x="26" y="1004" width="748" height="70" fill="rgba(10,7,4,.72)"/>';
+  s+='<text x="400" y="1048" text-anchor="middle" font-size="24" fill="#D9A441" letter-spacing="4" font-family="\'Noto Serif SC\',serif">'+esc(b.status)+'</text>';
+  s+='</svg>';
+  return s;
+}
+
+/* ============================================================
+   内页（800×1100）：旧纸底 + 2~3 个分格 + 气泡 + 拟声词
+============================================================ */
+const LAYOUTS=[
+  [{x:60,y:78,w:680,h:520},{x:60,y:636,w:328,h:386},{x:412,y:636,w:328,h:386}],
+  [{x:60,y:78,w:680,h:300},{x:60,y:414,w:680,h:300},{x:60,y:750,w:680,h:272}],
+  [{x:60,y:78,w:322,h:920},{x:418,y:78,w:322,h:444},{x:418,y:558,w:322,h:440}],
+  [{x:60,y:78,w:680,h:690},{x:60,y:804,w:680,h:218}]
+];
+function panelInner(b,kind,R,n,i,U){
+  let s=ART[b.id](R,kind,400,270,b,U);
+  const line=b.lines[(n*3+i)%b.lines.length];
+  if(kind==='est'){s+=bubble(18,14,158,line,{tail:'br',fs:15,max:6})}
+  else if(kind==='fig'){s+=bubble(178,186,196,line,{tail:'bl',fs:15,max:7})}
+  else if(kind==='cu'){s+=bubble(116,196,182,line,{tail:'br',fs:15,max:7})}
+  else{s+=bubble(14,14,172,line,{tail:'br',fs:15,max:6})}
+  return s;
+}
+function pageSVG(b,n){
+  const R=RNG(b.seed*131+n*17);
+  const frames=LAYOUTS[(n-1)%LAYOUTS.length];
+  let s='<svg viewBox="0 0 800 1100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">';
+  s+='<rect width="800" height="1100" fill="#F6EFDE"/>';
+  s+='<circle cx="'+(120+R()*560).toFixed(0)+'" cy="'+(180+R()*700).toFixed(0)+'" r="130" fill="#E7D9BA" opacity=".14"/>';
+  s+='<circle cx="'+(120+R()*560).toFixed(0)+'" cy="'+(180+R()*700).toFixed(0)+'" r="80" fill="#E7D9BA" opacity=".1"/>';
+  frames.forEach(function(f,i){
+    const kind=['est','fig','cu','obj'][(n+i)%4];
+    s+='<g><rect x="'+f.x+'" y="'+f.y+'" width="'+f.w+'" height="'+f.h+'" fill="#FBF5E8"/>';
+    s+='<svg x="'+f.x+'" y="'+f.y+'" width="'+f.w+'" height="'+f.h+'" viewBox="0 0 400 270" preserveAspectRatio="xMidYMid slice">'+panelInner(b,kind,R,n,i,uid())+'</svg>';
+    s+='<rect x="'+f.x+'" y="'+f.y+'" width="'+f.w+'" height="'+f.h+'" fill="none" stroke="#17110B" stroke-width="'+(kind==='fig'?5:3.5)+'"/></g>';
+  });
+  s+='<text x="62" y="1066" font-size="15" fill="#a8977a" font-family="\'Noto Serif SC\',serif" letter-spacing="2">漫屿藏书 · 《'+esc(b.title)+'》</text>';
+  s+='<text x="400" y="1068" text-anchor="middle" font-size="19" fill="#8a7a5f" font-family="Georgia,serif">— '+n+' —</text>';
+  s+='<text x="738" y="1066" text-anchor="end" font-size="15" fill="#a8977a" font-family="\'Noto Serif SC\',serif" letter-spacing="2">'+esc(b.chapter)+'</text>';
+  s+='</svg>';
+  return s;
+}
+/* 扉页 */
+function titlePageSVG(b){
+  const U=uid();
+  let s='<svg viewBox="0 0 800 1100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">';
+  s+='<rect width="800" height="1100" fill="#F3ECDA"/>';
+  s+='<rect x="50" y="50" width="700" height="1000" fill="none" stroke="#B5442D" stroke-width="2.5" opacity=".8"/>';
+  s+='<rect x="64" y="64" width="672" height="972" fill="none" stroke="#B08D57" stroke-width="1.2" opacity=".7"/>';
+  s+='<text x="400" y="180" text-anchor="middle" font-size="18" letter-spacing="8" fill="#8a7a5f" font-family="\'Noto Serif SC\',serif">漫屿 MANYU · 立体藏书馆</text>';
+  s+=vtext(400,320,b.title,64,86,{fill:'#B5442D',stroke:'rgba(0,0,0,0)',sw:0});
+  s+='<text x="400" y="'+(320+b.title.length*86+50)+'" text-anchor="middle" font-size="26" fill="#17110B" font-family="\'Noto Serif SC\',serif" letter-spacing="6">'+esc(b.author)+' 著</text>';
+  // 朱红藏书印
+  s+='<g transform="translate(400 '+(b.title.length*86+150)+')"><rect x="-52" y="-52" width="104" height="104" rx="10" fill="#B5442D"/>';
+  s+='<text x="0" y="-8" text-anchor="middle" font-size="34" fill="#F2E7CE" font-family="\'Noto Serif SC\',serif" font-weight="900">漫屿</text>';
+  s+='<text x="0" y="34" text-anchor="middle" font-size="30" fill="#F2E7CE" font-family="\'Noto Serif SC\',serif" font-weight="900">藏书</text></g>';
+  s+='<text x="400" y="880" text-anchor="middle" font-size="19" fill="#6d5d44" font-family="\'Noto Serif SC\',serif" letter-spacing="3">收录 · '+esc(b.chapter)+'</text>';
+  s+='<line x1="280" y1="920" x2="520" y2="920" stroke="#B08D57" stroke-width="1.5"/>';
+  s+='<text x="400" y="960" text-anchor="middle" font-size="15" fill="#8a7a5f" font-family="Georgia,serif" letter-spacing="5">MANYU COLLECTION</text>';
+  s+='</svg>';
+  return s;
+}
+/* 馆员手记页 */
+function noteSVG(b){
+  let s='<svg viewBox="0 0 800 1100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">';
+  s+='<rect width="800" height="1100" fill="#F6EFDE"/>';
+  s+='<text x="90" y="150" font-size="40" font-weight="900" fill="#17110B" font-family="\'Noto Serif SC\',serif" letter-spacing="8">馆员手记</text>';
+  s+='<line x1="90" y1="176" x2="420" y2="176" stroke="#B5442D" stroke-width="3"/>';
+  const ps=['这一本，是深夜翻得最响的一部。灯芯压到最暗的那档，格子仍然亮着。','如果要在架上只留一句话给读者：请从第一页慢慢翻，翻页的声音也算剧情的一部分。','本章完 · 下一话正在装订中，馆灯为它留着。'];
+  ps.forEach(function(t,i){
+    s+='<text x="90" y="'+(250+i*110)+'" font-size="21" fill="#3d3222" font-family="\'Noto Serif SC\',serif" letter-spacing="1">';
+    wrap(t,17).forEach(function(L,j){s+='<tspan x="90" dy="'+(j?38:0)+'">'+esc(L)+'</tspan>'});
+    s+='</text>';
+  });
+  s+='<g><rect x="90" y="620" width="620" height="200" fill="#FBF5E8" stroke="#17110B" stroke-width="3"/>';
+  s+='<svg x="90" y="620" width="620" height="200" viewBox="0 0 400 270" preserveAspectRatio="xMidYMid slice">'+ART[b.id](RNG(b.seed+9),'obj',400,270,b,uid())+'</svg>';
+  s+='<rect x="90" y="620" width="620" height="200" fill="none" stroke="#17110B" stroke-width="3"/></g>';
+  s+='<text x="90" y="890" font-size="17" fill="#8a7a5f" font-family="\'Noto Serif SC\',serif" letter-spacing="2">馆藏编号 MS-'+String(b.seed).padStart(3,'0')+' · 上架于某个雨夜 · 灯下指数 ★★★★★</text>';
+  s+='<circle cx="660" cy="920" r="56" fill="none" stroke="#B5442D" stroke-width="4" opacity=".8"/>';
+  s+='<text x="660" y="912" text-anchor="middle" font-size="22" fill="#B5442D" font-family="\'Noto Serif SC\',serif" font-weight="900">已验讫</text>';
+  s+='<text x="660" y="942" text-anchor="middle" font-size="14" fill="#B5442D" font-family="\'Noto Serif SC\',serif">漫屿馆员</text>';
+  s+='</svg>';
+  return s;
+}
+/* 封底 */
+function backSVG(b){
+  const U=uid();
+  let s='<svg viewBox="0 0 800 1100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">';
+  s+='<defs><linearGradient id="bg2'+U+'" x1="0" y1="0" x2="0.5" y2="1"><stop offset="0" stop-color="'+b.c2+'"/><stop offset="1" stop-color="#0B0705"/></linearGradient></defs>';
+  s+='<rect width="800" height="1100" fill="url(#bg2'+U+')"/>';
+  s+='<rect x="26" y="26" width="748" height="1048" fill="none" stroke="#D9A441" stroke-width="2.5" opacity=".8"/>';
+  s+='<rect x="110" y="120" width="580" height="440" rx="10" fill="#F3ECDA"/>';
+  s+='<text x="400" y="190" text-anchor="middle" font-size="20" fill="#B5442D" font-family="\'Noto Serif SC\',serif" letter-spacing="6">读者短评</text>';
+  s+='<text x="400" y="270" text-anchor="middle" font-size="24" fill="#17110B" font-family="\'Noto Serif SC\',serif">';
+  wrap(b.quote,12).forEach(function(L,i){s+='<tspan x="400" dy="'+(i?42:0)+'">'+esc(L)+'</tspan>'});
+  s+='</text>';
+  s+='<text x="400" y="480" text-anchor="middle" font-size="17" fill="#6d5d44" letter-spacing="2">—— 摘自《漫屿晚灯》书评栏</text>';
+  // 条码（虚构）
+  let bar='';let bx=250;
+  for(let i=0;i<26;i++){const w=3+Math.floor(RNG(b.seed+i)()*7);bar+='<rect x="'+bx+'" y="620" width="'+w+'" height="90" fill="#17110B"/>';bx+=w+5}
+  s+=bar;
+  s+='<text x="400" y="748" text-anchor="middle" font-size="14" fill="#8a7a5f" font-family="Georgia,serif" letter-spacing="3">ISBN 978-7-0000-'+String(b.seed).padStart(4,'0')+'-'+(b.seed%9)+' （虚构编号）</text>';
+  s+=vtext(400,830,b.title,34,48,{fill:'#D9A441',stroke:'rgba(0,0,0,0)',sw:0});
+  s+='<text x="400" y="1046" text-anchor="middle" font-size="16" fill="#D9A441" letter-spacing="6" font-family="\'Noto Serif SC\',serif">漫屿 MANYU · 每座孤岛，都有格子靠岸</text>';
+  s+='</svg>';
+  return s;
+}
+
+/* ============================================================
+   运行模式：3D 翻书 / 单页滑动（降级）
+============================================================ */
+const mqReduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+const mqMobile=window.matchMedia('(max-width: 768px)');
+const support3D=window.CSS&&CSS.supports&&CSS.supports('transform-style','preserve-3d');
+const MODE3D=support3D&&!mqReduced.matches;
+if(!MODE3D)document.body.classList.add('slide3d');
+const FLIP_MS=760,FLIP_FAST=480,SHEETS=5;
+
+/* ============================================================
+   主书架 · Coverflow
+============================================================ */
+const CATS=['全部'].concat((function(){const seen=[];BOOKS.forEach(function(b){if(seen.indexOf(b.cat)<0)seen.push(b.cat)});return seen})());
+let curCat='全部',keyword='',cur=0,followed={};
+const shelfEl=$('#shelf'),catalogEl=$('#catalog'),stageEl=$('#stage'),infoEl=$('#infoCard'),posIndEl=$('#posInd');
+
+function visibleIdx(){
+  const out=[];
+  BOOKS.forEach(function(b,i){
+    const okCat=(curCat==='全部'||b.cat===curCat||b.tags.indexOf(curCat)>=0);
+    const kw=keyword.trim();
+    const okKw=!kw||b.title.indexOf(kw)>=0||b.author.indexOf(kw)>=0||b.cat.indexOf(kw)>=0||b.tags.join('').indexOf(kw)>=0;
+    if(okCat&&okKw)out.push(i);
+  });
+  return out;
+}
+function buildChips(){
+  catalogEl.innerHTML=CATS.map(function(c){return '<button class="chip'+(c===curCat?' on':'')+'" data-cat="'+c+'" type="button">'+c+'</button>'}).join('')+
+    '<span class="count">检索到 <b id="cnt">'+visibleIdx().length+'</b> 部作品</span>';
+}
+function buildShelf(){
+  shelfEl.innerHTML=BOOKS.map(function(b,i){
+    return '<div class="slot" data-i="'+i+'">'+
+      '<button class="book3d" type="button" aria-label="翻开《'+b.title+'》">'+
+        '<span class="bin"><span class="float">'+
+          '<span class="bface bfront">'+coverSVG(b,i)+'</span>'+
+          '<span class="bface bspine" style="background:linear-gradient(180deg,'+b.c1+' 0%,'+b.c2+' 100%);border-left:2px solid rgba(217,164,65,.5)"></span>'+
+          '<span class="bface bedge"></span>'+
+          '<span class="bface bback" style="background:linear-gradient(180deg,'+b.c2+','+b.c1+')"></span>'+
+        '</span></span>'+
+        (b.status.indexOf('连载中')===0?'<i class="hotdot" title="有更新"></i>':'')+
+      '</button></div>';
+  }).join('');
+}
+function layoutShelf(){
+  const vis=visibleIdx();
+  const mobile=mqMobile.matches||mqReduced.matches;
+  cur=Math.max(0,Math.min(cur,vis.length-1));
+  $$('.slot',shelfEl).forEach(function(slot){
+    const i=+slot.dataset.i,vi=vis.indexOf(i);
+    if(vi<0){slot.classList.remove('on','c');return}
+    slot.classList.add('on');
+    if(mobile){slot.classList.remove('c');slot.style.removeProperty('--x');slot.style.removeProperty('--z');slot.style.removeProperty('--ry');slot.style.removeProperty('--s');slot.style.filter='';slot.style.zIndex='';return}
+    const d=vi-cur;
+    if(Math.abs(d)>4){slot.classList.remove('c');slot.style.setProperty('--x',(d>0?1:-1)*1100+'px');slot.style.setProperty('--z','-300px');slot.style.setProperty('--ry','0deg');slot.style.setProperty('--s','1');return}
+    slot.style.setProperty('--x',(d*168)+'px');
+    slot.style.setProperty('--z',(-Math.abs(d)*120)+'px');
+    slot.style.setProperty('--ry',(d*-35)+'deg');
+    slot.style.setProperty('--s',d===0?'1.07':'1');
+    slot.style.setProperty('--d',(Math.abs(d)*0.04)+'s');
+    slot.style.filter=d===0?'none':'brightness(.55)';
+    slot.style.zIndex=String(20-Math.abs(d));
+    slot.classList.toggle('c',d===0);
+  });
+  $$('.dot',posIndEl).forEach(function(d2,i){d2.classList.toggle('on',i===cur)});
+  updateInfoCard();
+}
+function buildPosInd(){
+  const vis=visibleIdx();
+  posIndEl.innerHTML=vis.map(function(bi,i){return '<button class="dot" data-p="'+i+'" type="button" aria-label="第'+(i+1)+'本"></button>'}).join('')+
+    '<span class="pos-num"><b>'+String(cur+1).padStart(2,'0')+'</b> / '+String(vis.length).padStart(2,'0')+'</span>';
+}
+function updateInfoCard(){
+  const vis=visibleIdx();
+  if(!vis.length){infoEl.innerHTML='<div class="ic-main"><h3>书架空空</h3><p class="ic-desc">这个分类下暂时没有馆藏，换一枚索引签，或者清空关键词试试。</p></div>';return}
+  const bi=vis[Math.max(0,Math.min(cur,vis.length-1))],b=BOOKS[bi];
+  infoEl.classList.remove('swap');void infoEl.offsetWidth;infoEl.classList.add('swap');
+  infoEl.innerHTML=
+    '<div class="ic-cover">'+coverSVG(b,bi)+'</div>'+
+    '<div class="ic-main"><div class="ic-top"><h3>《'+b.title+'》</h3><span class="ic-status">'+b.status+'</span></div>'+
+    '<p class="ic-author">'+b.author+' · '+b.tags.join(' / ')+' · '+b.cat+'区 '+String(bi+1).padStart(2,'0')+' 号架位</p>'+
+    '<p class="ic-desc">'+b.desc+'</p>'+
+    '<p class="ic-quote">「'+b.quote+'」</p>'+
+    '<div class="ic-data"><span>评分<b>'+b.rating+'</b></span><span>人气<b>'+b.pop+'</b></span><span>话数<b>'+b.eps+'</b></span></div>'+
+    '<div class="ic-actions"><button class="btn primary" data-open="'+bi+'" type="button">翻开阅读</button>'+
+    '<button class="btn line'+(followed[bi]?' followed':'')+'" data-follow="'+bi+'" type="button">'+(followed[bi]?'已追更 · 更新亮灯':'+ 追更')+'</button></div></div>';
+}
+function moveShelf(d){const n=visibleIdx().length;if(!n)return;cur=(cur+d+n)%n;layoutShelf();buildPosInd()}
+
+/* 书架入场（逐本上架） */
+function entranceShelf(){
+  const vis=visibleIdx();
+  $$('.slot',shelfEl).forEach(function(slot){
+    const vi=vis.indexOf(+slot.dataset.i);
+    slot.style.setProperty('--d',(vi<0?0:0.12+vi*0.09)+'s');
+  });
+  shelfEl.classList.remove('placed');void shelfEl.offsetWidth;
+  requestAnimationFrame(function(){requestAnimationFrame(function(){shelfEl.classList.add('placed')})});
+}
+
+/* ---------- 书架交互 ---------- */
+catalogEl.addEventListener('click',function(e){
+  const chip=e.target.closest('.chip');if(!chip)return;
+  curCat=chip.dataset.cat;buildChips();buildPosInd();cur=0;layoutShelf();entranceShelf();
+});
+posIndEl.addEventListener('click',function(e){
+  const d=e.target.closest('.dot');if(!d)return;cur=+d.dataset.p;layoutShelf();
+});
+$('#prevBtn').addEventListener('click',function(){moveShelf(-1)});
+$('#nextBtn').addEventListener('click',function(){moveShelf(1)});
+/* 拖拽切换 + 点击开书 */
+let sd=null;
+stageEl.addEventListener('pointerdown',function(e){sd={x:e.clientX,t:Date.now(),moved:false}});
+stageEl.addEventListener('pointermove',function(e){if(sd&&Math.abs(e.clientX-sd.x)>8)sd.moved=true});
+stageEl.addEventListener('pointerup',function(e){
+  if(!sd)return;const dx=e.clientX-sd.x;const moved=sd.moved;sd=null;
+  if(moved&&Math.abs(dx)>60){moveShelf(dx<0?1:-1);return}
+  if(moved)return;
+  const slot=e.target.closest('.slot');if(!slot||!slot.classList.contains('on'))return;
+  const vis=visibleIdx(),vi=vis.indexOf(+slot.dataset.i);if(vi<0)return;
+  if(mqMobile.matches){openBook(+slot.dataset.i);return}
+  if(vi===cur)openBook(+slot.dataset.i);else{cur=vi;layoutShelf()}
+});
+/* 键盘（书架在视口时） */
+document.addEventListener('keydown',function(e){
+  if($('#reader').classList.contains('show'))return;
+  if(e.target&&(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'))return;
+  const r=stageEl.getBoundingClientRect();
+  if(r.top>innerHeight||r.bottom<0)return;
+  if(e.key==='ArrowLeft'){moveShelf(-1)}else if(e.key==='ArrowRight'){moveShelf(1)}
+});
+/* 搜索 */
+$('#kw').addEventListener('input',function(e){
+  keyword=e.target.value;buildChips();buildPosInd();cur=0;layoutShelf();entranceShelf();
+});
+
+/* ============================================================
+   阅读器 · CSS 3D 翻书
+============================================================ */
+const readerEl=$('#reader'),bookEl=$('#book'),flatEl=$('#flat'),bookwrap=$('#bookwrap'),ribbonEl=$('#ribbon');
+let FACES=[],FL=[false,false,false,false,false],flipped=0,animating=false,bookOf=null,drag=null,slideIdx=0;
+
+function buildFaces(b){
+  const f=[{label:'封面',svg:coverSVG(b,BOOKS.indexOf(b))},{label:'扉页',svg:titlePageSVG(b)}];
+  for(let n=1;n<=6;n++)f.push({label:'第'+n+'页',svg:pageSVG(b,n)});
+  f.push({label:'手记',svg:noteSVG(b)});
+  f.push({label:'封底',svg:backSVG(b)});
+  return f;
+}
+function buildBook3D(){
+  let h='';
+  for(let i=0;i<SHEETS;i++){
+    h+='<div class="sheet" data-i="'+i+'">'+
+       '<div class="pface front">'+FACES[2*i].svg+'<div class="pshade"></div><div class="pgleam"></div></div>'+
+       '<div class="pface back">'+FACES[2*i+1].svg+'<div class="pshade"></div><div class="pgleam"></div></div>'+
+       '</div>';
+  }
+  bookEl.innerHTML=h;
+}
+function buildFlat(){
+  flatEl.innerHTML=FACES.map(function(f){
+    return '<div class="fp">'+f.svg+'</div>';
+  }).join('');
+}
+function setZ(){
+  $$('.sheet',bookEl).forEach(function(el,i){el.style.zIndex=String(FL[i]?10+i:10+(SHEETS-i))});
+}
+function stepFlip(i,toFlip,fast){
+  return new Promise(function(res){
+    const el=$$('.sheet',bookEl)[i];if(!el){res();return}
+    if(fast)el.classList.add('fast');else el.classList.remove('fast');
+    el.style.zIndex='200';
+    FL[i]=toFlip;el.classList.toggle('flipped',toFlip);
+    setTimeout(function(){setZ();res()},fast?FLIP_FAST:FLIP_MS);
+  });
+}
+function updateReaderUI(){
+  const labels=FACES.map(function(f){return f.label});
+  $('#rProg').textContent=flipped===0?'封面 · 待翻开':(flipped>=SHEETS?'已读完 · 合书归架':labels[2*flipped-1]+' | '+labels[2*flipped]+' · '+Math.round(flipped/SHEETS*100)+'%');
+  const lt=$$('.sheet',bookEl);
+  // 左右页码签
+  const L=[],Rr=[];
+  for(let i=2*flipped-1;i>=0;i--)L.push(i);
+  for(let i=2*flipped;i<FACES.length;i++)Rr.push(i);
+  $('#tabsL').innerHTML=L.map(function(i){return '<button class="ptab'+(i===2*flipped-1?' cur':'')+'" data-face="'+i+'" type="button">◀ '+labels[i]+'</button>'}).join('');
+  $('#tabsR').innerHTML=Rr.map(function(i){return '<button class="ptab'+(i===2*flipped?' cur':'')+'" data-face="'+i+'" type="button">'+labels[i]+' ▶</button>'}).join('');
+  $('#fchips').innerHTML=FACES.map(function(f,i){
+    const show=MODE3D?(i===2*flipped||i===2*flipped-1):i===slideIdx;
+    return '<button class="fchip'+(show?' cur':'')+'" data-face="'+i+'" type="button">'+f.label+'</button>';
+  }).join('');
+  $('#rPrev').disabled=MODE3D?flipped===0:slideIdx===0;
+  $('#rNext').textContent=MODE3D?(flipped>=SHEETS?'合上书 · 归架':'下一页 ›'):(slideIdx>=FACES.length-1?'合上书 · 归架':'下一页 ›');
+  // 书签丝带
+  const prog=MODE3D?flipped/SHEETS:slideIdx/(FACES.length-1);
+  const H=bookwrap.clientHeight||460;
+  ribbonEl.style.top=((H-60)*prog).toFixed(0)+'px';
+  // 单页模式
+  if(!MODE3D)$$('.fp',flatEl).forEach(function(p,i){p.classList.toggle('active',i===slideIdx)});
+}
+function flipNext(){
+  if(animating)return;
+  if(MODE3D){
+    if(flipped>=SHEETS){closeWithAnim();return}
+    animating=true;stepFlip(flipped++,true,false).then(function(){animating=false;updateReaderUI()});
+  }else{
+    if(slideIdx>=FACES.length-1){closeReader();return}
+    slideIdx++;updateReaderUI();
+  }
+}
+function flipPrev(){
+  if(animating)return;
+  if(MODE3D){
+    if(flipped<=0)return;
+    animating=true;stepFlip(--flipped,false,false).then(function(){animating=false;updateReaderUI()});
+  }else{
+    if(slideIdx<=0)return;slideIdx--;updateReaderUI();
+  }
+}
+function gotoFace(f){
+  if(animating)return;
+  if(MODE3D){
+    const target=(f%2===1)?((f>>1)+1):(f>>1);
+    if(target===flipped)return;
+    const dir=target>flipped?1:-1;
+    animating=true;
+    (function loop(){
+      if(flipped===target){animating=false;updateReaderUI();return}
+      const i=dir>0?flipped:flipped-1;
+      stepFlip(i,dir>0,true).then(function(){flipped+=dir;loop()});
+    })();
+  }else{slideIdx=f;updateReaderUI()}
+}
+async function closeWithAnim(){
+  if(animating)return;
+  if(MODE3D&&flipped>0){
+    animating=true;
+    while(flipped>0){await stepFlip(flipped-1,false,true);flipped--}
+    animating=false;
+    setTimeout(closeReader,320);
+  }else closeReader();
+}
+function openBook(bi){
+  const b=BOOKS[bi];bookOf=bi;
+  FACES=buildFaces(b);
+  $('#rBook').textContent='《'+b.title+'》';
+  $('#rChap').textContent=b.chapter+' · '+b.status;
+  if(MODE3D){
+    FL=[false,false,false,false,false];flipped=0;animating=false;
+    buildBook3D();setZ();
+    bookEl.classList.remove('enter');void bookEl.offsetWidth;bookEl.classList.add('enter');
+  }else{
+    slideIdx=0;buildFlat();
+  }
+  updateReaderUI();
+  readerEl.classList.add('show');
+  document.body.classList.add('locked');
+  toast('灯已亮起 · 欢迎入座读《'+b.title+'》');
+  if(MODE3D)setTimeout(function(){if(flipped===0&&!animating)flipNext()},950);
+}
+function closeReader(){
+  readerEl.classList.remove('show');
+  document.body.classList.remove('locked');
+  if(bookOf!=null){cur=Math.max(0,visibleIdx().indexOf(bookOf));layoutShelf()}
+}
+
+/* ---------- 翻页交互：点击 / 拖拽跟手 ---------- */
+bookwrap.addEventListener('pointerdown',function(e){
+  if(animating)return;
+  const rect=bookwrap.getBoundingClientRect();
+  drag={x:e.clientX,rect,moved:false,
+        half:(e.clientX-rect.left)>rect.width/2?'r':'l',angle:null,el:null,dir:null};
+  try{bookwrap.setPointerCapture(e.pointerId)}catch(err){}
+});
+bookwrap.addEventListener('pointermove',function(e){
+  if(!drag||animating)return;
+  const dx=e.clientX-drag.x;
+  if(Math.abs(dx)>6)drag.moved=true;
+  if(!MODE3D||!drag.moved)return;
+  if(drag.half==='r'&&flipped<SHEETS){          // 向后翻：0 → -180
+    drag.el=$$('.sheet',bookEl)[flipped];drag.dir=1;
+    const a=Math.max(-180,Math.min(0,dx/drag.rect.width*180));
+    drag.angle=a;drag.el.style.transition='none';
+    drag.el.style.transform='rotateY('+a+'deg)';
+    drag.el.querySelector('.front .pshade').style.opacity=(Math.abs(a)/180*0.9).toFixed(2);
+  }else if(drag.half==='l'&&flipped>0){          // 向前回翻：-180 → 0
+    drag.el=$$('.sheet',bookEl)[flipped-1];drag.dir=-1;
+    const a=-180+Math.max(0,Math.min(180,dx/drag.rect.width*180));
+    drag.angle=a;drag.el.style.transition='none';
+    drag.el.style.transform='rotateY('+a+'deg)';
+    drag.el.querySelector('.front .pshade').style.opacity=(Math.abs(a)/180*0.9).toFixed(2);
+  }
+});
+function endDrag(e){
+  if(!drag)return;
+  const d=drag;drag=null;
+  if(animating)return;
+  const dx=(e.clientX-d.x),tap=!d.moved;
+  if(MODE3D&&d.el&&d.angle!=null){             // 拖拽翻页：过半完成，否则回弹
+    const done=Math.abs(d.angle)>90;
+    const i=(d.dir===1)?flipped:flipped-1;
+    const final=done?(d.dir===1?-180:0):(d.dir===1?0:-180);
+    d.el.style.transition='transform .3s ease-out';
+    d.el.style.transform='rotateY('+final+'deg)';
+    animating=true;
+    setTimeout(function(){
+      d.el.classList.toggle('flipped',done);   // 与 CSS 静止态对齐，避免弹跳
+      d.el.style.transition='';d.el.style.transform='';
+      const sh=d.el.querySelector('.front .pshade');if(sh)sh.style.opacity='';
+      FL[i]=done;flipped+=done?d.dir:0;        // 未过阈值则原样回弹
+      setZ();animating=false;updateReaderUI();
+    },310);
+    return;
+  }
+  if(tap){                                       // 点击翻页
+    if(!MODE3D){
+      const rect=bookwrap.getBoundingClientRect();
+      if((e.clientX-rect.left)>rect.width/2){if(slideIdx<FACES.length-1){slideIdx++;updateReaderUI()}}
+      else{if(slideIdx>0){slideIdx--;updateReaderUI()}}
+      return;
+    }
+    const rect=bookwrap.getBoundingClientRect();
+    if((e.clientX-rect.left)>rect.width/2)flipNext();else flipPrev();
+  }
+}
+bookwrap.addEventListener('pointerup',endDrag);
+bookwrap.addEventListener('pointercancel',function(){if(drag&&drag.el){drag.el.style.transition='';drag.el.style.transform=''}drag=null});
+/* 侧栏页签 / 底部缩略签 */
+$('#tabsL').addEventListener('click',function(e){const t=e.target.closest('.ptab');if(t)gotoFace(+t.dataset.face)});
+$('#tabsR').addEventListener('click',function(e){const t=e.target.closest('.ptab');if(t)gotoFace(+t.dataset.face)});
+$('#fchips').addEventListener('click',function(e){const t=e.target.closest('.fchip');if(t)gotoFace(+t.dataset.face)});
+$('#rNext').addEventListener('click',flipNext);
+$('#rPrev').addEventListener('click',flipPrev);
+$('#rBack').addEventListener('click',closeWithAnim);
+$('#veil').addEventListener('click',closeReader);
+document.addEventListener('keydown',function(e){
+  if(!readerEl.classList.contains('show'))return;
+  if(e.key==='ArrowRight'){e.preventDefault();flipNext()}
+  else if(e.key==='ArrowLeft'){e.preventDefault();flipPrev()}
+  else if(e.key==='Escape'){e.preventDefault();closeWithAnim()}
+});
+
+/* ============================================================
+   信息卡 / 追更 / 新书上架 / 入口
+============================================================ */
+infoEl.addEventListener('click',function(e){
+  const open=e.target.closest('[data-open]');
+  if(open){openBook(+open.dataset.open);return}
+  const fw=e.target.closest('[data-follow]');
+  if(fw){const i=+fw.dataset.follow;followed[i]=!followed[i];
+    fw.classList.toggle('followed',followed[i]);
+    fw.textContent=followed[i]?'已追更 · 更新亮灯':'+ 追更';
+    $('#followN').textContent=Object.keys(followed).filter(function(k){return followed[k]}).length;
+    toast(followed[i]?'已加入追更书架，更新时红点亮灯':'已取消追更《'+BOOKS[i].title+'》');
+  }
+});
+$('#followBtn').addEventListener('click',function(){
+  const n=Object.keys(followed).filter(function(k){return followed[k]}).length;
+  toast(n?('追更书架有 '+n+' 本在更，红点为你亮着'):'追更书架还是空的，去信息卡点亮一本吧');
+});
+/* 新书上架 */
+const NEW=[{i:7,tag:'新入库'},{i:4,tag:'本周黑马'},{i:0,tag:'完结安心看'},{i:9,tag:'编辑心头好'},{i:6,tag:'番外上线'}];
+$('#newRow').innerHTML=NEW.map(function(n){
+  const b=BOOKS[n.i];
+  return '<div class="newitem rv" data-open="'+n.i+'" role="button" tabindex="0" aria-label="翻开《'+b.title+'》">'+
+    '<div class="mini"><span class="bface bfront" style="position:absolute;inset:0;overflow:hidden">'+coverSVG(b,n.i)+'</span>'+
+    '<span class="bface bspine" style="position:absolute;top:0;bottom:0;left:0;width:11px;background:linear-gradient(180deg,'+b.c1+','+b.c2+')"></span>'+
+    '<span class="bface bedge" style="position:absolute;top:0;bottom:0;right:0;width:11px;background:repeating-linear-gradient(90deg,#f2ead8 0 2px,#d8ccb2 2px 4px)"></span></div>'+
+    '<h4>《'+b.title+'》</h4><p>'+b.author+' · '+b.chapter+'</p>'+
+    '<span class="newtag">'+n.tag+'</span></div>';
+}).join('');
+$('#newRow').addEventListener('click',function(e){
+  const it=e.target.closest('.newitem');if(it)openBook(+it.dataset.open);
+});
+/* Hero 入口 */
+$('#goShelf').addEventListener('click',function(){$('#shelf').scrollIntoView({behavior:mqReduced.matches?'auto':'smooth'})});
+$('#luckyBook').addEventListener('click',function(){
+  const vis=visibleIdx();if(!vis.length)return;
+  openBook(vis[Math.floor(Math.random()*vis.length)]);
+});
+
+/* ============================================================
+   滚动显现 + 数字滚动
+============================================================ */
+const io=new IntersectionObserver(function(es){
+  es.forEach(function(en){if(en.isIntersecting){en.target.classList.add('on');io.unobserve(en.target)}});
+},{threshold:.15});
+$$('.rv').forEach(function(el){io.observe(el)});
+function countUp(el){
+  const n=+el.dataset.n,t0=performance.now(),dur=1300;
+  function fmt(v){return v>=10000?(v/10000).toFixed(1)+'万':String(Math.round(v))}
+  (function f(t){
+    const p=Math.min(1,(t-t0)/dur),e2=p*p*(3-2*p);
+    el.textContent=fmt(n*e2);
+    if(p<1)requestAnimationFrame(f);
+  })(t0);
+}
+const io2=new IntersectionObserver(function(es){
+  es.forEach(function(en){if(en.isIntersecting){countUp(en.target);io2.unobserve(en.target)}});
+},{threshold:.4});
+$$('.stat b').forEach(function(el){io2.observe(el)});
+
+/* ============================================================
+   初始化 & 自适应
+============================================================ */
+buildChips();buildShelf();buildPosInd();layoutShelf();entranceShelf();
+let rzT=null;
+window.addEventListener('resize',function(){
+  clearTimeout(rzT);rzT=setTimeout(function(){layoutShelf();if(readerEl.classList.contains('show'))updateReaderUI()},150);
+});
+if(mqReduced.addEventListener)mqReduced.addEventListener('change',function(){location.reload()});
+</script>
+</body>
+</html>

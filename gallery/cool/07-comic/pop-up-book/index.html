@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>漫屿 MANYU · 立体书 Pop-up Book · 纸上漫画群岛</title>
+<meta name="description" content="漫屿 MANYU 漫画平台的立体书特辑：合上的烫金封面翻开，V 形折机构让《蒸汽长安》的分镜从书页上立起来。">
+<style>
+/* ==========================================================================
+   漫屿 MANYU · 立体书 Pop-up Book
+   视觉语言：一本摊开的立体书，纸艺场景经 V 形折机构从书脊立起
+   色板：书页米白 #F7F2E7 / 封面深蓝 #2E4A66 / 纸艺红 #D95B4A
+        纸艺黄 #EFC94C / 钢蓝 #4A7A96 / 墨灰 #3B3833
+   ========================================================================== */
+:root{
+  --paper:#F7F2E7;
+  --paper2:#EFE6D0;
+  --paper3:#E4DAC4;
+  --cream:#FFFDF6;
+  --ink:#3B3833;
+  --blue:#2E4A66;
+  --blue2:#24384E;
+  --red:#D95B4A;
+  --red2:#B5442D;
+  --yellow:#EFC94C;
+  --steel:#4A7A96;
+  --gold:#D9A441;
+  --gold2:#EAD9A8;
+  --desk1:#262B36;
+  --desk2:#14171F;
+  --serif:"Noto Serif SC","Source Han Serif SC","STSong","SimSun",serif;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --disp:"Cinzel","Trajan Pro","Georgia",serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--sans);
+  color:var(--paper);
+  background:
+    radial-gradient(1100px 620px at 50% 30%, rgba(239,201,76,.07), transparent 62%),
+    linear-gradient(178deg, var(--desk1), var(--desk2) 78%);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+/* 桌面暗角 + 木纹暗示 */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    repeating-linear-gradient(93deg, rgba(255,255,255,.012) 0 3px, transparent 3px 9px),
+    radial-gradient(120% 90% at 50% 8%, transparent 40%, rgba(0,0,0,.42) 100%);
+}
+::selection{background:var(--gold);color:var(--ink)}
+button{font-family:inherit}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+/* ---------------- 纸纹噪点（数据 URI，无外链） ---------------- */
+.grainable::after,
+.pg::after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:3;
+  opacity:.5;border-radius:inherit;transform:translateZ(1.2px);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.23 0 0 0 0 0.21 0 0 0 0 0.16 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ==========================================================================
+   顶栏（书斋陈设，非书本本体）
+   ========================================================================== */
+.chrome{
+  position:relative;z-index:5;max-width:1200px;margin:0 auto;
+  padding:20px 28px 6px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .mark{width:44px;height:44px;flex:0 0 auto}
+.brand b{
+  font-family:var(--serif);font-size:24px;letter-spacing:.14em;color:var(--gold2);
+  text-shadow:0 1px 0 rgba(0,0,0,.5);
+}
+.brand i{
+  display:block;font-style:normal;font-size:11px;letter-spacing:.32em;
+  color:rgba(247,242,231,.55);margin-top:2px;
+}
+.slipnav{display:flex;gap:10px;flex-wrap:wrap}
+.slipnav button{
+  position:relative;border:2px solid var(--ink);background:var(--cream);color:var(--ink);
+  font:700 13px/1 var(--sans);letter-spacing:.08em;padding:10px 14px 9px;cursor:pointer;
+  border-radius:3px 8px 3px 8px;box-shadow:0 3px 0 rgba(59,56,51,.35);
+  transition:transform .2s, box-shadow .2s, background .2s;
+}
+.slipnav button::after{
+  content:"";position:absolute;left:10px;right:10px;bottom:4px;height:2px;
+  background:var(--gold);transform:scaleX(0);transform-origin:left;transition:transform .25s;
+}
+.slipnav button:hover{transform:translateY(-3px);box-shadow:0 6px 0 rgba(59,56,51,.35)}
+.slipnav button:hover::after{transform:scaleX(1)}
+.slipnav button.on{background:var(--red);color:var(--cream);border-color:var(--red2)}
+.slipnav button.on::after{transform:scaleX(1);background:var(--gold2)}
+
+/* ==========================================================================
+   舞台：perspective + preserve-3d 的立体书
+   ========================================================================== */
+.stage-wrap{
+  position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;
+  padding:22px 12px 8px;
+}
+.stage-wrap::before{ /* 书下暖光 */
+  content:"";position:absolute;left:50%;top:52%;width:min(1200px,94vw);height:70%;
+  transform:translate(-50%,-50%);pointer-events:none;
+  background:radial-gradient(50% 50% at 50% 50%, rgba(239,201,76,.10), transparent 70%);
+}
+#stageBox{position:relative}
+#stageInner{
+  width:1040px;height:660px;transform-origin:0 0;
+}
+body.mob #stageInner{width:520px}
+.stage{
+  position:relative;width:1040px;height:660px;
+  perspective:1600px;perspective-origin:50% 34%;
+}
+body.mob .stage{width:520px}
+
+.book{
+  position:absolute;inset:0;transform-style:preserve-3d;
+  transform:rotateX(6deg);
+  transition:transform .9s ease;
+}
+body.boot .book{transform:rotateX(6deg) translateY(26px)}
+body.booted .book{transform:rotateX(6deg) translateY(0)}
+
+/* 底板（封底木板）+ 书芯（纸叠侧面）+ 书脊布 */
+.book-base{
+  position:absolute;inset:-16px -24px -22px;border-radius:14px;
+  background:linear-gradient(150deg,#33495F,var(--blue2) 68%,#1D2C3D);
+  transform:translateZ(-14px);
+  box-shadow:
+    0 34px 70px rgba(0,0,0,.55),
+    0 10px 22px rgba(0,0,0,.4),
+    inset 0 0 0 2px rgba(217,164,65,.28),
+    inset 0 0 60px rgba(0,0,0,.35);
+}
+.book-block{
+  position:absolute;inset:-7px -13px -12px;border-radius:8px;
+  background:repeating-linear-gradient(to bottom,#F2EBD8 0 3px,#D8CCB0 3px 5px);
+  transform:translateZ(-7px);
+  box-shadow:0 4px 10px rgba(0,0,0,.35);
+}
+.spine{
+  position:absolute;left:calc(50% - 15px);top:-12px;bottom:-12px;width:30px;
+  transform:translateZ(-6px);border-radius:6px;
+  background:linear-gradient(90deg,#1E3040,var(--blue) 46%,#1E3040);
+}
+.spine::before,.spine::after{
+  content:"";position:absolute;left:4px;right:4px;height:5px;border-radius:3px;
+  background:linear-gradient(90deg,#8A6B3A,var(--gold),#8A6B3A);
+}
+.spine::before{top:8px}
+.spine::after{bottom:8px}
+
+/* 对开页插槽：左页 / 右页，均需 preserve-3d 传递给弹出件 */
+.ul,.ur,.face{position:absolute;top:0;height:100%;transform-style:preserve-3d}
+.ul{left:0;width:50%;transform:translateZ(0)}
+.ur{left:50%;width:50%;transform:translateZ(0)}
+body.mob .ul,body.mob .leaf,body.mob .spine{display:none}
+body.mob .ur{left:0;width:100%}
+
+/* 书页本体 */
+.pg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(120% 90% at 18% 6%, rgba(255,255,255,.65), transparent 55%),
+    linear-gradient(105deg,#FBF6EA,var(--paper) 55%,var(--paper2));
+  transform-style:preserve-3d;
+  font-size:15px;color:var(--ink);
+  box-shadow:0 2px 6px rgba(30,25,15,.18);
+}
+.ul>.pg{border-radius:18px 5px 5px 18px;box-shadow:inset -34px 0 44px -30px rgba(59,56,51,.4),0 2px 6px rgba(30,25,15,.18)}
+.ur>.pg{border-radius:5px 18px 18px 5px;box-shadow:inset 34px 0 44px -30px rgba(59,56,51,.4),0 2px 6px rgba(30,25,15,.18)}
+.face>.pg{border-radius:5px 18px 18px 5px;box-shadow:inset 34px 0 44px -30px rgba(59,56,51,.4),0 2px 6px rgba(30,25,15,.18)}
+body.mob .ur>.pg{border-radius:18px;box-shadow:inset 0 -20px 30px -26px rgba(59,56,51,.4),0 2px 6px rgba(30,25,15,.18)}
+body.mob .face>.pg{border-radius:18px}
+/* 书沟 */
+.ul>.pg::before,.ur>.pg::before,.face>.pg::before{
+  content:"";position:absolute;top:0;bottom:0;width:64px;pointer-events:none;z-index:2;
+  transform:translateZ(1.3px);
+}
+.ul>.pg::before{left:0;background:linear-gradient(270deg,rgba(59,56,51,.16),transparent)}
+.ur>.pg::before,.face>.pg::before{right:auto;left:0;background:linear-gradient(90deg,rgba(59,56,51,.16),transparent)}
+.face>.pg.urback{border-radius:18px 5px 5px 18px;box-shadow:inset -34px 0 44px -30px rgba(59,56,51,.4),0 2px 6px rgba(30,25,15,.18)}
+.face>.pg.urback::before{left:auto;right:0;background:linear-gradient(270deg,rgba(59,56,51,.16),transparent)}
+
+/* 页面底图（平面纸艺 SVG，全部内联，无外链图片） */
+.art{position:absolute;inset:0;border-radius:inherit;overflow:hidden;transform:translateZ(.8px);z-index:1}
+.art svg{display:block;width:100%;height:100%}
+
+/* ==========================================================================
+   V 形折机构核心：fold 0° → 90°/135° 错峰展开
+   嵌套 div 树：.pop(底座贴页) > .sway(待机呼吸) > .fp(折面)
+   ========================================================================== */
+.scene{position:absolute;inset:0;transform-style:preserve-3d;z-index:4}
+.pop{position:absolute;transform-style:preserve-3d}
+.sway{
+  position:absolute;inset:0;transform-style:preserve-3d;
+  animation:swayz 5.6s ease-in-out infinite alternate;
+}
+@keyframes swayz{
+  from{transform:rotateZ(.5deg)}
+  to{transform:rotateZ(-.5deg) translateY(-2px)}
+}
+.pg:not(.live) .sway{animation-play-state:paused}
+
+.fp{
+  position:absolute;transform-style:preserve-3d;will-change:transform;
+  transition:transform .68s cubic-bezier(.3,1.42,.42,1);
+}
+.fp svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+/* 待机（合拢）姿态：纸张微微翘起 */
+.fp-wall {transform-origin:50% 100%;transform:rotateX(-8deg)}
+.fp-stand{transform-origin:50% 100%;transform:rotateX(-12deg)}
+.fp-vl   {transform-origin:0 50%;   transform:rotateY(-13deg)}
+.fp-vr   {transform-origin:100% 50%;transform:rotateY(13deg)}
+.fp-flap {transform-origin:50% 0;   transform:rotateX(8deg)}
+.fp-puff {transform:translateZ(2px) scale(.96);opacity:.85;transition:transform .68s cubic-bezier(.3,1.42,.42,1),opacity .5s}
+/* 展开（弹出）姿态：山折立起 */
+.pg.live .fp-wall {transform:rotateX(-76deg)}
+.pg.live .fp-stand{transform:rotateX(-82deg)}
+.pg.live .fp-vl   {transform:rotateY(-56deg)}
+.pg.live .fp-vr   {transform:rotateY(56deg)}
+.pg.live .fp-flap {transform:rotateX(40deg)}
+.pg.live .fp-puff {transform:translateZ(30px) scale(1.05);opacity:1}
+/* 错峰：底墙 → V 折 → 立牌 → 顶檐/喷汽 */
+.pg .fp-wall{transition-delay:.05s}
+.pg .fp-vl,.pg .fp-vr{transition-delay:.13s}
+.pg .fp-stand{transition-delay:.22s}
+.pg .fp-flap,.pg .fp-puff{transition-delay:.3s}
+/* 收拢：快速错峰落下 */
+.pg:not(.live) .fp{
+  transition-duration:.34s;
+  transition-timing-function:cubic-bezier(.5,0,.7,.4);
+  transition-delay:calc(var(--i,0)*.045s);
+}
+/* hover 微交互：立体件轻微掀动 */
+.pg.live .fp:hover{transition-duration:.28s}
+.pg.live .fp-wall:hover {transform:rotateX(-81deg)}
+.pg.live .fp-stand:hover{transform:rotateX(-88deg)}
+.pg.live .fp-vl:hover   {transform:rotateY(-62deg)}
+.pg.live .fp-vr:hover   {transform:rotateY(62deg)}
+.pg.live .fp-flap:hover {transform:rotateX(48deg)}
+.pg.live .fp-puff:hover {transform:translateZ(40px) scale(1.1)}
+
+/* 纸层次阴影：立体件在页面上投影 */
+.psh{
+  position:absolute;pointer-events:none;z-index:0;
+  background:radial-gradient(50% 50% at 50% 50%, rgba(46,40,30,.32), transparent 72%);
+  transform:translateZ(.4px);
+  transition:opacity .6s ease .22s, transform .68s cubic-bezier(.3,1.42,.42,1) .22s;
+}
+.pg:not(.live) .psh{opacity:0;transform:translateZ(.4px) scaleX(.45);transition-delay:0s}
+
+/* 纸拉杆 tab */
+.ptab{
+  position:absolute;bottom:-10px;z-index:8;transform:translateZ(5px);
+  display:inline-flex;align-items:center;gap:7px;padding:9px 15px;
+  background:var(--cream);border:2px solid var(--ink);color:var(--ink);
+  border-radius:9px 9px 13px 13px;font:700 13px/1 var(--sans);letter-spacing:.05em;
+  cursor:pointer;box-shadow:0 4px 0 rgba(59,56,51,.24);
+  transition:transform .25s, background .25s, color .25s;
+}
+.ptab::before{
+  content:"";position:absolute;top:-8px;left:13px;right:13px;
+  border-top:2px dashed rgba(59,56,51,.45);
+}
+.ptab .ar{font-size:15px;letter-spacing:-2px;font-weight:900}
+.ptab:hover{transform:translateZ(5px) translateX(11px)}
+.pg.pulled .ptab{transform:translateZ(5px) translateX(var(--tx,22px));background:var(--red);color:var(--cream);border-color:var(--red2)}
+/* 拉杆触发：各场景专属再弹出 */
+.pg.pulled .fp-puff{transform:translateZ(46px) scale(1.16)!important;opacity:1!important}
+.p4.pulled .gbig{transform:rotate(160deg)}
+.p4.pulled .g2{transform:rotate(-150deg)}
+.gbig,.g2{transform-box:fill-box;transform-origin:center;transition:transform 1.15s cubic-bezier(.3,1.5,.45,1)}
+.p5 .winglow{opacity:0;transition:opacity .5s ease .15s}
+.p5.pulled .winglow{opacity:1}
+.p5 .wglowhalo{opacity:0;transition:opacity .6s ease .1s}
+.p5.pulled .wglowhalo{opacity:.85}
+.p6 .bellg{transform-box:fill-box;transform-origin:50% 6%}
+.p6.pulled .bellg{animation:ring 1.5s ease-in-out .05s 2}
+@keyframes ring{
+  0%{transform:rotate(0)}12%{transform:rotate(10deg)}30%{transform:rotate(-9deg)}
+  48%{transform:rotate(7deg)}66%{transform:rotate(-5deg)}84%{transform:rotate(3deg)}100%{transform:rotate(0)}
+}
+
+/* 对话气泡（平贴页面上方，避免 3D 字变形） */
+.bub{
+  position:absolute;z-index:6;max-width:216px;padding:.55em .8em;
+  background:var(--cream);border:2px solid var(--ink);border-radius:14px;
+  font:700 14px/1.5 var(--sans);color:var(--ink);
+  box-shadow:2px 3px 0 rgba(59,56,51,.18);
+  transform:translateZ(3px) rotate(var(--tilt,-1.4deg));
+  transition:opacity .5s ease .38s, transform .55s cubic-bezier(.3,1.4,.4,1) .38s;
+}
+.bub::after{
+  content:"";position:absolute;bottom:-8px;left:18px;width:12px;height:12px;
+  background:var(--cream);border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);
+  transform:rotate(45deg);
+}
+.bub.rt::after{left:auto;right:18px}
+.bub.fx{
+  font-family:var(--serif);font-weight:900;font-size:19px;letter-spacing:.06em;
+  border-radius:4px;padding:.3em .55em;background:var(--yellow);
+  clip-path:polygon(0 12%,10% 0,26% 10%,42% 0,58% 10%,74% 0,90% 10%,100% 12%,96% 50%,100% 88%,88% 100%,70% 90%,52% 100%,34% 90%,16% 100%,4% 88%,8% 50%);
+}
+.bub.fx::after{display:none}
+.pg:not(.live) .bub{opacity:0;transform:translateZ(3px) scale(.55) translateY(10px);transition-delay:0s;transition-duration:.25s}
+
+/* 拟声词竖排纸签 */
+.sfx{
+  position:absolute;z-index:5;writing-mode:vertical-rl;
+  font-family:var(--serif);font-weight:900;color:var(--ink);
+  background:var(--cream);border:2px solid var(--ink);padding:12px 6px;
+  letter-spacing:.12em;border-radius:4px;box-shadow:3px 4px 0 rgba(59,56,51,.2);
+  transform:translateZ(2px) rotate(2.5deg);
+}
+/* 纸星星（少量静态点缀） */
+.wstar{
+  position:absolute;z-index:5;width:16px;height:16px;background:var(--gold);
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+  transform:translateZ(1.8px) rotate(14deg);opacity:.85;
+}
+.wstar.sm{width:11px;height:11px;opacity:.6}
+
+/* 页眉标签 / 页码 / 机构铭牌 */
+.sc-tag{position:absolute;left:28px;top:22px;z-index:6;transform:translateZ(2px)}
+.sc-tag b{
+  display:inline-block;font:900 12px/1 var(--sans);letter-spacing:.22em;color:var(--cream);
+  background:var(--red);padding:6px 10px 5px;border-radius:2px 6px 2px 6px;box-shadow:0 2px 0 rgba(59,56,51,.3);
+}
+.sc-tag span{
+  display:block;margin-top:7px;font:700 15px/1.4 var(--serif);color:var(--ink);
+}
+.sc-tag span i{font-style:normal;color:var(--red2)}
+.pageno{
+  position:absolute;bottom:14px;z-index:6;transform:translateZ(1.6px);
+  font:600 12px/1 var(--disp);letter-spacing:.28em;color:rgba(59,56,51,.62);
+}
+.pageno.pl{left:26px}.pageno.pr{right:26px}
+.mech{
+  position:absolute;left:28px;bottom:40px;z-index:6;display:flex;gap:6px;flex-wrap:wrap;
+  transform:translateZ(1.6px);max-width:62%;
+}
+.mech i{
+  font:600 11px/1 var(--sans);font-style:normal;letter-spacing:.1em;color:rgba(59,56,51,.72);
+  border:1px solid rgba(59,56,51,.4);border-radius:99px;padding:4px 9px;background:rgba(255,253,246,.6);
+}
+
+/* ==========================================================================
+   翻页书页（leaf）：双面 + 背面隐藏 + 翻转阴影
+   ========================================================================== */
+.leaf{
+  position:absolute;left:50%;top:0;width:50%;height:100%;
+  transform-origin:left center;transform-style:preserve-3d;
+  transform:translateZ(2px) rotateY(0deg);
+  transition:transform .82s cubic-bezier(.36,.06,.22,1);
+  visibility:hidden;z-index:5;
+}
+.leaf.on{visibility:visible}
+.leaf.turning{box-shadow:0 22px 44px rgba(0,0,0,.3)}
+.leaf.notrans{transition:none!important}
+.leaf .face{left:0;width:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.leaf .face.back{transform:rotateY(180deg)}
+.leaf-shade{
+  position:absolute;inset:0;opacity:0;pointer-events:none;transform:translateZ(.2px);
+  background:linear-gradient(90deg,rgba(30,25,15,.55),transparent 45%,transparent 55%,rgba(30,25,15,.55));
+}
+.leaf.turning .leaf-shade{animation:lsh .82s ease both}
+@keyframes lsh{0%{opacity:0}48%{opacity:.34}100%{opacity:0}}
+body.busy .corner{opacity:.4;pointer-events:none}
+
+/* ==========================================================================
+   书角翻页按钮（折叠角造型）
+   ========================================================================== */
+.corner{
+  position:absolute;bottom:-16px;z-index:9;width:78px;height:78px;
+  background:none;border:0;cursor:pointer;transform:translateZ(8px);
+  transition:opacity .3s;
+}
+.corner.next{right:-12px}
+.corner.prev{left:-12px}
+.corner .curl{
+  position:absolute;bottom:0;width:0;height:0;
+  transition:border-width .25s ease;
+}
+.corner.next .curl{right:0;border-style:solid;border-width:0 0 58px 58px;border-color:transparent transparent var(--paper3) transparent;filter:drop-shadow(-2px -2px 2px rgba(59,56,51,.28))}
+.corner.prev .curl{left:0;border-style:solid;border-width:58px 58px 0 0;border-color:var(--paper3) transparent transparent transparent;filter:drop-shadow(2px -2px 2px rgba(59,56,51,.28))}
+.corner:hover .curl{transition:border-width .25s ease}
+.corner.next:hover .curl{border-width:0 0 70px 70px}
+.corner.prev:hover .curl{border-width:70px 70px 0 0}
+.corner b{
+  position:absolute;bottom:8px;width:44px;height:44px;border-radius:50%;
+  background:var(--cream);border:2px solid var(--ink);color:var(--ink);
+  font:900 20px/40px var(--sans);text-align:center;
+  box-shadow:0 4px 0 rgba(59,56,51,.3);transition:transform .2s;
+}
+.corner.next b{right:8px}
+.corner.prev b{left:8px}
+.corner:hover b{transform:translateY(-3px)}
+.corner.hide{opacity:0;pointer-events:none}
+body.mob .corner.next{right:-6px}
+body.mob .corner.prev{left:-6px}
+
+/* ==========================================================================
+   封面烫金（DOM overlay，不进 3D 面，保持文字锐利）
+   ========================================================================== */
+#coverTitle{
+  position:absolute;left:50%;top:0;width:50%;height:100%;z-index:8;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  pointer-events:none;transition:opacity .45s ease;text-align:center;padding:0 30px;
+}
+body:not(.at-cover) #coverTitle{opacity:0}
+#coverTitle .kicker{
+  font:700 11px/1 var(--disp);letter-spacing:.42em;color:var(--gold);
+  text-shadow:0 1px 2px rgba(0,0,0,.6);
+}
+#coverTitle h1{
+  font-family:var(--serif);font-weight:900;font-size:88px;line-height:1;letter-spacing:.08em;
+  background:linear-gradient(168deg,var(--gold2) 12%,var(--gold) 46%,#A87B2E 82%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 1px rgba(0,0,0,.55));
+}
+#coverTitle .en{
+  font:700 15px/1 var(--disp);letter-spacing:.5em;color:var(--gold2);opacity:.9;
+}
+#coverTitle .slogan{
+  font:600 13px/1.7 var(--serif);letter-spacing:.2em;color:rgba(247,242,231,.82);
+  border-top:1px solid rgba(217,164,65,.5);border-bottom:1px solid rgba(217,164,65,.5);
+  padding:8px 14px;margin-top:4px;
+}
+#coverTitle .seal{
+  margin-top:6px;width:40px;height:40px;border-radius:6px;background:var(--red2);
+  color:#F6E8D3;font:900 22px/40px var(--serif);box-shadow:0 2px 6px rgba(0,0,0,.45);
+  transform:rotate(-6deg);
+}
+#coverHint{
+  pointer-events:auto;margin-top:18px;background:none;border:0;cursor:pointer;
+  color:var(--gold2);font:700 14px/1 var(--sans);letter-spacing:.28em;
+  animation:hintpulse 2.2s ease-in-out infinite;
+}
+#coverHint .tri{display:inline-block;margin-left:6px;color:var(--gold)}
+@keyframes hintpulse{0%,100%{opacity:.65}50%{opacity:1}}
+body:not(.at-cover) #coverHint{animation:none}
+
+/* 环衬（打开后露出的深蓝衬纸）与合书底衬 */
+.ep{
+  position:absolute;inset:0;transform-style:preserve-3d;
+  background:
+    radial-gradient(3px 3px at 18% 22%, rgba(217,164,65,.35), transparent 60%),
+    radial-gradient(2px 2px at 72% 14%, rgba(217,164,65,.3), transparent 60%),
+    radial-gradient(2.5px 2.5px at 84% 66%, rgba(217,164,65,.32), transparent 60%),
+    radial-gradient(2px 2px at 34% 78%, rgba(217,164,65,.28), transparent 60%),
+    radial-gradient(2px 2px at 56% 44%, rgba(217,164,65,.24), transparent 60%),
+    linear-gradient(150deg,#33506E,var(--blue2));
+}
+.ep::before{
+  content:"";position:absolute;inset:26px;border:1.5px solid rgba(217,164,65,.5);border-radius:8px;
+}
+.ep.board{background:linear-gradient(150deg,#2C3E52,#1C2A39);box-shadow:inset 0 0 50px rgba(0,0,0,.4)}
+.ep.board::before{border-color:rgba(217,164,65,.28)}
+
+/* ==========================================================================
+   纸屑（翻页瞬间飘落）
+   ========================================================================== */
+#confetti{position:absolute;inset:0;pointer-events:none;z-index:10;overflow:visible}
+.cf{
+  position:absolute;left:50%;top:34%;width:12px;height:12px;
+  background:var(--c,#EFC94C);clip-path:var(--cp,none);
+  animation:cfall var(--t,1.25s) cubic-bezier(.2,.55,.45,1) forwards;
+}
+@keyframes cfall{
+  0%{transform:translate3d(0,0,0) rotate(0);opacity:1}
+  82%{opacity:1}
+  100%{transform:translate3d(var(--dx,0),320px,0) rotate(var(--rr,540deg));opacity:0}
+}
+
+/* ==========================================================================
+   控制条 + 版权页页脚
+   ========================================================================== */
+.controls{
+  position:relative;z-index:4;margin-top:26px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;
+}
+.cbtn{
+  border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;
+  font:700 13px/1 var(--sans);letter-spacing:.12em;padding:11px 16px;border-radius:3px 8px 3px 8px;
+  box-shadow:0 3px 0 rgba(59,56,51,.35);transition:transform .2s,box-shadow .2s,opacity .2s;
+}
+.cbtn:hover{transform:translateY(-3px);box-shadow:0 6px 0 rgba(59,56,51,.35)}
+.cdots{display:flex;gap:9px}
+.cdots button{
+  width:12px;height:12px;border-radius:50%;border:2px solid var(--gold);background:transparent;
+  cursor:pointer;padding:0;transition:background .25s,transform .25s;
+}
+.cdots button.on{background:var(--gold);transform:scale(1.25)}
+.cdots button:hover{transform:scale(1.3)}
+.cline{
+  margin-top:12px;text-align:center;font:700 14px/1.6 var(--serif);letter-spacing:.12em;color:var(--gold2);
+}
+.chint{
+  margin-top:5px;text-align:center;font:500 11.5px/1.6 var(--sans);letter-spacing:.14em;color:rgba(247,242,231,.5);
+}
+.colophon{
+  position:relative;z-index:3;max-width:860px;margin:44px auto 0;padding:26px 22px 40px;text-align:center;
+  border-top:1px solid rgba(217,164,65,.4);
+}
+.colophon::before{
+  content:"❖";display:block;margin:-14px auto 10px;width:28px;color:var(--gold);
+  background:var(--desk2);font-size:13px;
+}
+.colophon p{
+  font:500 12.5px/2 var(--serif);letter-spacing:.14em;color:rgba(247,242,231,.66);
+}
+.colophon p b{color:var(--gold2);font-weight:700}
+.colophon .fin{
+  margin-top:10px;font:700 13px/1 var(--disp);letter-spacing:.4em;color:var(--gold);
+}
+
+/* ==========================================================================
+   第 1 页 · 上岛指南
+   ========================================================================== */
+.pg .p-head{position:relative;z-index:6;padding:52px 34px 0;transform:translateZ(2px)}
+.pg .p-head .chip{
+  display:inline-block;font:900 11px/1 var(--sans);letter-spacing:.24em;color:var(--cream);
+  background:var(--steel);padding:6px 10px 5px;border-radius:2px 6px 2px 6px;
+}
+.pg .p-head h2{
+  margin-top:10px;font:900 30px/1.2 var(--serif);color:var(--ink);letter-spacing:.06em;
+}
+.pg .p-head h2 em{font-style:normal;color:var(--red2)}
+.pg .p-head .sub{margin-top:4px;font:700 11px/1 var(--disp);letter-spacing:.3em;color:rgba(59,56,51,.55)}
+.lead{
+  position:relative;z-index:6;margin:12px 34px 0;font:500 13.5px/1.9 var(--sans);color:#4A463E;
+  transform:translateZ(1.6px);
+}
+.lead b{color:var(--red2)}
+.lead .go{color:var(--steel);font-weight:700;white-space:nowrap}
+.slips{position:relative;z-index:6;list-style:none;margin:14px 30px 0;transform:translateZ(1.8px)}
+.slips li{
+  display:flex;align-items:baseline;gap:10px;padding:7px 4px 6px;border-bottom:1px dashed rgba(59,56,51,.28);
+  transition:transform .22s, background .22s;
+}
+.slips li:hover{transform:translateX(5px);background:rgba(239,201,76,.14)}
+.slips i{
+  font:900 11px/1 var(--disp);font-style:normal;color:var(--cream);background:var(--blue);
+  padding:4px 6px;border-radius:3px;flex:0 0 auto;transform:translateY(-1px);
+}
+.slips b{font:700 14.5px/1 var(--serif);color:var(--ink);white-space:nowrap}
+.slips span{font:500 11.5px/1.4 var(--sans);color:rgba(59,56,51,.66)}
+.isle-note{
+  position:absolute;left:44px;bottom:24px;z-index:6;transform:translateZ(1.6px);
+  font:600 11px/1 var(--sans);letter-spacing:.16em;color:rgba(59,56,51,.6);
+}
+
+/* ==========================================================================
+   第 2 页 · 作品架（迷你书：两架 × 五签，可翻页浏览 10 部）
+   ========================================================================== */
+.shelf-head{position:relative;z-index:6;padding:50px 34px 0;transform:translateZ(2px)}
+.shelf-head .chip{
+  display:inline-block;font:900 11px/1 var(--sans);letter-spacing:.24em;color:var(--cream);
+  background:var(--red);padding:6px 10px 5px;border-radius:2px 6px 2px 6px;
+}
+.shelf-head h2{margin-top:10px;font:900 27px/1.2 var(--serif);color:var(--ink);letter-spacing:.05em}
+.shelf-head .sub{margin-top:4px;font:600 11.5px/1.5 var(--sans);color:rgba(59,56,51,.6);letter-spacing:.1em}
+.minibook{position:absolute;left:28px;top:118px;width:464px;height:474px;transform-style:preserve-3d;perspective:1200px;z-index:5}
+.mb-base{
+  position:absolute;inset:0;border-radius:10px;
+  background:linear-gradient(160deg,#4A3826,#33251A 70%);
+  box-shadow:inset 0 0 0 2px rgba(217,164,65,.35), inset 0 0 34px rgba(0,0,0,.5), 0 6px 12px rgba(59,56,51,.25);
+  overflow:hidden;
+}
+.mb-base svg{position:absolute;inset:0;width:100%;height:100%}
+.mb-leaf{
+  position:absolute;inset:8px;transform-style:preserve-3d;transform-origin:left center;
+  transform:rotateY(0deg);transition:transform .62s cubic-bezier(.4,.05,.25,1);z-index:2;
+}
+.mb-leaf.flip{transform:rotateY(-180deg)}
+.mb-face{
+  position:absolute;inset:0;border-radius:6px;overflow:hidden;
+  background:linear-gradient(160deg,#FBF6EA,var(--paper2));
+  box-shadow:inset 0 0 0 1.5px rgba(59,56,51,.25), inset 12px 0 20px -14px rgba(59,56,51,.4);
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  padding:12px 14px;display:flex;flex-direction:column;gap:8px;
+}
+.mb-face.back{transform:rotateY(180deg)}
+.mb-face h3{
+  font:900 13px/1 var(--serif);letter-spacing:.2em;color:var(--cream);background:var(--blue);
+  align-self:flex-start;padding:6px 12px 5px;border-radius:2px 6px 2px 6px;
+}
+.mb-face.back h3{background:var(--red2)}
+.tag{
+  display:flex;align-items:center;gap:9px;padding:8px 9px;border:1.5px solid rgba(59,56,51,.32);
+  border-radius:4px 9px 4px 9px;background:var(--cream);position:relative;
+  box-shadow:1px 2px 0 rgba(59,56,51,.14);transition:transform .2s, box-shadow .2s;
+  cursor:default;
+}
+.tag:hover{transform:rotateZ(1.5deg) translateY(-2px);box-shadow:3px 5px 8px rgba(59,56,51,.28)}
+.tag .tno{font:900 11px/1 var(--disp);color:var(--gold);letter-spacing:.04em;flex:0 0 26px}
+.tag .tt{min-width:0;flex:1}
+.tag .tt b{display:block;font:700 14px/1.25 var(--serif);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag .tt em{display:block;font:500 10.5px/1.4 var(--sans);font-style:normal;color:rgba(59,56,51,.6)}
+.tag .tchips{display:flex;gap:4px;flex:0 0 auto}
+.tag .tchips i{
+  font:600 10px/1 var(--sans);font-style:normal;color:var(--steel);border:1px solid rgba(74,122,150,.5);
+  border-radius:99px;padding:3px 6px;white-space:nowrap;
+}
+.tag .tdot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;background:#9AA0A6}
+.tag .tdot.hot{background:var(--red);box-shadow:0 0 0 3px rgba(217,91,74,.18);animation:dotpulse 1.8s ease-in-out infinite}
+.tag .tdot.fin{background:#7C8B77}
+@keyframes dotpulse{0%,100%{box-shadow:0 0 0 0 rgba(217,91,74,.4)}50%{box-shadow:0 0 0 5px rgba(217,91,74,0)}}
+.tag.hot{border-color:var(--gold);box-shadow:1px 2px 0 rgba(217,164,65,.4), inset 0 0 0 1px rgba(217,164,65,.35)}
+.tag .tstar{
+  position:absolute;right:-5px;top:-6px;font:900 9px/1 var(--sans);color:var(--cream);
+  background:var(--gold);padding:4px 6px;border-radius:2px 5px 2px 5px;transform:rotate(6deg);
+}
+.mb-ctrl{
+  position:absolute;left:28px;top:606px;width:464px;display:flex;align-items:center;justify-content:space-between;z-index:6;
+}
+.mb-btn{
+  border:2px solid var(--ink);background:var(--cream);color:var(--ink);cursor:pointer;
+  font:700 12px/1 var(--sans);letter-spacing:.1em;padding:8px 12px;border-radius:3px 7px 3px 7px;
+  box-shadow:0 3px 0 rgba(59,56,51,.3);transition:transform .2s,opacity .2s;
+}
+.mb-btn:hover{transform:translateY(-2px)}
+.mb-btn[disabled]{opacity:.35;pointer-events:none}
+.mb-dots{display:flex;gap:7px}
+.mb-dots i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--ink);background:transparent;transition:background .25s}
+.mb-dots i.on{background:var(--ink)}
+.shelf-note{
+  position:absolute;left:32px;bottom:14px;z-index:6;font:600 10.5px/1 var(--sans);
+  letter-spacing:.16em;color:rgba(59,56,51,.55);transform:translateZ(1.6px);
+}
+/* 迷你书降级（无 preserve-3d）：正反面淡入淡出切换 */
+body.flat .mb-leaf{transform:none!important}
+body.flat .mb-face{transition:opacity .35s ease}
+body.flat .mb-leaf:not(.flip) .mb-face.back{opacity:0}
+body.flat .mb-leaf.flip .mb-face.front{opacity:0}
+
+/* ==========================================================================
+   场景页通用小件
+   ========================================================================== */
+.deco{position:absolute;transform:translateZ(1.6px);z-index:2;pointer-events:none}
+.deco svg{display:block;width:100%;height:100%;overflow:visible}
+
+/* ==========================================================================
+   翻页滑动动画（移动端整页横滑 / 淡入）
+   ========================================================================== */
+.pg.m-out-l{animation:mOutL .28s ease-in both}
+.pg.m-out-r{animation:mOutR .28s ease-in both}
+.pg.m-in-l{animation:mInL .34s ease-out both}
+.pg.m-in-r{animation:mInR .34s ease-out both}
+@keyframes mOutL{to{transform:translateX(-46px);opacity:0}}
+@keyframes mOutR{to{transform:translateX(46px);opacity:0}}
+@keyframes mInL{from{transform:translateX(-46px);opacity:0}}
+@keyframes mInR{from{transform:translateX(46px);opacity:0}}
+
+/* ==========================================================================
+   降级一：不支持 preserve-3d → 2.5D 平面弹出（clip-path + 淡入，内容完整）
+   ========================================================================== */
+body.flat .stage{perspective:none}
+body.flat .book{transform:none}
+body.flat .leaf,body.flat .spine,body.flat .book-block{display:none}
+body.flat .pg{transform-style:flat}
+body.flat .fp{transition:transform .55s ease, opacity .55s ease;transform:translateY(18px) scale(.92)!important;opacity:0}
+body.flat .pg.live .fp{transform:none!important;opacity:1}
+body.flat .fp{filter:drop-shadow(0 6px 7px rgba(59,56,51,.26))}
+body.flat .fp-vl{clip-path:polygon(0 14%,100% 0,100% 100%,0 100%)}
+body.flat .fp-vr{clip-path:polygon(0 0,100% 14%,100% 100%,0 100%)}
+body.flat .psh{transition:none;opacity:.9!important;transform:translateZ(.4px)!important}
+body.flat .bub{transition:opacity .45s ease .3s;transform:translateZ(0) rotate(var(--tilt,-1.4deg))}
+body.flat .pg:not(.live) .bub{transform:translateZ(0) scale(.6)}
+body.flat .sway{animation:none}
+body.flat .ptab{transform:none}
+body.flat .ptab:hover{transform:translateX(11px)}
+body.flat .pg.pulled .ptab{transform:translateX(var(--tx,22px))}
+body.flat .corner{transform:none}
+
+/* ==========================================================================
+   降级二：prefers-reduced-motion → 书常开、场景完整静态呈现
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+body.rm .sway,body.rm .cf{animation:none!important}
+
+/* ==========================================================================
+   桌面点缀（静态纸星星 / 纸屑）
+   ========================================================================== */
+.dstar{
+  position:absolute;width:18px;height:18px;background:var(--gold);opacity:.4;
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+  pointer-events:none;
+}
+.dstar.s2{width:12px;height:12px;opacity:.3}
+.dbit{
+  position:absolute;width:14px;height:9px;border-radius:2px;pointer-events:none;
+  transform:rotate(-24deg);opacity:.35;
+}
+@media (max-width:767px){.dstar,.dbit{display:none}}
+
+/* ==========================================================================
+   Toast 提示
+   ========================================================================== */
+#toast{
+  position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);z-index:60;
+  background:var(--cream);color:var(--ink);border:2px solid var(--ink);border-radius:8px;
+  font:700 13px/1 var(--sans);letter-spacing:.08em;padding:12px 18px;
+  box-shadow:0 6px 14px rgba(0,0,0,.35);opacity:0;pointer-events:none;
+  transition:opacity .3s, transform .3s;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ==========================================================================
+   响应式
+   ========================================================================== */
+@media (max-width:1199px){
+  .chrome{padding:16px 18px 4px}
+  .brand b{font-size:20px}
+}
+@media (max-width:767px){
+  body.mob .chrome{padding:12px 14px 2px}
+  body.mob .brand i{letter-spacing:.2em}
+  body.mob .slipnav button{padding:8px 10px;font-size:12px}
+  body.mob .slipnav button[data-go="0"]{display:none}
+  body.mob .cdots button[data-dot="0"]{display:none}
+  body.mob .pg{font-size:18px}
+  body.mob .slips{margin:12px 22px 0}
+  body.mob .slips b{font-size:16px}
+  body.mob .slips span{font-size:13px}
+  body.mob .lead{margin:10px 22px 0;font-size:15px}
+  body.mob .pg .p-head{padding-top:46px}
+  body.mob .pg .p-head h2{font-size:32px}
+  body.mob .sc-tag span{font-size:17px}
+  body.mob .bub{font-size:16px;max-width:230px}
+  body.mob .minibook{left:16px;top:126px;width:488px;height:470px}
+  body.mob .mb-ctrl{left:16px;top:608px;width:488px}
+  body.mob .shelf-head{padding:44px 22px 0}
+  body.mob .mech{display:none}
+  body.mob .chint{padding:0 16px}
+}
+</style>
+</head>
+<body class="boot">
+
+<!-- ============================ 顶栏 ============================ -->
+<header class="chrome">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="24" r="21" fill="none" stroke="#D9A441" stroke-width="2.5" stroke-dasharray="3 4"/>
+      <path d="M10 30 Q16 20 24 20 Q34 20 38 30 Z" fill="#EFC94C"/>
+      <path d="M20 30 L30 30 L30 14 L24 18 L20 14 Z" fill="#D95B4A"/>
+      <path d="M8 34 Q24 40 40 34" fill="none" stroke="#4A7A96" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <b>漫屿</b>
+      <i>MANYU · 纸上漫画群岛</i>
+    </div>
+  </div>
+  <nav class="slipnav" aria-label="章节导航">
+    <button type="button" data-go="1">作品架</button>
+    <button type="button" data-go="2">分镜 · 话40</button>
+    <button type="button" data-go="3">分镜 · 话41</button>
+    <button type="button" data-go="0">合上书</button>
+  </nav>
+</header>
+
+<!-- ============================ 书台 ============================ -->
+<div class="stage-wrap">
+  <span class="dstar" style="left:6%;top:18%"></span>
+  <span class="dstar s2" style="left:12%;top:64%"></span>
+  <span class="dstar s2" style="right:8%;top:26%"></span>
+  <span class="dstar" style="right:13%;bottom:14%"></span>
+  <span class="dbit" style="left:9%;bottom:22%;background:#D95B4A"></span>
+  <span class="dbit" style="right:10%;top:58%;background:#4A7A96;transform:rotate(30deg)"></span>
+
+  <div id="stageBox">
+    <div id="stageInner">
+      <div class="stage" id="stage">
+        <div class="book" id="book">
+          <div class="book-base"></div>
+          <div class="book-block"></div>
+          <div class="spine"></div>
+          <div class="ul" id="ul"></div>
+          <div class="ur" id="ur"></div>
+          <div class="leaf" id="leaf">
+            <div class="face front" id="leafF"></div>
+            <div class="face back" id="leafB"></div>
+            <div class="leaf-shade"></div>
+          </div>
+          <button type="button" class="corner prev" id="btnPrev" title="上一页（←）" aria-label="上一页">
+            <span class="curl"></span><b>‹</b>
+          </button>
+          <button type="button" class="corner next" id="btnNext" title="下一页（→）" aria-label="下一页">
+            <span class="curl"></span><b>›</b>
+          </button>
+        </div>
+
+        <!-- 封面烫金文字：DOM overlay，不进 3D 面 -->
+        <div id="coverTitle" aria-hidden="true">
+          <span class="kicker">POP-UP BOOK · 立体书特辑</span>
+          <h1>漫屿</h1>
+          <span class="en">M A N Y U</span>
+          <p class="slogan">每座孤岛，都有格子靠岸</p>
+          <span class="seal">漫</span>
+          <button type="button" id="coverHint">翻开这本立体书<span class="tri">▸▸</span></button>
+        </div>
+
+        <div id="confetti"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button type="button" class="cbtn" id="cPrev">‹ 上一页</button>
+    <div class="cdots" id="dots">
+      <button type="button" data-dot="0" title="封面" aria-label="封面"></button>
+      <button type="button" data-dot="1" title="开篇 · 作品架" aria-label="开篇"></button>
+      <button type="button" data-dot="2" title="立体分镜 · 上" aria-label="分镜上"></button>
+      <button type="button" data-dot="3" title="立体分镜 · 下" aria-label="分镜下"></button>
+    </div>
+    <button type="button" class="cbtn" id="cNext">下一页 ›</button>
+  </div>
+  <p class="cline" id="spreadTitle">封面 · 漫屿 MANYU</p>
+  <p class="chint">键盘 ← → 翻页 · 触屏左右滑动 · 点击书角翻页 · 拉一拉页底的纸拉杆</p>
+</div>
+
+<!-- ============================ 版权页页脚 ============================ -->
+<footer class="colophon">
+  <p><b>漫屿 MANYU · 纸上漫画群岛 —— 立体书特辑</b></p>
+  <p>策划：漫屿编委会 · 纸艺机构设计：格子工房 · 收录场景：《蒸汽长安》第 40-41 话（虚构作品）</p>
+  <p>开本 787 × 1092 · 1/16 · 书页六幅 · 立体折件十四件 · 纸拉杆四枚 · 2026 年 9 月第 1 版第 1 次印刷</p>
+  <p>本站全部作品、作者与情节均为虚构 · 如有雷同，纯属巧合</p>
+  <p class="fin">© 2026 MANYU · 每座孤岛，都有格子靠岸</p>
+</footer>
+
+<div id="toast" role="status"></div>
+
+<!-- ============================ 书页素材池 ============================ -->
+<div id="pagePool" hidden>
+
+  <!-- 封面（3D 面内只放图形，文字走 DOM overlay） -->
+  <section class="pg cover-face" id="coverFace" style="background:linear-gradient(155deg,#35526F,#2E4A66 55%,#24384E)">
+    <div class="art" style="transform:translateZ(.9px)">
+      <svg viewBox="0 0 520 660" preserveAspectRatio="none" aria-hidden="true">
+        <rect width="520" height="660" fill="none"/>
+        <rect x="26" y="26" width="468" height="608" fill="none" stroke="#D9A441" stroke-width="2.5" opacity=".9"/>
+        <rect x="38" y="38" width="444" height="584" fill="none" stroke="#D9A441" stroke-width="1" opacity=".55"/>
+        <path d="M26 78 h52 M26 26 v52 M494 78 h-52 M494 26 v-52 M26 582 h52 M26 634 v-52 M494 582 h-52 M494 634 v-52" stroke="#D9A441" stroke-width="3" fill="none" opacity=".85" transform="translate(0,0)"/>
+        <path d="M26 26 h52 M26 26 v52 M494 26 h-52 M494 26 v52 M26 634 h52 M26 634 v-52 M494 634 h-52 M494 634 v-52" stroke="#EAD9A8" stroke-width="3" fill="none"/>
+        <circle cx="260" cy="298" r="118" fill="rgba(217,164,65,.07)" stroke="#D9A441" stroke-width="2"/>
+        <circle cx="260" cy="298" r="132" fill="none" stroke="#D9A441" stroke-width="4" stroke-dasharray="1 9" opacity=".8"/>
+        <g transform="translate(260,306)">
+          <path d="M-74 22 Q-40 -22 0 -26 Q42 -22 74 22 Z" fill="#D9A441" opacity=".9"/>
+          <path d="M-74 22 Q-46 -4 -18 -8 L-18 22 Z" fill="#EAD9A8"/>
+          <path d="M-6 -30 L-6 -74 L28 -38 Z" fill="#EAD9A8"/>
+          <path d="M-8 -30 L-8 -62 L-28 -34 Z" fill="#D9A441"/>
+          <path d="M-40 30 Q0 44 40 30 L30 44 Q0 54 -30 44 Z" fill="#D9A441"/>
+          <circle cx="52" cy="-46" r="13" fill="none" stroke="#EAD9A8" stroke-width="2.5"/>
+          <path d="M52 -66 v-8 M52 -26 v-8 M72 -46 h8 M32 -46 h8 M66 -60 l6 -6 M38 -60 l-6 -6" stroke="#EAD9A8" stroke-width="2" opacity=".8"/>
+        </g>
+        <path d="M150 470 h220 M170 486 h180" stroke="#D9A441" stroke-width="1.5" opacity=".6"/>
+        <circle cx="260" cy="470" r="5" fill="#EAD9A8"/>
+        <circle cx="120" cy="540" r="3" fill="#D9A441" opacity=".7"/>
+        <circle cx="404" cy="556" r="3" fill="#D9A441" opacity=".7"/>
+        <circle cx="96" cy="130" r="3" fill="#D9A441" opacity=".7"/>
+        <circle cx="430" cy="120" r="3" fill="#D9A441" opacity=".7"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 环衬 ×2 -->
+  <section class="pg ep" id="epR"></section>
+  <section class="pg ep board" id="epL"></section>
+
+  <!-- ==================== 第 1 页 · 上岛指南 ==================== -->
+  <section class="pg p1" id="page1" data-n="1">
+    <div class="art">
+      <svg viewBox="0 0 520 660" preserveAspectRatio="none" aria-hidden="true">
+        <rect width="520" height="660" fill="url(#g1sky)"/>
+        <defs>
+          <linearGradient id="g1sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FDF8EC"/><stop offset="1" stop-color="#F1E7CF"/>
+          </linearGradient>
+        </defs>
+        <path d="M0 566 Q40 554 80 566 T160 566 T240 566 T320 566 T400 566 T480 566 T560 566 V660 H0 Z" fill="#BFD3DC" opacity=".5"/>
+        <path d="M0 596 Q40 586 80 596 T160 596 T240 596 T320 596 T400 596 T480 596 T560 596 V660 H0 Z" fill="#8FB4C4" opacity=".45"/>
+        <g transform="translate(374,536)">
+          <path d="M0 26 Q34 44 68 26 L58 42 Q34 52 10 42 Z" fill="#3B3833"/>
+          <path d="M34 24 V-28 L66 20 Z" fill="#D95B4A"/>
+          <path d="M31 24 V-20 L8 22 Z" fill="#EFC94C"/>
+        </g>
+        <path d="M470 96 l4 12 12 4 -12 4 -4 12 -4 -12 -12 -4 12 -4 Z" fill="#D9A441" opacity=".55"/>
+        <path d="M52 118 l3 9 9 3 -9 3 -3 9 -3 -9 -9 -3 9 -3 Z" fill="#D9A441" opacity=".4"/>
+      </svg>
+    </div>
+    <header class="p-head">
+      <span class="chip">开 篇</span>
+      <h2>上岛<em>指南</em></h2>
+      <p class="sub">MANYU · COMIC ISLANDS</p>
+    </header>
+    <p class="lead">每座孤岛，都有格子靠岸。<b>漫屿</b>是一座漂在纸上的漫画岛：条漫与页漫在此泊岸，连载与完结各有码头，编辑每天摇铃派送新话。</p>
+    <ul class="slips">
+      <li><i>01</i><b>今日上岛</b><span>每日更新 · 红点即新话</span></li>
+      <li><i>02</i><b>编辑的心头好</b><span>每周精选 · Banner 轮播</span></li>
+      <li><i>03</i><b>本周黑马榜</b><span>人气 / 新作 / 飙升三榜</span></li>
+      <li><i>04</i><b>完结安心看</b><span>一次读到底，不用等</span></li>
+      <li><i>05</i><b>番外小剧场</b><span>正篇之外的碎屑与糖</span></li>
+    </ul>
+    <!-- 立体小岛：V 形折双丘 + 立折灯塔 -->
+    <div class="scene">
+      <div class="pop sway" style="left:40px;top:436px;width:302px;height:216px">
+        <div class="psh" style="left:24px;top:172px;width:254px;height:30px"></div>
+        <div class="fp fp-stand" style="left:110px;top:-10px;width:88px;height:132px;--i:0">
+          <svg viewBox="0 0 88 132" aria-hidden="true">
+            <path d="M32 128 L36 34 H52 L56 128 Z" fill="#FFFDF6" stroke="#3B3833" stroke-width="3"/>
+            <path d="M34.5 96 h19 M33.5 78 h21 M35.5 60 h19" stroke="#D95B4A" stroke-width="7"/>
+            <rect x="33" y="20" width="22" height="15" fill="#EFC94C" stroke="#3B3833" stroke-width="3"/>
+            <path d="M30 20 L44 4 L58 20 Z" fill="#D95B4A" stroke="#3B3833" stroke-width="3"/>
+            <path d="M14 30 h14 M60 30 h14 M20 46 h10 M58 46 h10" stroke="#EFC94C" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+          </svg>
+        </div>
+        <div class="fp fp-vl" style="left:0;top:56px;width:151px;height:132px;--i:1">
+          <svg viewBox="0 0 151 132" aria-hidden="true">
+            <path d="M4 128 L147 128 L147 44 Q70 22 4 84 Z" fill="#9CB894" stroke="#3B3833" stroke-width="3"/>
+            <path d="M30 108 q10 -14 24 -8 M64 96 q12 -12 26 -6" stroke="#5E7A58" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="fp fp-vr" style="left:151px;top:56px;width:151px;height:132px;--i:2">
+          <svg viewBox="0 0 151 132" aria-hidden="true">
+            <g transform="scale(-1,1) translate(-151,0)">
+              <path d="M4 128 L147 128 L147 44 Q70 22 4 84 Z" fill="#8AAD82" stroke="#3B3833" stroke-width="3"/>
+              <path d="M34 110 q10 -14 24 -8 M70 98 q12 -12 26 -6" stroke="#5E7A58" stroke-width="3" fill="none" stroke-linecap="round"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <span class="isle-note">立体机构 · V 形折小岛 + 立折灯塔</span>
+    <span class="pageno pl">— 1 —</span>
+    <span class="wstar" style="right:44px;top:70px"></span>
+    <span class="wstar sm" style="right:76px;top:104px"></span>
+  </section>
+
+  <!-- ==================== 第 2 页 · 作品架（10 部作品纸签） ==================== -->
+  <section class="pg p2" id="page2" data-n="2">
+    <div class="art">
+      <svg viewBox="0 0 520 660" preserveAspectRatio="none" aria-hidden="true">
+        <rect width="520" height="660" fill="url(#g2bg)"/>
+        <defs>
+          <linearGradient id="g2bg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FBF5E6"/><stop offset="1" stop-color="#EFE4CB"/>
+          </linearGradient>
+        </defs>
+        <path d="M470 88 l4 12 12 4 -12 4 -4 12 -4 -12 -12 -4 12 -4 Z" fill="#D9A441" opacity=".5"/>
+      </svg>
+    </div>
+    <header class="shelf-head">
+      <span class="chip">书 架</span>
+      <h2>作品架 · 十屿图录</h2>
+      <p class="sub">架上十部 · 点「下一架」翻看 · 追更红点即新话</p>
+    </header>
+    <div class="minibook">
+      <div class="mb-base">
+        <svg viewBox="0 0 464 474" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 474 L464 474 L464 452 L0 452 Z" fill="#241A10" opacity=".55"/>
+          <path d="M20 60 q60 -22 120 0 M324 400 q60 -22 120 0" stroke="rgba(217,164,65,.3)" stroke-width="2" fill="none"/>
+          <path d="M60 418 l3 9 9 3 -9 3 -3 9 -3 -9 -9 -3 9 -3 Z" fill="#D9A441" opacity=".5"/>
+        </svg>
+      </div>
+      <div class="mb-leaf" id="mbLeaf">
+        <div class="mb-face front">
+          <h3>架一 · 新泊岸</h3>
+          <div class="tag"><span class="tno">01</span><span class="tt"><b>星屑信使</b><em>白鹿原上</em></span><span class="tchips"><i>科幻</i><i>治愈</i></span><span class="tdot fin" title="已完结"></span></div>
+          <div class="tag"><span class="tno">02</span><span class="tt"><b>深夜面馆</b><em>陈一勺 · 单元剧</em></span><span class="tchips"><i>美食</i><i>都市</i></span><span class="tdot hot" title="连载中"></span></div>
+          <div class="tag"><span class="tno">03</span><span class="tt"><b>剑客不下班</b><em>老猫头</em></span><span class="tchips"><i>玄幻</i><i>搞笑</i></span><span class="tdot hot" title="连载中"></span></div>
+          <div class="tag"><span class="tno">04</span><span class="tt"><b>我在高三当魔王</b><em>阿蔓</em></span><span class="tchips"><i>校园</i><i>恋爱</i></span><span class="tdot hot" title="连载中"></span></div>
+          <div class="tag"><span class="tno">05</span><span class="tt"><b>午夜列车14号</b><em>双子星 · 条漫</em></span><span class="tchips"><i>悬疑</i><i>惊悚</i></span><span class="tdot hot" title="连载中"></span></div>
+        </div>
+        <div class="mb-face back">
+          <h3>架二 · 长明灯</h3>
+          <div class="tag"><span class="tno">06</span><span class="tt"><b>企鹅事务所</b><em>南极洲代表 · 四格</em></span><span class="tchips"><i>日常</i><i>萌宠</i></span><span class="tdot hot" title="连载中"></span></div>
+          <div class="tag hot"><span class="tstar">本书主打</span><span class="tno">07</span><span class="tt"><b>蒸汽长安</b><em>墨小仟 · 见第 3-6 页立体分镜</em></span><span class="tchips"><i>蒸汽朋克</i><i>热血</i></span><span class="tdot hot" title="连载中"></span></div>
+          <div class="tag"><span class="tno">08</span><span class="tt"><b>量子恋爱观察报告</b><em>薛定谔的猫窝 · 轻喜剧</em></span><span class="tchips"><i>科幻</i><i>恋爱</i></span><span class="tdot hot" title="连载中"></span></div>
+          <div class="tag"><span class="tno">09</span><span class="tt"><b>山海便利店</b><em>山海君</em></span><span class="tchips"><i>奇幻</i><i>温情</i></span><span class="tdot hot" title="连载中"></span></div>
+          <div class="tag"><span class="tno">10</span><span class="tt"><b>拳与花</b><em>一根葱</em></span><span class="tchips"><i>格斗</i><i>少女</i></span><span class="tdot hot" title="连载中"></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="mb-ctrl">
+      <button type="button" class="mb-btn" id="mbPrev" disabled>‹ 上一架</button>
+      <span class="mb-dots" id="mbDots"><i class="on"></i><i></i></span>
+      <button type="button" class="mb-btn" id="mbNext">下一架 ›</button>
+    </div>
+    <span class="shelf-note">《蒸汽长安》在架二 · 翻过这页即可入画</span>
+    <span class="pageno pr">— 2 —</span>
+    <span class="wstar sm" style="left:40px;top:88px"></span>
+  </section>
+
+  <!-- ==================== 第 3 页 · 分镜一：朱雀大街的蒸汽 ==================== -->
+  <section class="pg p3 sc" id="page3" data-n="3">
+    <div class="art">
+      <svg viewBox="0 0 520 660" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="g3sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#F6E3C4"/><stop offset=".55" stop-color="#F3D9AE"/><stop offset="1" stop-color="#E9CE9E"/>
+          </linearGradient>
+        </defs>
+        <rect width="520" height="660" fill="url(#g3sky)"/>
+        <circle cx="428" cy="120" r="34" fill="#EFC94C" opacity=".8"/>
+        <circle cx="428" cy="120" r="50" fill="#EFC94C" opacity=".25"/>
+        <path d="M0 560 L0 528 L46 528 L46 544 L86 536 L86 552 L128 548 L128 560 Z" fill="#8A7A5C" opacity=".5"/>
+        <path d="M520 566 L520 522 L470 522 L470 540 L430 532 L430 552 L396 548 L396 566 Z" fill="#8A7A5C" opacity=".5"/>
+        <path d="M150 560 q70 -16 140 0 l-14 18 h-112 Z" fill="#A08A64" opacity=".45"/>
+        <rect y="560" width="520" height="100" fill="#C9B384" opacity=".5"/>
+        <path d="M60 592 h64 M180 604 h84 M330 588 h60" stroke="#8A7A5C" stroke-width="3" opacity=".4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="sc-tag">
+      <b>立体分镜 一</b>
+      <span>《蒸汽长安》第 40 话 · <i>朱雀大街的蒸汽</i></span>
+    </div>
+    <div class="bub" style="left:30px;top:96px;--tilt:-1.8deg">钟楼三响之前，得把主轴送上去！</div>
+    <div class="scene">
+      <!-- 城墙（立折）+ 双坡屋顶（V 形折）+ 蒸汽（喷出件） -->
+      <div class="pop sway" style="left:34px;top:150px;width:304px;height:322px">
+        <div class="psh" style="left:16px;top:288px;width:272px;height:28px"></div>
+        <div class="fp fp-wall" style="left:0;top:0;width:304px;height:196px;--i:0">
+          <svg viewBox="0 0 304 196" aria-hidden="true">
+            <rect x="6" y="34" width="24" height="20" fill="#CBB894" stroke="#3B3833" stroke-width="3"/>
+            <rect x="48" y="34" width="24" height="20" fill="#CBB894" stroke="#3B3833" stroke-width="3"/>
+            <rect x="90" y="34" width="24" height="20" fill="#CBB894" stroke="#3B3833" stroke-width="3"/>
+            <rect x="190" y="34" width="24" height="20" fill="#CBB894" stroke="#3B3833" stroke-width="3"/>
+            <rect x="232" y="34" width="24" height="20" fill="#CBB894" stroke="#3B3833" stroke-width="3"/>
+            <rect x="274" y="34" width="24" height="20" fill="#CBB894" stroke="#3B3833" stroke-width="3"/>
+            <rect x="2" y="52" width="300" height="142" fill="#CBB894" stroke="#3B3833" stroke-width="3"/>
+            <path d="M2 86 h300 M2 128 h300 M40 52 v34 M120 86 v42 M210 52 v34 M262 86 v42" stroke="#8A7A5C" stroke-width="2" opacity=".55"/>
+            <path d="M112 194 v-64 a40 40 0 0 1 80 0 v64 Z" fill="#5A4A38" stroke="#3B3833" stroke-width="3"/>
+            <g>
+              <path d="M36 52 v10 M60 52 v10" stroke="#3B3833" stroke-width="2.5"/>
+              <circle cx="36" cy="76" r="13" fill="#D95B4A" stroke="#3B3833" stroke-width="3"/>
+              <rect x="31" y="58" width="10" height="7" fill="#EFC94C" stroke="#3B3833" stroke-width="2"/>
+              <path d="M36 89 v9" stroke="#3B3833" stroke-width="2.5"/>
+              <circle cx="60" cy="76" r="13" fill="#D95B4A" stroke="#3B3833" stroke-width="3"/>
+              <rect x="55" y="58" width="10" height="7" fill="#EFC94C" stroke="#3B3833" stroke-width="2"/>
+              <path d="M60 89 v9" stroke="#3B3833" stroke-width="2.5"/>
+            </g>
+            <rect x="242" y="60" width="34" height="86" fill="#FFFDF6" stroke="#3B3833" stroke-width="3"/>
+            <text x="259" y="74" font-size="17" font-weight="700" fill="#3B3833" font-family="serif" text-anchor="middle">朱<tspan x="259" dy="20">雀</tspan><tspan x="259" dy="20">大</tspan><tspan x="259" dy="20">街</tspan></text>
+          </svg>
+        </div>
+        <div class="fp fp-vl" style="left:0;top:186px;width:152px;height:130px;--i:1">
+          <svg viewBox="0 0 152 130" aria-hidden="true">
+            <path d="M4 126 L148 126 L148 38 Q76 20 4 78 Z" fill="#D95B4A" stroke="#3B3833" stroke-width="3"/>
+            <path d="M140 34 v96" stroke="#B5442D" stroke-width="8"/>
+            <path d="M22 118 q40 -14 58 -40 M52 120 q40 -16 62 -44" stroke="#3B3833" stroke-width="2" opacity=".3" fill="none"/>
+          </svg>
+        </div>
+        <div class="fp fp-vr" style="left:152px;top:186px;width:152px;height:130px;--i:2">
+          <svg viewBox="0 0 152 130" aria-hidden="true">
+            <g transform="scale(-1,1) translate(-152,0)">
+              <path d="M4 126 L148 126 L148 38 Q76 20 4 78 Z" fill="#C94F3E" stroke="#3B3833" stroke-width="3"/>
+              <path d="M140 34 v96" stroke="#9E3A28" stroke-width="8"/>
+              <path d="M22 118 q40 -14 58 -40" stroke="#3B3833" stroke-width="2" opacity=".3" fill="none"/>
+            </g>
+          </svg>
+        </div>
+        <div class="fp fp-puff" style="left:88px;top:-58px;width:150px;height:110px;--i:3">
+          <svg viewBox="0 0 150 110" aria-hidden="true">
+            <circle cx="52" cy="66" r="26" fill="#FFFDF6" stroke="#3B3833" stroke-width="3"/>
+            <circle cx="92" cy="52" r="32" fill="#FFFDF6" stroke="#3B3833" stroke-width="3"/>
+            <circle cx="118" cy="78" r="20" fill="#FFFDF6" stroke="#3B3833" stroke-width="3"/>
+            <path d="M20 30 q8 -10 18 -6 M34 16 q8 -8 16 -4" stroke="#8FB4C4" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <!-- 机关师少年（立折剪影） -->
+      <div class="pop sway" style="left:366px;top:296px;width:126px;height:272px">
+        <div class="psh" style="left:6px;top:246px;width:114px;height:22px"></div>
+        <div class="fp fp-stand" style="left:6px;top:0;width:114px;height:250px;--i:1">
+          <svg viewBox="0 0 114 250" aria-hidden="true">
+            <circle cx="60" cy="26" r="15" fill="#3B3833"/>
+            <path d="M44 46 q16 -9 32 0 l7 74 q2 11 -9 13 l-30 0 q-11 -2 -9 -13 Z" fill="#3B3833"/>
+            <path d="M48 136 l-7 74 h13 l7 -46 7 46 h13 l-7 -74 Z" fill="#3B3833"/>
+            <path d="M76 56 q26 -7 32 -32 l10 7 q-8 30 -38 40 Z" fill="#3B3833"/>
+            <rect x="18" y="56" width="30" height="46" rx="7" fill="#3B3833"/>
+            <circle cx="33" cy="79" r="11" fill="none" stroke="#EFC94C" stroke-width="6" stroke-dasharray="6 4"/>
+            <circle cx="33" cy="79" r="3" fill="#EFC94C"/>
+            <path d="M44 66 L58 60" stroke="#3B3833" stroke-width="6" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="ptab" style="left:56%" data-pull>拉我 · 喷汽<span class="ar">»</span></button>
+    <div class="mech"><i>V 形折 ×1</i><i>立折 ×2</i><i>喷汽件 ×1</i><i>纸拉杆 ×1</i></div>
+    <span class="pageno pl">— 3 —</span>
+    <span class="wstar sm" style="right:52px;top:150px"></span>
+  </section>
+
+  <!-- ==================== 第 4 页 · 分镜二：齿轮铺的早晨 ==================== -->
+  <section class="pg p4 sc" id="page4" data-n="4">
+    <div class="art">
+      <svg viewBox="0 0 520 660" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="g4bg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#F8EFDB"/><stop offset="1" stop-color="#EBDFC2"/>
+          </linearGradient>
+        </defs>
+        <rect width="520" height="660" fill="url(#g4bg)"/>
+        <path d="M0 210 h150 M370 210 h150" stroke="#C9B384" stroke-width="5" opacity=".6"/>
+        <path d="M0 240 q80 10 160 0 M360 240 q80 10 160 0" stroke="#C9B384" stroke-width="2.5" fill="none" opacity=".5"/>
+        <rect y="560" width="520" height="100" fill="#C9B384" opacity=".45"/>
+        <path d="M70 600 h70 M210 588 h64 M330 606 h90" stroke="#8A7A5C" stroke-width="3" opacity=".35" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="sc-tag">
+      <b>立体分镜 二</b>
+      <span>《蒸汽长安》第 40 话 · <i>齿轮铺的早晨</i></span>
+    </div>
+    <!-- 雨棚（V 形折 · 山折） -->
+    <div class="scene">
+      <div class="pop sway" style="left:78px;top:116px;width:344px;height:170px">
+        <div class="psh" style="left:30px;top:128px;width:284px;height:26px"></div>
+        <div class="fp fp-vl" style="left:0;top:0;width:172px;height:126px;--i:0">
+          <svg viewBox="0 0 172 126" aria-hidden="true">
+            <path d="M4 96 L168 96 L168 34 L4 62 Z" fill="#FFFDF6" stroke="#3B3833" stroke-width="3"/>
+            <path d="M34 88 L48 34 L74 34 L60 92 Z" fill="#D95B4A"/>
+            <path d="M96 84 L110 33 L134 34 L120 90 Z" fill="#D95B4A"/>
+            <path d="M4 96 q22 18 42 0 q22 18 42 0 q22 18 42 0 q22 18 38 -2" fill="#D95B4A" stroke="#3B3833" stroke-width="3"/>
+            <path d="M4 62 L168 34" stroke="#B5442D" stroke-width="4" opacity=".6"/>
+          </svg>
+        </div>
+        <div class="fp fp-vr" style="left:172px;top:0;width:172px;height:126px;--i:1">
+          <svg viewBox="0 0 172 126" aria-hidden="true">
+            <g transform="scale(-1,1) translate(-172,0)">
+              <path d="M4 96 L168 96 L168 34 L4 62 Z" fill="#F6EDD8" stroke="#3B3833" stroke-width="3"/>
+              <path d="M34 88 L48 34 L74 34 L60 92 Z" fill="#C94F3E"/>
+              <path d="M96 84 L110 33 L134 34 L120 90 Z" fill="#C94F3E"/>
+              <path d="M4 96 q22 18 42 0 q22 18 42 0 q22 18 42 0 q22 18 38 -2" fill="#C94F3E" stroke="#3B3833" stroke-width="3"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <!-- 小齿轮（平贴装饰，拉杆联动） -->
+      <div class="deco" style="right:52px;top:172px;width:84px;height:84px">
+        <svg viewBox="0 0 90 90" aria-hidden="true">
+          <g class="g2" fill="#D9A441" stroke="#3B3833" stroke-width="2.5">
+            <rect x="41" y="4" width="12" height="16" rx="3" transform="rotate(0 45 45)"/>
+            <rect x="41" y="4" width="12" height="16" rx="3" transform="rotate(45 45 45)"/>
+            <rect x="41" y="4" width="12" height="16" rx="3" transform="rotate(90 45 45)"/>
+            <rect x="41" y="4" width="12" height="16" rx="3" transform="rotate(135 45 45)"/>
+            <rect x="41" y="4" width="12" height="16" rx="3" transform="rotate(180 45 45)"/>
+            <rect x="41" y="4" width="12" height="16" rx="3" transform="rotate(225 45 45)"/>
+            <rect x="41" y="4" width="12" height="16" rx="3" transform="rotate(270 45 45)"/>
+            <rect x="41" y="4" width="12" height="16" rx="3" transform="rotate(315 45 45)"/>
+            <circle cx="45" cy="45" r="26"/>
+            <circle cx="45" cy="45" r="9" fill="#FFFDF6"/>
+          </g>
+        </svg>
+      </div>
+      <div class="bub rt" style="right:120px;top:250px;--tilt:1.6deg">主轴就托付给你了。</div>
+      <div class="bub fx" style="left:96px;top:322px;--tilt:-3deg">嘎吱——</div>
+      <!-- 大齿轮墙（立折） -->
+      <div class="pop sway" style="left:56px;top:336px;width:296px;height:282px">
+        <div class="psh" style="left:26px;top:246px;width:244px;height:26px"></div>
+        <div class="fp fp-stand" style="left:18px;top:0;width:260px;height:250px;--i:0">
+          <svg viewBox="0 0 260 250" aria-hidden="true">
+            <rect x="6" y="70" width="64" height="150" rx="4" fill="#E2D3AE" stroke="#3B3833" stroke-width="3"/>
+            <rect x="14" y="82" width="12" height="42" fill="#D95B4A"/>
+            <rect x="31" y="82" width="12" height="52" fill="#4A7A96"/>
+            <rect x="48" y="82" width="12" height="36" fill="#EFC94C"/>
+            <rect x="14" y="140" width="12" height="46" fill="#9CB894"/>
+            <rect x="31" y="140" width="12" height="38" fill="#D95B4A"/>
+            <rect x="48" y="140" width="12" height="50" fill="#4A7A96"/>
+            <g class="gbig" fill="#4A7A96" stroke="#3B3833" stroke-width="3">
+              <rect x="152" y="10" width="26" height="42" rx="6" transform="rotate(0 165 130)"/>
+              <rect x="152" y="10" width="26" height="42" rx="6" transform="rotate(45 165 130)"/>
+              <rect x="152" y="10" width="26" height="42" rx="6" transform="rotate(90 165 130)"/>
+              <rect x="152" y="10" width="26" height="42" rx="6" transform="rotate(135 165 130)"/>
+              <rect x="152" y="10" width="26" height="42" rx="6" transform="rotate(180 165 130)"/>
+              <rect x="152" y="10" width="26" height="42" rx="6" transform="rotate(225 165 130)"/>
+              <rect x="152" y="10" width="26" height="42" rx="6" transform="rotate(270 165 130)"/>
+              <rect x="152" y="10" width="26" height="42" rx="6" transform="rotate(315 165 130)"/>
+              <circle cx="165" cy="130" r="76"/>
+              <circle cx="165" cy="130" r="24" fill="#F7F2E7"/>
+              <rect x="158" y="66" width="14" height="128" rx="6" fill="#3B5F76" stroke="none"/>
+              <rect x="101" y="123" width="128" height="14" rx="6" fill="#3B5F76" stroke="none"/>
+            </g>
+            <circle cx="165" cy="130" r="8" fill="#3B3833"/>
+          </svg>
+        </div>
+      </div>
+      <!-- 老师傅（立折剪影） -->
+      <div class="pop sway" style="left:376px;top:348px;width:118px;height:268px">
+        <div class="psh" style="left:4px;top:242px;width:110px;height:22px"></div>
+        <div class="fp fp-stand" style="left:4px;top:0;width:110px;height:246px;--i:1">
+          <svg viewBox="0 0 110 246" aria-hidden="true">
+            <circle cx="55" cy="28" r="15" fill="#3B3833"/>
+            <path d="M36 16 h38 l-4 12 h-30 Z" fill="#3B3833"/>
+            <path d="M39 48 q16 -9 32 0 l6 72 q2 11 -9 13 h-26 q-11 -2 -9 -13 Z" fill="#3B3833"/>
+            <rect x="47" y="60" width="16" height="46" rx="3" fill="#F7F2E7" opacity=".9"/>
+            <path d="M43 132 l-6 70 h12 l6 -42 6 42 h12 l-6 -70 Z" fill="#3B3833"/>
+            <path d="M77 60 q24 2 26 24 l-10 4 q-4 -14 -18 -16 Z" fill="#3B3833"/>
+            <rect x="97" y="78" width="9" height="26" rx="3" fill="#8A6B3A" stroke="#3B3833" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="ptab" style="left:40%" data-pull>拉我 · 转齿轮<span class="ar">»</span></button>
+    <div class="mech"><i>V 形折 ×1</i><i>立折 ×2</i><i>联动齿轮 ×2</i><i>纸拉杆 ×1</i></div>
+    <span class="pageno pr">— 4 —</span>
+    <span class="wstar" style="left:40px;top:180px"></span>
+  </section>
+
+  <!-- ==================== 第 5 页 · 分镜三：一百二十级台阶 ==================== -->
+  <section class="pg p5 sc" id="page5" data-n="5">
+    <div class="art">
+      <svg viewBox="0 0 520 660" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="g5sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#5E6F94"/><stop offset=".5" stop-color="#96849A"/><stop offset="1" stop-color="#E4B58C"/>
+          </linearGradient>
+        </defs>
+        <rect width="520" height="660" fill="url(#g5sky)"/>
+        <circle cx="110" cy="520" r="30" fill="#EFC94C" opacity=".75"/>
+        <circle cx="110" cy="520" r="48" fill="#EFC94C" opacity=".22"/>
+        <path d="M0 560 L60 512 L120 552 L190 506 L260 548 L330 514 L400 550 L470 518 L520 546 L520 660 L0 660 Z" fill="#3E4A66" opacity=".55"/>
+        <rect y="588" width="520" height="72" fill="#2E3A52" opacity=".6"/>
+        <path d="M396 128 l3 9 9 3 -9 3 -3 9 -3 -9 -9 -3 9 -3 Z" fill="#EAD9A8" opacity=".7"/>
+        <path d="M60 150 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 Z" fill="#EAD9A8" opacity=".5"/>
+      </svg>
+    </div>
+    <div class="sc-tag">
+      <b>立体分镜 三</b>
+      <span>《蒸汽长安》第 41 话 · <i>一百二十级台阶</i></span>
+    </div>
+    <div class="bub" style="left:30px;top:100px;--tilt:-1.6deg">还差三十级……加油。</div>
+    <div class="scene">
+      <!-- 钟楼（立折主件，含点灯窗） -->
+      <div class="pop sway" style="left:132px;top:110px;width:288px;height:344px">
+        <div class="psh" style="left:34px;top:308px;width:220px;height:26px"></div>
+        <div class="fp fp-stand" style="left:4px;top:0;width:280px;height:312px;--i:0">
+          <svg viewBox="0 0 280 312" aria-hidden="true">
+            <rect x="62" y="74" width="140" height="234" fill="#E8DCC2" stroke="#3B3833" stroke-width="3"/>
+            <rect x="62" y="74" width="30" height="234" fill="#D9C9A8" opacity=".8"/>
+            <rect x="48" y="58" width="168" height="18" fill="#B5442D" stroke="#3B3833" stroke-width="3"/>
+            <rect x="56" y="40" width="16" height="18" fill="#B5442D" stroke="#3B3833" stroke-width="2.5"/>
+            <rect x="96" y="40" width="16" height="18" fill="#B5442D" stroke="#3B3833" stroke-width="2.5"/>
+            <rect x="136" y="40" width="16" height="18" fill="#B5442D" stroke="#3B3833" stroke-width="2.5"/>
+            <rect x="176" y="40" width="16" height="18" fill="#B5442D" stroke="#3B3833" stroke-width="2.5"/>
+            <rect x="212" y="40" width="16" height="18" fill="#B5442D" stroke="#3B3833" stroke-width="2.5"/>
+            <circle cx="132" cy="140" r="42" fill="#FFFDF6" stroke="#D9A441" stroke-width="6"/>
+            <circle cx="132" cy="140" r="42" fill="none" stroke="#3B3833" stroke-width="2"/>
+            <path d="M132 140 L132 112 M132 140 L152 152" stroke="#3B3833" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="132" cy="140" r="4" fill="#3B3833"/>
+            <path d="M118 236 v-26 a14 14 0 0 1 28 0 v26 Z" fill="#5A4A38" stroke="#3B3833" stroke-width="3"/>
+            <rect class="winglow" x="116" y="192" width="34" height="30" fill="#EFC94C"/>
+            <circle class="wglowhalo" cx="133" cy="207" r="30" fill="#EFC94C" opacity="0" style="mix-blend-mode:multiply"/>
+            <rect x="196" y="160" width="66" height="148" fill="#D9C9A8" stroke="#3B3833" stroke-width="3"/>
+            <rect x="208" y="176" width="14" height="34" fill="#5A4A38"/>
+            <rect x="232" y="176" width="14" height="34" fill="#5A4A38"/>
+            <path d="M62 308 h140" stroke="#3B3833" stroke-width="3"/>
+          </svg>
+        </div>
+      </div>
+      <!-- 石阶（V 形折 · 谷折对位） -->
+      <div class="pop sway" style="left:26px;top:344px;width:352px;height:196px">
+        <div class="psh" style="left:20px;top:158px;width:312px;height:26px"></div>
+        <div class="fp fp-vl" style="left:0;top:14px;width:176px;height:148px;--i:1">
+          <svg viewBox="0 0 176 148" aria-hidden="true">
+            <path d="M172 16 V144 H4 V122 H36 V100 H68 V78 H100 V56 H132 V38 H172 Z" fill="#4A7A96" stroke="#3B3833" stroke-width="3"/>
+            <path d="M4 122 h32 M36 100 h32 M68 78 h32 M100 56 h32" stroke="#2E4A66" stroke-width="5"/>
+          </svg>
+        </div>
+        <div class="fp fp-vr" style="left:176px;top:14px;width:176px;height:148px;--i:2">
+          <svg viewBox="0 0 176 148" aria-hidden="true">
+            <g transform="scale(-1,1) translate(-176,0)">
+              <path d="M172 16 V144 H4 V122 H36 V100 H68 V78 H100 V56 H132 V38 H172 Z" fill="#41708D" stroke="#3B3833" stroke-width="3"/>
+              <path d="M4 122 h32 M36 100 h32 M68 78 h32 M100 56 h32" stroke="#2E4A66" stroke-width="5"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <!-- 攀登少年（立折剪影） -->
+      <div class="pop sway" style="left:404px;top:272px;width:96px;height:264px">
+        <div class="psh" style="left:2px;top:238px;width:92px;height:20px"></div>
+        <div class="fp fp-stand" style="left:2px;top:0;width:92px;height:242px;--i:1">
+          <svg viewBox="0 0 92 242" aria-hidden="true">
+            <g transform="rotate(-12 46 130)">
+              <circle cx="46" cy="26" r="14" fill="#3B3833"/>
+              <path d="M31 44 q15 -8 30 0 l6 68 q2 10 -8 12 h-26 q-10 -2 -8 -12 Z" fill="#3B3833"/>
+              <path d="M35 124 l-6 68 h12 l5 -42 5 42 h12 l-6 -68 Z" fill="#3B3833"/>
+              <path d="M60 54 q20 -18 16 -40 l10 -2 q6 28 -16 50 Z" fill="#3B3833"/>
+              <path d="M70 8 v34" stroke="#3B3833" stroke-width="4"/>
+              <path d="M70 8 l30 10 -28 12 Z" fill="#D95B4A" stroke="#3B3833" stroke-width="2.5"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="ptab" style="left:58%" data-pull>拉我 · 点灯<span class="ar">»</span></button>
+    <div class="mech"><i>V 形折 ×1</i><i>立折 ×2</i><i>点灯联动 ×1</i><i>纸拉杆 ×1</i></div>
+    <span class="pageno pl">— 5 —</span>
+    <span class="wstar sm" style="right:48px;top:96px"></span>
+  </section>
+
+  <!-- ==================== 第 6 页 · 分镜四：钟声与日出 ==================== -->
+  <section class="pg p6 sc" id="page6" data-n="6">
+    <div class="art">
+      <svg viewBox="0 0 520 660" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="g6sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#F6C987"/><stop offset=".5" stop-color="#F3B26A"/><stop offset="1" stop-color="#E08D56"/>
+          </linearGradient>
+        </defs>
+        <rect width="520" height="660" fill="url(#g6sky)"/>
+        <g opacity=".22" stroke="#FFF3D6" stroke-width="6">
+          <path d="M260 600 L150 60 M260 600 L226 44 M260 600 L318 50 M260 600 L392 84 M260 600 L86 150 M260 600 L452 170"/>
+        </g>
+        <circle cx="260" cy="560" r="56" fill="#EFC94C"/>
+        <circle cx="260" cy="560" r="86" fill="#EFC94C" opacity=".3"/>
+        <ellipse cx="120" cy="150" rx="64" ry="18" fill="#FFF3D6" opacity=".8"/>
+        <ellipse cx="170" cy="136" rx="40" ry="13" fill="#FFF3D6" opacity=".65"/>
+        <ellipse cx="420" cy="210" rx="52" ry="15" fill="#FFF3D6" opacity=".7"/>
+        <path d="M0 600 L90 570 L180 596 L290 566 L400 598 L520 572 L520 660 L0 660 Z" fill="#8A4A34" opacity=".5"/>
+      </svg>
+    </div>
+    <div class="sc-tag">
+      <b>立体分镜 四</b>
+      <span>《蒸汽长安》第 41 话 · <i>钟声与日出</i></span>
+    </div>
+    <span class="sfx" style="right:54px;top:118px;font-size:34px">当——</span>
+    <span class="sfx" style="right:64px;top:268px;font-size:22px;transform:translateZ(2px) rotate(-3deg);opacity:.85">——当</span>
+    <div class="bub rt" style="right:150px;top:96px;--tilt:1.8deg">听，全城都醒了。</div>
+    <div class="scene">
+      <!-- 鎏金屋脊（V 形折 · 山折主件） -->
+      <div class="pop sway" style="left:56px;top:158px;width:408px;height:186px">
+        <div class="psh" style="left:40px;top:146px;width:328px;height:30px"></div>
+        <div class="fp fp-vl" style="left:0;top:0;width:204px;height:146px;--i:0">
+          <svg viewBox="0 0 204 146" aria-hidden="true">
+            <path d="M4 142 L200 142 L200 40 Q100 12 4 84 Z" fill="#EFC94C" stroke="#3B3833" stroke-width="3"/>
+            <path d="M192 34 v112" stroke="#D9A441" stroke-width="10"/>
+            <path d="M30 132 q60 -20 86 -58 M76 136 q60 -22 90 -62" stroke="#3B3833" stroke-width="2" opacity=".28" fill="none"/>
+            <circle cx="104" cy="52" r="7" fill="#D95B4A" stroke="#3B3833" stroke-width="2.5"/>
+          </svg>
+        </div>
+        <div class="fp fp-vr" style="left:204px;top:0;width:204px;height:146px;--i:1">
+          <svg viewBox="0 0 204 146" aria-hidden="true">
+            <g transform="scale(-1,1) translate(-204,0)">
+              <path d="M4 142 L200 142 L200 40 Q100 12 4 84 Z" fill="#E5B93B" stroke="#3B3833" stroke-width="3"/>
+              <path d="M192 34 v112" stroke="#C99B2E" stroke-width="10"/>
+              <path d="M30 132 q60 -20 86 -58" stroke="#3B3833" stroke-width="2" opacity=".28" fill="none"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <!-- 大钟（立折 · 拉杆敲响） -->
+      <div class="pop sway" style="left:64px;top:352px;width:156px;height:268px">
+        <div class="psh" style="left:12px;top:242px;width:132px;height:22px"></div>
+        <div class="fp fp-stand" style="left:12px;top:0;width:132px;height:246px;--i:0">
+          <svg viewBox="0 0 132 246" aria-hidden="true">
+            <defs>
+              <linearGradient id="goldg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#EAD9A8"/><stop offset=".55" stop-color="#D9A441"/><stop offset="1" stop-color="#8A6B3A"/>
+              </linearGradient>
+            </defs>
+            <rect x="20" y="10" width="92" height="12" rx="5" fill="#5A4A38" stroke="#3B3833" stroke-width="3"/>
+            <path d="M66 22 v12" stroke="#3B3833" stroke-width="4"/>
+            <g class="bellg">
+              <path d="M66 34 C38 38 32 66 32 96 L32 132 Q32 146 16 156 L116 156 Q100 146 100 132 L100 96 C100 66 94 38 66 34 Z" fill="url(#goldg)" stroke="#3B3833" stroke-width="3"/>
+              <rect x="12" y="156" width="108" height="12" rx="5" fill="#8A6B3A" stroke="#3B3833" stroke-width="3"/>
+              <path d="M46 70 q20 -10 40 0" stroke="#FFF3D6" stroke-width="4" fill="none" opacity=".8"/>
+              <circle cx="66" cy="176" r="10" fill="#3B3833"/>
+            </g>
+            <path d="M108 190 l14 20 M118 184 l14 20" stroke="#EFC94C" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <!-- 挥旗少年（立折剪影） -->
+      <div class="pop sway" style="left:352px;top:368px;width:126px;height:256px">
+        <div class="psh" style="left:8px;top:230px;width:110px;height:22px"></div>
+        <div class="fp fp-stand" style="left:8px;top:0;width:110px;height:234px;--i:1">
+          <svg viewBox="0 0 110 234" aria-hidden="true">
+            <circle cx="52" cy="24" r="14" fill="#3B3833"/>
+            <path d="M37 42 q15 -8 30 0 l6 66 q2 10 -8 12 h-26 q-10 -2 -8 -12 Z" fill="#3B3833"/>
+            <path d="M41 118 l-6 66 h12 l5 -40 5 40 h12 l-6 -66 Z" fill="#3B3833"/>
+            <path d="M66 52 q22 -20 40 -24 l2 10 q-16 6 -32 24 Z" fill="#3B3833"/>
+            <path d="M104 22 v40" stroke="#3B3833" stroke-width="4"/>
+            <path d="M104 22 l-32 12 30 14 Z" fill="#D95B4A" stroke="#3B3833" stroke-width="2.5"/>
+          </svg>
+        </div>
+      </div>
+      <div class="fp fp-puff" style="left:236px;top:368px;width:120px;height:96px;--i:2">
+        <svg viewBox="0 0 120 96" aria-hidden="true">
+          <circle cx="42" cy="56" r="22" fill="#FFF3D6" stroke="#3B3833" stroke-width="3"/>
+          <circle cx="76" cy="44" r="27" fill="#FFF3D6" stroke="#3B3833" stroke-width="3"/>
+          <path d="M14 30 q7 -9 15 -5" stroke="#E08D56" stroke-width="3" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <button type="button" class="ptab" style="left:46%" data-pull>拉我 · 敲钟<span class="ar">»</span></button>
+    <div class="mech"><i>V 形折 ×1</i><i>立折 ×2</i><i>喷汽件 ×1</i><i>纸拉杆 ×1</i></div>
+    <span class="pageno pr">— 6 —</span>
+    <span class="wstar" style="left:52px;top:120px"></span>
+    <span class="wstar sm" style="left:84px;top:92px"></span>
+  </section>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  /* ================= 基础引用 ================= */
+  var $id = function(id){ return document.getElementById(id); };
+  var body = document.body;
+  var stage = $id('stage'), book = $id('book');
+  var ul = $id('ul'), ur = $id('ur');
+  var leaf = $id('leaf'), leafF = $id('leafF'), leafB = $id('leafB');
+  var btnPrev = $id('btnPrev'), btnNext = $id('btnNext');
+  var cPrev = $id('cPrev'), cNext = $id('cNext');
+  var spreadTitle = $id('spreadTitle');
+  var dotsBox = $id('dots');
+  var dots = dotsBox ? Array.prototype.slice.call(dotsBox.querySelectorAll('button')) : [];
+  var toastEl = $id('toast'), confettiBox = $id('confetti');
+  var stageBox = $id('stageBox'), stageInner = $id('stageInner');
+
+  /* ================= 书页素材 ================= */
+  var P = {
+    cover: $id('coverFace'), epL: $id('epL'), epR: $id('epR'),
+    p1: $id('page1'), p2: $id('page2'), p3: $id('page3'),
+    p4: $id('page4'), p5: $id('page5'), p6: $id('page6')
+  };
+  var mPages = [P.p1, P.p2, P.p3, P.p4, P.p5, P.p6];
+
+  /* ================= 能力检测与降级 ================= */
+  var supports3D = !!(window.CSS && CSS.supports &&
+    CSS.supports('transform-style','preserve-3d') && CSS.supports('perspective','10px'));
+  var flat = !supports3D;
+  var rm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var mob = window.matchMedia('(max-width: 767px)');
+  if (flat) body.classList.add('flat');
+  if (rm) body.classList.add('rm');
+
+  /* ================= 状态 ================= */
+  var TITLES = [
+    '封面 · 漫屿 MANYU',
+    '开篇 · 上岛指南 × 作品架',
+    '《蒸汽长安》第 40 话 · 钟楼醒来的清晨',
+    '《蒸汽长安》第 41 话 · 钟声与日出'
+  ];
+  var SPREADS = [
+    { l: P.epL, r: P.epR, live: [], cover: true, title: TITLES[0] },
+    { l: P.p1,  r: P.p2,  live: [P.p1, P.p2], title: TITLES[1] },
+    { l: P.p3,  r: P.p4,  live: [P.p3, P.p4], title: TITLES[2] },
+    { l: P.p5,  r: P.p6,  live: [P.p5, P.p6], title: TITLES[3] }
+  ];
+  var state = { spread: 0, mp: 0 };
+  var locked = true;   // 开书前锁定
+  var FOLD = 340, TURN = 840;
+
+  /* ================= 工具 ================= */
+  function put(node, slot){
+    if (node && slot && node.parentElement !== slot) slot.appendChild(node);
+  }
+  function raf2(fn){
+    requestAnimationFrame(function(){ requestAnimationFrame(fn); });
+  }
+  function setLeaf(angle, animate){
+    if (!animate) leaf.classList.add('notrans');
+    leaf.style.transform = 'translateZ(2px) rotateY(' + angle + 'deg)';
+    if (!animate){ void leaf.offsetHeight; leaf.classList.remove('notrans'); }
+  }
+  function sweepLive(){
+    mPages.forEach(function(p){
+      if (!ul.contains(p) && !ur.contains(p) && !leaf.contains(p)) p.classList.remove('live');
+    });
+  }
+  var toastTimer = null;
+  function toast(msg, keep){
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, keep || 2300);
+  }
+
+  /* ================= 纸屑 ================= */
+  var CF_COLORS = ['#D95B4A','#EFC94C','#4A7A96','#EAD9A8'];
+  var CF_SHAPES = [
+    'polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)',
+    'none',
+    'polygon(0 0,100% 0,100% 46%,0 46%)'
+  ];
+  function confetti(){
+    if (rm || window.innerWidth < 768 || !confettiBox) return;
+    for (var i = 0; i < 11; i++){
+      var s = document.createElement('i');
+      s.className = 'cf';
+      s.style.setProperty('--c', CF_COLORS[i % CF_COLORS.length]);
+      var shape = CF_SHAPES[i % CF_SHAPES.length];
+      if (shape !== 'none') s.style.setProperty('--cp', shape); else s.style.setProperty('--cp','none');
+      s.style.setProperty('--dx', (Math.random() * 240 - 120).toFixed(0) + 'px');
+      s.style.setProperty('--rr', (320 + Math.random() * 420).toFixed(0) + 'deg');
+      s.style.setProperty('--t', (1 + Math.random() * 0.5).toFixed(2) + 's');
+      s.style.left = (38 + Math.random() * 24) + '%';
+      s.style.top = (26 + Math.random() * 14) + '%';
+      var w = 8 + Math.random() * 7;
+      s.style.width = w + 'px'; s.style.height = (w * (0.7 + Math.random() * 0.8)) + 'px';
+      confettiBox.appendChild(s);
+      (function(node){ setTimeout(function(){ if (node.parentNode) node.parentNode.removeChild(node); }, 1600); })(s);
+    }
+  }
+
+  /* ================= UI 同步 ================= */
+  function updateUI(){
+    body.classList.toggle('at-cover', state.spread === 0);
+    if (spreadTitle) spreadTitle.textContent = TITLES[state.spread] || '';
+    dots.forEach(function(d, i){
+      d.classList.toggle('on', i === state.spread);
+    });
+    btnPrev.classList.toggle('hide', state.spread === 0);
+    btnNext.classList.toggle('hide', state.spread === 3);
+    var slips = document.querySelectorAll('.slipnav button[data-go]');
+    Array.prototype.forEach.call(slips, function(b){
+      b.classList.toggle('on', Number(b.getAttribute('data-go')) === state.spread);
+    });
+  }
+
+  /* ================= 场景展开（错峰 fold 动画在此发生） ================= */
+  function openLive(spreadDef){
+    raf2(function(){
+      spreadDef.live.forEach(function(p){ p.classList.add('live'); });
+    });
+  }
+
+  /* ================= 立体翻页（桌面 3D） ================= */
+  function turn(dir, target){
+    if (locked) return;
+    if (target == null) target = state.spread + dir;
+    if (target < 0 || target > 3 || target === state.spread) return;
+    if (Math.abs(target - state.spread) > 1) target = state.spread + dir; // 大跨度只翻一页
+    locked = true;
+    body.classList.add('busy');
+    var cur = SPREADS[state.spread], nx = SPREADS[target];
+
+    /* 1) 立体场景先收拢 */
+    sweepLive();
+    cur.live.forEach(function(p){ p.classList.remove('live'); });
+
+    /* 2) 书页对向翻过书脊（封面态时烫金封面常驻 leafF，不可被换下） */
+    setTimeout(function(){
+      if (dir > 0){
+        if (state.spread !== 0) put(cur.r, leafF);
+        put(nx.l, leafB);
+        put(nx.r, ur);
+        setLeaf(0, false);
+        leaf.classList.add('on');
+        raf2(function(){
+          leaf.classList.add('turning');
+          setLeaf(-180, true);
+        });
+      } else {
+        put(target === 0 ? P.cover : nx.r, leafF); /* 合上封面时，确保烫金封面回到正面 */
+        put(cur.l, leafB);
+        put(nx.l, ul);
+        setLeaf(-180, false);
+        leaf.classList.add('on');
+        raf2(function(){
+          leaf.classList.add('turning');
+          setLeaf(0, true);
+        });
+      }
+    }, FOLD);
+
+    /* 3) 落页：换底页 → 新场景错峰弹出 */
+    setTimeout(function(){
+      if (nx.cover){
+        put(P.epL, ul);
+        put(P.epR, ur);
+        leaf.classList.add('on');
+        setLeaf(0, false);
+      } else {
+        if (dir > 0) put(nx.l, ul); else put(nx.r, ur);
+        leaf.classList.remove('on');
+      }
+      leaf.classList.remove('turning');
+      state.spread = target;
+      updateUI();
+      openLive(nx);
+      if (!nx.cover) confetti();
+      body.classList.remove('busy');
+      setTimeout(function(){ locked = false; }, 90);
+    }, FOLD + TURN + 40);
+  }
+
+  /* ================= 平面 / 静态降级的直达切换 ================= */
+  function jumpTo(target){
+    if (target < 0 || target > 3) return;
+    var nx = SPREADS[target];
+    sweepLive();
+    if (nx.cover){
+      put(P.cover, leafF); put(P.p1, leafB);
+      put(P.epL, ul); put(P.epR, ur);
+      if (!flat) { leaf.classList.add('on'); setLeaf(0, false); }
+    } else {
+      put(nx.l, ul); put(nx.r, ur);
+      leaf.classList.remove('on');
+    }
+    state.spread = target;
+    updateUI();
+    openLive(nx);
+  }
+
+  /* ================= 移动端：整页横滑翻页 ================= */
+  function slideBy(dir, forceMp){
+    if (locked) return;
+    var t = (forceMp == null) ? state.mp + dir : forceMp;
+    if (t < 0) t = 0;
+    if (t > 5) t = 5;
+    if (t === state.mp && forceMp == null) return;
+    var curEl = ur.firstElementChild;
+    var nx = mPages[t];
+    if (!nx || nx === curEl){
+      state.mp = t;
+      state.spread = Math.floor(t / 2) + 1;
+      updateUI();
+      return;
+    }
+    locked = true;
+    body.classList.add('busy');
+    var outCls = dir >= 0 ? 'm-out-l' : 'm-out-r';
+    var inCls  = dir >= 0 ? 'm-in-r'  : 'm-in-l';
+    if (curEl){
+      curEl.classList.remove('m-out-l','m-out-r','m-in-l','m-in-r');
+      curEl.classList.add(outCls);
+      curEl.classList.remove('live'); /* 场景收拢 */
+    }
+    setTimeout(function(){
+      if (curEl) curEl.classList.remove('m-out-l','m-out-r');
+      nx.classList.remove('m-out-l','m-out-r','m-in-l','m-in-r');
+      put(nx, ur);
+      state.mp = t;
+      state.spread = Math.floor(t / 2) + 1;
+      updateUI();
+      raf2(function(){
+        nx.classList.add(inCls);
+        nx.classList.add('live');
+        setTimeout(function(){ nx.classList.remove('m-in-l','m-in-r'); }, 420);
+        if (!rm) confetti();
+        body.classList.remove('busy');
+        setTimeout(function(){ locked = false; }, 60);
+      });
+    }, rm ? 30 : 280);
+  }
+
+  /* ================= 对外动作 ================= */
+  function next(){
+    if (mob.matches){ slideBy(1); return; }
+    turn(1);
+  }
+  function prev(){
+    if (mob.matches){ slideBy(-1); return; }
+    turn(-1);
+  }
+  function goTo(t){
+    if (mob.matches){
+      if (t === 0) t = 1;               // 移动端无常开封面
+      var mp = t * 2 - 1;
+      if (mp === state.mp) return;
+      slideBy(mp > state.mp ? 1 : -1, mp);
+      return;
+    }
+    if (t === state.spread) return;
+    turn(t > state.spread ? 1 : -1, Math.abs(t - state.spread) === 1 ? t : null);
+  }
+
+  /* ================= 缩放适配（书按设计尺寸等比缩放） ================= */
+  function fit(){
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var designW = mob.matches ? 520 : 1040, designH = 660, s;
+    if (mob.matches){
+      s = Math.min((vw * 0.94) / 520, 0.92);
+      s = Math.max(s, 0.42);
+    } else {
+      s = Math.min((vw - 28) / 1040, (vh - 258) / 660, 1);
+      s = Math.max(s, 0.4);
+    }
+    if (stageInner) stageInner.style.transform = 'scale(' + s.toFixed(4) + ')';
+    if (stageBox){
+      stageBox.style.width = (designW * s) + 'px';
+      stageBox.style.height = (designH * s) + 'px';
+    }
+  }
+
+  /* ================= 模式切换（桌面对开 ↔ 移动单页） ================= */
+  function clearSlot(slot){
+    while (slot && slot.firstChild) slot.removeChild(slot.firstChild);
+  }
+  function renderForMode(){
+    fit();
+    if (mob.matches){
+      if (state.spread === 0){ state.spread = 1; state.mp = 0; }
+      /* 若 mp 与当前对开页不一致（刚在桌面模式翻过页），以对开页首页为准 */
+      if (Math.floor(state.mp / 2) + 1 !== state.spread) state.mp = state.spread * 2 - 1;
+      state.mp = Math.min(Math.max(state.mp, 0), 5);
+      state.spread = Math.floor(state.mp / 2) + 1;
+      sweepLive();
+      clearSlot(ul); clearSlot(ur);
+      put(mPages[state.mp], ur);
+      leaf.classList.remove('on');
+      updateUI();
+      openLive(SPREADS[state.spread]);
+    } else {
+      state.spread = Math.min(Math.max(state.spread, 0), 3);
+      sweepLive();
+      clearSlot(ul); clearSlot(ur);
+      if (state.spread === 0){
+        put(P.cover, leafF); put(P.p1, leafB);
+        put(P.epL, ul); put(P.epR, ur);
+        leaf.classList.add('on'); setLeaf(0, false);
+      } else {
+        var sd = SPREADS[state.spread];
+        put(sd.l, ul); put(sd.r, ur);
+        leaf.classList.remove('on');
+      }
+      updateUI();
+      if (SPREADS[state.spread].live.length) openLive(SPREADS[state.spread]);
+    }
+  }
+
+  /* ================= 事件绑定 ================= */
+  btnNext.addEventListener('click', next);
+  btnPrev.addEventListener('click', prev);
+  cNext.addEventListener('click', next);
+  cPrev.addEventListener('click', prev);
+  dots.forEach(function(d){
+    d.addEventListener('click', function(){ goTo(Number(d.getAttribute('data-dot'))); });
+  });
+  document.addEventListener('click', function(e){
+    var slip = e.target.closest ? e.target.closest('.slipnav button[data-go]') : null;
+    if (slip){ goTo(Number(slip.getAttribute('data-go'))); return; }
+    var hint = e.target.closest ? e.target.closest('#coverHint') : null;
+    if (hint){ turn(1, 1); return; }
+    var tab = e.target.closest ? e.target.closest('[data-pull]') : null;
+    if (tab){
+      var pg = tab.closest('.pg');
+      if (pg){
+        pg.classList.toggle('pulled');
+        if (pg.classList.contains('pulled')) toast('纸拉杆已拉动 · 场景再弹出');
+      }
+      return;
+    }
+    if (e.target.closest && e.target.closest('.mb-btn')){
+      var flipped = mbLeaf.classList.toggle('flip');
+      $id('mbPrev').disabled = !flipped;
+      $id('mbNext').disabled = flipped;
+      var md = $id('mbDots').querySelectorAll('i');
+      if (md[0]) md[0].classList.toggle('on', !flipped);
+      if (md[1]) md[1].classList.toggle('on', flipped);
+    }
+  });
+  /* 键盘方向键 */
+  document.addEventListener('keydown', function(e){
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); prev(); }
+  });
+  /* 触屏 / 指针左右滑动 */
+  var swipe = null;
+  stage.addEventListener('pointerdown', function(e){
+    if (e.target.closest && e.target.closest('button, .ptab, .mb-btn, .tag')) { swipe = null; return; }
+    swipe = { x: e.clientX, y: e.clientY, id: e.pointerId };
+  });
+  stage.addEventListener('pointerup', function(e){
+    if (!swipe || e.pointerId !== swipe.id){ swipe = null; return; }
+    var dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
+    swipe = null;
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5){
+      if (dx < 0) next(); else prev();
+    }
+  });
+  stage.addEventListener('pointercancel', function(){ swipe = null; });
+
+  /* 迷你书引用（事件委托用） */
+  var mbLeaf = $id('mbLeaf');
+
+  if (mob.addEventListener) mob.addEventListener('change', renderForMode);
+  else if (mob.addListener) mob.addListener(renderForMode);
+  window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', fit);
+
+  /* ================= 初始化 ================= */
+  put(P.cover, leafF);   // 封面（合书时朝外）
+  put(P.p1, leafB);      // 第 1 页随封面一起翻入
+  put(P.epL, ul);
+  put(P.epR, ur);
+  setLeaf(0, false);
+  leaf.classList.add('on');
+  updateUI();
+  fit();
+
+  if (rm || flat || mob.matches){
+    body.classList.remove('boot');
+    body.classList.add('booted');
+    if (mob.matches){
+      /* 移动端：书常开，单页横滑，直接呈现第 1 页 */
+      state.spread = 1; state.mp = 0;
+      put(P.p1, ur);
+      updateUI();
+      openLive(SPREADS[1]);
+    } else {
+      jumpTo(1);
+    }
+    locked = false;
+  } else {
+    /* 入场：书合着 → 稍候自动翻开（封面 90° 对开） */
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ body.classList.add('booted'); });
+    });
+    setTimeout(function(){
+      if (state.spread === 0){ locked = false; turn(1, 1); }
+    }, 1250);
+  }
+
+  /* 触屏提示（一次性） */
+  if (('ontouchstart' in window) || (navigator.maxTouchPoints > 0)){
+    setTimeout(function(){ if (!rm) toast('左右滑动或点书角翻页 · 试试页底的纸拉杆', 2600); }, (rm || flat) ? 900 : 2600);
+  }
+})();
+</script>
+</body>
+</html>

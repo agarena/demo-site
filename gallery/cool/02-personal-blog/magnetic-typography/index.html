@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="no-js">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>慢速缓存 · Slow Cache — 沈知远的公开笔记本</title>
+<meta name="description" content="慢速缓存 Slow Cache：沈知远的个人博客。关注 Web 性能、设计工程与独立开发。把值得想的事，写在会呼吸的页面上。">
+<style>
+/* ============================================================
+   慢速缓存 · Slow Cache
+   风格：磁性交互大字排版 Magnetic / Kinetic Typography
+   原则：文字即界面，底色克制，让「字动」成为唯一主角
+   ============================================================ */
+
+/* ---------- 0. 令牌 ---------- */
+:root{
+  --paper:      #F2EFE9;   /* 纸白底 */
+  --ink:        #161512;   /* 墨黑 */
+  --ink-2:      #6F6A5F;   /* 弱文字 */
+  --line:       #D8D2C5;   /* 分隔线 */
+  --accent:     #FF4D00;   /* 唯一强调 · 磁性橙 */
+  --dark:       #141311;   /* 深色段底 */
+  --paper-dark: #F2EFE9;   /* 深色段上的纸白文字 */
+  --line-dark:  rgba(242,239,233,.18);
+
+  --font-display: "Segoe UI Variable Display","Segoe UI Variable","Segoe UI","Helvetica Neue",Helvetica,Arial,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --font-body: "Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --font-mono: "Cascadia Code","JetBrains Mono","SF Mono",Consolas,"Courier New",monospace;
+
+  --pad-x: 4vw;
+  --ease-out: cubic-bezier(.22,1,.36,1);
+  --ease-back: cubic-bezier(.2,1.35,.3,1);
+}
+
+/* ---------- 1. 基础 ---------- */
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+html{ scroll-behavior:smooth; -webkit-text-size-adjust:100%; }
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.75;
+  overflow-x:hidden;
+}
+body.is-loading{ overflow:hidden; }
+img,svg{ display:block; max-width:100%; }
+a{ color:inherit; text-decoration:none; }
+button{ font:inherit; color:inherit; background:none; border:0; }
+ul,ol{ list-style:none; }
+::selection{ background:var(--accent); color:var(--paper); }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:4px; }
+/* cursor:none 绝不静态全局生效：只在 JS 受控的启用类作用域内生效。
+   html.has-custom-cursor 由脚本确认「光标 DOM 就绪 + 已收到真实 pointermove
+   + rAF 循环已启动」三条件全部满足后才添加；异常 / 失焦 / 移出窗口时立即移除，
+   系统光标即刻恢复。 */
+html.has-custom-cursor,
+html.has-custom-cursor body,
+html.has-custom-cursor a,
+html.has-custom-cursor button{ cursor:none; }
+html.has-custom-cursor input,
+html.has-custom-cursor textarea{ cursor:text; }
+
+/* 字符 span 化的公共样式 */
+.char{ display:inline-block; }
+
+/* ---------- 2. 自定义光标（圆点 + 滞后圆环 · difference 反色） ----------
+   安全策略：光标层默认自带完整可见样式，初始 transform 定位在视口外 (-100px)，
+   不依赖 JS 写入位置才可见；z-index 拉满、pointer-events:none、transform 驱动。
+   圆点在 difference 之外另叠一层深色描边 + 投影（.cursor-under），
+   mix-blend-mode 在中灰等背景上失效时依然可见。 */
+.cursor-dot,
+.cursor-ring,
+.cursor-under{
+  position:fixed; top:0; left:0;
+  z-index:2147483647; pointer-events:none;
+  border-radius:50%;
+  will-change:transform;
+  transform:translate3d(-100px,-100px,0);
+}
+.cursor-under{
+  width:12px; height:12px; margin:-6px 0 0 -6px;
+  box-shadow:0 0 0 1px rgba(20,19,17,.45), 0 1px 5px rgba(20,19,17,.4);
+  opacity:.9;
+  transition:opacity .25s ease;
+}
+.cursor-dot{
+  width:8px; height:8px; margin:-4px 0 0 -4px;
+  background:#fff;
+  mix-blend-mode:difference;
+  transition:opacity .25s ease;
+}
+.cursor-ring{
+  width:38px; height:38px; margin:-19px 0 0 -19px;
+  border:1.5px solid #fff;
+  mix-blend-mode:difference;
+  transition:width .28s var(--ease-out), height .28s var(--ease-out), margin .28s var(--ease-out), opacity .25s ease;
+}
+body.cursor-hover .cursor-ring{ width:72px; height:72px; margin:-36px 0 0 -36px; }
+/* 移出窗口 / 失焦：光标层淡出，同时由 JS 交还系统光标 */
+body.cursor-hidden .cursor-dot,
+body.cursor-hidden .cursor-ring,
+body.cursor-hidden .cursor-under{ opacity:0; }
+@media (hover:none),(pointer:coarse){
+  .cursor-dot,.cursor-ring,.cursor-under{ display:none !important; }
+}
+
+/* ---------- 3. 阅读进度条 ---------- */
+.progress{
+  position:fixed; top:0; left:0; right:0;
+  height:3px; z-index:80;
+  background:var(--accent);
+  transform:scaleX(0); transform-origin:0 50%;
+  pointer-events:none;
+}
+
+/* ---------- 4. 加载幕布（字符逐个落位前的黑场） ---------- */
+.loader{
+  position:fixed; inset:0; z-index:100;
+  background:var(--dark); color:var(--paper-dark);
+  display:none;
+  flex-direction:column; justify-content:space-between;
+  padding:26px var(--pad-x);
+}
+.js .loader{ display:flex; }
+.loader.done{
+  transform:translateY(-101%);
+  transition:transform .7s cubic-bezier(.76,0,.24,1);
+  pointer-events:none;
+}
+.loader-top{ display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:rgba(242,239,233,.6); }
+.loader-word{
+  font-family:var(--font-display);
+  font-size:clamp(48px,10vw,150px);
+  font-weight:800; line-height:1.05; letter-spacing:-.01em;
+  overflow:hidden; padding:.08em 0;
+}
+.loader-word .char{
+  transform:translateY(120%);
+  animation:loaderRise .8s var(--ease-back) forwards;
+  animation-delay:var(--d,0ms);
+}
+@keyframes loaderRise{ to{ transform:translateY(0); } }
+.loader-bottom{ display:flex; justify-content:space-between; align-items:flex-end; }
+.loader-hint{ font-family:var(--font-mono); font-size:12px; color:rgba(242,239,233,.5); letter-spacing:.1em; }
+.loader-count{
+  font-family:var(--font-display);
+  font-size:clamp(40px,6vw,84px);
+  font-weight:750; line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ---------- 5. 页头（difference 反色，深浅底通吃） ---------- */
+.site-head{
+  position:fixed; top:0; left:0; right:0; z-index:60;
+  mix-blend-mode:difference; color:#fff;
+}
+.head-in{
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+  padding:18px var(--pad-x);
+}
+.head-logo{
+  font-family:var(--font-display);
+  font-size:19px; font-weight:800; letter-spacing:.01em;
+  display:inline-flex; align-items:center; gap:10px;
+  white-space:nowrap;
+}
+.head-logo i{
+  width:9px; height:9px; border-radius:50%; background:#fff; font-style:normal;
+}
+.head-nav{ display:flex; gap:clamp(14px,2.4vw,34px); }
+.head-nav a{
+  position:relative; font-size:14px; letter-spacing:.06em; padding:4px 0;
+}
+.head-nav a::after{
+  content:""; position:absolute; left:0; bottom:0;
+  width:100%; height:1px; background:#fff;
+  transform:scaleX(0); transform-origin:100% 50%;
+  transition:transform .35s var(--ease-out);
+}
+.head-nav a:hover::after{ transform:scaleX(1); transform-origin:0 50%; }
+.head-cta{
+  border:1px solid #fff; border-radius:999px;
+  padding:8px 20px; font-size:13px; letter-spacing:.08em;
+  transition:background .3s, color .3s;
+  white-space:nowrap;
+}
+.head-cta:hover{ background:#fff; color:#000; }
+
+/* ---------- 6. Hero · 磁性大字 ---------- */
+.hero{
+  min-height:100svh;
+  display:flex; flex-direction:column; justify-content:center;
+  padding:120px var(--pad-x) 90px;
+  position:relative;
+}
+.hero-meta{
+  display:flex; flex-wrap:wrap; gap:10px 26px;
+  font-family:var(--font-mono); font-size:12px; letter-spacing:.14em;
+  color:var(--ink-2); text-transform:uppercase;
+  margin-bottom:clamp(24px,4vh,48px);
+}
+.hero-meta b{ color:var(--accent); font-weight:400; }
+.hero-title{
+  font-family:var(--font-display);
+  font-weight:800;
+  line-height:.98;
+  letter-spacing:-.015em;
+  user-select:none;
+}
+.h-line{ display:block; overflow:hidden; padding:.06em 0; }
+body.entrance-done .h-line{ overflow:visible; }
+.h-line-inner{ display:inline-block; will-change:transform; }
+.h-line--cn .char{ font-size:clamp(58px,15vw,290px); }
+.h-line--lat .char{
+  font-size:clamp(30px,7.6vw,148px);
+  color:transparent;
+  -webkit-text-stroke:1.5px var(--ink);
+  letter-spacing:.01em;
+}
+/* 入场：字符逐个落位（JS 标注每字 delay） */
+.js .hero-title .char{
+  transform:translateY(118%) rotate(6deg);
+  transition:transform .95s var(--ease-back);
+  transition-delay:var(--d,0ms);
+  will-change:transform;
+}
+.js .hero-in .hero-title .char{ transform:translateY(0) rotate(0deg); }
+body.entrance-done .hero-title .char{ transition:none; }
+
+.hero-foot{
+  display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:24px;
+  margin-top:clamp(28px,5vh,60px);
+}
+.hero-slogan{
+  font-family:var(--font-display);
+  font-size:clamp(17px,2vw,26px);
+  font-weight:600; line-height:1.6;
+  max-width:34em;
+}
+.hero-slogan .char{ display:inline-block; }
+.hero-slogan .hl{ color:var(--accent); }
+.hero-side{
+  font-family:var(--font-mono); font-size:12px; line-height:2.1;
+  letter-spacing:.16em; color:var(--ink-2); text-align:right;
+}
+.hero-scroll{
+  position:absolute; left:var(--pad-x); bottom:26px;
+  display:flex; align-items:center; gap:12px;
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.3em; color:var(--ink-2);
+}
+.hero-scroll i{
+  width:52px; height:1px; background:var(--ink);
+  transform-origin:0 50%; animation:scrollLine 2.2s var(--ease-out) infinite;
+  font-style:normal;
+}
+@keyframes scrollLine{
+  0%{ transform:scaleX(0); transform-origin:0 50%; }
+  45%{ transform:scaleX(1); transform-origin:0 50%; }
+  55%{ transform:scaleX(1); transform-origin:100% 50%; }
+  100%{ transform:scaleX(0); transform-origin:100% 50%; }
+}
+
+/* ---------- 7. 跑马灯分隔带 ---------- */
+.marquee{
+  overflow:hidden;
+  border-block:1px solid var(--line);
+  padding:16px 0;
+  user-select:none;
+}
+.marquee-track{
+  display:flex; width:max-content;
+  will-change:transform;
+  white-space:nowrap;
+}
+.marquee.css-anim .marquee-track{ animation:mq 26s linear infinite; }
+@keyframes mq{ to{ transform:translateX(-50%); } }
+.marquee-chunk{
+  font-family:var(--font-display);
+  font-size:clamp(20px,3.4vw,44px);
+  font-weight:800; letter-spacing:.01em;
+  padding-right:.6em;
+}
+.marquee-chunk em{
+  font-style:normal; color:transparent;
+  -webkit-text-stroke:1.2px var(--ink);
+}
+.marquee-chunk b{ color:var(--accent); font-weight:800; }
+.marquee--dark{ background:var(--dark); border-color:var(--line-dark); }
+.marquee--dark .marquee-chunk{ color:var(--paper-dark); }
+.marquee--dark .marquee-chunk em{ -webkit-text-stroke-color:var(--paper-dark); }
+
+/* ---------- 8. 区块公共 ---------- */
+.sec{ padding:clamp(80px,14vh,150px) var(--pad-x) 0; }
+.sec-head{ overflow:hidden; padding:.08em 0; margin-bottom:clamp(28px,5vh,56px); }
+.sec-title{
+  font-family:var(--font-display);
+  font-size:clamp(44px,8vw,128px);
+  font-weight:800; line-height:1; letter-spacing:-.015em;
+}
+.sec-title .char{ display:inline-block; }
+.js .sec-title[data-split-reveal] .char{
+  transform:translateY(115%);
+  transition:transform .8s var(--ease-back);
+  transition-delay:var(--d,0ms);
+}
+.js .sec-title[data-split-reveal].is-in .char{ transform:translateY(0); }
+.sec-sub{
+  display:flex; flex-wrap:wrap; gap:8px 28px; align-items:baseline;
+  margin-top:14px;
+  font-family:var(--font-mono); font-size:13px; letter-spacing:.1em; color:var(--ink-2);
+}
+.sec-sub b{ color:var(--accent); font-weight:400; }
+
+/* 滚动显现（通用） */
+[data-reveal]{ opacity:0; transform:translateY(30px); transition:opacity .8s ease, transform .8s var(--ease-out); }
+[data-reveal].is-in{ opacity:1; transform:none; }
+
+/* ---------- 9. 文章列表 · 行式大字 ---------- */
+.filters{
+  display:flex; flex-wrap:wrap; gap:10px;
+  margin:0 0 clamp(28px,4vh,44px);
+}
+.chip{
+  font-family:var(--font-mono); font-size:13px; letter-spacing:.08em;
+  border:1px solid var(--ink); border-radius:999px;
+  padding:8px 18px;
+  transition:background .25s, color .25s, transform .25s;
+}
+.chip:hover{ transform:translateY(-2px); }
+.chip.on{ background:var(--ink); color:var(--paper); }
+.rows{ border-top:1px solid var(--line); }
+.row{ border-bottom:1px solid var(--line); }
+.row.is-hidden{ display:none; }
+.row-head{
+  display:grid;
+  grid-template-columns:3.4rem minmax(0,1fr) 2rem;
+  grid-template-areas:"idx title arrow" "meta meta meta";
+  column-gap:clamp(14px,2vw,30px); row-gap:8px;
+  align-items:baseline;
+  width:100%; text-align:left;
+  padding:clamp(20px,3vh,32px) 0;
+}
+.row-idx{
+  grid-area:idx;
+  font-family:var(--font-mono); font-size:13px; color:var(--accent);
+  font-variant-numeric:tabular-nums;
+}
+.row-main{ grid-area:title; min-width:0; }
+.row-dash{
+  display:inline-block; width:0; height:2px;
+  background:var(--accent); vertical-align:middle;
+  margin-right:0;
+  transition:width .35s var(--ease-out), margin-right .35s var(--ease-out);
+}
+.row-title{
+  display:inline-block;
+  font-family:var(--font-display);
+  font-size:clamp(23px,3.3vw,46px);
+  font-weight:700; line-height:1.22; letter-spacing:-.01em;
+  transition:transform .4s var(--ease-out);
+  transform:translateX(0);
+}
+.row-head:hover .row-title,
+.row-head:focus-visible .row-title{ transform:translateX(12px); }
+.row-head:hover .row-dash,
+.row-head:focus-visible .row-dash{ width:34px; margin-right:16px; }
+.row-title .char{ display:inline-block; }
+.row-meta{
+  grid-area:meta;
+  display:flex; flex-wrap:wrap; gap:6px 20px;
+  font-family:var(--font-mono); font-size:12px; letter-spacing:.06em; color:var(--ink-2);
+}
+.row-meta .cat::before{ content:"◈ "; color:var(--accent); }
+.row-arrow{
+  grid-area:arrow; align-self:center; justify-self:end;
+  font-family:var(--font-display); font-size:clamp(20px,2.4vw,30px); font-weight:700;
+  transition:transform .35s var(--ease-out), color .3s;
+}
+.row-head:hover .row-arrow{ transform:translate(4px,-4px); color:var(--accent); }
+.row.open .row-arrow{ transform:rotate(45deg); }
+
+/* 展开面板 */
+.row-panel{
+  display:grid; grid-template-rows:0fr;
+  transition:grid-template-rows .65s var(--ease-out);
+}
+.row-panel.open{ grid-template-rows:1fr; }
+.row-panel-inner{ overflow:hidden; min-height:0; }
+@supports not (grid-template-rows:0fr){
+  .row-panel{ display:none; }
+  .row-panel.open{ display:block; }
+}
+.panel-box{
+  border-top:1px dashed var(--line);
+  margin:0 0 clamp(28px,4vh,44px);
+  padding-top:clamp(22px,3vh,34px);
+  max-width:76ch;
+}
+
+/* 正文排版 */
+.prose{ font-size:16.5px; line-height:1.9; color:var(--ink); }
+.prose p{ margin:0 0 1.3em; }
+.prose .lead{ font-size:clamp(18px,1.6vw,21px); font-weight:500; }
+.prose h2{
+  font-family:var(--font-display);
+  font-size:clamp(21px,2.2vw,28px); font-weight:800;
+  margin:2.2em 0 .9em; letter-spacing:-.01em;
+}
+.prose h2::before{ content:"§ "; color:var(--accent); }
+.prose h3{ font-size:18px; font-weight:700; margin:1.8em 0 .7em; }
+.prose ul{ margin:0 0 1.3em; padding-left:1.2em; }
+.prose ul li{ margin-bottom:.5em; }
+.prose ul li::marker{ content:"— "; color:var(--accent); }
+.prose blockquote{
+  border-left:3px solid var(--accent);
+  padding:.2em 0 .2em 1.2em; margin:1.8em 0;
+  font-family:var(--font-display); font-weight:600;
+  font-size:clamp(17px,1.5vw,20px); line-height:1.8;
+}
+.prose .pull{
+  font-family:var(--font-display); font-weight:800;
+  font-size:clamp(22px,2.6vw,34px); line-height:1.5;
+  margin:1.6em 0; letter-spacing:-.01em;
+}
+.prose .pull b{ color:var(--accent); font-weight:800; }
+.prose code{
+  font-family:var(--font-mono); font-size:.86em;
+  background:rgba(22,21,18,.06); border:1px solid var(--line);
+  border-radius:4px; padding:1px 6px;
+}
+.prose .end-mark{ color:var(--accent); }
+.panel-tags{
+  display:flex; flex-wrap:wrap; gap:8px 18px;
+  margin-top:1.6em; padding-top:1.2em; border-top:1px dashed var(--line);
+  font-family:var(--font-mono); font-size:12.5px; color:var(--ink-2); letter-spacing:.05em;
+}
+.panel-tags a:hover{ color:var(--accent); }
+.panel-nav{
+  display:flex; justify-content:space-between; gap:16px;
+  margin-top:1.6em;
+  font-family:var(--font-mono); font-size:13px;
+}
+.panel-nav a{ border-bottom:1px solid var(--line); padding-bottom:2px; transition:color .25s, border-color .25s; }
+.panel-nav a:hover{ color:var(--accent); border-color:var(--accent); }
+.panel-note{
+  font-family:var(--font-mono); font-size:12.5px; color:var(--ink-2);
+  margin-bottom:1.4em; letter-spacing:.04em;
+}
+.panel-note b{ color:var(--accent); font-weight:400; }
+
+/* 代码卡 */
+.code-card{
+  border:1px solid var(--line); border-radius:10px;
+  overflow:hidden; margin:1.6em 0;
+  background:#FBFAF6;
+}
+.code-head{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 14px; border-bottom:1px solid var(--line);
+  font-family:var(--font-mono); font-size:12px; color:var(--ink-2); letter-spacing:.08em;
+}
+.code-copy{
+  font-family:var(--font-mono); font-size:12px;
+  border:1px solid var(--line); border-radius:6px; padding:3px 10px;
+  transition:all .25s;
+}
+.code-copy:hover{ border-color:var(--ink); color:var(--ink); }
+.code-copy.ok{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.code-card pre{
+  padding:16px 18px; overflow-x:auto;
+  font-family:var(--font-mono); font-size:13.5px; line-height:1.75;
+  color:var(--ink);
+}
+.result-strip{
+  display:flex; flex-wrap:wrap; gap:0;
+  border:1px solid var(--line); border-radius:10px; overflow:hidden;
+  margin:1.6em 0;
+}
+.result-strip div{
+  flex:1 1 120px; padding:14px 16px;
+  border-right:1px solid var(--line);
+}
+.result-strip div:last-child{ border-right:0; }
+.result-strip small{ display:block; font-family:var(--font-mono); font-size:11px; color:var(--ink-2); letter-spacing:.1em; }
+.result-strip strong{ font-family:var(--font-display); font-size:clamp(20px,2vw,26px); font-weight:800; }
+.result-strip strong.hot{ color:var(--accent); }
+
+/* ---------- 10. 归档 · 按年 ---------- */
+#archive{ padding-left:0; padding-right:0; }
+#archive .sec-head, #archive .sec-sub{ padding:0 var(--pad-x); }
+.arch-year{
+  display:grid;
+  grid-template-columns:minmax(130px,20vw) minmax(0,1fr);
+  gap:clamp(20px,4vw,60px);
+  padding:clamp(36px,6vh,64px) var(--pad-x);
+  border-top:1px solid var(--line);
+  align-items:start;
+}
+.arch-num{
+  font-family:var(--font-display);
+  font-size:clamp(64px,11vw,190px);
+  font-weight:800; line-height:.85; letter-spacing:-.03em;
+  color:transparent; -webkit-text-stroke:1.6px var(--ink);
+  transition:color .4s;
+  user-select:none;
+}
+.arch-year:hover .arch-num{ color:var(--ink); }
+.arch-num .char{ display:inline-block; }
+.js .arch-num[data-split-reveal] .char{
+  transform:translateY(60%); opacity:0;
+  transition:transform .8s var(--ease-back), opacity .5s ease;
+  transition-delay:var(--d,0ms);
+}
+.js .arch-num[data-split-reveal].is-in .char{ transform:translateY(0); opacity:1; }
+.arch-list li{
+  display:flex; align-items:baseline; gap:16px;
+  padding:13px 0;
+  border-bottom:1px dashed var(--line);
+  font-size:15.5px;
+}
+.arch-list li:first-child{ padding-top:0; }
+.arch-list time{ font-family:var(--font-mono); font-size:12.5px; color:var(--ink-2); white-space:nowrap; font-variant-numeric:tabular-nums; }
+.arch-list .t{ font-family:var(--font-display); font-weight:600; font-size:clamp(15px,1.4vw,18px); transition:color .25s; }
+.arch-list li:hover .t{ color:var(--accent); }
+.arch-list .c{ margin-left:auto; font-family:var(--font-mono); font-size:11.5px; color:var(--ink-2); white-space:nowrap; }
+
+/* ---------- 11. 关于我 ---------- */
+.about-grid{
+  display:grid;
+  grid-template-columns:minmax(210px,320px) minmax(0,1fr);
+  gap:clamp(32px,6vw,90px);
+  align-items:start;
+}
+.avatar{
+  aspect-ratio:1/1;
+  border:1.5px solid var(--ink);
+  display:grid; place-items:center;
+  position:relative;
+  font-family:var(--font-display);
+  font-size:clamp(90px,11vw,170px); font-weight:900; line-height:1;
+  user-select:none;
+  background:linear-gradient(135deg, rgba(255,77,0,.07), transparent 55%);
+}
+.avatar::after{
+  content:"EST.2015";
+  position:absolute; right:-1px; bottom:-1px;
+  background:var(--accent); color:var(--paper);
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.14em;
+  padding:5px 10px;
+}
+.avatar::before{
+  content:"SLOW CACHE · HANGZHOU";
+  position:absolute; left:14px; top:12px;
+  font-family:var(--font-mono); font-size:10px; letter-spacing:.22em; color:var(--ink-2);
+}
+.about-name{
+  font-family:var(--font-display);
+  font-size:clamp(26px,3vw,40px); font-weight:800; letter-spacing:-.01em;
+  margin-bottom:6px;
+}
+.about-name span{ font-family:var(--font-mono); font-size:.42em; font-weight:400; color:var(--ink-2); letter-spacing:.1em; margin-left:14px; }
+.about-motto{
+  font-family:var(--font-display); font-weight:700;
+  font-size:clamp(18px,1.9vw,24px);
+  color:var(--accent);
+  margin-bottom:1.4em;
+}
+.about-bio p{ margin-bottom:1.1em; max-width:62ch; }
+.about-h{ font-family:var(--font-mono); font-size:12.5px; letter-spacing:.22em; color:var(--ink-2); text-transform:uppercase; margin:2.4em 0 1em; }
+.about-h::before{ content:"// "; color:var(--accent); }
+.now-list li{
+  display:flex; gap:18px; align-items:baseline;
+  padding:11px 0; border-bottom:1px dashed var(--line);
+  max-width:62ch;
+}
+.now-list .k{ font-family:var(--font-mono); font-size:12px; color:var(--accent); white-space:nowrap; letter-spacing:.08em; }
+.now-list .v{ font-size:15.5px; }
+.contact-list{ display:flex; flex-wrap:wrap; gap:12px; }
+.contact-list a{
+  font-family:var(--font-mono); font-size:13.5px; letter-spacing:.04em;
+  border:1px solid var(--ink); border-radius:999px; padding:9px 20px;
+  transition:background .25s, color .25s, transform .25s;
+}
+.contact-list a:hover{ background:var(--ink); color:var(--paper); transform:translateY(-3px); }
+
+/* ---------- 12. 订阅（深色段） ---------- */
+.sub{
+  margin-top:clamp(90px,15vh,160px);
+  background:var(--dark); color:var(--paper-dark);
+  padding:clamp(90px,16vh,170px) var(--pad-x) clamp(70px,10vh,120px);
+}
+.sub .sec-title{ color:var(--paper-dark); }
+.sub .sec-sub{ color:rgba(242,239,233,.55); }
+.sub-lead{ max-width:44ch; font-size:clamp(16px,1.5vw,19px); line-height:1.9; color:rgba(242,239,233,.82); margin-bottom:clamp(34px,5vh,54px); }
+.sub-lead b{ color:var(--accent); font-weight:600; }
+.sub-form{ display:flex; flex-wrap:wrap; gap:18px; align-items:stretch; max-width:760px; }
+.sub-field{ flex:1 1 300px; position:relative; }
+.sub-field input{
+  width:100%;
+  background:transparent; border:0; border-bottom:1.5px solid rgba(242,239,233,.4);
+  color:var(--paper-dark);
+  font-family:var(--font-mono); font-size:clamp(16px,1.6vw,20px);
+  padding:14px 2px;
+  transition:border-color .3s;
+  border-radius:0;
+}
+.sub-field input::placeholder{ color:rgba(242,239,233,.35); }
+.sub-field input:focus{ outline:none; border-color:var(--accent); }
+.sub-field input[aria-invalid="true"]{ border-color:#FF6B4A; animation:shake .4s ease; }
+@keyframes shake{
+  0%,100%{ transform:translateX(0); }
+  25%{ transform:translateX(-7px); }
+  50%{ transform:translateX(6px); }
+  75%{ transform:translateX(-4px); }
+}
+.sub-btn{
+  font-family:var(--font-display); font-weight:700;
+  font-size:clamp(15px,1.4vw,18px); letter-spacing:.02em;
+  background:var(--paper-dark); color:var(--dark);
+  border-radius:999px; padding:16px 34px;
+  transition:background .3s, color .3s;
+  will-change:transform;
+  white-space:nowrap;
+}
+.sub-btn:hover{ background:var(--accent); color:var(--paper); }
+.sub-msg{ font-family:var(--font-mono); font-size:13px; margin-top:16px; min-height:1.5em; letter-spacing:.03em; }
+.sub-msg.err{ color:#FF8A6B; }
+.sub-ok{
+  border:1px dashed rgba(242,239,233,.4); border-radius:14px;
+  padding:clamp(26px,4vh,40px);
+  max-width:760px;
+}
+.sub-ok h3{
+  font-family:var(--font-display); font-size:clamp(22px,2.4vw,32px); font-weight:800;
+  margin-bottom:.5em;
+}
+.sub-ok h3 i{ color:var(--accent); font-style:normal; }
+.sub-ok p{ color:rgba(242,239,233,.75); }
+.sub-ok p b{ color:var(--paper-dark); }
+.sub-rss{
+  margin-top:clamp(30px,5vh,50px);
+  display:flex; flex-wrap:wrap; align-items:center; gap:14px 22px;
+  font-family:var(--font-mono); font-size:13px; color:rgba(242,239,233,.55);
+}
+.sub-rss a{
+  color:var(--paper-dark);
+  border-bottom:1px solid rgba(242,239,233,.35);
+  padding-bottom:2px; transition:color .25s, border-color .25s;
+}
+.sub-rss a:hover{ color:var(--accent); border-color:var(--accent); }
+
+/* ---------- 13. 页脚 ---------- */
+.footer{
+  background:var(--dark); color:var(--paper-dark);
+  border-top:1px solid var(--line-dark);
+  padding:34px var(--pad-x) 40px;
+  display:flex; flex-wrap:wrap; gap:16px 30px; align-items:center; justify-content:space-between;
+  font-family:var(--font-mono); font-size:12.5px; color:rgba(242,239,233,.5);
+  letter-spacing:.05em;
+}
+.footer .big-thanks{
+  font-family:var(--font-display); font-weight:800;
+  font-size:clamp(15px,1.5vw,19px); color:var(--paper-dark);
+}
+.to-top{
+  display:inline-flex; align-items:center; gap:10px;
+  border:1px solid rgba(242,239,233,.4); border-radius:999px;
+  padding:11px 24px; color:var(--paper-dark);
+  font-family:var(--font-mono); font-size:13px;
+  transition:background .3s, color .3s, border-color .3s;
+  will-change:transform;
+}
+.to-top:hover{ background:var(--paper-dark); color:var(--dark); border-color:var(--paper-dark); }
+
+/* ---------- 14. 响应式 ---------- */
+@media (max-width:1199px){
+  .hero-side{ display:none; }
+}
+@media (max-width:767px){
+  :root{ --pad-x:22px; }
+  .head-nav{ display:none; }
+  .head-in{ padding-top:14px; padding-bottom:14px; }
+  .hero{ padding-top:104px; }
+  .hero-meta{ gap:6px 16px; font-size:11px; }
+  .h-line--cn .char{ font-size:clamp(52px,15vw,90px); }
+  .h-line--lat .char{ font-size:clamp(24px,7.4vw,52px); -webkit-text-stroke-width:1px; }
+  .hero-slogan{ font-size:16px; }
+  .hero-scroll{ display:none; }
+  .row-head{
+    grid-template-columns:2.2rem minmax(0,1fr);
+    grid-template-areas:"idx title" "meta meta";
+  }
+  .row-arrow{ display:none; }
+  .row-title{ font-size:clamp(21px,6vw,30px); }
+  .arch-year{ grid-template-columns:1fr; gap:18px; }
+  .arch-list .c{ display:none; }
+  .about-grid{ grid-template-columns:1fr; }
+  .avatar{ max-width:250px; }
+  .sub-btn{ flex:1 1 100%; text-align:center; }
+  .footer{ flex-direction:column; align-items:flex-start; }
+}
+@media (min-width:768px) and (max-width:1199px){
+  .row-head{
+    grid-template-columns:3rem minmax(0,1fr) 2rem;
+    grid-template-areas:"idx title arrow" "meta meta meta";
+  }
+}
+
+/* ---------- 15. 降级：触屏 / 粗指针（绝不启用 cursor:none） ---------- */
+@media (hover:none),(pointer:coarse){
+  html.kinetic *, html.has-custom-cursor, html.has-custom-cursor *{ cursor:auto !important; }
+}
+
+/* ---------- 16. 降级：prefers-reduced-motion ---------- */
+@media (prefers-reduced-motion:reduce){
+  html{ scroll-behavior:auto; }
+  .loader{ display:none !important; }
+  .js .hero-title .char{ transform:none !important; transition:none !important; }
+  .js .sec-title[data-split-reveal] .char,
+  .js .arch-num[data-split-reveal] .char{ transform:none !important; opacity:1 !important; transition:none !important; }
+  .marquee-track{ animation:none !important; transform:none !important; }
+  [data-reveal]{ opacity:1 !important; transform:none !important; transition:none !important; }
+  .hero-scroll i{ animation:none; }
+  .row-head:hover .row-title{ transform:none; }
+  .row-title, .row-dash, .row-arrow, .chip, .contact-list a{ transition:none; }
+  .sub-field input[aria-invalid="true"]{ animation:none; }
+  .cursor-dot,.cursor-ring,.cursor-under{ display:none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- 阅读进度条 -->
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<!-- 加载幕布 -->
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader-top">
+    <span>SLOWCACHE.DEV</span>
+    <span>EST.2015 — HANGZHOU</span>
+  </div>
+  <div class="loader-word" id="loaderWord">慢速缓存</div>
+  <div class="loader-bottom">
+    <span class="loader-hint">正在解压字符…</span>
+    <span class="loader-count" id="loaderCount">0%</span>
+  </div>
+</div>
+
+<!-- 自定义光标（under = 深色描边兜底层，difference 在中灰背景失效时保底可见） -->
+<div class="cursor-under" id="cursorUnder" aria-hidden="true"></div>
+<div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+<div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
+
+<!-- 页头（difference 反色） -->
+<header class="site-head">
+  <div class="head-in">
+    <a class="head-logo" href="#top" data-magnet data-hover><i></i>慢速缓存<sup style="font-size:9px;letter-spacing:.1em">SLOW CACHE</sup></a>
+    <nav class="head-nav" aria-label="站内导航">
+      <a href="#articles">文章</a>
+      <a href="#archive">归档</a>
+      <a href="#about">关于</a>
+      <a href="#subscribe">订阅</a>
+    </nav>
+    <a class="head-cta" href="#subscribe" data-hover>缓存到收件箱</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ============ HERO · 磁性大字 ============ -->
+  <section class="hero" aria-label="博客名与欢迎语">
+    <div class="hero-meta" data-reveal>
+      <span>沈知远的公开笔记本</span>
+      <span><b>Vol.12</b> 已更新 12 篇</span>
+      <span>杭州 · 29°08′N 120°09′E</span>
+      <span>慢速缓存，长期保鲜</span>
+    </div>
+
+    <h1 class="hero-title">
+      <span class="h-line h-line--cn">
+        <span class="h-line-inner" id="heroCn">慢速缓存</span>
+      </span>
+      <span class="h-line h-line--lat">
+        <span class="h-line-inner" id="heroLat">SLOW CACHE</span>
+      </span>
+    </h1>
+
+    <div class="hero-foot">
+      <p class="hero-slogan" id="heroSlogan">把值得想的事，写在会呼吸的页面上。把折腾的过程，酿成可供检索的思考。</p>
+      <div class="hero-side" data-reveal>
+        WEB PERF / DESIGN ENG<br>
+        INDIE DEV / ESSAYS<br>
+        RSS FIRST · SINCE 2015
+      </div>
+    </div>
+
+    <div class="hero-scroll" aria-hidden="true"><i></i>向下滚动 SCROLL</div>
+  </section>
+
+  <!-- 跑马灯 1 -->
+  <div class="marquee" data-marquee aria-hidden="true">
+    <div class="marquee-track" id="mq1">
+      <span class="marquee-chunk">慢速缓存 · <em>SLOW CACHE</em> — 把值得想的事，写在会呼吸的页面上 — 慢速缓存 · <em>SLOW CACHE</em> — <b>长期保鲜</b> — </span>
+      <span class="marquee-chunk">慢速缓存 · <em>SLOW CACHE</em> — 把值得想的事，写在会呼吸的页面上 — 慢速缓存 · <em>SLOW CACHE</em> — <b>长期保鲜</b> — </span>
+    </div>
+  </div>
+
+  <!-- ============ 文章列表 ============ -->
+  <section class="sec" id="articles" aria-label="文章列表">
+    <div class="sec-head">
+      <h2 class="sec-title" data-split-reveal>最近更新</h2>
+      <p class="sec-sub">
+        <span>共 <b id="rowCount">12</b> 篇</span>
+        <span>点击行展开阅读 · 约 400 字/分钟</span>
+        <span>悬停标题，看字符起浪</span>
+      </p>
+    </div>
+
+    <div class="filters" role="group" aria-label="按栏目筛选">
+      <button class="chip on" data-filter="all" aria-pressed="true">全部 12</button>
+      <button class="chip" data-filter="maker" aria-pressed="false">造轮子 3</button>
+      <button class="chip" data-filter="expo" aria-pressed="false">观展记 2</button>
+      <button class="chip" data-filter="walk" aria-pressed="false">城市漫步 2</button>
+      <button class="chip" data-filter="hack" aria-pressed="false">折腾录 2</button>
+      <button class="chip" data-filter="garden" aria-pressed="false">半成品 3</button>
+    </div>
+
+    <ul class="rows" id="rows">
+
+      <!-- 01 · 完整正文 -->
+      <li class="row" data-cat="maker" data-reveal>
+        <button class="row-head" data-row-toggle aria-expanded="false" aria-controls="panel-01" id="rowhead-01">
+          <span class="row-idx">01</span>
+          <span class="row-main"><span class="row-dash" aria-hidden="true"></span><span class="row-title">把博客首屏压进300ms：一次性能考古</span></span>
+          <span class="row-arrow" aria-hidden="true">↗</span>
+          <span class="row-meta"><span class="cat">造轮子</span><time datetime="2026-08-30">2026.08.30</time><span>约 9 分钟</span><span>含全文</span></span>
+        </button>
+        <div class="row-panel" id="panel-01" role="region" aria-labelledby="rowhead-01">
+          <div class="row-panel-inner">
+            <div class="panel-box">
+              <article class="prose">
+                <p class="lead">上个月，我在年度计划里写下一行字：把 slowcache.dev 的 LCP 压进 300ms。当时 Lighthouse 给的分数是 45，LCP 是 2.8 秒——对一个自称「关注 Web 性能」的人来说，这多少有点行为艺术。</p>
+                <h2>一、先测准，再动手</h2>
+                <p>实验室数据和真实用户数据是两回事。Lighthouse 跑在本地光纤上，而我的读者有一半来自地铁里的 4G。所以我搭了三层测量：Lighthouse 看趋势，WebPageTest 的 4G 节点看弱网，CrUX 看真实用户的第 75 百分位。测了一周，瓶颈排序出乎意料——</p>
+                <ul>
+                  <li>全量中文字体 4.2MB，占首屏传输量的 62%，是压垮首屏的头号元凶；</li>
+                  <li>关键 CSS 没有内联，首屏渲染被stylesheet 请求瀑布卡住约 600ms；</li>
+                  <li>三张题图没有懒加载，和字体抢带宽；</li>
+                  <li>一段 80KB 的统计脚本同步加载，阻塞了正文解析。</li>
+                </ul>
+                <h2>二、头号嫌疑人：全量字体</h2>
+                <p>中文字体是个体积困境：常用字三千五，全量打包动辄几 MB。但我的博客一年也写不满一千五百个不重复的汉字。解法是子集化——用 fonttools 把实际用到的字符削出来，再按 unicode-range 分包，浏览器只下载页面真正用到的那几包。</p>
+                <div class="code-card">
+                  <div class="code-head"><span>bash · subset-fonts.sh</span><button class="code-copy" type="button">复制</button></div>
+                  <pre><code># 用 fonttools 把 4.2MB 的全量字体削成 84KB
+pyftsubset slowcache-full.woff2 \
+  --text-file=used-chars.txt \
+  --flavor=woff2 \
+  --layout-features='kern,liga' \
+  --output-file=slowcache-subset.woff2</code></pre>
+                </div>
+                <p>第二步是 <code>font-display: swap</code> 配合备用字体的度量对齐（<code>size-adjust</code> / <code>ascent-override</code>），让系统字体先顶上时版式不跳动。这一步做完，FCP 从 1.9s 掉到 0.7s。</p>
+                <div class="result-strip">
+                  <div><small>字体体积</small><strong>4.2MB → 84KB</strong></div>
+                  <div><small>字体请求数</small><strong>1 → 6 包按需</strong></div>
+                  <div><small>FCP</small><strong class="hot">1.9s → 0.7s</strong></div>
+                </div>
+                <h2>三、关键 CSS 内联与首屏直出</h2>
+                <p>首屏样式只有 11KB，我直接把它内联进 HTML 的 <code>&lt;style&gt;</code>，其余样式异步加载。页面本身由我那个零依赖生成器预渲染成静态 HTML，TTFB 只剩 CDN 的往返。请求瀑布图上，首屏只剩一条几乎垂直的线。</p>
+                <h2>四、剩下的 100ms：预连接与优先级</h2>
+                <p>最后一段路最琐碎也最有效：<code>preconnect</code> 提前握手 CDN；LCP 图片加 <code>fetchpriority="high"</code>；统计脚本挪到 <code>requestIdleCallback</code> 里再加载。另外我把缓存策略调成了「慢速缓存」本人：HTML 用 <code>stale-while-revalidate</code>，静态资源带内容哈希加 <code>immutable</code>——名字就是这么来的。</p>
+                <blockquote>性能优化的第一原则：先测量，再动手。第二原则：每次只改一件事，否则你永远不知道是谁起了作用。</blockquote>
+                <p>最终成绩：LCP 2.8s → 283ms，Lighthouse 45 → 98。回头看，真正难的不是技巧清单，而是克制——忍住不加载第三个第三方脚本，忍住不为一个动效引入 40KB 的库。</p>
+                <p>这篇博客的首屏，现在也是 283ms。<span class="end-mark">■</span></p>
+                <div class="panel-tags"><span>#性能</span><span>#字体子集化</span><span>#关键CSS</span><span>#缓存策略</span></div>
+                <div class="panel-nav"><a href="#panel-02" data-open-row="rowhead-02">下一篇：凌晨四点的杭州菜市场 →</a></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- 02 · 完整正文 -->
+      <li class="row" data-cat="walk" data-reveal>
+        <button class="row-head" data-row-toggle aria-expanded="false" aria-controls="panel-02" id="rowhead-02">
+          <span class="row-idx">02</span>
+          <span class="row-main"><span class="row-dash" aria-hidden="true"></span><span class="row-title">凌晨四点的杭州菜市场</span></span>
+          <span class="row-arrow" aria-hidden="true">↗</span>
+          <span class="row-meta"><span class="cat">城市漫步</span><time datetime="2026-07-12">2026.07.12</time><span>约 6 分钟</span><span>含全文</span></span>
+        </button>
+        <div class="row-panel" id="panel-02" role="region" aria-labelledby="rowhead-02">
+          <div class="row-panel-inner">
+            <div class="panel-box">
+              <article class="prose">
+                <p class="lead">凌晨四点，我被闹钟叫醒。不是为了赶飞机，而是为了赶在杭州醒来之前，先看一眼它没化妆的样子。</p>
+                <p>凤起路菜市场的卷帘门，一半还睡着，一半已经哗啦啦地醒了。送货的三轮车停在门口，车上码着的青菜还带着露水，在灯泡底下泛着一层毛茸茸的光。送货的师傅姓周，五十来岁，嗓门不大，但每一句都像盖了章：「芥蓝，今早最好的，你摸摸。」</p>
+                <p>豆腐摊的夫妻俩是全市场起得最早的。凌晨两点半磨豆子，四点整第一板豆腐出锅。热气腾起来，把头顶那只白炽灯泡裹成一团毛月亮。女主人用铜刀划豆腐，手起刀落，一块一块，稳得像在执行某种跑了三十年的定时任务。</p>
+                <p>我在水产摊前站了很久。增氧泵咕嘟咕嘟地响，鲫鱼挤在一起，尾巴拍出细碎的水花。摊主是个年轻小伙，一边捞鱼一边跟熟客聊天：「同样的鱼，我这里便宜八毛。」熟客说：「我不是图便宜，我是图你这里闹猛。」</p>
+                <p>对，闹猛。这个词精确得没法翻译。白天的超市里，价格是印在标签上的；凌晨的菜市场里，价格是聊出来的。抹掉的零头、搭上的两根葱、临走塞进来的一把茴香——这些都是系统的隐藏参数，只在人与人当面通信时才会被激活。</p>
+                <p class="pull">「菜市场是一座城市的<b>系统日志</b>，而且它每天凌晨四点，准时刷新。」</p>
+                <p>五点半，天光从青灰色里渗出来，第一班公交在街口进站。穿反光背心的环卫工、拎着保温杯的摊主、睡眼惺忪的早班乘客，在同一个路口完成交接班。三轮车空了，卷帘门全部醒了，城市正式开始运行。</p>
+                <p>我平时写代码，习惯给每个系统记日志。但那个早晨我意识到，没有任何日志比一座菜市场的更诚实——每一次写盘都是真实发生的交易、寒暄和讨价还价，而且从不丢失。<span class="end-mark">■</span></p>
+                <div class="panel-tags"><span>#散文</span><span>#杭州</span><span>#城市观察</span><span>#手机摄影×9（见 RSS 图文版）</span></div>
+                <div class="panel-nav"><a href="#panel-01" data-open-row="rowhead-01">← 上一篇：把博客首屏压进 300ms</a></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- 03 -->
+      <li class="row" data-cat="expo" data-reveal>
+        <button class="row-head" data-row-toggle aria-expanded="false" aria-controls="panel-03" id="rowhead-03">
+          <span class="row-idx">03</span>
+          <span class="row-main"><span class="row-dash" aria-hidden="true"></span><span class="row-title">衬线体为什么在屏幕上「活」了回来</span></span>
+          <span class="row-arrow" aria-hidden="true">↗</span>
+          <span class="row-meta"><span class="cat">观展记</span><time datetime="2026-06-02">2026.06.02</time><span>约 7 分钟</span></span>
+        </button>
+        <div class="row-panel" id="panel-03" role="region" aria-labelledby="rowhead-03">
+          <div class="row-panel-inner">
+            <div class="panel-box">
+              <p class="panel-note"><b>摘要</b> — 从铅字的黄金时代讲到可变字体：屏幕分辨率、渲染引擎与「杂志感」回潮背后的技术原因。</p>
+              <article class="prose">
+                <p>屏幕曾经是衬线体的流放地。72dpi 的年代，衬线被渲染成一团毛边，无衬线体借着「屏幕友好」的名头统治了界面三十年。但 Retina 屏普及、亚像素渲染成熟之后，情况悄悄变了：屏幕终于有能力偿还欠印刷五个世纪的排版债。</p>
+                <p>真正让衬线体「活」回来的，是可变字体。一个文件里装下 200 到 900 的连续字重，标题可以像铅字时代的海报一样「又粗又优雅」，正文却依然轻盈。杂志感的回潮不是审美倒车，而是渲染技术终于追上了 1928 年的排印理想。</p>
+                <p>这篇观展记从一场活字印刷展讲起，途经 Skia 的可变轴、font-variation-settings 的坑，最后落在一个判断：下一阶段的好排版，是「会呼吸的排版」——字重、字距随交互与滚动轻微起伏，页面像纸一样有生命。</p>
+                <div class="panel-tags"><span>#排印</span><span>#可变字体</span><span>#设计史</span></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- 04 -->
+      <li class="row" data-cat="maker" data-reveal>
+        <button class="row-head" data-row-toggle aria-expanded="false" aria-controls="panel-04" id="rowhead-04">
+          <span class="row-idx">04</span>
+          <span class="row-main"><span class="row-dash" aria-hidden="true"></span><span class="row-title">CSS滚动时间轴入门：不写一行JS的滚动动画</span></span>
+          <span class="row-arrow" aria-hidden="true">↗</span>
+          <span class="row-meta"><span class="cat">造轮子</span><time datetime="2026-04-18">2026.04.18</time><span>约 8 分钟</span></span>
+        </button>
+        <div class="row-panel" id="panel-04" role="region" aria-labelledby="rowhead-04">
+          <div class="row-panel-inner">
+            <div class="panel-box">
+              <p class="panel-note"><b>摘要</b> — animation-timeline 实战笔记：scroll() 与 view() 两套时间轴、6 个渐进增强案例，以及浏览器支持现状。</p>
+              <article class="prose">
+                <p>滚动驱动动画曾经是 JS 的专属领地：监听 scroll、算比例、写 transform，然后花一半时间处理节流。CSS 滚动时间轴把这一切压缩成两行声明——<code>animation-timeline: scroll()</code> 把动画绑在滚动容器上，<code>view()</code> 把动画绑在元素进入视口的进度上。</p>
+                <p>文章用六个案例递进：阅读进度条、分区显影、视差题图、时间轴刻度、图片揭示、以及本站页脚的「回到顶部」环。核心心法只有一条：时间轴是渐进增强，动画消失时内容必须完整可读。</p>
+                <div class="panel-tags"><span>#CSS</span><span>#scroll-timeline</span><span>#渐进增强</span></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- 05 -->
+      <li class="row" data-cat="garden" data-reveal>
+        <button class="row-head" data-row-toggle aria-expanded="false" aria-controls="panel-05" id="rowhead-05">
+          <span class="row-idx">05</span>
+          <span class="row-main"><span class="row-dash" aria-hidden="true"></span><span class="row-title">数字花园第一年：种下214条笔记之后</span></span>
+          <span class="row-arrow" aria-hidden="true">↗</span>
+          <span class="row-meta"><span class="cat">半成品 🌲</span><time datetime="2026-02-27">2026.02.27</time><span>约 11 分钟</span></span>
+        </button>
+        <div class="row-panel" id="panel-05" role="region" aria-labelledby="rowhead-05">
+          <div class="row-panel-inner">
+            <div class="panel-box">
+              <p class="panel-note"><b>摘要</b> — 成熟度统计、双链心得与放弃完美主义的收获：一座花园最重要的不是美观，而是「回来找得到」。</p>
+              <article class="prose">
+                <p>一年前我把博客里「永远写不完」的那些部分搬进了数字花园，用 🌱 幼苗、🌿 成长、🌲 常青三档成熟度公开标注。一年后盘点：214 条笔记里，常青 41 条，成长 97 条，剩下的 76 条还安安静静当幼苗——而且我不再为此羞愧。</p>
+                <p>最大的收获是放弃了「发布即完工」的执念。文章是纪念碑，笔记是苗圃；纪念碑要求一次成型，苗圃只要求按时浇水。双链的意义也在这：每条笔记都是入口，回来找得到，比当初写得多好更重要。</p>
+                <div class="panel-tags"><span>#数字花园</span><span>#笔记方法</span><span>#双链</span></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- 06 -->
+      <li class="row" data-cat="maker" data-reveal>
+        <button class="row-head" data-row-toggle aria-expanded="false" aria-controls="panel-06" id="rowhead-06">
+          <span class="row-idx">06</span>
+          <span class="row-main"><span class="row-dash" aria-hidden="true"></span><span class="row-title">我用90天写了个零依赖的静态站点生成器</span></span>
+          <span class="row-arrow" aria-hidden="true">↗</span>
+          <span class="row-meta"><span class="cat">造轮子</span><time datetime="2025-11-09">2025.11.09</time><span>约 14 分钟</span></span>
+        </button>
+        <div class="row-panel" id="panel-06" role="region" aria-labelledby="rowhead-06">
+          <div class="row-panel-inner">
+            <div class="panel-box">
+              <p class="panel-note"><b>摘要</b> — 只用 Node 标准库，从 markdown 渲染到增量构建：架构图、踩坑清单，以及为什么不值得你重写一个。</p>
+              <article class="prose">
+                <p>这个博客就跑在它上面。90 天里我写完了 markdown 解析、模板、增量构建、RSS 输出四个模块，全程只用 Node 标准库——没有 dependencies，连 devDependencies 都没有。<code>npm install</code> 的输出是一句「up to date」，这感觉好极了。</p>
+                <p>但文章的结论并不是「你也来写一个」。恰恰相反：写它值 90 天，是因为我想弄懂静态站点生成的每一层；用它则不值 90 分钟，现成工具在 90 秒内就能给你更多。造轮子的回报是理解，不是生产力。</p>
+                <p>踩坑清单节选：Windows 路径分隔符、BOM 头、CJK 断行的 CSS 处理、增量构建的脏标记设计，以及 RSS 里那个必须转义八次的 CDATA。</p>
+                <div class="panel-tags"><span>#Node.js</span><span>#静态站点</span><span>#零依赖</span></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- 07 -->
+      <li class="row" data-cat="hack" data-reveal>
+        <button class="row-head" data-row-toggle aria-expanded="false" aria-controls="panel-07" id="rowhead-07">
+          <span class="row-idx">07</span>
+          <span class="row-main"><span class="row-dash" aria-hidden="true"></span><span class="row-title">给十年前的Kindle刷了个「慢读」系统</span></span>
+          <span class="row-arrow" aria-hidden="true">↗</span>
+          <span class="row-meta"><span class="cat">折腾录</span><time datetime="2025-09-21">2025.09.21</time><span>约 10 分钟</span></span>
+        </button>
+        <div class="row-panel" id="panel-07" role="region" aria-labelledby="rowhead-07">
+          <div class="row-panel-inner">
+            <div class="panel-box">
+              <p class="panel-note"><b>摘要</b> — 越狱、换字体、屏蔽商城，把它改成一台只读文章的墨水屏终端：一次对「设备应有用途」的反抗。</p>
+              <article class="prose">
+                <p>2015 年买的 Kindle Paperwhite，吃灰三年。它的问题从来不是硬件——墨水屏至今能打——而是软件越来越像一个商场。于是我给它做了次减法手术：越狱、换上思源宋体、屏蔽商店与推荐，最后接上一个每天凌晨抓取我 RSS 列表的脚本，把博客全文推成期刊。</p>
+              <p>现在的它是一台纯粹的「慢读终端」：没有通知、没有进度条焦虑，只有每天早上自动出现的一期《慢速缓存》。折腾完我发现，改装旧设备的本质是重新谈判——和厂商谈判设备的用途，也和自己的注意力谈判。</p>
+                <div class="panel-tags"><span>#Kindle</span><span>#墨水屏</span><span>#折腾</span><span>#数字极简</span></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- 08 -->
+      <li class="row" data-cat="expo" data-reveal>
+        <button class="row-head" data-row-toggle aria-expanded="false" aria-controls="panel-08" id="rowhead-08">
+          <span class="row-idx">08</span>
+          <span class="row-main"><span class="row-dash" aria-hidden="true"></span><span class="row-title">滚动即叙事：拆解3个获奖网站的动效节奏</span></span>
+          <span class="row-arrow" aria-hidden="true">↗</span>
+          <span class="row-meta"><span class="cat">观展记</span><time datetime="2025-06-15">2025.06.15</time><span>约 12 分钟</span></span>
+        </button>
+        <div class="row-panel" id="panel-08" role="region" aria-labelledby="rowhead-08">
+          <div class="row-panel-inner">
+            <div class="panel-box">
+              <p class="panel-note"><b>摘要</b> — 逐帧拆解三支获奖长文的 pinned 章节、节拍与留白：好的滚动叙事像电影剪辑，而不是过山车。</p>
+              <article class="prose">
+                <p>我把三个获奖滚动叙事网站逐帧录屏，标注每一次场景切换、每一个 pinned 章节的进入与退出，得出一张「节拍表」。结论朴素得惊人：最好的滚动叙事不是动得最多，而是敢留白——大动效之间必须给眼睛留出静止的落点，像电影里对话之间的沉默。</p>
+                <p>文中拆了三种节奏型：匀速纪录片型、章节交响乐型、和最难的「呼吸型」——动效强度随内容情绪起伏。本站的滚动 skew 就是从第三个案例里偷来的，减掉了七成幅度。</p>
+                <div class="panel-tags"><span>#动效</span><span>#滚动叙事</span><span>#案例分析</span></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- 09 -->
+      <li class="row" data-cat="hack" data-reveal>
+        <button class="row-head" data-row-toggle aria-expanded="false" aria-controls="panel-09" id="rowhead-09">
+          <span class="row-idx">09</span>
+          <span class="row-main"><span class="row-dash" aria-hidden="true"></span><span class="row-title">仙人掌养护备忘：论不作为的长期主义</span></span>
+          <span class="row-arrow" aria-hidden="true">↗</span>
+          <span class="row-meta"><span class="cat">折腾录</span><time datetime="2025-03-08">2025.03.08</time><span>约 5 分钟</span></span>
+        </button>
+        <div class="row-panel" id="panel-09" role="region" aria-labelledby="rowhead-09">
+          <div class="row-panel-inner">
+            <div class="panel-box">
+              <p class="panel-note"><b>摘要</b> — 养了七年仙人掌得出的系统设计心得：最好的照顾，往往是建立一套不需要你时刻干预的环境。</p>
+              <article class="prose">
+                <p>桌上的仙人掌七岁了，我每年实际照料它的时间不超过两小时。浇水十四天一次，冬天停浇，其余时间它在替我上班——进行「不作为的光合作用」。这份备忘录一半是养护记录，一半是从它身上抄来的系统设计笔记：好的系统不要求操作者勤快，只要求环境不容易被搞坏。</p>
+                <p>静态博客、RSS、crontab，本质上都是我养的仙人掌。</p>
+                <div class="panel-tags"><span>#长期主义</span><span>#系统设计</span><span>#生活笔记</span></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- 10 -->
+      <li class="row" data-cat="garden" data-reveal>
+        <button class="row-head" data-row-toggle aria-expanded="false" aria-controls="panel-10" id="rowhead-10">
+          <span class="row-idx">10</span>
+          <span class="row-main"><span class="row-dash" aria-hidden="true"></span><span class="row-title">字节与纸：我为什么开始写博客</span></span>
+          <span class="row-arrow" aria-hidden="true">↗</span>
+          <span class="row-meta"><span class="cat">半成品 🌿</span><time datetime="2024-12-01">2024.12.01</time><span>约 6 分钟</span></span>
+        </button>
+        <div class="row-panel" id="panel-10" role="region" aria-labelledby="rowhead-10">
+          <div class="row-panel-inner">
+            <div class="panel-box">
+              <p class="panel-note"><b>摘要</b> — 写作是为了把折腾过程变成「可供检索的思考」：关于公开笔记本、慢速缓存与长期保鲜的宣言。</p>
+              <article class="prose">
+                <p>这是本站的创刊号。当时我给博客起的名字叫「字节与纸」，半年后才改成「慢速缓存」。这篇文章记录了改名的原因：缓存的价值不在快，而在「存得住」——写下来的思考是一种对未来的自己的预取。</p>
+                <p>宣言只有三条：不追热点、不写没有做过的事、允许文章过时。十年过去，前两条守住了，第三条正在由「半成品」栏目温柔地豁免。</p>
+                <div class="panel-tags"><span>#创刊</span><span>#写作动机</span><span>#RSS</span></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- 11 -->
+      <li class="row" data-cat="walk" data-reveal>
+        <button class="row-head" data-row-toggle aria-expanded="false" aria-controls="panel-11" id="rowhead-11">
+          <span class="row-idx">11</span>
+          <span class="row-main"><span class="row-dash" aria-hidden="true"></span><span class="row-title">杭州地铁末班车观察报告</span></span>
+          <span class="row-arrow" aria-hidden="true">↗</span>
+          <span class="row-meta"><span class="cat">城市漫步</span><time datetime="2024-08-24">2024.08.24</time><span>约 8 分钟</span></span>
+        </button>
+        <div class="row-panel" id="panel-11" role="region" aria-labelledby="rowhead-11">
+          <div class="row-panel-inner">
+            <div class="panel-box">
+              <p class="panel-note"><b>摘要</b> — 连续一个月坐末班车回家：每条线上的乘客构成、睡眠姿势与城市夜班的隐性时刻表。</p>
+              <article class="prose">
+                <p>连续一个月，我坐 23:15 之后的末班地铁回城西。末班车是一趟「未收录镜头」列车：代驾师傅折叠着小电驴打盹，夜班护士背靠广告海报站得笔直，兼职下课的学生把整排座位睡成宿舍。车厢安静得能听见空调滴水。</p>
+                <p>报告按线路记录了乘客构成与「睡眠姿势图谱」，结论是：末班车从不晚点，它只是载着城市还没说完的话，慢慢进站。</p>
+                <div class="panel-tags"><span>#杭州</span><span>#地铁</span><span>#夜班观察</span></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- 12 -->
+      <li class="row" data-cat="garden" data-reveal>
+        <button class="row-head" data-row-toggle aria-expanded="false" aria-controls="panel-12" id="rowhead-12">
+          <span class="row-idx">12</span>
+          <span class="row-main"><span class="row-dash" aria-hidden="true"></span><span class="row-title">第一行CSS，与之后的两千行</span></span>
+          <span class="row-arrow" aria-hidden="true">↗</span>
+          <span class="row-meta"><span class="cat">半成品 🌱</span><time datetime="2024-05-05">2024.05.05</time><span>约 4 分钟</span></span>
+        </button>
+        <div class="row-panel" id="panel-12" role="region" aria-labelledby="rowhead-12">
+          <div class="row-panel-inner">
+            <div class="panel-box">
+              <p class="panel-note"><b>摘要</b> — 翻出 2015 年写的第一行 CSS：<code>margin: 0 auto</code> 的浪漫，与这些年在浏览器里学会的谦卑。</p>
+              <article class="prose">
+                <p>翻硬盘翻出 2015 年的第一个个人主页，全部样式只有一行：<code>margin: 0 auto</code>。十年后的这个博客有两千多行 CSS——其中大概一千九百行在处理第一行那句话没说清楚的事：居中从来不难，难的是「在所有地方、所有人面前」居中。</p>
+                <p>幼苗笔记，慢慢长。</p>
+                <div class="panel-tags"><span>#CSS</span><span>#回忆</span><span>#幼苗🌱</span></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </li>
+
+    </ul>
+  </section>
+
+  <!-- 跑马灯 2（深色） -->
+  <div class="marquee marquee--dark" data-marquee aria-hidden="true">
+    <div class="marquee-track" id="mq2">
+      <span class="marquee-chunk">造轮子 — <em>观展记</em> — 城市漫步 — <em>折腾录</em> — 半成品 — <b>造轮子 — 观展记 — 城市漫步 — 折腾录 — 半成品</b> — </span>
+      <span class="marquee-chunk">造轮子 — <em>观展记</em> — 城市漫步 — <em>折腾录</em> — 半成品 — <b>造轮子 — 观展记 — 城市漫步 — 折腾录 — 半成品</b> — </span>
+    </div>
+  </div>
+
+  <!-- ============ 归档 · 按年 ============ -->
+  <section class="sec" id="archive" aria-label="按年归档">
+    <div class="sec-head">
+      <h2 class="sec-title" data-split-reveal>归档</h2>
+      <p class="sec-sub"><span>2015 年建站以来 · <b>12</b> 篇存档</span><span>按年份倒序</span></p>
+    </div>
+
+    <div class="arch-year" data-reveal>
+      <div class="arch-num" data-split-reveal>2026</div>
+      <ul class="arch-list">
+        <li><time datetime="2026-08-30">08.30</time><span class="t">把博客首屏压进 300ms：一次性能考古</span><span class="c">造轮子</span></li>
+        <li><time datetime="2026-07-12">07.12</time><span class="t">凌晨四点的杭州菜市场</span><span class="c">城市漫步</span></li>
+        <li><time datetime="2026-06-02">06.02</time><span class="t">衬线体为什么在屏幕上「活」了回来</span><span class="c">观展记</span></li>
+        <li><time datetime="2026-04-18">04.18</time><span class="t">CSS 滚动时间轴入门：不写一行 JS 的滚动动画</span><span class="c">造轮子</span></li>
+        <li><time datetime="2026-02-27">02.27</time><span class="t">数字花园第一年：种下 214 条笔记之后</span><span class="c">半成品 🌲</span></li>
+      </ul>
+    </div>
+
+    <div class="arch-year" data-reveal>
+      <div class="arch-num" data-split-reveal>2025</div>
+      <ul class="arch-list">
+        <li><time datetime="2025-11-09">11.09</time><span class="t">我用 90 天写了个零依赖的静态站点生成器</span><span class="c">造轮子</span></li>
+        <li><time datetime="2025-09-21">09.21</time><span class="t">给十年前的 Kindle 刷了个「慢读」系统</span><span class="c">折腾录</span></li>
+        <li><time datetime="2025-06-15">06.15</time><span class="t">滚动即叙事：拆解 3 个获奖网站的动效节奏</span><span class="c">观展记</span></li>
+        <li><time datetime="2025-03-08">03.08</time><span class="t">仙人掌养护备忘：论不作为的长期主义</span><span class="c">折腾录</span></li>
+      </ul>
+    </div>
+
+    <div class="arch-year" data-reveal>
+      <div class="arch-num" data-split-reveal>2024</div>
+      <ul class="arch-list">
+        <li><time datetime="2024-12-01">12.01</time><span class="t">字节与纸：我为什么开始写博客</span><span class="c">半成品 🌿</span></li>
+        <li><time datetime="2024-08-24">08.24</time><span class="t">杭州地铁末班车观察报告</span><span class="c">城市漫步</span></li>
+        <li><time datetime="2024-05-05">05.05</time><span class="t">第一行 CSS，与之后的两千行</span><span class="c">半成品 🌱</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 关于我 ============ -->
+  <section class="sec" id="about" aria-label="关于我">
+    <div class="sec-head">
+      <h2 class="sec-title" data-split-reveal>关于我</h2>
+      <p class="sec-sub"><span>白天写组件，晚上写句子</span><span>NOW PAGE · 持续更新</span></p>
+    </div>
+    <div class="about-grid">
+      <div class="avatar" data-reveal aria-hidden="true">沈</div>
+      <div class="about-body" data-reveal>
+        <h3 class="about-name">沈知远<span>SHEN ZHIYUAN · 29 岁 · 杭州</span></h3>
+        <p class="about-motto">「慢速缓存，长期保鲜。」</p>
+        <div class="about-bio">
+          <p>白天写组件，晚上写句子。这里是沈知远的公开笔记本。我是杭州的一名前端工程师，关注 Web 性能、设计工程与独立开发——关心像素如何落到毫秒上，也关心毫秒如何变成句子。</p>
+          <p>桌上有一台 2015 年的 Kindle 和一盆七岁的仙人掌。写博客的动机很简单：把折腾的过程写成「可供检索的思考」，让下一次的我不用从零开始。</p>
+        </div>
+        <h4 class="about-h">现在进行时 NOW</h4>
+        <ul class="now-list">
+          <li><span class="k">正在写</span><span class="v">零依赖生成器的增量构建模块 v0.9</span></li>
+          <li><span class="k">正在读</span><span class="v">《字体故事》—— 西文字体的一百年</span></li>
+          <li><span class="k">正在学</span><span class="v">CSS 滚动时间轴与可变字重的磁性排版</span></li>
+          <li><span class="k">正在听</span><span class="v">坂本龙一《async》，写散文时的固定背景音</span></li>
+        </ul>
+        <h4 class="about-h">找到我 FIND ME</h4>
+        <div class="contact-list">
+          <a href="#subscribe" data-hover>RSS 订阅</a>
+          <a href="#top" data-hover>GitHub @shenzhiyuan</a>
+          <a href="#top" data-hover>hi@slowcache.dev</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 订阅（深色段） ============ -->
+  <section class="sub" id="subscribe" aria-label="订阅">
+    <div class="sec-head">
+      <h2 class="sec-title" data-split-reveal>订阅</h2>
+      <p class="sec-sub"><span>每周四 · 只在有事可说时发送</span><span>已有 <b>1,024</b> 位读者缓存了本站</span></p>
+    </div>
+    <p class="sub-lead">把值得想的事，写进你的收件箱。一期一封，只聊<b>技术、设计与散步</b>，没有营销，随时可退。</p>
+
+    <form class="sub-form" id="subForm" novalidate>
+      <div class="sub-field">
+        <label for="subEmail" style="position:absolute;left:-9999px;">邮箱地址</label>
+        <input type="email" id="subEmail" name="email" placeholder="you@example.com" autocomplete="email" inputmode="email">
+      </div>
+      <button class="sub-btn" type="submit" id="subBtn" data-magnet data-hover>缓存到你的收件箱 →</button>
+    </form>
+    <p class="sub-msg" id="subMsg" role="status" aria-live="polite"></p>
+
+    <div class="sub-ok" id="subOk" hidden>
+      <h3><i>✓</i> 已缓存</h3>
+      <p>确认邮件已发往 <b id="subOkEmail"></b>。下周四见——记得把 slowcache.dev 加入通讯录，别让周报掉进垃圾箱的冷缓存里。</p>
+    </div>
+
+    <div class="sub-rss">
+      <span>不用注册，不用登录，阅读器直达。</span>
+      <a href="#subscribe" data-hover>slowcache.dev/feed.xml</a>
+    </div>
+  </section>
+</main>
+
+<!-- 页脚 -->
+<footer class="footer">
+  <span class="big-thanks">© 2015-2026 沈知远 · 慢速缓存 Slow Cache</span>
+  <span>由一个写了 90 天的零依赖生成器驱动 · 283ms 首屏</span>
+  <button class="to-top" type="button" id="toTop" data-magnet data-hover>回到顶部 ↑</button>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ============================================================
+     磁性交互大字排版 · 引擎
+     - 全局单 rAF 循环：lerp 平滑 + 磁吸合力 + 滚动速率 skew
+     - 磁吸公式：半径内 偏移 = 距离向量 × 0.3 × 衰减，lerp 0.1 回弹
+     - 可变字重：光标接近度映射 wght 400→900（+ 文字描边增粗退化）
+     - 自定义光标仅在 (pointer:fine) 且无 reduced-motion 时启用；
+       且需「光标 DOM 就绪 + 收到过真实 pointermove + rAF 循环已启动」
+       三条件全部确认后，才给 html 加 has-custom-cursor 隐藏系统光标；
+       任何异常 / 失焦 / 移出窗口立即移除该类，交还系统光标
+     ============================================================ */
+
+  var docEl = document.documentElement;
+  docEl.classList.remove('no-js');
+  docEl.classList.add('js');
+
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var finePointer = window.matchMedia('(pointer: fine)').matches;
+  var kinetic = finePointer && !reduced;      /* 动能总开关 */
+  if (kinetic) docEl.classList.add('kinetic');
+
+  var body = document.body;
+  var mouse = { x: -9999, y: -9999 };         /* 原始光标（视口坐标） */
+  var curDot = { x: innerWidth/2, y: innerHeight/2 };
+  var curRing = { x: innerWidth/2, y: innerHeight/2 };
+  var cursorHover = false;
+  var scrollVel = 0, lastScrollY = window.pageYOffset || 0, smoothVel = 0, skew = 0;
+  var entranceDone = false;
+
+  /* ---------- 字符拆分：按字符 span 化，容器保留 aria-label 原文 ---------- */
+  function splitChars(el, cls){
+    var text = el.textContent;
+    el.setAttribute('aria-label', text.trim());
+    el.textContent = '';
+    var wrap = document.createElement('span');
+    wrap.className = 'chars';
+    wrap.setAttribute('aria-hidden', 'true');
+    var out = [];
+    for (var i = 0; i < text.length; i++){
+      var ch = text.charAt(i);
+      var s = document.createElement('span');
+      s.className = 'char' + (cls ? ' ' + cls : '');
+      if (ch === ' '){ s.innerHTML = '\u00A0'; }
+      else { s.textContent = ch; }
+      wrap.appendChild(s);
+      out.push(s);
+    }
+    el.appendChild(wrap);
+    return out;
+  }
+
+  function splitReveal(el){
+    var chars = splitChars(el);
+    for (var i = 0; i < chars.length; i++){
+      chars[i].style.setProperty('--d', (i * 42) + 'ms');
+    }
+  }
+
+  /* ---------- 加载幕布 ---------- */
+  var loader = document.getElementById('loader');
+  var loaderWord = document.getElementById('loaderWord');
+  var loaderCount = document.getElementById('loaderCount');
+
+  function prepLoader(){
+    if (!loaderWord) return;
+    var chars = splitChars(loaderWord);
+    for (var i = 0; i < chars.length; i++){
+      chars[i].style.setProperty('--d', (i * 55) + 'ms');
+    }
+  }
+
+  function finishLoad(){
+    if (body.classList.contains('hero-in')) return;
+    body.classList.add('hero-in');
+    body.classList.remove('is-loading');
+    if (loader) loader.classList.add('done');
+    /* 入场落位完成后：冻结 transition，交棒给 rAF 磁吸循环 */
+    window.setTimeout(function(){
+      entranceDone = true;
+      body.classList.add('entrance-done');
+      measureHeroChars();
+    }, 1600);
+  }
+
+  function runLoaderCounter(){
+    var p = 0, target = 0, t0 = performance.now();
+    function step(now){
+      target = Math.min(100, target + 2.1);
+      p += (target - p) * 0.14;
+      if (loaderCount) loaderCount.textContent = Math.round(p) + '%';
+      var elapsed = now - t0;
+      if (p >= 99.4 && elapsed > 1000){ finishLoad(); return; }
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ============================================================
+     注册表：磁吸大字 / 软磁吸 / 磁性按钮 / 波浪行
+     ============================================================ */
+  var heroChars = [];   /* hero 大字：磁吸 + 散开 + wght 400→900 */
+  var softChars = [];   /* 欢迎语：逐字轻磁吸 */
+  var magnets = [];     /* 按钮 / logo / 回顶：元素级磁吸 */
+  var waveRows = [];    /* 文章行：hover 字符波浪 */
+  var heroLines = [];   /* skewY 应用对象 */
+  var marquee = { el: null, track: null, half: 1, pos: 0 };
+
+  function buildRegistries(){
+    /* hero 主标题 */
+    var heroCn = document.getElementById('heroCn');
+    var heroLat = document.getElementById('heroLat');
+    var heroTitle = document.querySelector('.hero-title');
+    if (heroCn){
+      var cn = splitChars(heroCn);
+      var lat = heroLat ? splitChars(heroLat) : [];
+      var all = cn.concat(lat);
+      for (var i = 0; i < all.length; i++){
+        all[i].style.setProperty('--d', (i * 45) + 'ms');
+      }
+      heroLines = [];
+      var lines = document.querySelectorAll('.h-line-inner');
+      for (var j = 0; j < lines.length; j++) heroLines.push(lines[j]);
+
+      cn.forEach(function(el){ heroChars.push(makeHeroChar(el, 'cn')); });
+      lat.forEach(function(el){ heroChars.push(makeHeroChar(el, 'lat')); });
+    }
+
+    /* 欢迎语逐字轻磁吸（把两个强调词标色） */
+    var slogan = document.getElementById('heroSlogan');
+    if (slogan){
+      var txt = slogan.textContent;
+      slogan.setAttribute('aria-label', txt.trim());
+      slogan.textContent = '';
+      var wrap = document.createElement('span');
+      wrap.setAttribute('aria-hidden', 'true');
+      var chars = [];
+      for (var k = 0; k < txt.length; k++){
+        var s = document.createElement('span');
+        s.className = 'char';
+        s.textContent = txt.charAt(k) === ' ' ? '\u00A0' : txt.charAt(k);
+        wrap.appendChild(s);
+        chars.push(s);
+      }
+      slogan.appendChild(wrap);
+      chars.forEach(function(el){ softChars.push(makeHeroChar(el, 'soft')); });
+    }
+
+    /* 元素级磁吸：logo / 订阅按钮 / 回到顶部 */
+    var mEls = document.querySelectorAll('[data-magnet]');
+    for (var m = 0; m < mEls.length; m++){
+      magnets.push(makeMagnet(mEls[m]));
+    }
+  }
+
+  function makeHeroChar(el, kind){
+    return {
+      el: el, kind: kind,
+      cx: 0, cy: 0, halfW: 0, halfH: 0, size: 0,
+      x: 0, y: 0, rot: 0, w: 400,
+      tx: 0, ty: 0, trot: 0, tw: 400
+    };
+  }
+  function makeMagnet(el){
+    return { el: el, cx: 0, cy: 0, x: 0, y: 0, tx: 0, ty: 0 };
+  }
+
+  /* ---------- 测量（只读 layout 的时机集中在此） ---------- */
+  function measureHeroChar(c){
+    var r = c.el.getBoundingClientRect();
+    var sx = window.pageXOffset || 0, sy = window.pageYOffset || 0;
+    c.cx = r.left + r.width/2 + sx - c.x;
+    c.cy = r.top + r.height/2 + sy - c.y;
+    c.halfW = r.width/2;
+    c.halfH = r.height/2;
+    c.size = Math.max(r.width, r.height);
+  }
+  function measureHeroChars(){
+    for (var i = 0; i < heroChars.length; i++) measureHeroChar(heroChars[i]);
+    for (var j = 0; j < softChars.length; j++) measureHeroChar(softChars[j]);
+    for (var k = 0; k < magnets.length; k++) measureMagnet(magnets[k]);
+  }
+  function measureMagnet(mg){
+    var r = mg.el.getBoundingClientRect();
+    var sx = window.pageXOffset || 0, sy = window.pageYOffset || 0;
+    mg.cx = r.left + r.width/2 + sx - mg.x;
+    mg.cy = r.top + r.height/2 + sy - mg.y;
+  }
+  function measureMagnetsOnly(){
+    for (var i = 0; i < magnets.length; i++) measureMagnet(magnets[i]);
+  }
+  function measureMarquee(){
+    if (marquee.track) marquee.half = Math.max(1, marquee.track.scrollWidth / 2);
+  }
+  function resetAndMeasure(){
+    var i;
+    for (i = 0; i < heroChars.length; i++){ heroChars[i].x = heroChars[i].y = 0; heroChars[i].el.style.transform = ''; }
+    for (i = 0; i < softChars.length; i++){ softChars[i].x = softChars[i].y = 0; softChars[i].el.style.transform = ''; }
+    for (i = 0; i < magnets.length; i++){ magnets[i].x = magnets[i].y = 0; magnets[i].el.style.transform = ''; }
+    measureHeroChars();
+    measureMarquee();
+  }
+
+  /* ---------- 波浪行注册 ---------- */
+  function buildWaves(){
+    var rows = document.querySelectorAll('.row');
+    for (var i = 0; i < rows.length; i++){
+      var title = rows[i].querySelector('.row-title');
+      if (!title) continue;
+      var chars = splitChars(title);
+      var entry = { chars: chars, env: 0, target: 0, dirty: false };
+      waveRows.push(entry);
+      (function(en){
+        rows[i].addEventListener('pointerenter', function(){
+          if (kinetic) en.target = 1;
+        });
+        rows[i].addEventListener('pointerleave', function(){
+          en.target = 0;
+        });
+      })(entry);
+    }
+  }
+
+  /* ---------- 自定义光标 ----------
+     启用门槛（三者同时满足才隐藏系统光标）：
+     1) 光标 DOM（dot/ring/under）存在；2) 收到过至少一次真实 pointermove；
+     3) rAF 主循环已启动。任何异常 / 失焦 / 移出窗口：立即移除启用类。 */
+  var dotEl = document.getElementById('cursorDot');
+  var ringEl = document.getElementById('cursorRing');
+  var underEl = document.getElementById('cursorUnder');
+  var cursorArmed = false;      /* html.has-custom-cursor 当前是否生效 */
+  var gotPointerMove = false;   /* 是否收到过真实 pointermove */
+  var rafRunning = false;       /* rAF 主循环是否已启动 */
+
+  function cursorDomReady(){
+    return !!(dotEl && ringEl && underEl);
+  }
+  function armCursor(){
+    if (cursorArmed || !kinetic) return;
+    if (!cursorDomReady() || !gotPointerMove || !rafRunning) return;
+    cursorArmed = true;
+    body.classList.remove('cursor-hidden');
+    docEl.classList.add('has-custom-cursor');
+  }
+  function disarmCursor(){
+    if (!cursorArmed) return;
+    cursorArmed = false;
+    docEl.classList.remove('has-custom-cursor');
+  }
+  function hideCursorLayer(){
+    body.classList.add('cursor-hidden');
+    disarmCursor(); /* 移出窗口 / 失焦：光标层淡出，同时交还系统光标 */
+  }
+  function restoreCursorLayer(){
+    body.classList.remove('cursor-hidden');
+    armCursor();
+  }
+
+  function initCursor(){
+    if (!kinetic) return;
+    if (!cursorDomReady()) return;   /* 光标层缺失：保持系统光标，不再隐藏 */
+    try {
+      window.addEventListener('pointermove', function(e){
+        mouse.x = e.clientX; mouse.y = e.clientY;
+        gotPointerMove = true;
+        if (!body.classList.contains('cursor-on')) body.classList.add('cursor-on');
+        body.classList.remove('cursor-hidden');
+        armCursor();
+      }, { passive: true });
+      document.addEventListener('pointerover', function(e){
+        cursorHover = !!(e.target && e.target.closest && e.target.closest('a, button, input, [data-hover]'));
+        body.classList.toggle('cursor-hover', cursorHover);
+      });
+      document.addEventListener('pointerdown', function(){ body.classList.add('cursor-down'); });
+      document.addEventListener('pointerup', function(){ body.classList.remove('cursor-down'); });
+      /* 移出窗口：淡出光标层并交还系统光标；再次进入 / 回焦时恢复 */
+      docEl.addEventListener('mouseleave', function(){
+        mouse.x = -9999; mouse.y = -9999;
+        hideCursorLayer();
+      });
+      docEl.addEventListener('mouseenter', restoreCursorLayer);
+      window.addEventListener('blur', hideCursorLayer);
+      window.addEventListener('focus', restoreCursorLayer);
+    } catch (err) {
+      disarmCursor();
+      body.classList.add('cursor-hidden');
+      if (window.console && console.error) console.error('initCursor fallback:', err);
+    }
+  }
+
+  /* ---------- rAF 主循环 ---------- */
+  var smoothstep = function(t){ return t * t * (3 - 2 * t); };
+  var clamp = function(v, a, b){ return v < a ? a : (v > b ? b : v); };
+
+  function writeHeroChar(c, pullClose){
+    c.el.style.transform = 'translate3d(' + c.x.toFixed(2) + 'px,' + c.y.toFixed(2) + 'px,0) rotate(' + c.rot.toFixed(2) + 'deg)';
+    if (c.kind === 'soft'){
+      c.el.style.fontVariationSettings = '"wght" ' + Math.round(c.w);
+      c.el.style.fontWeight = Math.round(c.w);
+      return;
+    }
+    c.el.style.fontVariationSettings = '"wght" ' + Math.round(c.w);
+    c.el.style.fontWeight = Math.round(c.w);
+    /* 可变字体失败时的退化：文字描边随字重增粗（对中文回退字体尤其有效） */
+    if (c.kind === 'cn'){
+      var sw = ((c.w - 400) / 500) * c.size * 0.022;
+      c.el.style.webkitTextStrokeWidth = sw.toFixed(2) + 'px';
+      c.el.style.webkitTextStrokeColor = '';
+    } else {
+      var base = Math.max(1.2, c.size * 0.01);
+      var swl = base + ((c.w - 400) / 500) * c.size * 0.02;
+      c.el.style.webkitTextStrokeWidth = swl.toFixed(2) + 'px';
+    }
+  }
+
+  /* rAF 包装：循环内任何异常 → 立即移除启用类交还系统光标，杜绝「无光标」死局 */
+  function tick(now){
+    try {
+      tickFrame(now);
+      requestAnimationFrame(tick);
+    } catch (err) {
+      disarmCursor();
+      body.classList.add('cursor-hidden');
+      if (window.console && console.error) console.error('tick fallback:', err);
+    }
+  }
+
+  function tickFrame(now){
+    /* 光标 lerp：圆点紧跟，圆环滞后（收到真实移动前不写入，保持视口外初始位） */
+    if (gotPointerMove){
+      curDot.x += (mouse.x - curDot.x) * 0.55;
+      curDot.y += (mouse.y - curDot.y) * 0.55;
+      curRing.x += (mouse.x - curRing.x) * 0.16;
+      curRing.y += (mouse.y - curRing.y) * 0.16;
+      if (underEl) underEl.style.transform = 'translate3d(' + curDot.x + 'px,' + curDot.y + 'px,0) scale(' + (cursorHover ? 0.5 : 1) + ')';
+      if (dotEl) dotEl.style.transform = 'translate3d(' + curDot.x + 'px,' + curDot.y + 'px,0) scale(' + (cursorHover ? 0.5 : 1) + ')';
+      if (ringEl) ringEl.style.transform = 'translate3d(' + curRing.x + 'px,' + curRing.y + 'px,0)';
+    }
+
+    /* 滚动速率 → 标题 skewY(±3deg)，停止后回弹 */
+    var y = window.pageYOffset || 0;
+    scrollVel = y - lastScrollY;
+    lastScrollY = y;
+    smoothVel += (scrollVel - smoothVel) * 0.1;
+    skew += (clamp(smoothVel * 0.12, -3, 3) - skew) * 0.12;
+
+    var mx = mouse.x + (window.pageXOffset || 0);
+    var my = mouse.y + (window.pageYOffset || 0);
+    var i, c, dx, dy, dist;
+
+    /* hero 大字：磁吸 + 散开 + 字重呼吸 */
+    if (entranceDone){
+      for (i = 0; i < heroChars.length; i++){
+        c = heroChars[i];
+        var R = Math.max(120, c.size * 1.3);
+        var Rw = Math.max(160, c.size * 1.7);
+        var Rc = Math.max(46, c.halfW * 0.9);
+        dx = mx - c.cx; dy = my - c.cy;
+        dist = Math.sqrt(dx * dx + dy * dy);
+        var pull = 0;
+        if (dist < R && dist > 0.001){
+          var fall = smoothstep(1 - dist / R);
+          pull = fall;
+          c.tx = dx * 0.35 * fall;                 /* 偏移 = 距离向量 × 系数 × 衰减 */
+          c.ty = dy * 0.35 * fall;
+          c.tx = clamp(c.tx, -c.size * 0.24, c.size * 0.24);
+          c.ty = clamp(c.ty, -c.size * 0.24, c.size * 0.24);
+        } else { c.tx = 0; c.ty = 0; }
+        /* hover 字母散开：贴近时旋转 + 上浮，离开回落 */
+        if (c.kind !== 'lat' && dist < Rc){
+          var cl = Math.pow(1 - dist / Rc, 1.6);
+          c.trot = (dx > 0 ? -1 : 1) * 9 * cl;
+          c.ty -= cl * c.size * 0.12;
+        } else if (dist < Rc){
+          var cl2 = Math.pow(1 - dist / Rc, 1.6);
+          c.trot = (dx > 0 ? -1 : 1) * 7 * cl2;
+        } else { c.trot = 0; }
+        /* 字重呼吸：接近度 → wght 400→900 */
+        var nearW = dist < Rw ? Math.pow(1 - dist / Rw, 1.25) : 0;
+        c.tw = 400 + 500 * nearW;
+        /* lerp 回弹 */
+        c.x += (c.tx - c.x) * 0.1;
+        c.y += (c.ty - c.y) * 0.1;
+        c.rot += (c.trot - c.rot) * 0.12;
+        c.w += (c.tw - c.w) * 0.14;
+        if (Math.abs(c.x) > 0.05 || Math.abs(c.y) > 0.05 || Math.abs(c.rot) > 0.05 || Math.abs(c.w - 400) > 1 || pullClose){
+          writeHeroChar(c, pull > 0);
+        }
+      }
+      /* 欢迎语轻磁吸 */
+      for (i = 0; i < softChars.length; i++){
+        c = softChars[i];
+        var Rs = 150, Rws = 190;
+        dx = mx - c.cx; dy = my - c.cy;
+        dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < Rs && dist > 0.001){
+          var fs = smoothstep(1 - dist / Rs);
+          c.tx = dx * 0.16 * fs;
+          c.ty = dy * 0.16 * fs;
+        } else { c.tx = 0; c.ty = 0; }
+        c.tw = 400 + 300 * (dist < Rws ? Math.pow(1 - dist / Rws, 1.4) : 0);
+        c.x += (c.tx - c.x) * 0.1;
+        c.y += (c.ty - c.y) * 0.1;
+        c.w += (c.tw - c.w) * 0.14;
+        if (Math.abs(c.x) > 0.05 || Math.abs(c.y) > 0.05 || Math.abs(c.w - 400) > 1){
+          c.el.style.transform = 'translate3d(' + c.x.toFixed(2) + 'px,' + c.y.toFixed(2) + 'px,0)';
+          c.el.style.fontVariationSettings = '"wght" ' + Math.round(c.w);
+          c.el.style.fontWeight = Math.round(c.w);
+        }
+      }
+      /* skew 应用到 hero 行容器 */
+      for (i = 0; i < heroLines.length; i++){
+        heroLines[i].style.transform = 'skewY(' + skew.toFixed(3) + 'deg)';
+      }
+    }
+
+    /* 元素级磁吸按钮 */
+    for (i = 0; i < magnets.length; i++){
+      var mg = magnets[i];
+      dx = mx - mg.cx; dy = my - mg.cy;
+      dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 110 && dist > 0.001){
+        var fm = smoothstep(1 - dist / 110);
+        mg.tx = dx * 0.3 * fm;
+        mg.ty = dy * 0.3 * fm;
+      } else { mg.tx = 0; mg.ty = 0; }
+      mg.x += (mg.tx - mg.x) * 0.12;
+      mg.y += (mg.ty - mg.y) * 0.12;
+      if (Math.abs(mg.x) > 0.05 || Math.abs(mg.y) > 0.05){
+        mg.el.style.transform = 'translate3d(' + mg.x.toFixed(2) + 'px,' + mg.y.toFixed(2) + 'px,0)';
+      } else if (mg.el.style.transform){
+        mg.el.style.transform = '';
+      }
+    }
+
+    /* 行 hover 字符波浪起伏 */
+    for (i = 0; i < waveRows.length; i++){
+      var wr = waveRows[i];
+      if (wr.env < 0.002 && wr.target === 0){
+        if (wr.dirty){
+          for (var a = 0; a < wr.chars.length; a++) wr.chars[a].style.transform = '';
+          wr.dirty = false;
+        }
+        continue;
+      }
+      wr.env += (wr.target - wr.env) * 0.08;
+      for (var b = 0; b < wr.chars.length; b++){
+        var ph = now * 0.0045 - b * 0.55;
+        var wy = Math.sin(ph) * 10 * wr.env;
+        var wr2 = Math.sin(ph + 1.1) * 3.5 * wr.env;
+        wr.chars[b].style.transform = 'translate3d(0,' + wy.toFixed(2) + 'px,0) rotate(' + wr2.toFixed(2) + 'deg)';
+      }
+      wr.dirty = true;
+    }
+
+    /* 跑马灯：滚动速率越快，跑得越快 */
+    if (marquee.track){
+      marquee.pos -= 0.55 + Math.min(Math.abs(smoothVel) * 0.12, 4.5);
+      if (-marquee.pos >= marquee.half) marquee.pos += marquee.half;
+      marquee.track.style.transform = 'translate3d(' + marquee.pos.toFixed(2) + 'px,0,0) skewY(' + (skew * 0.5).toFixed(3) + 'deg)';
+    }
+  }
+
+  /* ---------- 滚动显现 ---------- */
+  function initReveal(){
+    var els = document.querySelectorAll('[data-reveal], [data-split-reveal]');
+    if (reduced || !('IntersectionObserver' in window)){
+      for (var i = 0; i < els.length; i++) els[i].classList.add('is-in');
+      return;
+    }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting){
+          en.target.classList.add('is-in');
+          io.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+    for (var j = 0; j < els.length; j++) io.observe(els[j]);
+  }
+
+  /* ---------- 阅读进度条 ---------- */
+  var progress = document.getElementById('progress');
+  function updateProgress(){
+    if (!progress) return;
+    var h = docEl.scrollHeight - window.innerHeight;
+    var r = h > 0 ? (window.pageYOffset || 0) / h : 0;
+    progress.style.transform = 'scaleX(' + clamp(r, 0, 1).toFixed(4) + ')';
+  }
+  window.addEventListener('scroll', updateProgress, { passive: true });
+
+  /* ---------- 展开面板 ---------- */
+  function initPanels(){
+    var toggles = document.querySelectorAll('[data-row-toggle]');
+    function setOpen(head, open){
+      var panel = document.getElementById(head.getAttribute('aria-controls'));
+      if (!panel) return;
+      panel.classList.toggle('open', open);
+      head.setAttribute('aria-expanded', open ? 'true' : 'false');
+      var row = head.closest('.row');
+      if (row) row.classList.toggle('open', open);
+    }
+    for (var i = 0; i < toggles.length; i++){
+      (function(head){
+        head.addEventListener('click', function(){
+          var willOpen = head.getAttribute('aria-expanded') !== 'true';
+          setOpen(head, willOpen);
+        });
+      })(toggles[i]);
+    }
+    /* 文末「上一篇 / 下一篇」直达 */
+    var links = document.querySelectorAll('[data-open-row]');
+    for (var j = 0; j < links.length; j++){
+      (function(a){
+        a.addEventListener('click', function(e){
+          e.preventDefault();
+          var target = document.getElementById(a.getAttribute('data-open-row'));
+          if (!target) return;
+          if (target.getAttribute('aria-expanded') !== 'true'){
+            target.click();
+          }
+          window.setTimeout(function(){
+            var panel = document.getElementById(target.getAttribute('aria-controls'));
+            if (panel){
+              var behavior = reduced ? 'auto' : 'smooth';
+              try { panel.scrollIntoView({ behavior: behavior, block: 'start' }); }
+              catch (err) { panel.scrollIntoView(); }
+            }
+          }, 120);
+        });
+      })(links[j]);
+    }
+  }
+
+  /* ---------- 分类筛选 ---------- */
+  function initFilters(){
+    var chips = document.querySelectorAll('.chip');
+    var rows = document.querySelectorAll('.row');
+    var countEl = document.getElementById('rowCount');
+    for (var i = 0; i < chips.length; i++){
+      (function(chip){
+        chip.addEventListener('click', function(){
+          for (var k = 0; k < chips.length; k++){
+            chips[k].classList.toggle('on', chips[k] === chip);
+            chips[k].setAttribute('aria-pressed', chips[k] === chip ? 'true' : 'false');
+          }
+          var f = chip.getAttribute('data-filter');
+          var n = 0;
+          for (var m = 0; m < rows.length; m++){
+            var show = (f === 'all') || (rows[m].getAttribute('data-cat') === f);
+            rows[m].classList.toggle('is-hidden', !show);
+            if (show) n++;
+          }
+          if (countEl) countEl.textContent = n;
+        });
+      })(chips[i]);
+    }
+  }
+
+  /* ---------- 代码复制 ---------- */
+  function initCopy(){
+    var btns = document.querySelectorAll('.code-copy');
+    function fallbackCopy(text){
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      return ok;
+    }
+    for (var i = 0; i < btns.length; i++){
+      (function(btn){
+        btn.addEventListener('click', function(){
+          var card = btn.closest('.code-card');
+          var code = card ? card.querySelector('code') : null;
+          if (!code) return;
+          var text = code.textContent;
+          function done(ok){
+            btn.textContent = ok ? '已复制 ✓' : '复制失败';
+            btn.classList.add('ok');
+            window.setTimeout(function(){
+              btn.textContent = '复制';
+              btn.classList.remove('ok');
+            }, 1600);
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText){
+            navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ done(fallbackCopy(text)); });
+          } else {
+            done(fallbackCopy(text));
+          }
+        });
+      })(btns[i]);
+    }
+  }
+
+  /* ---------- 订阅表单：校验 + 反馈 ---------- */
+  function initSubscribe(){
+    var form = document.getElementById('subForm');
+    var input = document.getElementById('subEmail');
+    var msg = document.getElementById('subMsg');
+    var okBox = document.getElementById('subOk');
+    var okEmail = document.getElementById('subOkEmail');
+    if (!form || !input) return;
+    var re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    input.addEventListener('input', function(){
+      input.removeAttribute('aria-invalid');
+      if (msg){ msg.textContent = ''; msg.className = 'sub-msg'; }
+    });
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var v = input.value.trim();
+      if (!v){
+        input.setAttribute('aria-invalid', 'true');
+        if (msg){ msg.textContent = '⚠ 邮箱还没填——缓存总得有个地址。'; msg.className = 'sub-msg err'; }
+        input.focus();
+        return;
+      }
+      if (!re.test(v)){
+        input.setAttribute('aria-invalid', 'true');
+        if (msg){ msg.textContent = '⚠ 格式看起来不太对，检查一下 @ 和域名？'; msg.className = 'sub-msg err'; }
+        input.focus();
+        return;
+      }
+      if (msg){ msg.textContent = ''; msg.className = 'sub-msg'; }
+      if (okEmail) okEmail.textContent = v;
+      form.hidden = true;
+      if (okBox) okBox.hidden = false;
+    });
+  }
+
+  /* ---------- 回到顶部 ---------- */
+  function initToTop(){
+    var btn = document.getElementById('toTop');
+    if (!btn) return;
+    btn.addEventListener('click', function(){
+      var behavior = reduced ? 'auto' : 'smooth';
+      try { window.scrollTo({ top: 0, behavior: behavior }); }
+      catch (e) { window.scrollTo(0, 0); }
+    });
+  }
+
+  /* ---------- resize ---------- */
+  var resizeTimer = 0;
+  window.addEventListener('resize', function(){
+    window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(resetAndMeasure, 160);
+  });
+
+  /* ---------- 启动 ---------- */
+  function boot(){
+    try {
+      if (reduced){
+        /* reduced-motion：动能全关，静态排版直达 */
+        if (loader) loader.style.display = 'none';
+        body.classList.add('hero-in', 'entrance-done');
+        body.classList.remove('is-loading');
+        buildRegistries();
+        buildWaves();
+        initReveal();
+        initPanels();
+        initFilters();
+        initCopy();
+        initSubscribe();
+        initToTop();
+        updateProgress();
+        return;
+      }
+
+      prepLoader();
+      buildRegistries();
+      measureMagnetsOnly();
+      buildWaves();
+      initReveal();
+      initPanels();
+      initFilters();
+      initCopy();
+      initSubscribe();
+      initToTop();
+      initCursor();
+      updateProgress();
+
+      if (!kinetic){
+        /* 触屏：跑马灯走 CSS 动画，无磁吸无光标 */
+        var mqs = document.querySelectorAll('.marquee');
+        for (var i = 0; i < mqs.length; i++) mqs[i].classList.add('css-anim');
+        body.classList.remove('is-loading');
+        window.setTimeout(function(){
+          body.classList.add('hero-in', 'entrance-done');
+          if (loader) loader.classList.add('done');
+        }, 900);
+        return;
+      }
+
+      /* 桌面：计数幕布 → 字符落位 → 磁吸接管 */
+      runLoaderCounter();
+      measureMarquee();
+      if (document.fonts && document.fonts.ready){
+        document.fonts.ready.then(function(){
+          measureMarquee();
+          if (entranceDone) resetAndMeasure();
+        })['catch'](function(){});
+      }
+      /* 安全网：任何情况下 4.5s 后必然放行内容 */
+      window.setTimeout(finishLoad, 4500);
+      requestAnimationFrame(tick);
+      rafRunning = true;   /* rAF 循环已启动 —— 光标启用三条件的最后一条 */
+      armCursor();         /* 若 pointermove 先于此刻发生，立即补上启用类 */
+    } catch (err) {
+      /* 任何初始化异常：放行内容、交还系统光标，保证可读可操作 */
+      disarmCursor();
+      body.classList.add('cursor-hidden');
+      if (loader) loader.style.display = 'none';
+      body.classList.add('hero-in', 'entrance-done');
+      body.classList.remove('is-loading');
+      if (window.console && console.error) console.error('boot fallback:', err);
+    }
+  }
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+</body>
+</html>

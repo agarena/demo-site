@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F6F2E9">
+<meta name="description" content="星澜科技 Xinglan Tech —— 以数据为澜，驱动产业进化。云计算与数据中台、智能制造解决方案、AI 应用开发等一站式数字化转型服务。">
+<title>星澜科技 Xinglan Tech · 以数据为澜，驱动产业进化</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================
+   星澜科技 · 3D 折纸 Origami 公司门户
+   配色锁死：和纸白 #F6F2E9 / 朱 #CE5347 / 藍 #3D5A80
+             折痕灰 #D8D2C4 / 墨 #2B2925 / 金箔 #C9A227
+   ========================================================== */
+:root{
+  --paper:#F6F2E9;
+  --paper-2:#FBF8F1;
+  --paper-3:#EFE9DA;
+  --vermilion:#CE5347;
+  --indigo:#3D5A80;
+  --crease:#D8D2C4;
+  --crease-2:#B9AE99;
+  --ink:#2B2925;
+  --ink-soft:#5A554B;
+  --gold:#C9A227;
+  --serif:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",-apple-system,sans-serif;
+  --hard-shadow:5px 5px 0 rgba(43,41,37,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{
+  font-family:var(--sans);
+  background:var(--paper);
+  color:var(--ink);
+  line-height:1.8;
+  font-size:16px;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--vermilion);color:#FBF7ED}
+a{color:inherit;text-decoration:none}
+img,svg{display:block;max-width:100%}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+/* 纸张颗粒（feTurbulence，≤5% 不干扰阅读） */
+body::after{
+  content:"";position:fixed;inset:0;z-index:40;pointer-events:none;opacity:.05;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='180' height='180' filter='url(%23n)' opacity='0.6'/></svg>");
+}
+
+/* ---------- WebGL 舞台（固定背景层） ---------- */
+#stage{
+  position:fixed;inset:0;z-index:0;width:100%;height:100%;
+  pointer-events:none;display:block;
+}
+body.no3d #stage{display:none}
+
+main{position:relative;z-index:1}
+.wrap{max-width:1200px;margin:0 auto;padding:0 5vw}
+
+/* ---------- 顶部加载折线 ---------- */
+#progress{
+  position:fixed;top:0;left:0;height:2px;width:100%;z-index:80;
+  transform-origin:0 50%;transform:scaleX(0);
+  background:linear-gradient(90deg,var(--vermilion),var(--gold));
+}
+
+/* ---------- 页头 ---------- */
+header{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  padding:20px 0;transition:padding .35s ease,background .35s ease,box-shadow .35s ease;
+}
+header.scrolled{
+  background:rgba(246,242,233,.9);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  box-shadow:0 1px 0 var(--crease);
+  padding:10px 0;
+}
+.hwrap{max-width:1280px;margin:0 auto;padding:0 4vw;display:flex;align-items:center;gap:26px}
+.logo{display:flex;align-items:center;gap:11px}
+.logo svg{width:36px;height:36px}
+.logo b{font-family:var(--serif);font-size:20px;font-weight:900;letter-spacing:.12em}
+.logo small{display:block;font-size:10px;letter-spacing:.3em;color:var(--ink-soft);font-weight:400}
+nav.main{display:flex;gap:2px;margin-left:auto}
+nav.main a{
+  padding:8px 13px;font-size:14px;letter-spacing:.08em;color:var(--ink);
+  position:relative;transition:color .3s;
+}
+nav.main a::after{
+  content:"";position:absolute;left:13px;right:13px;bottom:3px;height:2px;
+  background:var(--vermilion);transform:scaleX(0);transform-origin:left;transition:transform .3s;
+}
+nav.main a:hover,nav.main a.on{color:var(--vermilion)}
+nav.main a:hover::after,nav.main a.on::after{transform:scaleX(1)}
+.h-cta{
+  margin-left:8px;padding:9px 20px;font-size:13px;letter-spacing:.14em;
+  background:var(--ink);color:var(--paper);border:1px solid var(--ink);transition:.3s;
+}
+.h-cta:hover{background:var(--vermilion);border-color:var(--vermilion);transform:translateY(-2px);box-shadow:3px 3px 0 rgba(43,41,37,.2)}
+#burger{
+  display:none;margin-left:auto;width:44px;height:44px;border:1px solid var(--crease);
+  background:var(--paper-2);position:relative;z-index:95;
+}
+#burger i,#burger i::before,#burger i::after{
+  content:"";position:absolute;left:11px;right:11px;height:2px;background:var(--ink);transition:.3s;
+}
+#burger i{top:21px}
+#burger i::before{left:0;right:0;top:-7px}
+#burger i::after{left:0;right:0;top:7px}
+#burger.active i{background:transparent}
+#burger.active i::before{top:0;transform:rotate(45deg)}
+#burger.active i::after{top:0;transform:rotate(-45deg)}
+
+/* 移动端全屏抽屉 */
+#drawer{
+  position:fixed;inset:0;z-index:90;background:var(--paper);
+  display:flex;flex-direction:column;justify-content:center;gap:6px;padding:0 10vw;
+  opacity:0;visibility:hidden;transform:translateY(-4%);transition:.4s ease;
+}
+#drawer.open{opacity:1;visibility:visible;transform:none}
+#drawer a{font-family:var(--serif);font-size:28px;font-weight:700;padding:10px 0;border-bottom:1px solid var(--crease);display:flex;justify-content:space-between;align-items:baseline}
+#drawer a em{font-style:normal;font-size:12px;letter-spacing:.24em;color:var(--crease-2)}
+#drawer a:hover{color:var(--vermilion)}
+#drawer .d-info{margin-top:26px;font-size:13px;color:var(--ink-soft);letter-spacing:.05em}
+body.lock{overflow:hidden}
+
+/* ---------- Hero ---------- */
+.hero{
+  position:relative;min-height:100vh;min-height:100svh;
+  display:flex;align-items:center;padding:130px 0 90px;
+}
+.hero-inner{
+  width:100%;max-width:1280px;margin:0 auto;padding:0 5vw;
+  display:grid;grid-template-columns:minmax(0,620px) 1fr;gap:40px;align-items:center;
+}
+.kicker{
+  display:inline-flex;align-items:center;gap:12px;
+  font-size:12px;letter-spacing:.32em;color:var(--indigo);margin-bottom:26px;
+}
+.kicker::before{content:"";width:34px;height:1px;background:var(--indigo)}
+.hero h1{
+  font-family:var(--serif);font-weight:900;
+  font-size:clamp(40px,6.2vw,82px);line-height:1.22;letter-spacing:.02em;
+}
+.hero h1 .zhu{color:var(--vermilion);font-style:normal}
+.hero .sub{
+  margin:26px 0 38px;max-width:34em;color:var(--ink-soft);font-size:16.5px;
+}
+.hero-btns{display:flex;gap:16px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:10px;padding:15px 32px;
+  font-size:15px;letter-spacing:.1em;border:1px solid var(--ink);
+  color:var(--ink);background:transparent;transition:.28s ease;position:relative;
+}
+.btn.primary{
+  background:var(--vermilion);border-color:var(--vermilion);color:#FBF7ED;
+  box-shadow:var(--hard-shadow);
+}
+.btn.primary:hover{transform:translate(-2px,-2px);box-shadow:8px 8px 0 rgba(43,41,37,.16)}
+.btn.ghost:hover{background:var(--ink);color:var(--paper);transform:translateY(-2px)}
+.hero-hint{
+  margin-top:56px;display:inline-flex;align-items:center;gap:12px;
+  font-size:12.5px;letter-spacing:.18em;color:var(--crease-2);
+}
+.hero-hint svg{animation:hintFloat 2.2s ease-in-out infinite}
+@keyframes hintFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+
+/* Hero 入场（body.ready 后错峰上浮） */
+.fx-up{opacity:0;transform:translateY(30px);
+  transition:opacity .85s ease var(--d,0s),transform .85s cubic-bezier(.22,.61,.36,1) var(--d,0s)}
+body.ready .fx-up{opacity:1;transform:none}
+
+/* ---------- 无 WebGL 降级：SVG 折纸插画 ---------- */
+.fallback-visual{display:none;position:relative;min-height:420px}
+body.no3d .fallback-visual{display:block}
+.fv{position:absolute;filter:drop-shadow(6px 10px 14px rgba(43,41,37,.14))}
+.fv-crane{width:min(92%,460px);top:0;right:0;animation:fvFloat 6s ease-in-out infinite alternate}
+.fv-boat1{width:150px;bottom:6%;left:4%;animation:fvFloat 5s 0.6s ease-in-out infinite alternate}
+.fv-boat2{width:104px;bottom:0;right:14%;animation:fvFloat 7s 1.1s ease-in-out infinite alternate-reverse}
+.fv-box{width:110px;bottom:34%;left:38%;animation:fvFloat 8s 0.2s ease-in-out infinite alternate}
+@keyframes fvFloat{from{transform:translateY(-7px) rotate(-1.2deg)}to{transform:translateY(9px) rotate(1.6deg)}}
+
+/* ---------- 数据信任带（墨色折边） ---------- */
+.band{position:relative;background:var(--ink);color:var(--paper);padding:74px 0 60px;margin:40px 0}
+.band::before{ /* 纸质折边锯齿 */
+  content:"";position:absolute;top:-17px;left:0;right:0;height:18px;
+  background:
+    linear-gradient(135deg,var(--ink) 50%,transparent 50%),
+    linear-gradient(225deg,var(--ink) 50%,transparent 50%);
+  background-size:20px 20px;background-repeat:repeat-x;
+}
+.band::after{
+  content:"";position:absolute;bottom:-17px;left:0;right:0;height:18px;
+  background:
+    linear-gradient(45deg,var(--ink) 50%,transparent 50%),
+    linear-gradient(-45deg,var(--ink) 50%,transparent 50%);
+  background-size:20px 20px;background-repeat:repeat-x;
+}
+.band-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.stat{text-align:center;padding:10px 8px;position:relative}
+.stat + .stat::before{content:"";position:absolute;left:0;top:18%;bottom:18%;width:1px;background:rgba(246,242,233,.16)}
+.stat .num{font-family:var(--serif);font-weight:900;font-size:clamp(40px,4.6vw,62px);line-height:1.1;color:var(--gold);font-variant-numeric:tabular-nums}
+.stat .num em{font-style:normal;font-size:.42em;margin-left:4px;color:var(--paper)}
+.stat p{font-size:13.5px;letter-spacing:.14em;color:rgba(246,242,233,.72);margin-top:8px}
+.band-note{text-align:center;margin-top:34px;font-size:13px;letter-spacing:.2em;color:rgba(246,242,233,.5)}
+
+/* ---------- 章节公共 ---------- */
+section.block{padding:112px 0;position:relative;scroll-margin-top:76px}
+.sec-head{margin-bottom:54px;max-width:720px}
+.sec-kicker{
+  display:inline-flex;align-items:center;gap:12px;
+  font-size:12px;letter-spacing:.3em;color:var(--vermilion);margin-bottom:14px;
+}
+.sec-kicker::before{content:"";width:30px;height:1px;background:var(--vermilion)}
+.sec-head h2{font-family:var(--serif);font-weight:900;font-size:clamp(30px,3.6vw,46px);line-height:1.3;letter-spacing:.03em}
+.sec-head .lead{margin-top:16px;color:var(--ink-soft);font-size:15.5px}
+.sec-fold{ /* 章节标题旁的折角小方 */
+  display:inline-block;width:15px;height:15px;margin-right:10px;vertical-align:-2px;
+  background:linear-gradient(225deg,var(--gold) 50%,transparent 50%);
+}
+
+/* 滚动显现 */
+.reveal{opacity:0;transform:translateY(28px);
+  transition:opacity .75s ease var(--fd,0s),transform .75s cubic-bezier(.22,.61,.36,1) var(--fd,0s)}
+.reveal[data-fx="fold"]{transform:perspective(900px) rotateX(-13deg) translateY(34px);transform-origin:top center}
+.reveal.in{opacity:1;transform:none}
+
+/* ---------- CSS 3D 折角卡片 ---------- */
+.fcard{
+  position:relative;background:rgba(252,249,243,.92);
+  border:1px solid var(--crease);padding:28px;
+  transform-style:preserve-3d;
+  transition:transform .5s cubic-bezier(.22,.61,.36,1),box-shadow .5s,border-color .5s;
+}
+.fcard::before{ /* 折角暗口 */
+  content:"";position:absolute;top:-1px;right:-1px;width:44px;height:44px;
+  background:linear-gradient(225deg,rgba(43,41,37,.16),rgba(43,41,37,.04) 58%,transparent 59%);
+  clip-path:polygon(0 0,100% 0,100% 100%);
+}
+.fcard .flap{
+  position:absolute;top:-1px;right:-1px;width:44px;height:44px;z-index:2;pointer-events:none;
+  transform-origin:50% 50%;transform-style:preserve-3d;
+  transition:transform .6s cubic-bezier(.34,1.25,.44,1);
+}
+.fcard .flap i{
+  position:absolute;inset:0;
+  background:linear-gradient(225deg,var(--flap-c,#E7DFCC) 49.6%,transparent 50.4%);
+  clip-path:polygon(0 0,100% 0,100% 100%);
+  backface-visibility:hidden;
+}
+.fcard:hover{transform:translateY(-7px) rotateX(1.4deg);box-shadow:9px 14px 30px -12px rgba(43,41,37,.28);border-color:var(--crease-2)}
+.fcard:hover .flap{transform:rotate3d(1,1,0,180deg)}
+
+/* ---------- 关于星澜 ---------- */
+.about-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:start}
+.about-copy p{margin-bottom:20px;color:var(--ink-soft)}
+.about-copy p b{color:var(--ink)}
+.about-quote{
+  margin:30px 0;padding:22px 26px;border-left:3px solid var(--gold);
+  background:rgba(201,162,39,.08);font-family:var(--serif);font-size:18px;line-height:1.9;color:var(--ink);
+}
+.about-quote footer{margin-top:8px;font-family:var(--sans);font-size:12.5px;letter-spacing:.14em;color:var(--ink-soft)}
+.mv-list{display:grid;gap:14px;margin-bottom:26px}
+.mv-list .fcard{padding:20px 24px}
+.mv-list h4{font-family:var(--serif);font-size:17px;display:flex;align-items:center;gap:10px}
+.mv-list h4 i{font-style:normal;width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;font-size:12px;color:#FBF7ED;background:var(--indigo);transform:rotate(45deg)}
+.mv-list h4 i b{transform:rotate(-45deg);font-weight:500}
+.mv-list p{font-size:14px;color:var(--ink-soft);margin-top:6px}
+.honor-chips{display:flex;flex-wrap:wrap;gap:10px}
+.honor-chips span{
+  font-size:12.5px;letter-spacing:.1em;padding:7px 14px;border:1px solid var(--crease);
+  background:var(--paper-2);color:var(--ink-soft);transition:.3s;
+}
+.honor-chips span:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-2px)}
+
+/* ---------- 核心业务 ---------- */
+.biz-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;perspective:1400px}
+.b-card{padding:32px 28px 26px}
+.b-ic{width:52px;height:52px;margin-bottom:18px;display:grid;place-items:center;background:var(--paper-3);border:1px solid var(--crease);transition:.4s}
+.b-card:hover .b-ic{background:var(--vermilion);border-color:var(--vermilion)}
+.b-ic svg{width:30px;height:30px;stroke:var(--ink);fill:none;stroke-width:1.6;stroke-linejoin:round;transition:.4s}
+.b-card:hover .b-ic svg{stroke:#FBF7ED}
+.b-ic svg .ac{fill:var(--gold);stroke:none}
+.b-card:hover .b-ic svg .ac{fill:#FBF7ED}
+.b-card h3{font-family:var(--serif);font-size:19px;margin-bottom:10px}
+.b-card > p{font-size:14px;color:var(--ink-soft);min-height:72px}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.tags span{font-size:11.5px;letter-spacing:.12em;padding:4px 11px;border:1px solid var(--crease);color:var(--ink-soft)}
+.b-no{
+  position:absolute;left:26px;bottom:16px;font-family:var(--serif);font-weight:900;
+  font-size:15px;color:var(--crease-2);letter-spacing:.1em;
+}
+
+/* ---------- 发展历程 ---------- */
+.timeline{position:relative;max-width:860px;margin:0 auto;padding-left:42px}
+.timeline::before{content:"";position:absolute;left:9px;top:6px;bottom:6px;width:2px;
+  background:repeating-linear-gradient(to bottom,var(--crease-2) 0 6px,transparent 6px 13px)}
+.tl-item{position:relative;padding:0 0 40px 16px}
+.tl-item:last-child{padding-bottom:6px}
+.tl-item::before{ /* 折纸菱形节点 */
+  content:"";position:absolute;left:-42px;top:7px;width:16px;height:16px;
+  background:var(--vermilion);transform:rotate(45deg);box-shadow:2px 2px 0 rgba(43,41,37,.18);
+}
+.tl-item:nth-child(even)::before{background:var(--indigo)}
+.tl-item time{font-family:var(--serif);font-weight:900;font-size:26px;color:var(--vermilion);letter-spacing:.04em}
+.tl-item:nth-child(even) time{color:var(--indigo)}
+.tl-item h4{font-family:var(--serif);font-size:17px;margin:6px 0 4px}
+.tl-item p{font-size:14px;color:var(--ink-soft);max-width:38em}
+
+/* ---------- 客户案例 ---------- */
+.case-filter{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:34px}
+.chip{
+  padding:9px 20px;border:1px solid var(--crease);background:var(--paper-2);
+  font-size:13px;letter-spacing:.14em;color:var(--ink-soft);transition:.3s;
+}
+.chip:hover{border-color:var(--vermilion);color:var(--vermilion)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.cases-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;perspective:1400px}
+.case-card{padding:30px 30px 26px;animation:caseIn .5s cubic-bezier(.22,.61,.36,1) both}
+.case-card.hide{display:none}
+@keyframes caseIn{from{opacity:0;transform:perspective(900px) rotateX(-8deg) translateY(22px)}to{opacity:1;transform:none}}
+.c-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.c-tag{font-size:12px;letter-spacing:.16em;color:#FBF7ED;background:var(--indigo);padding:4px 12px}
+.case-card[data-ind="mfg"] .c-tag{background:var(--vermilion)}
+.case-card[data-ind="nrg"] .c-tag{background:var(--gold)}
+.c-year{font-size:12px;letter-spacing:.14em;color:var(--crease-2)}
+.case-card h3{font-family:var(--serif);font-size:20px;margin-bottom:12px}
+.c-line{font-size:13.5px;color:var(--ink-soft);margin-bottom:6px}
+.c-line b{color:var(--ink);font-weight:500}
+.c-stats{display:flex;gap:34px;margin-top:18px;padding-top:16px;border-top:1px dashed var(--crease)}
+.c-stats strong{font-family:var(--serif);font-weight:900;font-size:30px;color:var(--vermilion);display:block;line-height:1.15;font-variant-numeric:tabular-nums}
+.case-card[data-ind="fin"] .c-stats strong{color:var(--indigo)}
+.c-stats span{font-size:12px;letter-spacing:.1em;color:var(--ink-soft)}
+
+/* ---------- 新闻动态 ---------- */
+.news-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.n-card{display:flex;flex-direction:column;padding:26px;min-height:220px}
+.n-meta{display:flex;justify-content:space-between;font-size:12px;letter-spacing:.14em;color:var(--crease-2);margin-bottom:14px}
+.n-meta b{color:var(--vermilion);font-weight:500}
+.n-card h3{font-family:var(--serif);font-size:17.5px;line-height:1.6;margin-bottom:12px}
+.n-card p{font-size:13.5px;color:var(--ink-soft);flex:1}
+.n-card .n-more{margin-top:16px;font-size:12.5px;letter-spacing:.2em;color:var(--indigo);transition:.3s}
+.n-card:hover .n-more{color:var(--vermilion);letter-spacing:.3em}
+
+/* ---------- 合作伙伴 ---------- */
+.partners{padding:30px 0 90px;overflow:hidden}
+.partners p.p-title{text-align:center;font-size:12px;letter-spacing:.34em;color:var(--crease-2);margin-bottom:26px}
+.marquee{display:flex;width:max-content;animation:mar 30s linear infinite}
+.marquee:hover{animation-play-state:paused}
+.marquee ul{display:flex;list-style:none;align-items:center}
+.marquee li{
+  display:flex;align-items:center;gap:10px;margin:0 34px;white-space:nowrap;
+  font-family:var(--serif);font-weight:700;font-size:20px;color:#9a927f;
+  filter:grayscale(1);transition:.35s;letter-spacing:.08em;
+}
+.marquee li:hover{color:var(--ink);filter:none}
+.marquee li i{width:12px;height:12px;flex:0 0 12px;transform:rotate(45deg);background:var(--crease-2);transition:.35s}
+.marquee li:hover i{background:var(--vermilion)}
+@keyframes mar{to{transform:translateX(-50%)}}
+
+/* ---------- 加入我们 ---------- */
+.job-list{display:grid;gap:16px;max-width:920px;margin:0 auto}
+.job{display:grid;grid-template-columns:1fr auto;gap:8px 20px;align-items:center;padding:26px 30px}
+.job h3{font-family:var(--serif);font-size:19px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.job h3 em{font-style:normal;font-size:12px;letter-spacing:.14em;color:var(--indigo)}
+.job p{font-size:13.5px;color:var(--ink-soft);grid-column:1}
+.job .j-go{
+  grid-row:1/3;grid-column:2;width:46px;height:46px;border:1px solid var(--crease);
+  display:grid;place-items:center;transition:.35s;color:var(--ink);
+}
+.job:hover .j-go{background:var(--vermilion);border-color:var(--vermilion);color:#FBF7ED;transform:rotate(45deg)}
+.welfare{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:36px}
+.welfare span{font-size:12.5px;letter-spacing:.1em;padding:7px 16px;border:1px dashed var(--crease-2);color:var(--ink-soft);transition:.3s}
+.welfare span:hover{border-style:solid;border-color:var(--gold);color:var(--gold)}
+
+/* ---------- 联系星澜 ---------- */
+.contact-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:48px;align-items:start}
+.c-info h3{font-family:var(--serif);font-size:24px;margin-bottom:20px}
+.c-info ul{list-style:none;display:grid;gap:18px;margin-bottom:30px}
+.c-info li{display:flex;gap:14px;align-items:flex-start;font-size:14.5px;color:var(--ink-soft)}
+.c-info li b{color:var(--ink);font-weight:500}
+.c-info li svg{width:20px;height:20px;flex:0 0 20px;margin-top:4px;stroke:var(--vermilion);fill:none;stroke-width:1.6}
+.form-card{padding:36px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 18px}
+.field{display:flex;flex-direction:column}
+.field.full{grid-column:1/-1}
+.field label{font-size:13px;letter-spacing:.1em;margin-bottom:7px;color:var(--ink)}
+.field label i{color:var(--vermilion);font-style:normal;margin-left:3px}
+.field input,.field textarea{
+  width:100%;padding:13px 14px;border:1px solid var(--crease);
+  background:rgba(255,255,255,.78);font:inherit;font-size:14.5px;color:var(--ink);
+  transition:border-color .3s,box-shadow .3s;resize:vertical;
+}
+.field textarea{min-height:110px}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--indigo);box-shadow:0 0 0 3px rgba(61,90,128,.13)}
+.field.bad input,.field.bad textarea{border-color:var(--vermilion);box-shadow:0 0 0 3px rgba(206,83,71,.13)}
+.field .err{color:var(--vermilion);font-size:12px;min-height:18px;margin-top:5px;letter-spacing:.04em}
+.form-foot{grid-column:1/-1;display:flex;align-items:center;gap:18px;margin-top:6px}
+.form-foot small{color:var(--crease-2);font-size:12px;letter-spacing:.06em}
+#submitBtn.loading{pointer-events:none;opacity:.75}
+#submitBtn.loading::after{
+  content:"";width:14px;height:14px;border:2px solid rgba(251,247,237,.4);border-top-color:#FBF7ED;
+  border-radius:50%;animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.form-ok{display:none;text-align:center;padding:34px 10px 14px}
+#contactForm.sent .form-ok{display:block;animation:okIn .6s cubic-bezier(.34,1.4,.44,1) both}
+#contactForm.sent .form-body{display:none}
+@keyframes okIn{from{opacity:0;transform:translateY(20px) scale(.94)}to{opacity:1;transform:none}}
+.ok-seal{
+  width:84px;height:84px;margin:0 auto 20px;display:grid;place-items:center;
+  background:var(--vermilion);border-radius:6px;transform:rotate(-6deg);
+  box-shadow:inset 0 0 0 2px rgba(251,247,237,.4),4px 4px 0 rgba(43,41,37,.15);
+}
+.ok-seal svg{width:40px;height:40px;stroke:#FBF7ED;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.form-ok h3{font-family:var(--serif);font-size:24px;margin-bottom:10px}
+.form-ok p{font-size:14px;color:var(--ink-soft);margin-bottom:22px}
+/* FAQ */
+.faq{max-width:820px;margin:70px auto 0}
+.faq h3{font-family:var(--serif);font-size:22px;margin-bottom:20px;text-align:center}
+.faq-item{border:1px solid var(--crease);background:rgba(252,249,243,.9);margin-bottom:12px}
+.faq-q{
+  width:100%;display:flex;justify-content:space-between;align-items:center;gap:14px;
+  padding:18px 22px;background:none;border:none;text-align:left;
+  font-size:15px;font-weight:500;color:var(--ink);letter-spacing:.04em;
+}
+.faq-q i{font-style:normal;flex:0 0 22px;width:22px;height:22px;position:relative;transition:.35s}
+.faq-q i::before,.faq-q i::after{content:"";position:absolute;background:var(--vermilion);top:50%;left:50%}
+.faq-q i::before{width:14px;height:2px;transform:translate(-50%,-50%)}
+.faq-q i::after{width:2px;height:14px;transform:translate(-50%,-50%)}
+.faq-item.open .faq-q i{transform:rotate(135deg)}
+.faq-a{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s cubic-bezier(.22,.61,.36,1)}
+.faq-a > div{overflow:hidden}
+.faq-a p{padding:0 22px 20px;font-size:14px;color:var(--ink-soft)}
+.faq-item.open .faq-a{grid-template-rows:1fr}
+
+/* ---------- CTA 横幅 ---------- */
+.cta-band{background:var(--indigo);color:var(--paper);padding:86px 0;text-align:center;position:relative}
+.cta-band::before{
+  content:"";position:absolute;top:-16px;left:0;right:0;height:17px;
+  background:linear-gradient(135deg,var(--indigo) 50%,transparent 50%),linear-gradient(225deg,var(--indigo) 50%,transparent 50%);
+  background-size:20px 20px;background-repeat:repeat-x;
+}
+.cta-band h2{font-family:var(--serif);font-weight:900;font-size:clamp(28px,3.8vw,46px);letter-spacing:.04em;margin-bottom:16px}
+.cta-band p{color:rgba(246,242,233,.75);margin-bottom:34px;font-size:15.5px}
+.cta-band .btn{border-color:var(--paper);color:var(--paper)}
+.cta-band .btn.primary{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.cta-band .btn.primary:hover{box-shadow:8px 8px 0 rgba(0,0,0,.2)}
+.cta-band .btn:hover{background:var(--paper);color:var(--indigo)}
+.cta-band .btn.primary:hover{background:#FBF7ED;color:var(--ink)}
+
+/* ---------- 页脚 ---------- */
+footer.site{background:var(--ink);color:rgba(246,242,233,.78);padding:70px 0 0}
+.f-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:40px;padding-bottom:52px}
+.f-brand .logo b{color:var(--paper)}
+.f-brand .logo small{color:rgba(246,242,233,.45)}
+.f-brand p{font-size:13.5px;margin-top:18px;max-width:26em;color:rgba(246,242,233,.6)}
+.f-col h4{font-size:14px;letter-spacing:.2em;color:var(--paper);margin-bottom:18px;font-weight:500}
+.f-col ul{list-style:none;display:grid;gap:11px}
+.f-col a,.f-col li{font-size:13.5px;color:rgba(246,242,233,.62);transition:.3s}
+.f-col a:hover{color:var(--gold);padding-left:6px}
+.f-bottom{border-top:1px solid rgba(246,242,233,.12);padding:20px 0;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:12px;letter-spacing:.08em;color:rgba(246,242,233,.4)}
+
+/* ---------- 返回顶部 ---------- */
+#toTop{
+  position:fixed;right:26px;bottom:28px;z-index:60;width:48px;height:48px;
+  border:1px solid var(--crease);background:rgba(252,249,243,.94);color:var(--ink);
+  display:grid;place-items:center;opacity:0;transform:translateY(16px);
+  pointer-events:none;transition:.35s;box-shadow:4px 4px 0 rgba(43,41,37,.12);
+}
+#toTop.show{opacity:1;transform:none;pointer-events:auto}
+#toTop:hover{background:var(--vermilion);border-color:var(--vermilion);color:#FBF7ED;transform:translateY(-3px)}
+#toTop svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* ---------- 开场：一张方纸逐折成形（折纸 Logo） ---------- */
+#intro{
+  position:fixed;inset:0;z-index:100;background:var(--paper);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;
+  animation:introAuto .01s 3.6s forwards;
+}
+@keyframes introAuto{to{opacity:0;visibility:hidden;pointer-events:none}}
+#intro.leave{opacity:0;transform:translateY(-3.5%);transition:opacity .65s ease,transform .65s ease;pointer-events:none}
+.ipaper{
+  width:min(230px,54vw);aspect-ratio:1;position:relative;
+  perspective:1000px;
+  box-shadow:0 30px 70px -26px rgba(43,41,37,.3);
+}
+.ipaper .base{position:absolute;inset:0;background:linear-gradient(135deg,#FBF8F0,#ECE5D3);border:1px solid var(--crease)}
+.ipaper .fl{position:absolute;width:50%;height:50%;opacity:0;transform-style:preserve-3d}
+#intro.run .fl{opacity:1}
+.ipaper .fl.f1{top:0;left:0;clip-path:polygon(0 0,100% 0,0 100%);background:linear-gradient(135deg,var(--vermilion),#A93E33)}
+.ipaper .fl.f2{bottom:0;right:0;clip-path:polygon(100% 100%,0 100%,100% 0);background:linear-gradient(-135deg,var(--paper-3),#DCD2BC)}
+.ipaper .fl.f3{top:0;right:0;clip-path:polygon(100% 0,0 0,100% 100%);background:linear-gradient(-135deg,var(--indigo),#2E4562)}
+.ipaper .fl.f4{bottom:0;left:0;clip-path:polygon(0 100%,100% 100%,0 0);background:linear-gradient(135deg,var(--gold),#A88720)}
+#intro.run .f1{animation:foldA .55s cubic-bezier(.5,0,.3,1) .18s both}
+#intro.run .f2{animation:foldA .55s cubic-bezier(.5,0,.3,1) .36s both}
+#intro.run .f3{animation:foldB .55s cubic-bezier(.5,0,.3,1) .54s both}
+#intro.run .f4{animation:foldB .55s cubic-bezier(.5,0,.3,1) .72s both}
+@keyframes foldA{from{transform:rotate3d(1,-1,0,0deg)}to{transform:rotate3d(1,-1,0,180deg)}}
+@keyframes foldB{from{transform:rotate3d(1,1,0,0deg)}to{transform:rotate3d(1,1,0,180deg)}}
+.iseal{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+}
+#intro.run .iseal{animation:sealIn .55s cubic-bezier(.34,1.5,.44,1) 1.25s both}
+.iseal span{
+  width:72px;height:72px;background:var(--vermilion);color:#FBF7ED;
+  display:grid;place-items:center;font-family:var(--serif);font-weight:900;font-size:40px;
+  border-radius:6px;box-shadow:inset 0 0 0 2px rgba(251,247,237,.35),4px 4px 0 rgba(43,41,37,.16);
+}
+@keyframes sealIn{from{opacity:0;transform:scale(.5) rotate(-16deg)}to{opacity:1;transform:scale(1) rotate(-6deg)}}
+.itag{
+  font-size:13px;letter-spacing:.5em;color:var(--ink-soft);text-indent:.5em;
+  opacity:0;
+}
+#intro.run + .itag,
+.itag.run{animation:tagIn .7s ease .95s both}
+@keyframes tagIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1199px){
+  nav.main{display:none}
+  #burger{display:block}
+  .h-cta{display:none}
+  .hero-inner{grid-template-columns:1fr}
+  .fallback-visual{min-height:340px;max-width:520px}
+  .biz-grid{grid-template-columns:repeat(2,1fr)}
+  .news-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:767px){
+  section.block{padding:84px 0}
+  .hero{padding-top:112px}
+  .hero .sub{font-size:15px}
+  .about-grid,.contact-grid{grid-template-columns:1fr;gap:36px}
+  .band-grid{grid-template-columns:repeat(2,1fr);gap:30px 12px}
+  .stat + .stat::before{display:none}
+  .biz-grid,.cases-grid,.news-grid{grid-template-columns:1fr}
+  .b-card > p{min-height:0}
+  .form-grid{grid-template-columns:1fr}
+  .f-grid{grid-template-columns:1fr 1fr;gap:34px 20px}
+  .f-brand{grid-column:1/-1}
+  .job{grid-template-columns:1fr auto}
+  .fcard::before,.fcard .flap{width:36px;height:36px}
+  #toTop{right:16px;bottom:18px}
+  .timeline{padding-left:34px}
+}
+@media (max-width:374px){
+  body{font-size:15px}
+  .hero h1{font-size:38px}
+  .band-grid{grid-template-columns:1fr 1fr}
+  .stat .num{font-size:38px}
+  .f-grid{grid-template-columns:1fr}
+  .job{padding:22px 18px}
+  .form-card{padding:26px 20px}
+  .c-stats{gap:22px}
+  .hero-btns .btn{width:100%;justify-content:center}
+  .fv-boat1{width:110px}
+}
+
+/* ---------- 降低动效 ---------- */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.001s !important}
+  .reveal,.fx-up{opacity:1 !important;transform:none !important}
+  .marquee{animation:none;overflow-x:auto}
+  #intro{display:none}
+  .hero-hint svg{animation:none}
+}
+</style>
+</head>
+<body>
+
+<noscript><style>#intro{display:none}.reveal,.fx-up{opacity:1;transform:none}</style></noscript>
+
+<!-- 开场：方纸四折成 Logo -->
+<div id="intro" aria-hidden="true">
+  <div class="ipaper">
+    <div class="base"></div>
+    <div class="fl f1"></div><div class="fl f2"></div>
+    <div class="fl f3"></div><div class="fl f4"></div>
+    <div class="iseal"><span>澜</span></div>
+  </div>
+  <p class="itag run">星澜科技 · 一张纸，折出万物</p>
+</div>
+
+<!-- WebGL 舞台 -->
+<canvas id="stage" aria-hidden="true"></canvas>
+
+<div id="progress" aria-hidden="true"></div>
+
+<!-- ============ 页头 ============ -->
+<header id="header">
+  <div class="hwrap">
+    <a class="logo" href="#home" aria-label="星澜科技 首页">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <g stroke="#2B2925" stroke-width="1">
+          <polygon points="20,4 4,20 20,20" fill="#CE5347"/>
+          <polygon points="20,4 36,20 20,20" fill="#3D5A80"/>
+          <polygon points="36,20 20,36 20,20" fill="#C9A227"/>
+          <polygon points="20,36 4,20 20,20" fill="#EFE9DA"/>
+        </g>
+      </svg>
+      <span><b>星澜科技</b><small>XINGLAN TECH</small></span>
+    </a>
+    <nav class="main" aria-label="主导航">
+      <a href="#home" class="on">首页</a>
+      <a href="#about">关于星澜</a>
+      <a href="#business">核心业务</a>
+      <a href="#cases">客户案例</a>
+      <a href="#news">新闻动态</a>
+      <a href="#join">加入我们</a>
+      <a href="#contact">联系星澜</a>
+    </nav>
+    <a class="h-cta" href="#contact">获取方案</a>
+    <button id="burger" aria-label="打开菜单" aria-expanded="false"><i></i></button>
+  </div>
+</header>
+
+<!-- 移动端抽屉 -->
+<div id="drawer">
+  <a href="#home">首页<em>HOME</em></a>
+  <a href="#about">关于星澜<em>ABOUT</em></a>
+  <a href="#business">核心业务<em>BUSINESS</em></a>
+  <a href="#cases">客户案例<em>CASES</em></a>
+  <a href="#news">新闻动态<em>NEWS</em></a>
+  <a href="#join">加入我们<em>JOIN</em></a>
+  <a href="#contact">联系星澜<em>CONTACT</em></a>
+  <p class="d-info">+86 21-8000-1200 · hello@xinglan-tech.com<br>上海市浦东新区张江高科技园区澜启大厦 21F</p>
+</div>
+
+<main>
+  <!-- ============ Hero ============ -->
+  <section class="hero" id="home">
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <p class="kicker fx-up" style="--d:.05s">星澜科技 · 数字化转型服务商</p>
+        <h1 class="fx-up" style="--d:.15s">以数据为<em class="zhu">澜</em>，<br>驱动产业进化</h1>
+        <p class="sub fx-up" style="--d:.3s">为企业提供从云基础设施到智能应用的一站式数字化解决方案——让每一次转型都像折纸：每一步精准可溯，每一道折痕都承载结构的力量。</p>
+        <div class="hero-btns fx-up" style="--d:.45s">
+          <a class="btn primary" href="#contact">获取解决方案</a>
+          <a class="btn ghost" href="#about">了解星澜</a>
+        </div>
+        <p class="hero-hint fx-up" style="--d:.6s">
+          点击空白处，放飞纸鹤
+          <svg width="14" height="18" viewBox="0 0 14 18" aria-hidden="true"><path d="M7 1v14M2 10l5 5 5-5" stroke="#B9AE99" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+          向下滚动，展开全程
+        </p>
+      </div>
+      <!-- 无 WebGL 时：SVG 折纸插画 -->
+      <div class="fallback-visual" aria-hidden="true">
+        <svg class="fv fv-crane" viewBox="0 0 480 400">
+          <g stroke="#2B2925" stroke-width="2" stroke-linejoin="round">
+            <polygon points="226,192 112,78 194,166" fill="#E7DFCE"/>
+            <polygon points="234,194 362,64 296,178" fill="#CE5347"/>
+            <polygon points="194,166 296,178 246,240 174,226" fill="#FAF6EC"/>
+            <polygon points="296,178 342,116 352,130 306,190" fill="#3D5A80"/>
+            <polygon points="342,116 382,124 350,142" fill="#2B2925"/>
+            <polygon points="174,226 92,156 104,142 186,202" fill="#FAF6EC"/>
+          </g>
+          <path d="M194,166 L296,178 M226,192 L246,240" stroke="#B9AE99" stroke-width="1.4" fill="none"/>
+        </svg>
+        <svg class="fv fv-boat1" viewBox="0 0 120 90">
+          <g stroke="#2B2925" stroke-width="1.6" stroke-linejoin="round">
+            <polygon points="60,6 98,48 22,48" fill="#FAF6EC"/>
+            <polygon points="60,6 60,48 22,48" fill="#E7DFCE"/>
+            <polygon points="8,52 112,52 86,78 34,78" fill="#3D5A80"/>
+            <polygon points="8,52 34,78 34,52" fill="#2E4562"/>
+          </g>
+        </svg>
+        <svg class="fv fv-boat2" viewBox="0 0 120 90">
+          <g stroke="#2B2925" stroke-width="1.6" stroke-linejoin="round">
+            <polygon points="60,10 92,46 28,46" fill="#FAF6EC"/>
+            <polygon points="12,50 108,50 86,74 34,74" fill="#CE5347"/>
+            <polygon points="12,50 34,74 34,50" fill="#A93E33"/>
+          </g>
+        </svg>
+        <svg class="fv fv-box" viewBox="0 0 120 110">
+          <g stroke="#2B2925" stroke-width="1.6" stroke-linejoin="round">
+            <polygon points="14,42 60,20 106,42 60,64" fill="#EFE9DA"/>
+            <polygon points="14,42 14,78 60,100 60,64" fill="#C9A227"/>
+            <polygon points="106,42 106,78 60,100 60,64" fill="#A88720"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 数据信任带 ============ -->
+  <section class="band" aria-label="数据一览">
+    <div class="wrap">
+      <div class="band-grid">
+        <div class="stat reveal"><div class="num"><span data-count="14">0</span><em>年</em></div><p>行业深耕 · 始于 2012</p></div>
+        <div class="stat reveal" style="--fd:.1s"><div class="num"><span data-count="500">0</span><em>+</em></div><p>服务企业客户</p></div>
+        <div class="stat reveal" style="--fd:.2s"><div class="num"><span data-count="20">0</span><em>个</em></div><p>覆盖行业领域</p></div>
+        <div class="stat reveal" style="--fd:.3s"><div class="num"><span data-count="120">0</span><em>项</em></div><p>授权发明专利</p></div>
+      </div>
+      <p class="band-note reveal" style="--fd:.4s">4 大研发中心：上海 · 深圳 · 成都 · 新加坡</p>
+    </div>
+  </section>
+
+  <!-- ============ 关于星澜 ============ -->
+  <section class="block" id="about">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <p class="sec-kicker">ABOUT US</p>
+        <h2><span class="sec-fold"></span>关于星澜</h2>
+        <p class="lead">一张纸的千万种可能，一家公司的每一种可靠。</p>
+      </div>
+      <div class="about-grid">
+        <div class="about-copy reveal">
+          <p>星澜科技成立于 <b>2012 年</b>，总部位于上海张江高科技园区，先后在上海、深圳、成都与新加坡设立四大研发中心。十余年来，我们只专注一件事：<b>把复杂的数字化工程，折叠成企业用得起、用得好的能力</b>。</p>
+          <p>从「澜枢云」的数据底座，到「澜造」的工业智能，再到「澜脑」的大模型中台，星澜构建了覆盖「云 — 数 — 智」的完整产品体系，已服务 500 余家企业客户，覆盖制造、金融、物流、能源等 20 个行业。</p>
+          <blockquote class="about-quote">
+            「好的系统像折纸：每一道折痕都有理由，每一个立面都承重。」
+            <footer>—— 星澜科技创始人 &amp; CEO 陈屿</footer>
+          </blockquote>
+          <div class="honor-chips">
+            <span>国家高新技术企业</span><span>CMMI L5 认证</span><span>ISO 27001</span><span>专精特新「小巨人」</span><span>2026 数字化服务商榜单入选</span>
+          </div>
+        </div>
+        <div class="mv-list">
+          <div class="fcard reveal" data-fx="fold" style="--fd:.05s"><span class="flap"><i></i></span>
+            <h4><i><b>使</b></i>使命</h4>
+            <p>让数据如水，赋能千行百业——把领先的技术折叠进每一家企业的日常经营。</p>
+          </div>
+          <div class="fcard reveal" data-fx="fold" style="--fd:.15s"><span class="flap"><i></i></span>
+            <h4><i><b>愿</b></i>愿景</h4>
+            <p>成为最值得信赖的数字化转型伙伴，与客户共同折叠出下一个十年的产业形态。</p>
+          </div>
+          <div class="fcard reveal" data-fx="fold" style="--fd:.25s"><span class="flap"><i></i></span>
+            <h4><i><b>值</b></i>价值观</h4>
+            <p>简单 · 精准 · 可靠 · 共生。像折纸一样：去掉多余，留下结构，尊重材料本身。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 核心业务 ============ -->
+  <section class="block" id="business">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <p class="sec-kicker">OUR BUSINESS</p>
+        <h2><span class="sec-fold"></span>核心业务</h2>
+        <p class="lead">六项能力，如同六道折痕，把一张纸折成能够承载业务的立体结构。</p>
+      </div>
+      <div class="biz-grid">
+        <article class="fcard b-card reveal" data-fx="fold"><span class="flap"><i></i></span>
+          <div class="b-ic"><svg viewBox="0 0 24 24"><path d="M3.5 16.5h13a3.5 3.5 0 0 0 .6-6.95A6 6 0 0 0 5.6 8.2 4.2 4.2 0 0 0 3.5 16.5z"/><path class="ac" d="M14 16.5l3.5-6.9 2.6 6.9z"/></svg></div>
+          <h3>云计算与数据中台</h3>
+          <p>「澜枢云」提供混合云底座与数据中台，统一采集、治理与服务化企业全域数据资产，让数据像纸一样可折、可展、可复用。</p>
+          <div class="tags"><span>混合云</span><span>数据治理</span><span>实时数仓</span></div>
+          <span class="b-no">01</span>
+        </article>
+        <article class="fcard b-card reveal" data-fx="fold" style="--fd:.08s"><span class="flap"><i></i></span>
+          <div class="b-ic"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M4 20h16M9 20v-6h6v6"/><path class="ac" d="M12 4l3 5H9z"/></svg></div>
+          <h3>智能制造解决方案</h3>
+          <p>「澜造」覆盖产线数采、设备联网、数字孪生与 AI 排产，让工厂拥有一套会思考的神经系统，平均效率提升 30% 以上。</p>
+          <div class="tags"><span>数字孪生</span><span>MES</span><span>AI 排产</span></div>
+          <span class="b-no">02</span>
+        </article>
+        <article class="fcard b-card reveal" data-fx="fold" style="--fd:.16s"><span class="flap"><i></i></span>
+          <div class="b-ic"><svg viewBox="0 0 24 24"><path d="M12 3l8 5v8l-8 5-8-5V8z"/><path d="M12 3v18M4 8l8 5 8-5"/><path class="ac" d="M12 11l4 2-4 2-4-2z"/></svg></div>
+          <h3>AI 应用开发</h3>
+          <p>「澜脑」大模型中台与行业智能体，覆盖知识问答、智能质检与经营预测，推理成本较上一代降低 40%。</p>
+          <div class="tags"><span>大模型</span><span>智能体</span><span>知识库</span></div>
+          <span class="b-no">03</span>
+        </article>
+        <article class="fcard b-card reveal" data-fx="fold" style="--fd:.05s"><span class="flap"><i></i></span>
+          <div class="b-ic"><svg viewBox="0 0 24 24"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 16v-5M13 16V8M18 16v-8"/><path class="ac" d="M6 4l4 4H8.5L11 10.5 6 8z"/></svg></div>
+          <h3>数据可视化与决策分析</h3>
+          <p>把繁杂的经营数据折叠成一面清晰的驾驶舱：实时指标、归因分析与预警推送，让每个决策都有据可依。</p>
+          <div class="tags"><span>BI 驾驶舱</span><span>归因分析</span></div>
+          <span class="b-no">04</span>
+        </article>
+        <article class="fcard b-card reveal" data-fx="fold" style="--fd:.12s"><span class="flap"><i></i></span>
+          <div class="b-ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.4-3 7.4-7 9-4-1.6-7-4.6-7-9V6z"/><path d="M12 3v18"/><path class="ac" d="M12 8l3.5 2.8L12 14z"/></svg></div>
+          <h3>云原生与信息安全</h3>
+          <p>从容器化改造、微服务治理到零信任安全体系，为每一次数字化折叠加上可靠的「背胶」，稳而不漏。</p>
+          <div class="tags"><span>K8s</span><span>零信任</span><span>等保三级</span></div>
+          <span class="b-no">05</span>
+        </article>
+        <article class="fcard b-card reveal" data-fx="fold" style="--fd:.2s"><span class="flap"><i></i></span>
+          <div class="b-ic"><svg viewBox="0 0 24 24"><path d="M12 3l9 9-9 9-9-9z"/><path d="M12 3v18M3 12h18"/><path class="ac" d="M12 8.5L15.5 12 12 15.5 8.5 12z"/></svg></div>
+          <h3>数字化咨询与陪跑</h3>
+          <p>从顶层设计、路线图到落地陪跑，咨询顾问驻场交付，像折纸教学一样：示范一步、对齐一步、成形成步。</p>
+          <div class="tags"><span>顶层设计</span><span>驻场陪跑</span><span>培训赋能</span></div>
+          <span class="b-no">06</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 发展历程 ============ -->
+  <section class="block" id="timeline">
+    <div class="wrap">
+      <div class="sec-head reveal" style="margin-left:auto;margin-right:auto;text-align:center;max-width:640px">
+        <p class="sec-kicker" style="justify-content:center">MILESTONES</p>
+        <h2><span class="sec-fold"></span>发展历程</h2>
+        <p class="lead">十四年，八道关键折痕，把一支三人小队折成五百余家客户的共同选择。</p>
+      </div>
+      <div class="timeline">
+        <div class="tl-item reveal"><time>2012</time><h4>成立于上海张江</h4><p>三位工程师在一间 40 平米的办公室里写下第一行代码，星澜科技正式注册成立。</p></div>
+        <div class="tl-item reveal" style="--fd:.08s"><time>2015</time><h4>澜枢云 1.0 上线</h4><p>首个自研云管平台发布，同年签下第一家世界 500 强客户，迈出规模化第一步。</p></div>
+        <div class="tl-item reveal" style="--fd:.08s"><time>2017</time><h4>客户破百 · 深圳中心成立</h4><p>服务企业客户突破 100 家，设立深圳研发中心，聚焦工业数据采集方向。</p></div>
+        <div class="tl-item reveal" style="--fd:.08s"><time>2019</time><h4>澜造平台发布</h4><p>进军工业互联网，发布「澜造」智能制造平台，当年落地 12 座数字化工厂。</p></div>
+        <div class="tl-item reveal" style="--fd:.08s"><time>2022</time><h4>成都、新加坡双中心</h4><p>研发与交付网络覆盖亚太，海外首个交付团队在新加坡组建完成。</p></div>
+        <div class="tl-item reveal" style="--fd:.08s"><time>2026</time><h4>澜脑 3.0 · 客户破 500</h4><p>大模型中台 3.0 发布，推理成本降低 40%；服务企业客户突破 500 家。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 客户案例 ============ -->
+  <section class="block" id="cases">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <p class="sec-kicker">CASE STUDIES</p>
+        <h2><span class="sec-fold"></span>客户案例</h2>
+        <p class="lead">每一段合作，都是一次从平面到立体的折叠——挑几个展开给你看。</p>
+      </div>
+      <div class="case-filter reveal">
+        <button class="chip on" data-f="all">全部</button>
+        <button class="chip" data-f="mfg">制造</button>
+        <button class="chip" data-f="fin">金融</button>
+        <button class="chip" data-f="log">物流</button>
+        <button class="chip" data-f="nrg">能源</button>
+      </div>
+      <div class="cases-grid">
+        <article class="fcard case-card reveal" data-fx="fold" data-ind="mfg"><span class="flap"><i></i></span>
+          <div class="c-top"><span class="c-tag">智能制造</span><span class="c-year">2024 交付</span></div>
+          <h3>某头部车企 · 数字工厂</h3>
+          <p class="c-line"><b>挑战：</b>32 条产线数据孤岛，设备 OEE 长期低于 68%，排产依赖老师傅经验。</p>
+          <p class="c-line"><b>方案：</b>澜造平台接入 2400+ 设备点位，构建产线数字孪生与 AI 排产引擎。</p>
+          <div class="c-stats">
+            <div><strong>+32%</strong><span>产线效率提升</span></div>
+            <div><strong>-21%</strong><span>设备停机时间</span></div>
+          </div>
+        </article>
+        <article class="fcard case-card reveal" data-fx="fold" style="--fd:.08s" data-ind="fin"><span class="flap"><i></i></span>
+          <div class="c-top"><span class="c-tag">金融</span><span class="c-year">2025 一期验收</span></div>
+          <h3>某全国性银行 · 数据中台</h3>
+          <p class="c-line"><b>挑战：</b>37 套核心系统烟囱林立，监管报表口径不一，时效停留在 T+1。</p>
+          <p class="c-line"><b>方案：</b>澜枢云数据中台统一指标体系，落地 12 个主题域与实时服务网关。</p>
+          <div class="c-stats">
+            <div><strong>8TB</strong><span>日处理数据量</span></div>
+            <div><strong>T+0</strong><span>报表时效跃迁</span></div>
+          </div>
+        </article>
+        <article class="fcard case-card reveal" data-fx="fold" style="--fd:.12s" data-ind="log"><span class="flap"><i></i></span>
+          <div class="c-top"><span class="c-tag">物流</span><span class="c-year">2024 交付</span></div>
+          <h3>某港口集团 · 智能调度</h3>
+          <p class="c-line"><b>挑战：</b>枯水期与高峰期叠加，闸口拥堵严重，堆场翻箱率居高不下。</p>
+          <p class="c-line"><b>方案：</b>AI 调度引擎联动闸口、岸桥与堆场，全局动态优化作业序列。</p>
+          <div class="c-stats">
+            <div><strong>-18%</strong><span>吞吐周期缩短</span></div>
+            <div><strong>+15%</strong><span>堆场利用率</span></div>
+          </div>
+        </article>
+        <article class="fcard case-card reveal" data-fx="fold" style="--fd:.16s" data-ind="nrg"><span class="flap"><i></i></span>
+          <div class="c-top"><span class="c-tag">能源</span><span class="c-year">2025 在营</span></div>
+          <h3>某省级电网 · AI 视觉质检</h3>
+          <p class="c-line"><b>挑战：</b>输电线路人工巡检成本高，绝缘子缺陷漏检率超过 8%。</p>
+          <p class="c-line"><b>方案：</b>澜脑视觉模型部署至边缘无人机，缺陷自动识别与工单直连。</p>
+          <div class="c-stats">
+            <div><strong>99.2%</strong><span>缺陷检出率</span></div>
+            <div><strong>-45%</strong><span>巡检人工成本</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 新闻动态 ============ -->
+  <section class="block" id="news">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <p class="sec-kicker">NEWSROOM</p>
+        <h2><span class="sec-fold"></span>新闻动态</h2>
+        <p class="lead">每一次展开，都有新的折痕。</p>
+      </div>
+      <div class="news-grid">
+        <article class="fcard n-card reveal" data-fx="fold"><span class="flap"><i></i></span>
+          <p class="n-meta"><b>公司动态</b><time>2026-08-12</time></p>
+          <h3>星澜科技发布澜脑 AI 中台 3.0，推理成本降低 40%</h3>
+          <p>新一代中台引入稀疏化推理与动态批处理调度，在金融客服、工业质检两大场景完成规模化验证，客户平均推理开销降至原来的六成。</p>
+          <a class="n-more" href="#news">阅读全文 →</a>
+        </article>
+        <article class="fcard n-card reveal" data-fx="fold" style="--fd:.1s"><span class="flap"><i></i></span>
+          <p class="n-meta"><b>战略合作</b><time>2026-06-30</time></p>
+          <h3>与华东智能制造研究院达成战略合作</h3>
+          <p>双方将共建「工业大模型联合实验室」，围绕工艺知识沉淀、产线智能调优展开三年期联合研发，首批成果预计 2027 年落地。</p>
+          <a class="n-more" href="#news">阅读全文 →</a>
+        </article>
+        <article class="fcard n-card reveal" data-fx="fold" style="--fd:.2s"><span class="flap"><i></i></span>
+          <p class="n-meta"><b>行业荣誉</b><time>2026-05-18</time></p>
+          <h3>入选 2026 年度数字化转型服务商榜单</h3>
+          <p>凭借在制造与金融行业的规模化交付能力，星澜科技连续第三年入选该榜单，并首次进入「工业智能」细分赛道前三名。</p>
+          <a class="n-more" href="#news">阅读全文 →</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 合作伙伴 ============ -->
+  <section class="partners" aria-label="合作伙伴">
+    <p class="p-title">THEY FOLD WITH US · 与星澜同折的伙伴</p>
+    <div class="marquee">
+      <ul>
+        <li><i></i>华炎集团</li><li><i></i>临港数科</li><li><i></i>青云出行</li>
+        <li><i></i>白泽金融</li><li><i></i>南山能源</li><li><i></i>望潮物流</li>
+      </ul>
+      <ul aria-hidden="true">
+        <li><i></i>华炎集团</li><li><i></i>临港数科</li><li><i></i>青云出行</li>
+        <li><i></i>白泽金融</li><li><i></i>南山能源</li><li><i></i>望潮物流</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 加入我们 ============ -->
+  <section class="block" id="join">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <p class="sec-kicker">JOIN US</p>
+        <h2><span class="sec-fold"></span>加入我们</h2>
+        <p class="lead">我们来一起折一些有意思的东西——比如下一个十年。</p>
+      </div>
+      <div class="job-list">
+        <div class="fcard job reveal" data-fx="fold"><span class="flap"><i></i></span>
+          <h3>前端开发工程师<em>上海 · 技术中心</em></h3>
+          <p>负责可视化产品与交互引擎研发，WebGL / Three.js / 数据大屏方向，要求三年以上前端经验，对图形学有热情。</p>
+          <a class="j-go" href="#contact" aria-label="投递前端开发工程师"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 14L14 2M6 2h8v8" stroke="currentColor" stroke-width="1.6" fill="none"/></svg></a>
+        </div>
+        <div class="fcard job reveal" data-fx="fold" style="--fd:.08s"><span class="flap"><i></i></span>
+          <h3>3D 视觉算法工程师<em>深圳 · 研究院</em></h3>
+          <p>面向工业质检与数字孪生场景，研究三维重建、点云分割与缺陷检测算法，要求熟悉深度学习与 C++ / Python 工程化。</p>
+          <a class="j-go" href="#contact" aria-label="投递 3D 视觉算法工程师"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 14L14 2M6 2h8v8" stroke="currentColor" stroke-width="1.6" fill="none"/></svg></a>
+        </div>
+        <div class="fcard job reveal" data-fx="fold" style="--fd:.16s"><span class="flap"><i></i></span>
+          <h3>解决方案架构师<em>成都 · 交付中心</em></h3>
+          <p>负责大型客户数字化蓝图设计与方案落地，云原生与数据中台背景优先，能独立主导 POC 到验收的完整闭环。</p>
+          <a class="j-go" href="#contact" aria-label="投递解决方案架构师"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 14L14 2M6 2h8v8" stroke="currentColor" stroke-width="1.6" fill="none"/></svg></a>
+        </div>
+      </div>
+      <div class="welfare reveal">
+        <span>15 薪起</span><span>六险一金</span><span>弹性工作</span><span>年度体检</span><span>内部折纸工坊</span><span>技术大会年票</span><span>带薪灵感假</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 联系星澜 ============ -->
+  <section class="block" id="contact">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <p class="sec-kicker">CONTACT</p>
+        <h2><span class="sec-fold"></span>联系星澜</h2>
+        <p class="lead">写下你的需求，我们来折出答案。</p>
+      </div>
+      <div class="contact-grid">
+        <div class="c-info reveal">
+          <h3>直接找到我们</h3>
+          <ul>
+            <li><svg viewBox="0 0 24 24"><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg><span><b>地址</b><br>上海市浦东新区张江高科技园区澜启大厦 21F</span></li>
+            <li><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg><span><b>电话</b><br>+86 21-8000-1200（工作日 9:00 – 18:00）</span></li>
+            <li><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 7l9 6 9-6"/></svg><span><b>邮箱</b><br>hello@xinglan-tech.com</span></li>
+          </ul>
+          <div class="mv-list">
+            <div class="fcard" style="padding:20px 24px"><span class="flap"><i></i></span>
+              <h4 style="font-family:var(--serif);font-size:16px">预约方案演示</h4>
+              <p style="font-size:13.5px;color:var(--ink-soft);margin-top:6px">留下联系方式，解决方案顾问将在 1 个工作日内与你联系，并准备一份针对你所在行业的折纸式改造路线图。</p>
+            </div>
+          </div>
+        </div>
+        <div class="fcard form-card reveal" data-fx="fold" style="--fd:.1s"><span class="flap"><i></i></span>
+          <form id="contactForm" novalidate>
+            <div class="form-body">
+              <div class="form-grid">
+                <div class="field">
+                  <label for="f-name">姓名<i>*</i></label>
+                  <input id="f-name" name="name" type="text" placeholder="怎么称呼您" autocomplete="name">
+                  <small class="err" aria-live="polite"></small>
+                </div>
+                <div class="field">
+                  <label for="f-phone">电话<i>*</i></label>
+                  <input id="f-phone" name="phone" type="tel" placeholder="手机或座机号" autocomplete="tel">
+                  <small class="err" aria-live="polite"></small>
+                </div>
+                <div class="field">
+                  <label for="f-mail">邮箱<i>*</i></label>
+                  <input id="f-mail" name="email" type="email" placeholder="name@company.com" autocomplete="email">
+                  <small class="err" aria-live="polite"></small>
+                </div>
+                <div class="field">
+                  <label for="f-org">企业名称</label>
+                  <input id="f-org" name="org" type="text" placeholder="选填">
+                  <small class="err" aria-live="polite"></small>
+                </div>
+                <div class="field full">
+                  <label for="f-msg">留言<i>*</i></label>
+                  <textarea id="f-msg" name="message" placeholder="简单描述您的需求，例如：希望为 3 座工厂规划数据中台……（至少 10 个字）"></textarea>
+                  <small class="err" aria-live="polite"></small>
+                </div>
+                <div class="form-foot">
+                  <button type="submit" class="btn primary" id="submitBtn">提交需求</button>
+                  <small>提交即视为同意《隐私政策》，信息仅用于业务联系。</small>
+                </div>
+              </div>
+            </div>
+            <div class="form-ok" role="status">
+              <div class="ok-seal"><svg viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></div>
+              <h3>折痕已落定 · 信息已送达</h3>
+              <p>感谢您的信任！解决方案顾问将在 1 个工作日内与您联系。<br>需求编号：XL-2026-0908（演示环境，不会真实发送）</p>
+              <button type="button" class="btn ghost" id="resetForm">再填一次</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="faq reveal">
+        <h3>常见问题</h3>
+        <div class="faq-item">
+          <button class="faq-q" type="button">一个典型项目的交付周期是多久？<i></i></button>
+          <div class="faq-a"><div><p>数据中台类项目通常 12 – 20 周完成一期上线；数字工厂类按产线分批推进，单期 8 – 12 周。我们采用「小步折叠、每折可验」的交付节奏，每两周有一次可演示的里程碑。</p></div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" type="button">是否支持私有化 / 信创环境部署？<i></i></button>
+          <div class="faq-a"><div><p>支持。澜枢云与澜脑均提供全栈私有化版本，已完成主流国产芯片、操作系统与数据库的适配认证，可满足金融、能源行业的等保与信创要求。</p></div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" type="button">如何开始一次合作？<i></i></button>
+          <div class="faq-a"><div><p>三步即可：提交本页表单 → 1 个工作日内顾问联系并对齐目标 → 2 周内输出免费的范围评估与原型 POC。合不合作，路线图都归您。</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA 横幅 ============ -->
+  <section class="cta-band">
+    <div class="wrap">
+      <h2 class="reveal">准备好折叠你的下一条增长曲线了吗？</h2>
+      <p class="reveal" style="--fd:.1s">从一次 30 分钟的需求对齐开始，让数据如澜，折万物之形。</p>
+      <div class="reveal" style="--fd:.2s">
+        <a class="btn primary" href="#contact">获取解决方案</a>
+        <a class="btn" href="#cases" style="margin-left:14px">先看看案例</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 页脚 ============ -->
+  <footer class="site">
+    <div class="wrap">
+      <div class="f-grid">
+        <div class="f-brand">
+          <a class="logo" href="#home">
+            <svg viewBox="0 0 40 40" aria-hidden="true">
+              <g stroke="#F6F2E9" stroke-width="1">
+                <polygon points="20,4 4,20 20,20" fill="#CE5347"/>
+                <polygon points="20,4 36,20 20,20" fill="#3D5A80"/>
+                <polygon points="36,20 20,36 20,20" fill="#C9A227"/>
+                <polygon points="20,36 4,20 20,20" fill="#EFE9DA"/>
+              </g>
+            </svg>
+            <span><b>星澜科技</b><small>XINGLAN TECH</small></span>
+          </a>
+          <p>「一张纸，折出万物。」星澜科技以数据为澜，为企业折叠从云基础设施到智能应用的一站式数字化能力。</p>
+        </div>
+        <div class="f-col">
+          <h4>公司</h4>
+          <ul>
+            <li><a href="#about">关于星澜</a></li>
+            <li><a href="#news">新闻动态</a></li>
+            <li><a href="#join">加入我们</a></li>
+            <li><a href="#contact">联系星澜</a></li>
+          </ul>
+        </div>
+        <div class="f-col">
+          <h4>业务</h4>
+          <ul>
+            <li><a href="#business">云计算与数据中台</a></li>
+            <li><a href="#business">智能制造解决方案</a></li>
+            <li><a href="#business">AI 应用开发</a></li>
+            <li><a href="#business">数字化咨询与陪跑</a></li>
+          </ul>
+        </div>
+        <div class="f-col">
+          <h4>联系</h4>
+          <ul>
+            <li>上海市浦东新区张江高科技园区澜启大厦 21F</li>
+            <li>+86 21-8000-1200</li>
+            <li>hello@xinglan-tech.com</li>
+          </ul>
+        </div>
+      </div>
+      <div class="f-bottom">
+        <span>© 2026 星澜科技 Xinglan Tech · 保留所有权利</span>
+        <span>沪ICP备2026001234号-1 · 沪公网安备31011502026XXX号</span>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<!-- 返回顶部 -->
+<button id="toTop" aria-label="返回顶部">
+  <svg viewBox="0 0 18 18"><path d="M9 15V3M3.5 8.5L9 3l5.5 5.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
+<script>
+/* ==========================================================
+   星澜科技 · 折纸门户脚本
+   结构：工具 → 界面交互 → 开场折纸 → three.js 折纸舞台 → 降级
+   ========================================================== */
+(function(){
+'use strict';
+
+/* ---------- 工具 ---------- */
+var $  = function(s,c){ return (c||document).querySelector(s); };
+var $$ = function(s,c){ return Array.prototype.slice.call((c||document).querySelectorAll(s)); };
+var clamp = function(v,a,b){ return Math.max(a, Math.min(b, v)); };
+var lerp  = function(a,b,t){ return a + (b-a)*t; };
+var easeIO  = function(t){ return t<.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2; };
+var easeOut = function(t){ return 1 - Math.pow(1-t,3); };
+var sstep = function(a,b,x){ var t = clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); };
+var shortAngle = function(a){ return Math.atan2(Math.sin(a), Math.cos(a)); };
+var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var LOWEND  = (navigator.deviceMemory && navigator.deviceMemory < 4) || /Android 4|iPhone OS 10_/.test(navigator.userAgent);
+
+/* ============================================================
+   一、界面交互（与 3D 无关，独立可靠）
+   ============================================================ */
+
+/* -- 折角卡片：为每张卡注入可翻转的折角 -- */
+$$('.fcard').forEach(function(card){
+  if(card.querySelector('.flap')) return;
+  var f = document.createElement('span');
+  f.className = 'flap';
+  f.innerHTML = '<i></i>';
+  card.appendChild(f);
+});
+
+/* -- 开场折纸 + Hero 入场 -- */
+var intro = $('#intro');
+var introDone = false;
+var onIntroFinish = null;
+function finishIntro(){
+  if(introDone) return;
+  introDone = true;
+  if(intro){
+    intro.classList.add('leave');
+    setTimeout(function(){ if(intro.parentNode) intro.parentNode.removeChild(intro); }, 700);
+  }
+  document.body.classList.add('ready');
+  if(typeof onIntroFinish === 'function') onIntroFinish();
+}
+if(REDUCED){
+  finishIntro();
+}else{
+  requestAnimationFrame(function(){ if(intro) intro.classList.add('run'); });
+  if(intro) intro.addEventListener('click', finishIntro);
+  setTimeout(finishIntro, 2600);
+}
+
+/* -- 页头状态 / 进度线 / 返回顶部 -- */
+var header = $('#header'), toTop = $('#toTop'), progress = $('#progress');
+var ticking = false;
+function onScrollUI(){
+  if(ticking) return;
+  ticking = true;
+  requestAnimationFrame(function(){
+    var y = window.scrollY || document.documentElement.scrollTop;
+    header.classList.toggle('scrolled', y > 40);
+    toTop.classList.toggle('show', y > window.innerHeight);
+    var max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    progress.style.transform = 'scaleX(' + clamp(y/max,0,1) + ')';
+    ticking = false;
+  });
+}
+window.addEventListener('scroll', onScrollUI, {passive:true});
+onScrollUI();
+toTop.addEventListener('click', function(){ window.scrollTo({top:0, behavior: REDUCED ? 'auto' : 'smooth'}); });
+
+/* -- 移动端抽屉 -- */
+var burger = $('#burger'), drawer = $('#drawer');
+function closeDrawer(){
+  drawer.classList.remove('open');
+  burger.classList.remove('active');
+  burger.setAttribute('aria-expanded','false');
+  document.body.classList.remove('lock');
+}
+burger.addEventListener('click', function(){
+  var open = drawer.classList.toggle('open');
+  burger.classList.toggle('active', open);
+  burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  document.body.classList.toggle('lock', open);
+});
+$$('#drawer a').forEach(function(a){ a.addEventListener('click', closeDrawer); });
+
+/* -- 滚动显现 -- */
+var revealOb = new IntersectionObserver(function(entries){
+  entries.forEach(function(en){
+    if(en.isIntersecting){ en.target.classList.add('in'); revealOb.unobserve(en.target); }
+  });
+}, {threshold:.12, rootMargin:'0px 0px -6% 0px'});
+$$('.reveal').forEach(function(el){ revealOb.observe(el); });
+
+/* -- 数字滚动计数 -- */
+function animCount(el){
+  var target = parseFloat(el.getAttribute('data-count')) || 0;
+  if(REDUCED){ el.textContent = String(target); return; }
+  var dur = 1500, t0 = performance.now();
+  (function step(now){
+    var k = clamp((now - t0)/dur, 0, 1);
+    el.textContent = String(Math.round(target * easeOut(k)));
+    if(k < 1) requestAnimationFrame(step);
+  })(t0);
+}
+var countOb = new IntersectionObserver(function(entries){
+  entries.forEach(function(en){
+    if(en.isIntersecting){ animCount(en.target); countOb.unobserve(en.target); }
+  });
+}, {threshold:.5});
+$$('[data-count]').forEach(function(el){ countOb.observe(el); });
+
+/* -- 锚点 scrollspy -- */
+var navLinks = $$('nav.main a');
+var spy = new IntersectionObserver(function(entries){
+  entries.forEach(function(en){
+    if(en.isIntersecting){
+      var id = '#' + en.target.id;
+      navLinks.forEach(function(l){ l.classList.toggle('on', l.getAttribute('href') === id); });
+    }
+  });
+}, {rootMargin:'-40% 0px -55% 0px'});
+['home','about','business','cases','news','join','contact'].forEach(function(id){
+  var el = document.getElementById(id);
+  if(el) spy.observe(el);
+});
+
+/* -- 案例筛选 -- */
+var chips = $$('.chip'), caseCards = $$('.case-card');
+chips.forEach(function(ch){
+  ch.addEventListener('click', function(){
+    chips.forEach(function(c){ c.classList.toggle('on', c === ch); });
+    var f = ch.getAttribute('data-f');
+    caseCards.forEach(function(card){
+      var show = (f === 'all') || (card.getAttribute('data-ind') === f);
+      card.classList.toggle('hide', !show);
+      if(show){ /* 重新触发入场动画 */
+        card.style.animation = 'none';
+        void card.offsetWidth;
+        card.style.animation = '';
+      }
+    });
+  });
+});
+
+/* -- FAQ 手风琴 -- */
+$$('.faq-item').forEach(function(item){
+  var btn = item.querySelector('.faq-q');
+  btn.addEventListener('click', function(){
+    var wasOpen = item.classList.contains('open');
+    $$('.faq-item.open').forEach(function(o){ o.classList.remove('open'); });
+    if(!wasOpen) item.classList.add('open');
+  });
+});
+
+/* -- 联系表单校验 + 成功反馈 -- */
+var form = $('#contactForm'), submitBtn = $('#submitBtn');
+function setErr(input, msg){
+  var field = input.closest('.field');
+  var err = field.querySelector('.err');
+  field.classList.toggle('bad', !!msg);
+  if(err) err.textContent = msg || '';
+}
+function validPhone(v){ return /^1[3-9]\d{9}$/.test(v) || /^0\d{2,3}-?\d{7,8}$/.test(v); }
+function validMail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+var fields = [
+  {el:$('#f-name'),  test:function(v){ return v.length >= 2; }, msg:'请填写至少 2 个字的称呼'},
+  {el:$('#f-phone'), test:validPhone,  msg:'请填写有效的 11 位手机号或座机号'},
+  {el:$('#f-mail'),  test:validMail,   msg:'请填写有效的邮箱地址'},
+  {el:$('#f-msg'),   test:function(v){ return v.replace(/\s/g,'').length >= 10; }, msg:'留言至少 10 个字，方便我们准备方案'}
+];
+fields.forEach(function(f){
+  f.el.addEventListener('input', function(){ setErr(f.el, ''); });
+  f.el.addEventListener('blur', function(){
+    if(f.el.value !== '' && !f.test(f.el.value.trim())) setErr(f.el, f.msg);
+  });
+});
+form.addEventListener('submit', function(e){
+  e.preventDefault();
+  var ok = true, firstBad = null;
+  fields.forEach(function(f){
+    var good = f.test(f.el.value.trim());
+    setErr(f.el, good ? '' : f.msg);
+    if(!good){ ok = false; if(!firstBad) firstBad = f.el; }
+  });
+  if(!ok){ firstBad.focus(); return; }
+  submitBtn.classList.add('loading');
+  submitBtn.textContent = '折纸封装中';
+  setTimeout(function(){
+    form.classList.add('sent');
+    submitBtn.classList.remove('loading');
+    submitBtn.textContent = '提交需求';
+  }, 950);
+});
+$('#resetForm').addEventListener('click', function(){
+  form.classList.remove('sent');
+  form.reset();
+  fields.forEach(function(f){ setErr(f.el, ''); });
+});
+
+/* ============================================================
+   二、three.js 折纸舞台（分组 mesh + 折痕旋转 + 双面双色）
+   ============================================================ */
+var threeReady = false, craneStart = null;
+var getClock = function(){ return 0; }; /* init3D 内部替换为真实时钟 */
+function maybeStartCrane(){
+  if(introDone && threeReady && craneStart === null && !REDUCED){
+    craneStart = getClock() + 0.35; /* 开场折纸结束后 0.35s 开始折叠 */
+  }
+}
+onIntroFinish = maybeStartCrane;
+
+var THREE_SOURCES = [
+  'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js',
+  'https://unpkg.com/three@0.158.0/build/three.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.158.0/three.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
+];
+function hasWebGL(){
+  try{
+    var c = document.createElement('canvas');
+    return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl')));
+  }catch(err){ return false; }
+}
+function loadThree(i){
+  if(i >= THREE_SOURCES.length){ enterFallback(); return; }
+  var s = document.createElement('script');
+  s.src = THREE_SOURCES[i];
+  s.async = true;
+  var to = setTimeout(function(){
+    s.onload = s.onerror = null;
+    if(s.parentNode) s.parentNode.removeChild(s);
+    loadThree(i+1);
+  }, 6500);
+  s.onload = function(){
+    clearTimeout(to);
+    if(window.THREE){ try{ init3D(); }catch(err){ enterFallback(); } }
+    else loadThree(i+1);
+  };
+  s.onerror = function(){
+    clearTimeout(to);
+    if(s.parentNode) s.parentNode.removeChild(s);
+    loadThree(i+1);
+  };
+  document.head.appendChild(s);
+}
+
+/* 无 WebGL / 加载失败：内容完整、SVG 插画 + CSS 折角卡兜底 */
+function enterFallback(){
+  document.body.classList.add('no3d');
+  var stage = $('#stage');
+  if(stage) stage.style.display = 'none';
+}
+
+/* ---------- 面板工厂：平面多边形 → 双面双色 mesh + 折痕线 ---------- */
+function makePanel(THREE, poly, colorFront, colorBack){
+  var geo = new THREE.BufferGeometry();
+  var pos = [];
+  var n = poly.length;
+  for(var k = 1; k < n - 1; k++){
+    pos.push(poly[0][0], 0, poly[0][1],  poly[k][0], 0, poly[k][1],  poly[k+1][0], 0, poly[k+1][1]);
+  }
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.computeVertexNormals();
+  /* 统一让法线朝 +Y（正面），双面材质分别渲染纸的正反面 */
+  if(geo.attributes.normal.getY(0) < 0){
+    var arr = geo.attributes.position.array;
+    for(var i = 0; i < arr.length; i += 9){
+      for(var j = 0; j < 3; j++){
+        var tmp = arr[i+3+j]; arr[i+3+j] = arr[i+6+j]; arr[i+6+j] = tmp;
+      }
+    }
+    geo.attributes.position.needsUpdate = true;
+    geo.computeVertexNormals();
+  }
+  var grp = new THREE.Group();
+  var mF = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:colorFront, roughness:.92, metalness:0, side:THREE.FrontSide}));
+  var mB = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:colorBack,  roughness:.92, metalness:0, side:THREE.BackSide}));
+  mB.position.y = -0.004;
+  mF.castShadow = true;
+  grp.add(mF); grp.add(mB);
+  if(!LOWEND){
+    var edges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(geo, 20),
+      new THREE.LineBasicMaterial({color:0xB9AE99, transparent:true, opacity:.55})
+    );
+    grp.add(edges);
+  }
+  return grp;
+}
+
+/* ---------- 主初始化 ---------- */
+function init3D(){
+  var canvas = $('#stage');
+  var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:!LOWEND, alpha:false});
+  renderer.setClearColor(0xF6F2E9, 1);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, LOWEND ? 1.5 : 2)); /* DPR 钳制 */
+  renderer.shadowMap.enabled = !LOWEND;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  var scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0xF6F2E9, 9, 18);
+  var camera = new THREE.PerspectiveCamera(42, window.innerWidth/window.innerHeight, .1, 60);
+
+  /* 纸感柔光 */
+  scene.add(new THREE.HemisphereLight(0xFFF8EC, 0xCFC6B2, .95));
+  var sun = new THREE.DirectionalLight(0xFFFDF6, 1.15);
+  sun.position.set(3.5, 6.5, 4.5);
+  if(!LOWEND){
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.radius = 4;
+    sun.shadow.bias = -0.0006;
+    var sc = sun.shadow.camera;
+    sc.left = -6; sc.right = 6; sc.top = 6; sc.bottom = -6;
+    sc.updateProjectionMatrix();
+  }
+  scene.add(sun);
+  var fill = new THREE.DirectionalLight(0xDCE6F2, .35);
+  fill.position.set(-4, 2.5, -3);
+  scene.add(fill);
+
+  /* 地面投影（ShadowMaterial） */
+  var ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(40, 40),
+    new THREE.ShadowMaterial({opacity:.15})
+  );
+  ground.rotation.x = -Math.PI/2;
+  ground.position.y = -0.72;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  var D2R = Math.PI/180;
+
+  /* ---------- 折纸鹤：分组 mesh 树，平面方纸 → 五折成形 ---------- */
+  function buildCrane(){
+    var root = new THREE.Group();
+    var CF = 0xFBF7ED, CB = 0xCE5347; /* 纸面白 / 朱背 */
+    function half(s){ /* s=+1 右半（z+），s=-1 左半 */
+      var body = new THREE.Group(); root.add(body);
+      body.add(makePanel(THREE, [[-0.55,0],[0.55,0],[0.55,0.32*s],[-0.55,0.32*s]], CF, CB));
+      var wing = new THREE.Group(); wing.position.z = 0.32*s; body.add(wing);
+      wing.add(makePanel(THREE, [[-0.55,0],[1.1,0],[1.1,0.78*s],[-1.1,0.78*s],[-1.1,-0.14*s],[-0.55,-0.14*s]], CF, CB));
+      var neck = new THREE.Group(); neck.position.x = 0.55; body.add(neck);
+      neck.add(makePanel(THREE, [[0,0],[0.37,0],[0.37,0.32*s],[0,0.32*s]], CF, CB));
+      var head = new THREE.Group(); head.position.x = 0.37; neck.add(head);
+      head.add(makePanel(THREE, [[0,0],[0.2,0],[0,0.32*s]], CF, CB));
+      var tail = new THREE.Group(); tail.position.x = -0.55; body.add(tail);
+      tail.add(makePanel(THREE, [[0,0],[-0.55,0],[-0.55,0.18*s],[0,0.18*s]], CF, CB));
+      return {body:body, wing:wing, neck:neck, head:head, tail:tail};
+    }
+    var R = half(1), L = half(-1);
+    /* 折痕角度插值：f=0 完全平铺的一张方纸 → f=1 立体纸鹤 */
+    function pose(f, flap, spread, nod){
+      var seg = function(a,b){ return easeIO(clamp((f-a)/(b-a), 0, 1)); };
+      var bA = 78*D2R, wA = (68 - 20*spread)*D2R, nA = 62*D2R, hA = 80*D2R, tA = 56*D2R;
+      var kb = seg(0,.42), kw = seg(.26,.66), kn = seg(.48,.82), kh = seg(.76,1);
+      R.body.rotation.x = -bA*kb;      L.body.rotation.x =  bA*kb;   /* 第1折：身体立起 */
+      R.wing.rotation.x =  wA*kw - flap; L.wing.rotation.x = -wA*kw + flap; /* 第2折：双翅展开 */
+      R.neck.rotation.z =  nA*kn + nod;  L.neck.rotation.z =  nA*kn + nod;  /* 第3折：引颈 */
+      R.tail.rotation.z = -tA*kn;        L.tail.rotation.z = -tA*kn;        /* 第4折：摆尾 */
+      R.head.rotation.z = -hA*kh;        L.head.rotation.z = -hA*kh;        /* 第5折：点喙 */
+    }
+    return {root:root, pose:pose};
+  }
+  var crane = buildCrane();
+  scene.add(crane.root);
+
+  /* ---------- 折纸船：船体两折 + 立帆 ---------- */
+  function buildBoat(hullColor){
+    var g = new THREE.Group();
+    var CFh = hullColor, CBh = 0xF3EEE1;
+    var s1 = makePanel(THREE, [[-0.5,0],[0.5,0],[0.32,0.26],[-0.32,0.26]], CFh, CBh);
+    s1.rotation.x = -26*D2R;
+    var s2 = makePanel(THREE, [[-0.5,0],[0.5,0],[0.32,-0.26],[-0.32,-0.26]], CFh, CBh);
+    s2.rotation.x = 26*D2R;
+    var sail = makePanel(THREE, [[-0.4,0],[0.4,0],[0,0.34]], 0xF6F1E4, hullColor);
+    sail.rotation.x = -90*D2R;
+    sail.position.y = 0.02;
+    var bob = new THREE.Group();
+    bob.add(s1); bob.add(s2); bob.add(sail);
+    g.add(bob);
+    g.userData.bob = bob;
+    return g;
+  }
+  var boats = new THREE.Group();
+  var boatList = [];
+  [0x3D5A80, 0xCE5347, 0xC9A227].forEach(function(c, i){
+    var b = buildBoat(c);
+    b.userData.phase = i * 2.1;
+    b.userData.off = [0, .06, .13][i];
+    b.userData.y = [-0.5, -0.66, -0.58][i];
+    boats.add(b);
+    boatList.push(b);
+  });
+  scene.add(boats);
+
+  /* ---------- 折纸方块组合：平铺十字 → 四壁折起成盒 ---------- */
+  function buildBox(hexF){
+    var grp = new THREE.Group();
+    var inner = new THREE.Group(); grp.add(inner);
+    var s = 0.3, h = 0.24, CBx = 0xFBF7ED;
+    inner.add(makePanel(THREE, [[-s,-s],[s,-s],[s,s],[-s,s]], hexF, CBx));
+    function wall(poly, px, pz){
+      var g = new THREE.Group(); g.position.set(px, 0, pz);
+      g.add(makePanel(THREE, poly, hexF, CBx));
+      inner.add(g);
+      return g;
+    }
+    var wf = wall([[-s,0],[s,0],[s,-h],[-s,-h]], 0, -s);
+    var wb = wall([[-s,0],[s,0],[s, h],[ s, h]], 0,  s);
+    var wr = wall([[0,-s],[0,s],[ h, s],[ h,-s]], s, 0);
+    var wl = wall([[0,-s],[0,s],[-h, s],[-h,-s]], -s, 0);
+    grp.userData.walls = [
+      {g:wf, axis:'x', d: 1},
+      {g:wb, axis:'x', d:-1},
+      {g:wr, axis:'z', d: 1},
+      {g:wl, axis:'z', d:-1}
+    ];
+    return grp;
+  }
+  var box1 = buildBox(0xC9A227); box1.position.set(-2.45, 0, -0.55); box1.rotation.y = .5;
+  var box2 = buildBox(0x3D5A80); box2.position.set(-1.55, -0.04, -1.35); box2.rotation.y = -.4; box2.scale.setScalar(.8);
+  scene.add(box1); scene.add(box2);
+
+  /* ---------- 纸屑三角（远景微动） ---------- */
+  var scraps = new THREE.Group();
+  [[0xCE5347, 2.75, 2.15, -1.4], [0x3D5A80, -2.85, 1.6, -1.1], [0xC9A227, 2.4, -0.2, -2.1]].forEach(function(d, i){
+    var tri = makePanel(THREE, [[0,0.26],[0.22,-0.15],[-0.22,-0.15]], d[0], 0xF6F1E4);
+    tri.position.set(d[1], d[2], d[3]);
+    tri.scale.setScalar(0.9 - i*0.16);
+    tri.userData.spin = (i % 2 ? 1 : -1) * (0.25 + i*0.1);
+    scraps.add(tri);
+  });
+  scene.add(scraps);
+
+  /* ---------- 金箔虚线轨迹（点击放飞的路径） ---------- */
+  var trail = new THREE.Line(
+    new THREE.BufferGeometry(),
+    new THREE.LineDashedMaterial({color:0xC9A227, transparent:true, opacity:0, dashSize:.14, gapSize:.1})
+  );
+  trail.frustumCulled = false;
+  scene.add(trail);
+
+  /* ---------- 滚动进度与鹤的飞行路径（标志性瞬间） ---------- */
+  var cranePath = new THREE.CatmullRomCurve3([
+    new THREE.Vector3( 1.25, 0.5,  0.4),
+    new THREE.Vector3(-1.55, 1.55, 0.1),
+    new THREE.Vector3( 1.6,  1.2, -0.5),
+    new THREE.Vector3(-1.35, 0.9,  0.35),
+    new THREE.Vector3( 0.5,  0.66, 0.5)
+  ], false, 'catmullrom', .6);
+
+  var scroll = {p:0, tp:0};
+  function readScroll(){
+    var max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    scroll.tp = clamp((window.scrollY || 0)/max, 0, 1);
+  }
+  window.addEventListener('scroll', readScroll, {passive:true});
+  readScroll();
+
+  /* ---------- 点击放飞纸鹤（贝塞尔飞越 + 虚线轨迹） ---------- */
+  var flight = null, blendBack = null, mouseX = 0;
+  function flyCrane(){
+    if(REDUCED || flight) return;
+    var sx = pathScaleX();
+    var p0 = crane.root.position.clone();
+    var pts = [
+      p0,
+      new THREE.Vector3(p0.x + 2.3*sx, p0.y + 1.7, p0.z - 0.9),
+      new THREE.Vector3(p0.x - 3.4*sx, 3.6, -1.4),
+      new THREE.Vector3(p0.x - 0.6*sx, p0.y + 0.4, p0.z)
+    ];
+    var curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .8);
+    var cpts = curve.getPoints(96);
+    trail.geometry.dispose();
+    trail.geometry = new THREE.BufferGeometry().setFromPoints(cpts);
+    trail.computeLineDistances();
+    trail.geometry.setDrawRange(0, 0);
+    flight = {curve:curve, t:0, dur:3.0, total:cpts.length, end:cpts[cpts.length-1].clone()};
+  }
+  var hero = $('#home');
+  hero.addEventListener('click', function(e){
+    if(e.target.closest('a,button,input,textarea')) return;
+    flyCrane();
+  });
+  window.addEventListener('pointermove', function(e){
+    mouseX = (e.clientX / window.innerWidth - .5) * 2;
+  }, {passive:true});
+
+  /* ---------- 尺寸自适应 ---------- */
+  function pathScaleX(){
+    return clamp(camera.aspect * 0.56, 0.42, 1);
+  }
+  function onResize(){
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+  }
+  window.addEventListener('resize', onResize);
+  onResize();
+
+  /* ---------- 主循环 ---------- */
+  var t = 0, last = performance.now(), rafId = 0, running = true;
+  getClock = function(){ return t; }; /* 供开场折纸联动读取 3D 时钟 */
+  var craneF = REDUCED ? 1 : 0; /* 折叠进度 */
+  var yaw = 0;
+  var foldDur = window.innerWidth < 768 ? 1.2 : 2.2;
+
+  function tick(now){
+    rafId = requestAnimationFrame(tick);
+    var dt = Math.min(0.05, (now - last)/1000);
+    last = now;
+    if(!REDUCED) t += dt;
+
+    /* 滚动平滑 */
+    scroll.p += (scroll.tp - scroll.p) * Math.min(1, dt*7);
+    var p = scroll.p;
+    var sx = pathScaleX();
+
+    /* 折叠进度（开场时间轴） */
+    if(craneStart !== null && craneF < 1){
+      craneF = clamp((t - craneStart)/foldDur, 0, 1);
+    }
+
+    /* 飞行状态量 */
+    var fly = sstep(.06,.16,p) * (1 - sstep(.86,.95,p));
+    var flapAmp = REDUCED ? 0 : lerp(.09, .3, fly);
+    var flapFreq = lerp(2.1, 6.0, fly);
+    var flap = Math.sin(t * flapFreq) * flapAmp * craneF + clamp((scroll.tp - scroll.p) * 3, -.25, .25) * craneF;
+    var spread = sstep(.3,.55,p) * (1 - sstep(.72,.88,p));
+    var nod = 0;
+    if(!REDUCED){
+      var c8 = t % 8; /* 每 8 秒轻点一次头 */
+      if(c8 < 1) nod = Math.sin(c8 * Math.PI) * .2 * craneF;
+    }
+    crane.pose(craneF, flap, spread, nod);
+
+    /* 鹤：沿曲线路径飞越章节 */
+    var u = clamp((p - .03)/.9, 0, 1);
+    var pathPt = cranePath.getPoint(u);
+    pathPt.x *= sx;
+    if(camera.aspect < .9) pathPt.y += 0.55; /* 竖屏时让鹤飞在文字上方 */
+    var baseS = 1 - .18 * sstep(.2,.5,p) + .1 * sstep(.9,1,p);
+    if(flight){
+      flight.t += dt;
+      var k = clamp(flight.t/flight.dur, 0, 1);
+      var e = easeIO(k);
+      crane.root.position.copy(flight.curve.getPoint(e));
+      trail.geometry.setDrawRange(0, Math.max(2, Math.floor(e * flight.total)));
+      trail.material.opacity = .65 * (1 - sstep(.72, 1, k));
+      if(k >= 1){
+        blendBack = {t:0, from:crane.root.position.clone()};
+        flight = null;
+      }
+    }else{
+      if(!REDUCED) pathPt.y += Math.sin(t*1.15)*0.05*fly; /* 滑翔起伏 */
+      crane.root.position.lerp(pathPt, Math.min(1, dt*4));
+      if(blendBack){
+        blendBack.t += dt;
+        var bk = clamp(blendBack.t/.8, 0, 1);
+        crane.root.position.lerpVectors(blendBack.from, pathPt, easeOut(bk));
+        if(bk >= 1) blendBack = null;
+      }
+    }
+    /* 朝向：沿路径切线，平滑转向 */
+    var ahead = cranePath.getPoint(Math.min(u + .02, 1));
+    ahead.x *= sx;
+    var dir = ahead.sub(crane.root.position);
+    if(dir.lengthSq() > 1e-6){
+      var targetYaw = Math.atan2(-dir.z, dir.x) + Math.sin(t*.5)*.08;
+      yaw += shortAngle(targetYaw - yaw) * Math.min(1, dt*3.2);
+    }
+    crane.root.rotation.y = yaw;
+    crane.root.rotation.z = Math.sin(t*flapFreq)*.05*fly;
+    var breath = REDUCED ? 1 : 1 + .013*Math.sin(t*1.3); /* 待机呼吸 */
+    crane.root.scale.setScalar(baseS * breath);
+
+    /* 纸船：沿正弦波游过章节 */
+    var bVis = sstep(.4,.5,p) * (1 - sstep(.86,.94,p));
+    boats.visible = bVis > .01;
+    if(boats.visible){
+      boats.scale.setScalar(Math.max(.001, bVis));
+      boatList.forEach(function(b, i){
+        var prog = clamp((p - .42 - b.userData.off)/.44, 0, 1.12);
+        var bx = lerp(-5.4, 5.4, prog) * sx;
+        var bobY = REDUCED ? 0 : Math.sin(bx*1.4 + t*1.5) * .07;
+        b.position.set(bx, b.userData.y + bobY, 0.9 - i*.35);
+        b.userData.bob.rotation.z = REDUCED ? 0 : -Math.cos(bx*1.4 + t*1.5)*.1 + Math.sin(t*1.8 + b.userData.phase)*.05;
+        b.userData.bob.position.y = REDUCED ? 0 : Math.sin(t*1.2 + b.userData.phase)*.02;
+      });
+    }
+
+    /* 方块组合：滚动到数据带/关于区时从平铺折起 */
+    var bxVis = sstep(.09,.14,p) * (1 - sstep(.34,.42,p));
+    var boxFold = easeOut(clamp((p - .11)/.1, 0, 1));
+    [ [box1, .28], [box2, -.22] ].forEach(function(pair){
+      var g = pair[0];
+      g.visible = bxVis > .01;
+      if(!g.visible) return;
+      g.scale.setScalar(Math.max(.001, bxVis) * (g === box2 ? .8 : 1));
+      g.rotation.y = (REDUCED ? 0 : t*pair[1]) + .5;
+      g.userData.walls.forEach(function(w){
+        if(w.axis === 'x') w.g.rotation.x =  90*D2R * w.d * boxFold;
+        else               w.g.rotation.z =  90*D2R * w.d * boxFold;
+      });
+    });
+
+    /* 纸屑缓旋 */
+    if(!REDUCED){
+      scraps.children.forEach(function(tri){
+        tri.rotation.y += tri.userData.spin * dt;
+        tri.rotation.x += tri.userData.spin * .4 * dt;
+      });
+    }
+
+    /* 相机：柔和绕转 + 指针视差 */
+    var dist = camera.aspect < .9 ? 7.4 : 5.6;
+    var az = (REDUCED ? 0 : Math.sin(p*Math.PI)*.2) + mouseX*.05;
+    var camY = 2.0 + Math.sin(p*Math.PI)*.55;
+    camera.position.set(Math.sin(az)*dist, camY, Math.cos(az)*dist);
+    camera.lookAt(0, .45, 0);
+
+    renderer.render(scene, camera);
+  }
+
+  /* 页签暂停 rAF */
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden){
+      cancelAnimationFrame(rafId);
+      running = false;
+    }else if(!running){
+      running = true;
+      last = performance.now();
+      rafId = requestAnimationFrame(tick);
+    }
+  });
+
+  threeReady = true;
+  crane.root.position.copy(cranePath.getPoint(0));
+  crane.root.position.x *= pathScaleX();
+  crane.pose(craneF, 0, 0, 0);
+  maybeStartCrane();
+  rafId = requestAnimationFrame(tick);
+}
+
+/* ---------- 启动 ---------- */
+if(hasWebGL()){
+  loadThree(0);
+}else{
+  enterFallback();
+}
+
+})();
+</script>
+</body>
+</html>

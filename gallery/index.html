@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>站点总目录 · 91 站 | 11 大主题 × 标准 / 炫酷双风格</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --surface: #11161f;
+    --card: #151b27;
+    --card-hover: #1a2231;
+    --ink: #e8ecf4;
+    --muted: #97a0b3;
+    --faint: #6b7386;
+    --line: rgba(255,255,255,.08);
+    --std: #5b93ff;
+    --cool: #b18cff;
+    --radius: 12px;
+    --serif: Georgia, "Times New Roman", "Songti SC", "STSong", SimSun, serif;
+    --sans: -apple-system, "PingFang SC", "Segoe UI", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, "JetBrains Mono", monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(60rem 30rem at 85% -5%, rgba(91,147,255,.07), transparent 60%),
+      radial-gradient(50rem 28rem at -10% 30%, rgba(177,140,255,.05), transparent 60%);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+  /* ---------- sticky 快速导航 ---------- */
+  .topnav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(13,17,25,.86);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topnav-inner { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+  .nav-row1 {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 9px 0 7px;
+  }
+  .brand {
+    font-family: var(--serif); font-size: 17px; font-weight: 700;
+    letter-spacing: .04em; white-space: nowrap;
+  }
+  .brand .en { font-family: var(--mono); font-size: 10px; color: var(--faint); letter-spacing: .18em; margin-left: 8px; }
+  .stats {
+    display: flex; gap: 12px; align-items: center;
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+  }
+  .stats b { color: var(--ink); font-weight: 600; }
+  .stats .k { display: inline-flex; align-items: center; gap: 5px; }
+  .stats .dot { width: 7px; height: 7px; border-radius: 2px; }
+  .totop {
+    margin-left: auto;
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    text-decoration: none; border: 1px solid var(--line); border-radius: 99px;
+    padding: 4px 12px; white-space: nowrap;
+    transition: color .18s, border-color .18s, background .18s;
+  }
+  .totop:hover { color: var(--ink); border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.05); }
+  .nav-row2 {
+    display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 10px;
+    scrollbar-width: thin; scrollbar-color: #2a3346 transparent;
+  }
+  .nav-row2::-webkit-scrollbar { height: 4px; }
+  .nav-row2::-webkit-scrollbar-thumb { background: #2a3346; border-radius: 4px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12.5px; color: var(--muted); text-decoration: none; white-space: nowrap;
+    border: 1px solid var(--line); border-radius: 99px; padding: 5px 12px;
+    background: rgba(255,255,255,.02);
+    transition: color .18s, border-color .18s, background .18s, transform .18s;
+  }
+  .pill:hover { color: var(--ink); border-color: rgba(255,255,255,.28); background: rgba(255,255,255,.06); transform: translateY(-1px); }
+  .pill .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; box-shadow: 0 0 6px color-mix(in srgb, currentColor 0%, transparent); }
+  .pill .pnum { font-family: var(--mono); font-size: 10px; color: var(--faint); }
+  .pill .pcount { font-family: var(--mono); font-size: 10.5px; color: var(--faint); background: rgba(255,255,255,.06); border-radius: 99px; padding: 0 6px; }
+  .pill.active { color: var(--ink); border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.08); }
+
+  /* ---------- hero ---------- */
+  .hero { max-width: 1180px; margin: 0 auto; padding: 52px 20px 8px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .3em;
+    color: var(--faint); text-transform: uppercase; margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-family: var(--serif); font-size: clamp(30px, 5vw, 46px);
+    font-weight: 700; letter-spacing: .06em; line-height: 1.25;
+  }
+  .hero h1 em { font-style: normal; color: var(--cool); }
+  .hero p.sub { color: var(--muted); margin-top: 12px; max-width: 640px; font-size: 14.5px; }
+  .hero p.sub code { font-family: var(--mono); font-size: 12px; color: var(--faint); }
+
+  /* ---------- 分节 ---------- */
+  main { max-width: 1180px; margin: 0 auto; padding: 26px 20px 30px; }
+  .sec { scroll-margin-top: 128px; padding-top: 34px; }
+  .sec-head { position: relative; margin-bottom: 18px; padding-left: 2px; }
+  .ghost {
+    position: absolute; left: -6px; top: -30px; z-index: 0;
+    font-family: var(--serif); font-size: 108px; font-weight: 700; line-height: 1;
+    color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,.07);
+    user-select: none; pointer-events: none;
+  }
+  .sec-title { position: relative; z-index: 1; padding-top: 14px; }
+  .sec-title h2 {
+    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    font-family: var(--serif); font-size: 24px; font-weight: 700; letter-spacing: .08em;
+  }
+  .sec-title .bar {
+    width: 26px; height: 10px; border-radius: 2px; align-self: center;
+    background: var(--hue); box-shadow: 0 0 14px color-mix(in srgb, var(--hue) 55%, transparent);
+  }
+  .scount { font-family: var(--mono); font-size: 12px; font-weight: 400; color: var(--muted); letter-spacing: .1em; }
+  .note {
+    display: inline-block; margin-top: 8px;
+    font-size: 12px; color: var(--muted);
+    border: 1px dashed rgba(242,181,68,.4); border-radius: 8px;
+    background: rgba(242,181,68,.06); padding: 4px 10px;
+  }
+  .note b { color: #f2b544; font-weight: 600; margin-right: 6px; }
+
+  /* ---------- 卡片网格 ---------- */
+  .grid {
+    display: grid; gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+  }
+  .card {
+    position: relative; display: flex; flex-direction: column; gap: 7px;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 15px 16px 13px;
+    transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+  }
+  .card:hover { transform: translateY(-3px); background: var(--card-hover); }
+  .card.std:hover { border-color: rgba(91,147,255,.55); box-shadow: 0 10px 28px -14px rgba(91,147,255,.45); }
+  .card.cool:hover { border-color: rgba(177,140,255,.55); box-shadow: 0 10px 28px -14px rgba(177,140,255,.45); }
+  .card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .badge {
+    font-size: 10.5px; font-weight: 600; letter-spacing: .12em;
+    border-radius: 5px; padding: 2px 7px; flex: none;
+  }
+  .badge.std { color: #9dc0ff; background: rgba(91,147,255,.13); border: 1px solid rgba(91,147,255,.35); }
+  .badge.cool { color: #cdb2ff; background: rgba(177,140,255,.13); border: 1px solid rgba(177,140,255,.35); }
+  .slug { font-family: var(--mono); font-size: 10.5px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cname { font-size: 16px; font-weight: 600; letter-spacing: .03em; display: flex; align-items: center; gap: 8px; }
+  .r7 {
+    font-family: var(--mono); font-size: 9.5px; font-weight: 600; letter-spacing: .08em;
+    color: #f2b544; border: 1px solid rgba(242,181,68,.45); border-radius: 4px; padding: 0 5px;
+  }
+  .wgl {
+    font-family: var(--mono); font-size: 9.5px; font-weight: 600; letter-spacing: .08em;
+    color: #7ce0d0; background: rgba(107,224,216,.08); border: 1px solid rgba(107,224,216,.45); border-radius: 4px; padding: 0 5px;
+  }
+  .cdesc { font-size: 12.8px; color: var(--muted); flex: 1; }
+  .card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 3px; }
+  .path { font-family: var(--mono); font-size: 10px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .go { font-size: 12.5px; flex: none; transition: transform .18s; }
+  .card.std .go { color: var(--std); }
+  .card.cool .go { color: var(--cool); }
+  .card:hover .go { transform: translateX(4px); }
+  .stretch { position: absolute; inset: 0; border-radius: inherit; }
+  .stretch:focus-visible { outline: 2px solid var(--std); outline-offset: 3px; }
+  .card.cool .stretch:focus-visible { outline-color: var(--cool); }
+
+  /* ---------- 页脚 ---------- */
+  footer {
+    border-top: 1px solid var(--line); margin-top: 46px;
+    background: linear-gradient(180deg, transparent, rgba(255,255,255,.015));
+  }
+  .foot-inner { max-width: 1180px; margin: 0 auto; padding: 34px 20px 44px; }
+  .foot-inner h2 {
+    font-family: var(--serif); font-size: 18px; letter-spacing: .1em; margin-bottom: 16px;
+  }
+  .rounds { list-style: none; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
+  .rounds li {
+    font-size: 12.8px; color: var(--muted); background: var(--surface);
+    border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px;
+  }
+  .rounds b { font-family: var(--mono); font-size: 11.5px; color: var(--ink); margin-right: 8px; }
+  .rounds li.r7row { border-color: rgba(242,181,68,.35); }
+  .foot-links { margin-top: 20px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .foot-links a {
+    font-family: var(--mono); font-size: 12px; color: var(--std); text-decoration: none;
+    border-bottom: 1px dashed rgba(91,147,255,.5); padding-bottom: 1px;
+    transition: color .18s, border-color .18s;
+  }
+  .foot-links a:hover { color: #9dc0ff; border-color: #9dc0ff; }
+  .foot-links span { font-size: 12px; color: var(--faint); }
+  .foot-note { margin-top: 14px; font-size: 11.5px; color: var(--faint); }
+
+  a { color: inherit; }
+
+  @media (max-width: 640px) {
+    .hero { padding-top: 36px; }
+    .stats { display: none; }
+    .sec { scroll-margin-top: 112px; }
+    .ghost { font-size: 76px; top: -18px; }
+    .grid { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+    .card:hover, .pill:hover { transform: none; }
+  }
+</style>
+</head>
+<body id="top">
+
+<nav class="topnav" aria-label="主题快速导航">
+  <div class="topnav-inner">
+    <div class="nav-row1">
+      <span class="brand">站点总目录<span class="en">SITES INDEX</span></span>
+      <span class="stats">
+        <span class="k"><b>91</b> 站</span>
+        <span class="k"><i class="dot" style="background:var(--std)"></i>标准 <b>40</b></span>
+        <span class="k"><i class="dot" style="background:var(--cool)"></i>炫酷 <b>51</b></span>
+        <span class="k">主题 <b>11</b></span>
+      </span>
+      <a class="totop" href="#top">返回顶部 ↑</a>
+    </div>
+    <div class="nav-row2">
+        <a class="pill" href="#t01"><i class="dot" style="background:#6ea8ff"></i><span class="pnum">01</span>公司门户<span class="pcount">8</span></a>
+        <a class="pill" href="#t02"><i class="dot" style="background:#f2b544"></i><span class="pnum">02</span>个人博客<span class="pcount">19</span></a>
+        <a class="pill" href="#t03"><i class="dot" style="background:#4fd1a5"></i><span class="pnum">03</span>收集表<span class="pcount">8</span></a>
+        <a class="pill" href="#t04"><i class="dot" style="background:#ff8a70"></i><span class="pnum">04</span>产品介绍<span class="pcount">8</span></a>
+        <a class="pill" href="#t05"><i class="dot" style="background:#e070b8"></i><span class="pnum">05</span>音乐网站<span class="pcount">8</span></a>
+        <a class="pill" href="#t06"><i class="dot" style="background:#7cc4ff"></i><span class="pnum">06</span>天体博物馆<span class="pcount">8</span></a>
+        <a class="pill" href="#t07"><i class="dot" style="background:#ffb347"></i><span class="pnum">07</span>漫画网站<span class="pcount">9</span></a>
+        <a class="pill" href="#t08"><i class="dot" style="background:#a3e06b"></i><span class="pnum">08</span>日历网站<span class="pcount">8</span></a>
+        <a class="pill" href="#t09"><i class="dot" style="background:#b18cff"></i><span class="pnum">09</span>塔罗占卜<span class="pcount">7</span></a>
+        <a class="pill" href="#t10"><i class="dot" style="background:#ff6b7a"></i><span class="pnum">10</span>周易占卜<span class="pcount">7</span></a>
+        <a class="pill" href="#t11"><i class="dot" style="background:#6be0d8"></i><span class="pnum">11</span>汽车展厅<span class="pcount">1</span></a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <p class="eyebrow">AI Site Gallery · Acceptance Directory</p>
+  <h1>站点总目录，<em>一站一风格</em></h1>
+  <p class="sub">共 91 个纯静态站点，横跨 11 大主题；每个主题下以【标准】与【炫酷】两种质感演绎同一套内容。点击卡片即打开对应站点，或用顶部导航直达分节。</p>
+</header>
+
+<main>
+    <section class="sec" id="t02" style="--hue:#f2b544">
+      <header class="sec-head">
+        <span class="ghost" aria-hidden="true">02</span>
+        <div class="sec-title">
+          <h2><i class="bar" aria-hidden="true"></i>个人博客<span class="scount">19 站</span></h2>
+          <span class="note"><b>专项扩充</b>含 10 个作品集型扩充变体（R7 博客专项，卡片带 <b>R7</b> 标）</span>
+        </div>
+      </header>
+      <div class="grid">
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">broadsheet</code></div>
+          <h3 class="cname">大报头版</h3>
+          <p class="cdesc">「慢速缓存」第 42 期，大报头版式博客，标题即版面</p>
+          <div class="card-foot"><code class="path">02-personal-blog/broadsheet</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/02-personal-blog/broadsheet/index.html" aria-label="打开 大报头版（标准）"><span class="sr">02-personal-blog/broadsheet</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">paper-editorial</code></div>
+          <h3 class="cname">纸质刊物</h3>
+          <p class="cdesc">沈知远的博客刊物，专栏与随笔的安静陈列</p>
+          <div class="card-foot"><code class="path">02-personal-blog/paper-editorial</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/02-personal-blog/paper-editorial/index.html" aria-label="打开 纸质刊物（标准）"><span class="sr">02-personal-blog/paper-editorial</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">tty-terminal</code></div>
+          <h3 class="cname">终端打字机</h3>
+          <p class="cdesc">TTY 终端界面，黑屏绿字的极客书写台</p>
+          <div class="card-foot"><code class="path">02-personal-blog/tty-terminal</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/02-personal-blog/tty-terminal/index.html" aria-label="打开 终端打字机（标准）"><span class="sr">02-personal-blog/tty-terminal</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">wabi-sabi</code></div>
+          <h3 class="cname">侘寂余白</h3>
+          <p class="cdesc">「余白集」，不完美与留白的日常书写</p>
+          <div class="card-foot"><code class="path">02-personal-blog/wabi-sabi</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/02-personal-blog/wabi-sabi/index.html" aria-label="打开 侘寂余白（标准）"><span class="sr">02-personal-blog/wabi-sabi</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">watercolor</code></div>
+          <h3 class="cname">水彩手绘</h3>
+          <p class="cdesc">水彩晕染的纸面博客，笔触轻盈透气</p>
+          <div class="card-foot"><code class="path">02-personal-blog/watercolor</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/02-personal-blog/watercolor/index.html" aria-label="打开 水彩手绘（标准）"><span class="sr">02-personal-blog/watercolor</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">magnetic-typography</code></div>
+          <h3 class="cname">磁吸文字</h3>
+          <p class="cdesc">文字如磁粉吸附排列，字体本身就是主角</p>
+          <div class="card-foot"><code class="path">02-personal-blog/magnetic-typography</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/02-personal-blog/magnetic-typography/index.html" aria-label="打开 磁吸文字（炫酷）"><span class="sr">02-personal-blog/magnetic-typography</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">night-library-3d</code></div>
+          <h3 class="cname">深夜书房</h3>
+          <p class="cdesc">深夜书房场景，台灯下只属于自己的阅读角落</p>
+          <div class="card-foot"><code class="path">02-personal-blog/night-library-3d</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/02-personal-blog/night-library-3d/index.html" aria-label="打开 深夜书房（炫酷）"><span class="sr">02-personal-blog/night-library-3d</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">particle-text</code></div>
+          <h3 class="cname">粒子文字</h3>
+          <p class="cdesc">标题由粒子构成，触碰即散落重聚</p>
+          <div class="card-foot"><code class="path">02-personal-blog/particle-text</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/02-personal-blog/particle-text/index.html" aria-label="打开 粒子文字（炫酷）"><span class="sr">02-personal-blog/particle-text</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">scroll-story</code></div>
+          <h3 class="cname">滚动叙事</h3>
+          <p class="cdesc">「纸上长风」特刊，滚动即翻页的叙事长卷</p>
+          <div class="card-foot"><code class="path">02-personal-blog/scroll-story</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/02-personal-blog/scroll-story/index.html" aria-label="打开 滚动叙事（炫酷）"><span class="sr">02-personal-blog/scroll-story</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">dream-clusters</code></div>
+          <h3 class="cname">梦境浮游<span class="r7" title="R7 博客专项扩充">R7</span><span class="wgl" title="three.js WebGL 重制版">WebGL</span></h3>
+          <p class="cdesc">全屏 three.js 粒子星云，点击飞入云心，重排为作品卡阵</p>
+          <div class="card-foot"><code class="path">02-personal-blog/dream-clusters</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/02-personal-blog/dream-clusters/index.html" aria-label="打开 梦境浮游（炫酷）"><span class="sr">02-personal-blog/dream-clusters</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">hologram-deck</code></div>
+          <h3 class="cname">全息投影台<span class="r7" title="R7 博客专项扩充">R7</span><span class="wgl" title="three.js WebGL 重制版">WebGL</span></h3>
+          <p class="cdesc">three.js 全息投影阵列，开场校准后文章悬浮投出</p>
+          <div class="card-foot"><code class="path">02-personal-blog/hologram-deck</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/02-personal-blog/hologram-deck/index.html" aria-label="打开 全息投影台（炫酷）"><span class="sr">02-personal-blog/hologram-deck</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">neon-city-walk</code></div>
+          <h3 class="cname">霓虹夜游街区<span class="r7" title="R7 博客专项扩充">R7</span><span class="wgl" title="three.js WebGL 重制版">WebGL</span></h3>
+          <p class="cdesc">three.js 雨夜霓虹街区，滚动沿街漫步 17 间小店</p>
+          <div class="card-foot"><code class="path">02-personal-blog/neon-city-walk</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/02-personal-blog/neon-city-walk/index.html" aria-label="打开 霓虹夜游街区（炫酷）"><span class="sr">02-personal-blog/neon-city-walk</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">orbital-glass</code></div>
+          <h3 class="cname">玻璃轨道空间站<span class="r7" title="R7 博客专项扩充">R7</span><span class="wgl" title="three.js WebGL 重制版">WebGL</span></h3>
+          <p class="cdesc">three.js 近地轨道空间站，舷窗外地球与作品列队掠过</p>
+          <div class="card-foot"><code class="path">02-personal-blog/orbital-glass</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/02-personal-blog/orbital-glass/index.html" aria-label="打开 玻璃轨道空间站（炫酷）"><span class="sr">02-personal-blog/orbital-glass</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">candy-balloon</code></div>
+          <h3 class="cname">糖果气球嘉年华<span class="r7" title="R7 博客专项扩充">R7</span><span class="wgl" title="three.js WebGL 重制版">WebGL</span></h3>
+          <p class="cdesc">three.js 糖果天空气球巡游，点气球「啵」地看作品</p>
+          <div class="card-foot"><code class="path">02-personal-blog/candy-balloon</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/02-personal-blog/candy-balloon/index.html" aria-label="打开 糖果气球嘉年华（炫酷）"><span class="sr">02-personal-blog/candy-balloon</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">tape-deck</code></div>
+          <h3 class="cname">磁带电台工作台<span class="r7" title="R7 博客专项扩充">R7</span><span class="wgl" title="three.js WebGL 重制版">WebGL</span></h3>
+          <p class="cdesc">three.js 电台工作台，拖拽环视滚动推镜，磁带走带选文章</p>
+          <div class="card-foot"><code class="path">02-personal-blog/tape-deck</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/02-personal-blog/tape-deck/index.html" aria-label="打开 磁带电台工作台（炫酷）"><span class="sr">02-personal-blog/tape-deck</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">flip-cube-wall</code></div>
+          <h3 class="cname">3D 魔方墙<span class="r7" title="R7 博客专项扩充">R7</span><span class="wgl" title="three.js WebGL 重制版">WebGL</span></h3>
+          <p class="cdesc">three.js 巨型魔方展厅，点击换面切换四类分区</p>
+          <div class="card-foot"><code class="path">02-personal-blog/flip-cube-wall</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/02-personal-blog/flip-cube-wall/index.html" aria-label="打开 3D 魔方墙（炫酷）"><span class="sr">02-personal-blog/flip-cube-wall</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">light-paint</code></div>
+          <h3 class="cname">光绘工作坊<span class="r7" title="R7 博客专项扩充">R7</span><span class="wgl" title="three.js WebGL 重制版">WebGL</span></h3>
+          <p class="cdesc">three.js 暗房光轨长廊，滚动穿行，光束勾勒标题与作品</p>
+          <div class="card-foot"><code class="path">02-personal-blog/light-paint</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/02-personal-blog/light-paint/index.html" aria-label="打开 光绘工作坊（炫酷）"><span class="sr">02-personal-blog/light-paint</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">terrarium-eco</code></div>
+          <h3 class="cname">苔藓生态缸<span class="r7" title="R7 博客专项扩充">R7</span><span class="wgl" title="three.js WebGL 重制版">WebGL</span></h3>
+          <p class="cdesc">three.js 苔藓生态缸桌面，点击缸体掀盖入内读札记</p>
+          <div class="card-foot"><code class="path">02-personal-blog/terrarium-eco</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/02-personal-blog/terrarium-eco/index.html" aria-label="打开 苔藓生态缸（炫酷）"><span class="sr">02-personal-blog/terrarium-eco</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">arcade-portal</code></div>
+          <h3 class="cname">街机大厅<span class="r7" title="R7 博客专项扩充">R7</span><span class="wgl" title="three.js WebGL 重制版">WebGL</span></h3>
+          <p class="cdesc">three.js 深夜街机厅，滚动沿过道漫游，点机台投币开玩</p>
+          <div class="card-foot"><code class="path">02-personal-blog/arcade-portal</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/02-personal-blog/arcade-portal/index.html" aria-label="打开 街机大厅（炫酷）"><span class="sr">02-personal-blog/arcade-portal</span></a>
+        </article>
+      </div>
+    </section>
+    <section class="sec" id="t01" style="--hue:#6ea8ff">
+      <header class="sec-head">
+        <span class="ghost" aria-hidden="true">01</span>
+        <div class="sec-title">
+          <h2><i class="bar" aria-hidden="true"></i>公司门户<span class="scount">8 站</span></h2>
+          
+        </div>
+      </header>
+      <div class="grid">
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">classic-corporate-blue</code></div>
+          <h3 class="cname">经典企业蓝</h3>
+          <p class="cdesc">星澜科技官网基准版，稳重可靠的企业蓝门面</p>
+          <div class="card-foot"><code class="path">01-company-portal/classic-corporate-blue</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/01-company-portal/classic-corporate-blue/index.html" aria-label="打开 经典企业蓝（标准）"><span class="sr">01-company-portal/classic-corporate-blue</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">metro-map</code></div>
+          <h3 class="cname">地铁线路图</h3>
+          <p class="cdesc">业务线画成地铁网图，数据如列车准点抵达</p>
+          <div class="card-foot"><code class="path">01-company-portal/metro-map</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/01-company-portal/metro-map/index.html" aria-label="打开 地铁线路图（标准）"><span class="sr">01-company-portal/metro-map</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">swiss-international</code></div>
+          <h3 class="cname">瑞士国际主义</h3>
+          <p class="cdesc">网格与字级的克制秩序，国际主义版式典范</p>
+          <div class="card-foot"><code class="path">01-company-portal/swiss-international</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/01-company-portal/swiss-international/index.html" aria-label="打开 瑞士国际主义（标准）"><span class="sr">01-company-portal/swiss-international</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">warm-editorial</code></div>
+          <h3 class="cname">暖调编辑部</h3>
+          <p class="cdesc">暖纸色杂志式企业叙事，亲和而有温度</p>
+          <div class="card-foot"><code class="path">01-company-portal/warm-editorial</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/01-company-portal/warm-editorial/index.html" aria-label="打开 暖调编辑部（标准）"><span class="sr">01-company-portal/warm-editorial</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">bright-dimension</code></div>
+          <h3 class="cname">明亮维度</h3>
+          <p class="cdesc">高明度渐变空间，品牌立于光感维度</p>
+          <div class="card-foot"><code class="path">01-company-portal/bright-dimension</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/01-company-portal/bright-dimension/index.html" aria-label="打开 明亮维度（炫酷）"><span class="sr">01-company-portal/bright-dimension</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">brutalist-kinetic</code></div>
+          <h3 class="cname">粗野动能</h3>
+          <p class="cdesc">粗黑边框配硬朗动效，态度鲜明的反差表达</p>
+          <div class="card-foot"><code class="path">01-company-portal/brutalist-kinetic</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/01-company-portal/brutalist-kinetic/index.html" aria-label="打开 粗野动能（炫酷）"><span class="sr">01-company-portal/brutalist-kinetic</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">origami-3d</code></div>
+          <h3 class="cname">立体折纸</h3>
+          <p class="cdesc">折纸几何折叠转场，页面如纸张层层展开</p>
+          <div class="card-foot"><code class="path">01-company-portal/origami-3d</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/01-company-portal/origami-3d/index.html" aria-label="打开 立体折纸（炫酷）"><span class="sr">01-company-portal/origami-3d</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">quantum-particles</code></div>
+          <h3 class="cname">量子粒子</h3>
+          <p class="cdesc">粒子群随滚动聚散，科技感扑面而来</p>
+          <div class="card-foot"><code class="path">01-company-portal/quantum-particles</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/01-company-portal/quantum-particles/index.html" aria-label="打开 量子粒子（炫酷）"><span class="sr">01-company-portal/quantum-particles</span></a>
+        </article>
+      </div>
+    </section>
+    <section class="sec" id="t03" style="--hue:#4fd1a5">
+      <header class="sec-head">
+        <span class="ghost" aria-hidden="true">03</span>
+        <div class="sec-title">
+          <h2><i class="bar" aria-hidden="true"></i>收集表<span class="scount">8 站</span></h2>
+          
+        </div>
+      </header>
+      <div class="grid">
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">clean-blue-form</code></div>
+          <h3 class="cname">洁净蓝表单</h3>
+          <p class="cdesc">城市青年阅读习惯调查，清爽蓝白经典表单</p>
+          <div class="card-foot"><code class="path">03-survey-form/clean-blue-form</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/03-survey-form/clean-blue-form/index.html" aria-label="打开 洁净蓝表单（标准）"><span class="sr">03-survey-form/clean-blue-form</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">fluent</code></div>
+          <h3 class="cname">Fluent 流畅卡片</h3>
+          <p class="cdesc">岛上书店年度问卷，软阴影与渐进披露</p>
+          <div class="card-foot"><code class="path">03-survey-form/fluent</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/03-survey-form/fluent/index.html" aria-label="打开 Fluent 流畅卡片（标准）"><span class="sr">03-survey-form/fluent</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">material-you</code></div>
+          <h3 class="cname">动态色板</h3>
+          <p class="cdesc">Material You 动态取色，圆润而有弹性</p>
+          <div class="card-foot"><code class="path">03-survey-form/material-you</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/03-survey-form/material-you/index.html" aria-label="打开 动态色板（标准）"><span class="sr">03-survey-form/material-you</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">memphis</code></div>
+          <h3 class="cname">孟菲斯撞色</h3>
+          <p class="cdesc">几何图形撞色，填表也带综艺感</p>
+          <div class="card-foot"><code class="path">03-survey-form/memphis</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/03-survey-form/memphis/index.html" aria-label="打开 孟菲斯撞色（标准）"><span class="sr">03-survey-form/memphis</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">paper-journal</code></div>
+          <h3 class="cname">纸间手帐</h3>
+          <p class="cdesc">手帐纸质感问卷，像在纸页上作答</p>
+          <div class="card-foot"><code class="path">03-survey-form/paper-journal</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/03-survey-form/paper-journal/index.html" aria-label="打开 纸间手帐（标准）"><span class="sr">03-survey-form/paper-journal</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">aurora-chat</code></div>
+          <h3 class="cname">极光夜话</h3>
+          <p class="cdesc">极光夜色里的对话式问卷，一问一答</p>
+          <div class="card-foot"><code class="path">03-survey-form/aurora-chat</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/03-survey-form/aurora-chat/index.html" aria-label="打开 极光夜话（炫酷）"><span class="sr">03-survey-form/aurora-chat</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">card-deck-3d</code></div>
+          <h3 class="cname">立体卡匣</h3>
+          <p class="cdesc">题目化作 3D 卡匣，翻卡作答</p>
+          <div class="card-foot"><code class="path">03-survey-form/card-deck-3d</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/03-survey-form/card-deck-3d/index.html" aria-label="打开 立体卡匣（炫酷）"><span class="sr">03-survey-form/card-deck-3d</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">fluid-ink</code></div>
+          <h3 class="cname">流体墨水</h3>
+          <p class="cdesc">墨水随作答流动晕染，纸面即画布</p>
+          <div class="card-foot"><code class="path">03-survey-form/fluid-ink</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/03-survey-form/fluid-ink/index.html" aria-label="打开 流体墨水（炫酷）"><span class="sr">03-survey-form/fluid-ink</span></a>
+        </article>
+      </div>
+    </section>
+    <section class="sec" id="t04" style="--hue:#ff8a70">
+      <header class="sec-head">
+        <span class="ghost" aria-hidden="true">04</span>
+        <div class="sec-title">
+          <h2><i class="bar" aria-hidden="true"></i>产品介绍<span class="scount">8 站</span></h2>
+          
+        </div>
+      </header>
+      <div class="grid">
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">blueprint</code></div>
+          <h3 class="cname">晒图蓝图</h3>
+          <p class="cdesc">AURA Halo 1 工程蓝图总图，尺寸标注即卖点</p>
+          <div class="card-foot"><code class="path">04-product-landing/blueprint</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/04-product-landing/blueprint/index.html" aria-label="打开 晒图蓝图（标准）"><span class="sr">04-product-landing/blueprint</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">dark-bento</code></div>
+          <h3 class="cname">暗色便当盒</h3>
+          <p class="cdesc">深色 Bento 格块，功能一格格摆清楚</p>
+          <div class="card-foot"><code class="path">04-product-landing/dark-bento</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/04-product-landing/dark-bento/index.html" aria-label="打开 暗色便当盒（标准）"><span class="sr">04-product-landing/dark-bento</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">fashion-editorial</code></div>
+          <h3 class="cname">时装刊物</h3>
+          <p class="cdesc">《AURA JOURNAL》创刊号，产品拍成时装大片</p>
+          <div class="card-foot"><code class="path">04-product-landing/fashion-editorial</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/04-product-landing/fashion-editorial/index.html" aria-label="打开 时装刊物（标准）"><span class="sr">04-product-landing/fashion-editorial</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">minimal-white</code></div>
+          <h3 class="cname">极简留白</h3>
+          <p class="cdesc">大面积留白，一句话讲清一副耳机</p>
+          <div class="card-foot"><code class="path">04-product-landing/minimal-white</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/04-product-landing/minimal-white/index.html" aria-label="打开 极简留白（标准）"><span class="sr">04-product-landing/minimal-white</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">topographic</code></div>
+          <h3 class="cname">地形等高线</h3>
+          <p class="cdesc">等高线纹理铺底，声场如地形展开</p>
+          <div class="card-foot"><code class="path">04-product-landing/topographic</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/04-product-landing/topographic/index.html" aria-label="打开 地形等高线（标准）"><span class="sr">04-product-landing/topographic</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">frutiger-aero</code></div>
+          <h3 class="cname">水感气泡 Aero</h3>
+          <p class="cdesc">Frutiger Aero 水感光泽，透明气泡的千禧乐观</p>
+          <div class="card-foot"><code class="path">04-product-landing/frutiger-aero</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/04-product-landing/frutiger-aero/index.html" aria-label="打开 水感气泡 Aero（炫酷）"><span class="sr">04-product-landing/frutiger-aero</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">industrial-scroll</code></div>
+          <h3 class="cname">工业滚动</h3>
+          <p class="cdesc">工业规格滚动页，重机械感的参数陈列</p>
+          <div class="card-foot"><code class="path">04-product-landing/industrial-scroll</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/04-product-landing/industrial-scroll/index.html" aria-label="打开 工业滚动（炫酷）"><span class="sr">04-product-landing/industrial-scroll</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">neon-showroom-3d</code></div>
+          <h3 class="cname">霓虹展厅</h3>
+          <p class="cdesc">霓虹 3D 展厅，产品在灯带之间旋转</p>
+          <div class="card-foot"><code class="path">04-product-landing/neon-showroom-3d</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/04-product-landing/neon-showroom-3d/index.html" aria-label="打开 霓虹展厅（炫酷）"><span class="sr">04-product-landing/neon-showroom-3d</span></a>
+        </article>
+      </div>
+    </section>
+    <section class="sec" id="t05" style="--hue:#e070b8">
+      <header class="sec-head">
+        <span class="ghost" aria-hidden="true">05</span>
+        <div class="sec-title">
+          <h2><i class="bar" aria-hidden="true"></i>音乐网站<span class="scount">8 站</span></h2>
+          
+        </div>
+      </header>
+      <div class="grid">
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">bright-hall</code></div>
+          <h3 class="cname">晴空白厅</h3>
+          <p class="cdesc">声浪 SONOWAVE 音乐志，明亮杂志式演出日历</p>
+          <div class="card-foot"><code class="path">05-music/bright-hall</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/05-music/bright-hall/index.html" aria-label="打开 晴空白厅（标准）"><span class="sr">05-music/bright-hall</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">classic-player</code></div>
+          <h3 class="cname">石墨夜航</h3>
+          <p class="cdesc">石墨深色经典播放器，功能齐全耐看</p>
+          <div class="card-foot"><code class="path">05-music/classic-player</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/05-music/classic-player/index.html" aria-label="打开 石墨夜航（标准）"><span class="sr">05-music/classic-player</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">neumorphism-player</code></div>
+          <h3 class="cname">新拟态播放器</h3>
+          <p class="cdesc">新拟态凸凹按钮，柔光下的实体手感</p>
+          <div class="card-foot"><code class="path">05-music/neumorphism-player</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/05-music/neumorphism-player/index.html" aria-label="打开 新拟态播放器（标准）"><span class="sr">05-music/neumorphism-player</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">audio-visualizer</code></div>
+          <h3 class="cname">霓虹声呐舞台</h3>
+          <p class="cdesc">可视化律动夜店舞台，频谱随节拍炸开</p>
+          <div class="card-foot"><code class="path">05-music/audio-visualizer</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/05-music/audio-visualizer/index.html" aria-label="打开 霓虹声呐舞台（炫酷）"><span class="sr">05-music/audio-visualizer</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">deep-sea</code></div>
+          <h3 class="cname">深海电台</h3>
+          <p class="cdesc">FM 3800 深海电台，水波与声呐的低频氛围</p>
+          <div class="card-foot"><code class="path">05-music/deep-sea</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/05-music/deep-sea/index.html" aria-label="打开 深海电台（炫酷）"><span class="sr">05-music/deep-sea</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">doodle-pop</code></div>
+          <h3 class="cname">涂鸦流行本</h3>
+          <p class="cdesc">一本会唱歌的手绘涂鸦本，笔迹随音乐蹦跳</p>
+          <div class="card-foot"><code class="path">05-music/doodle-pop</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/05-music/doodle-pop/index.html" aria-label="打开 涂鸦流行本（炫酷）"><span class="sr">05-music/doodle-pop</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">star-hall-3d</code></div>
+          <h3 class="cname">星环唱片厅</h3>
+          <p class="cdesc">3D 星空音乐馆，唱片如行星环绕</p>
+          <div class="card-foot"><code class="path">05-music/star-hall-3d</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/05-music/star-hall-3d/index.html" aria-label="打开 星环唱片厅（炫酷）"><span class="sr">05-music/star-hall-3d</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">vaporwave</code></div>
+          <h3 class="cname">蒸汽波电台</h3>
+          <p class="cdesc">蒸汽波紫粉落日，复古故障质感的电台</p>
+          <div class="card-foot"><code class="path">05-music/vaporwave</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/05-music/vaporwave/index.html" aria-label="打开 蒸汽波电台（炫酷）"><span class="sr">05-music/vaporwave</span></a>
+        </article>
+      </div>
+    </section>
+    <section class="sec" id="t06" style="--hue:#7cc4ff">
+      <header class="sec-head">
+        <span class="ghost" aria-hidden="true">06</span>
+        <div class="sec-title">
+          <h2><i class="bar" aria-hidden="true"></i>天体博物馆<span class="scount">8 站</span></h2>
+          
+        </div>
+      </header>
+      <div class="grid">
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">academy-archive</code></div>
+          <h3 class="cname">学院档案馆</h3>
+          <p class="cdesc">穹象天文馆馆藏编目，星图文献严谨陈列</p>
+          <div class="card-foot"><code class="path">06-cosmos-museum/academy-archive</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/06-cosmos-museum/academy-archive/index.html" aria-label="打开 学院档案馆（标准）"><span class="sr">06-cosmos-museum/academy-archive</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">dark-observatory</code></div>
+          <h3 class="cname">暗夜观测站</h3>
+          <p class="cdesc">暗色观测站界面，深空只衬托展品本身</p>
+          <div class="card-foot"><code class="path">06-cosmos-museum/dark-observatory</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/06-cosmos-museum/dark-observatory/index.html" aria-label="打开 暗夜观测站（标准）"><span class="sr">06-cosmos-museum/dark-observatory</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">glassmorphism</code></div>
+          <h3 class="cname">玻璃拟态展柜</h3>
+          <p class="cdesc">玻璃拟态展柜，星云在磨砂面板后流动</p>
+          <div class="card-foot"><code class="path">06-cosmos-museum/glassmorphism</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/06-cosmos-museum/glassmorphism/index.html" aria-label="打开 玻璃拟态展柜（标准）"><span class="sr">06-cosmos-museum/glassmorphism</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">ancient-atlas</code></div>
+          <h3 class="cname">古代星图手卷</h3>
+          <p class="cdesc">古代星图手卷横向展开，古人的星空坐标系</p>
+          <div class="card-foot"><code class="path">06-cosmos-museum/ancient-atlas</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/06-cosmos-museum/ancient-atlas/index.html" aria-label="打开 古代星图手卷（炫酷）"><span class="sr">06-cosmos-museum/ancient-atlas</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">black-hole</code></div>
+          <h3 class="cname">引力视界</h3>
+          <p class="cdesc">黑洞引力透镜页面，滚动即坠入视界</p>
+          <div class="card-foot"><code class="path">06-cosmos-museum/black-hole</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/06-cosmos-museum/black-hole/index.html" aria-label="打开 引力视界（炫酷）"><span class="sr">06-cosmos-museum/black-hole</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">lowpoly-constellation</code></div>
+          <h3 class="cname">低多边形星座</h3>
+          <p class="cdesc">低多边形星座漫游，几何面片拼出的天穹</p>
+          <div class="card-foot"><code class="path">06-cosmos-museum/lowpoly-constellation</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/06-cosmos-museum/lowpoly-constellation/index.html" aria-label="打开 低多边形星座（炫酷）"><span class="sr">06-cosmos-museum/lowpoly-constellation</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">panosphere</code></div>
+          <h3 class="cname">全景星穹</h3>
+          <p class="cdesc">360° 全景球幕，拖动环视整片星空</p>
+          <div class="card-foot"><code class="path">06-cosmos-museum/panosphere</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/06-cosmos-museum/panosphere/index.html" aria-label="打开 全景星穹（炫酷）"><span class="sr">06-cosmos-museum/panosphere</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">solar-system-3d</code></div>
+          <h3 class="cname">3D 太阳系</h3>
+          <p class="cdesc">可拖转的 3D 太阳系，行星轨道实时漫游</p>
+          <div class="card-foot"><code class="path">06-cosmos-museum/solar-system-3d</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/06-cosmos-museum/solar-system-3d/index.html" aria-label="打开 3D 太阳系（炫酷）"><span class="sr">06-cosmos-museum/solar-system-3d</span></a>
+        </article>
+      </div>
+    </section>
+    <section class="sec" id="t07" style="--hue:#ffb347">
+      <header class="sec-head">
+        <span class="ghost" aria-hidden="true">07</span>
+        <div class="sec-title">
+          <h2><i class="bar" aria-hidden="true"></i>漫画网站<span class="scount">9 站</span></h2>
+          
+        </div>
+      </header>
+      <div class="grid">
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">claymorphism</code></div>
+          <h3 class="cname">黏土拟态</h3>
+          <p class="cdesc">漫屿格子港，软糯黏土质感的漫画阅读</p>
+          <div class="card-foot"><code class="path">07-comic/claymorphism</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/07-comic/claymorphism/index.html" aria-label="打开 黏土拟态（标准）"><span class="sr">07-comic/claymorphism</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">crayon</code></div>
+          <h3 class="cname">蜡笔童绘</h3>
+          <p class="cdesc">蜡笔童绘笔触，每一格都认真涂</p>
+          <div class="card-foot"><code class="path">07-comic/crayon</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/07-comic/crayon/index.html" aria-label="打开 蜡笔童绘（标准）"><span class="sr">07-comic/crayon</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">fresh-webtoon</code></div>
+          <h3 class="cname">清新条漫</h3>
+          <p class="cdesc">清新条漫阅读流，向下滑动即登岛</p>
+          <div class="card-foot"><code class="path">07-comic/fresh-webtoon</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/07-comic/fresh-webtoon/index.html" aria-label="打开 清新条漫（标准）"><span class="sr">07-comic/fresh-webtoon</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">ink-paper-journal</code></div>
+          <h3 class="cname">墨间纸语</h3>
+          <p class="cdesc">日式页漫文库，纸纹与墨迹之间的阅读馆</p>
+          <div class="card-foot"><code class="path">07-comic/ink-paper-journal</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/07-comic/ink-paper-journal/index.html" aria-label="打开 墨间纸语（标准）"><span class="sr">07-comic/ink-paper-journal</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">flipbook-3d</code></div>
+          <h3 class="cname">立体藏书馆</h3>
+          <p class="cdesc">3D 立体藏书馆，翻动书脊挑选刊目</p>
+          <div class="card-foot"><code class="path">07-comic/flipbook-3d</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/07-comic/flipbook-3d/index.html" aria-label="打开 立体藏书馆（炫酷）"><span class="sr">07-comic/flipbook-3d</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">neon-webtoon</code></div>
+          <h3 class="cname">霓虹漫展</h3>
+          <p class="cdesc">霓虹漫展现场，条漫沉浸式大屏阅读</p>
+          <div class="card-foot"><code class="path">07-comic/neon-webtoon</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/07-comic/neon-webtoon/index.html" aria-label="打开 霓虹漫展（炫酷）"><span class="sr">07-comic/neon-webtoon</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">parallax-strip</code></div>
+          <h3 class="cname">视差长卷</h3>
+          <p class="cdesc">视差分镜长卷，《午夜列车 14 号》</p>
+          <div class="card-foot"><code class="path">07-comic/parallax-strip</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/07-comic/parallax-strip/index.html" aria-label="打开 视差长卷（炫酷）"><span class="sr">07-comic/parallax-strip</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">pixel-8bit</code></div>
+          <h3 class="cname">像素漫画主机</h3>
+          <p class="cdesc">8-bit 像素漫画主机，插卡即读</p>
+          <div class="card-foot"><code class="path">07-comic/pixel-8bit</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/07-comic/pixel-8bit/index.html" aria-label="打开 像素漫画主机（炫酷）"><span class="sr">07-comic/pixel-8bit</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">pop-up-book</code></div>
+          <h3 class="cname">立体书</h3>
+          <p class="cdesc">纸上漫画群岛立体书，翻页即弹出场景</p>
+          <div class="card-foot"><code class="path">07-comic/pop-up-book</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/07-comic/pop-up-book/index.html" aria-label="打开 立体书（炫酷）"><span class="sr">07-comic/pop-up-book</span></a>
+        </article>
+      </div>
+    </section>
+    <section class="sec" id="t08" style="--hue:#a3e06b">
+      <header class="sec-head">
+        <span class="ghost" aria-hidden="true">08</span>
+        <div class="sec-title">
+          <h2><i class="bar" aria-hidden="true"></i>日历网站<span class="scount">8 站</span></h2>
+          
+        </div>
+      </header>
+      <div class="grid">
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">bauhaus</code></div>
+          <h3 class="cname">包豪斯年历</h3>
+          <p class="cdesc">拾光历 2026 包豪斯版，三原色块排班日期</p>
+          <div class="card-foot"><code class="path">08-calendar/bauhaus</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/08-calendar/bauhaus/index.html" aria-label="打开 包豪斯年历（标准）"><span class="sr">08-calendar/bauhaus</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">classic-grid</code></div>
+          <h3 class="cname">经典网格</h3>
+          <p class="cdesc">经典网格在线日历，信息密度与可读性基准</p>
+          <div class="card-foot"><code class="path">08-calendar/classic-grid</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/08-calendar/classic-grid/index.html" aria-label="打开 经典网格（标准）"><span class="sr">08-calendar/classic-grid</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">horology</code></div>
+          <h3 class="cname">黄铜辰历</h3>
+          <p class="cdesc">机械钟表机芯日历，黄铜齿轮的精度感</p>
+          <div class="card-foot"><code class="path">08-calendar/horology</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/08-calendar/horology/index.html" aria-label="打开 黄铜辰历（标准）"><span class="sr">08-calendar/horology</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">paper-daily</code></div>
+          <h3 class="cname">晨昏纸历</h3>
+          <p class="cdesc">一日一页撕页纸历，晨昏各得一面</p>
+          <div class="card-foot"><code class="path">08-calendar/paper-daily</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/08-calendar/paper-daily/index.html" aria-label="打开 晨昏纸历（标准）"><span class="sr">08-calendar/paper-daily</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">flip-calendar-3d</code></div>
+          <h3 class="cname">翻月台历</h3>
+          <p class="cdesc">翻月 FLIPMO 台历，纸上剧场逐月翻演</p>
+          <div class="card-foot"><code class="path">08-calendar/flip-calendar-3d</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/08-calendar/flip-calendar-3d/index.html" aria-label="打开 翻月台历（炫酷）"><span class="sr">08-calendar/flip-calendar-3d</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">four-seasons</code></div>
+          <h3 class="cname">四季流转</h3>
+          <p class="cdesc">沉浸式季节日历，整页随四季换装</p>
+          <div class="card-foot"><code class="path">08-calendar/four-seasons</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/08-calendar/four-seasons/index.html" aria-label="打开 四季流转（炫酷）"><span class="sr">08-calendar/four-seasons</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">split-flap</code></div>
+          <h3 class="cname">车站翻牌板</h3>
+          <p class="cdesc">车站翻牌显示板，日期咔哒一声翻落</p>
+          <div class="card-foot"><code class="path">08-calendar/split-flap</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/08-calendar/split-flap/index.html" aria-label="打开 车站翻牌板（炫酷）"><span class="sr">08-calendar/split-flap</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">y3k</code></div>
+          <h3 class="cname">Y3K 全息</h3>
+          <p class="cdesc">CHRONO·GRID 全息日历，铬色 Y3K 未来感</p>
+          <div class="card-foot"><code class="path">08-calendar/y3k</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/08-calendar/y3k/index.html" aria-label="打开 Y3K 全息（炫酷）"><span class="sr">08-calendar/y3k</span></a>
+        </article>
+      </div>
+    </section>
+    <section class="sec" id="t09" style="--hue:#b18cff">
+      <header class="sec-head">
+        <span class="ghost" aria-hidden="true">09</span>
+        <div class="sec-title">
+          <h2><i class="bar" aria-hidden="true"></i>塔罗占卜<span class="scount">7 站</span></h2>
+          
+        </div>
+      </header>
+      <div class="grid">
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">art-deco</code></div>
+          <h3 class="cname">装饰艺术</h3>
+          <p class="cdesc">日轮塔罗馆，装饰艺术金线几何与对称</p>
+          <div class="card-foot"><code class="path">09-tarot/art-deco</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/09-tarot/art-deco/index.html" aria-label="打开 装饰艺术（标准）"><span class="sr">09-tarot/art-deco</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">classic-mystic</code></div>
+          <h3 class="cname">紫金秘仪</h3>
+          <p class="cdesc">紫金秘仪馆，二十二张大阿卡纳正逆位</p>
+          <div class="card-foot"><code class="path">09-tarot/classic-mystic</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/09-tarot/classic-mystic/index.html" aria-label="打开 紫金秘仪（标准）"><span class="sr">09-tarot/classic-mystic</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">cream-morning</code></div>
+          <h3 class="cname">奶油晨光</h3>
+          <p class="cdesc">极简晨光塔罗，把读牌变成轻的日常</p>
+          <div class="card-foot"><code class="path">09-tarot/cream-morning</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/09-tarot/cream-morning/index.html" aria-label="打开 奶油晨光（标准）"><span class="sr">09-tarot/cream-morning</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">dark-luxury</code></div>
+          <h3 class="cname">鎏夜暗奢</h3>
+          <p class="cdesc">鎏夜暗金馆，烛光丝绒里的占卜仪式</p>
+          <div class="card-foot"><code class="path">09-tarot/dark-luxury</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/09-tarot/dark-luxury/index.html" aria-label="打开 鎏夜暗奢（标准）"><span class="sr">09-tarot/dark-luxury</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">acid-chrome</code></div>
+          <h3 class="cname">酸性镀铬</h3>
+          <p class="cdesc">FATE 命运作证，酸性液态金属质感</p>
+          <div class="card-foot"><code class="path">09-tarot/acid-chrome</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/09-tarot/acid-chrome/index.html" aria-label="打开 酸性镀铬（炫酷）"><span class="sr">09-tarot/acid-chrome</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">starfield-ritual</code></div>
+          <h3 class="cname">星穹秘仪</h3>
+          <p class="cdesc">星穹之下暗夜抽牌，仪式感拉满</p>
+          <div class="card-foot"><code class="path">09-tarot/starfield-ritual</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/09-tarot/starfield-ritual/index.html" aria-label="打开 星穹秘仪（炫酷）"><span class="sr">09-tarot/starfield-ritual</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">water-mirror</code></div>
+          <h3 class="cname">水镜秘境</h3>
+          <p class="cdesc">月影落进水镜，牌面在涟漪中浮现</p>
+          <div class="card-foot"><code class="path">09-tarot/water-mirror</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/09-tarot/water-mirror/index.html" aria-label="打开 水镜秘境（炫酷）"><span class="sr">09-tarot/water-mirror</span></a>
+        </article>
+      </div>
+    </section>
+    <section class="sec" id="t10" style="--hue:#ff6b7a">
+      <header class="sec-head">
+        <span class="ghost" aria-hidden="true">10</span>
+        <div class="sec-title">
+          <h2><i class="bar" aria-hidden="true"></i>周易占卜<span class="scount">7 站</span></h2>
+          
+        </div>
+      </header>
+      <div class="grid">
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">guochao</code></div>
+          <h3 class="cname">国潮观象台</h3>
+          <p class="cdesc">观象台国潮风格，一卦知进退</p>
+          <div class="card-foot"><code class="path">10-iching/guochao</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/10-iching/guochao/index.html" aria-label="打开 国潮观象台（标准）"><span class="sr">10-iching/guochao</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">xuan-paper</code></div>
+          <h3 class="cname">宣纸书卷</h3>
+          <p class="cdesc">宣纸书卷朱砂批卦，古籍排印质感</p>
+          <div class="card-foot"><code class="path">10-iching/xuan-paper</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/10-iching/xuan-paper/index.html" aria-label="打开 宣纸书卷（标准）"><span class="sr">10-iching/xuan-paper</span></a>
+        </article>
+        <article class="card std">
+          <div class="card-top"><span class="badge std">标准</span><code class="slug">zen-gallery</code></div>
+          <h3 class="cname">留白卦格</h3>
+          <p class="cdesc">留白卦格陈列馆，六十四卦静置如展品</p>
+          <div class="card-foot"><code class="path">10-iching/zen-gallery</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="standard/10-iching/zen-gallery/index.html" aria-label="打开 留白卦格（标准）"><span class="sr">10-iching/zen-gallery</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">ink-cosmos</code></div>
+          <h3 class="cname">水墨玄境</h3>
+          <p class="cdesc">三钱问天，水墨在玄境里晕开卦象</p>
+          <div class="card-foot"><code class="path">10-iching/ink-cosmos</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/10-iching/ink-cosmos/index.html" aria-label="打开 水墨玄境（炫酷）"><span class="sr">10-iching/ink-cosmos</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">paper-cut</code></div>
+          <h3 class="cname">六爻影戏</h3>
+          <p class="cdesc">剪纸皮影专场，爻线在灯影里动起来</p>
+          <div class="card-foot"><code class="path">10-iching/paper-cut</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/10-iching/paper-cut/index.html" aria-label="打开 六爻影戏（炫酷）"><span class="sr">10-iching/paper-cut</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">star-hexagram-3d</code></div>
+          <h3 class="cname">玄穹卦宫</h3>
+          <p class="cdesc">3D 星环卦宫，蓍草起卦星盘演算</p>
+          <div class="card-foot"><code class="path">10-iching/star-hexagram-3d</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/10-iching/star-hexagram-3d/index.html" aria-label="打开 玄穹卦宫（炫酷）"><span class="sr">10-iching/star-hexagram-3d</span></a>
+        </article>
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">y2k-oracle</code></div>
+          <h3 class="cname">赛博神谕</h3>
+          <p class="cdesc">CYBER ORACLE 数字神农，Y2K 荧光卦辞</p>
+          <div class="card-foot"><code class="path">10-iching/y2k-oracle</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/10-iching/y2k-oracle/index.html" aria-label="打开 赛博神谕（炫酷）"><span class="sr">10-iching/y2k-oracle</span></a>
+        </article>
+      </div>
+    </section>
+    <section class="sec" id="t11" style="--hue:#6be0d8">
+      <header class="sec-head">
+        <span class="ghost" aria-hidden="true">11</span>
+        <div class="sec-title">
+          <h2><i class="bar" aria-hidden="true"></i>汽车展厅<span class="scount">1 站</span></h2>
+          
+        </div>
+      </header>
+      <div class="grid">
+        <article class="card cool">
+          <div class="card-top"><span class="badge cool">炫酷</span><code class="slug">transformer-hall-3d</code></div>
+          <h3 class="cname">变形机库</h3>
+          <p class="cdesc">烛龙 GT-9 变形机库 HANGAR-07，3D 机甲感车展厅</p>
+          <div class="card-foot"><code class="path">11-car-showroom/transformer-hall-3d</code><span class="go">打开 →</span></div>
+          <a class="stretch" href="cool/11-car-showroom/transformer-hall-3d/index.html" aria-label="打开 变形机库（炫酷）"><span class="sr">11-car-showroom/transformer-hall-3d</span></a>
+        </article>
+      </div>
+    </section>
+</main>
+
+<footer>
+  <div class="foot-inner">
+    <h2>建设轮次 R1 – R7</h2>
+    <ul class="rounds">
+      <li><b>R1</b>方向调研 + 首批 20 站（标准 A 向 10 · 炫酷 C 向 10）</li>
+      <li><b>R2</b>第二批 20 站（标准 B 向 10 · 炫酷 D 向 10）</li>
+      <li><b>R3</b>风格缺口调研（research/11-style-gap.md）+ 10 站</li>
+      <li><b>R4</b>第二批缺口风格 10 站</li>
+      <li><b>R5</b>第三批缺口风格 10 站</li>
+      <li><b>R6</b>特殊单站：3D 汽车展厅（11 主题唯一 1 站）+ 缺口循环 10 站</li>
+      <li class="r7row"><b>R7</b>博客专项扩充：作品集型博客 10 站（02 个人博客，统一四模块，卡片带 R7 标）</li>
+    </ul>
+    <div class="foot-links">
+      <span class="mut">research/ 调研文档（见完整工程目录）</span>
+      <a href="使用说明.md">使用说明.md 建站台账 →</a>
+      <span>全部站点为纯静态 HTML，可直接本地打开。</span>
+    </div>
+    <p class="foot-note">R7 后累计 91 站（标准 40 + 炫酷 51），校验通过。本页即总画廊，验收跳转入口。</p>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var pills = [].slice.call(document.querySelectorAll('.pill'));
+    if (!('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        pills.forEach(function (p) { p.classList.toggle('active', p.getAttribute('href') === '#' + e.target.id); });
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    document.querySelectorAll('section.sec').forEach(function (s) { io.observe(s); });
+  })();
+</script>
+<script>
+/* 基础埋点:page_view + 停留时长,走站点统一统计后端(与主页 /api/collect 同构) */
+(function () {
+  var BASE = 'https://api.agarena.xyz';
+  var ANON = null;
+  try { ANON = localStorage.getItem('shufy_anon'); } catch (e) {}
+  if (!ANON) {
+    ANON = 'u-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    try { localStorage.setItem('shufy_anon', ANON); } catch (e) {}
+  }
+  var SID = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2);
+  var SRC = null, SRCV = null;
+  try { var q = new URLSearchParams(location.search); SRC = (q.get('from') || '').slice(0, 40) || null; SRCV = (q.get('v') || '').slice(0, 40) || null; } catch (e) {}
+  function send(events) {
+    var body = {
+      anonId: ANON, sessionId: SID, fingerprint: navigator.userAgent,
+      context: { path: location.pathname, referrer: document.referrer || null, language: navigator.language,
+        timezone: (Intl.DateTimeFormat().resolvedOptions().timeZone || null), screen: { w: innerWidth, h: innerHeight },
+        platform: navigator.platform, src: SRC, v: SRCV, landing: location.pathname + location.search, consent: true },
+      events: events
+    };
+    try {
+      var j = JSON.stringify(body);
+      if (navigator.sendBeacon) navigator.sendBeacon(BASE + '/api/collect', new Blob([j], { type: 'application/json' }));
+      else fetch(BASE + '/api/collect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: j, keepalive: true });
+    } catch (e) {}
+  }
+  send([{ type: 'page_view', targetType: null, targetId: null, path: location.pathname, ts: new Date().toISOString() }]);
+  var t0 = Date.now(), sent = false;
+  function dwell() { if (sent) return; sent = true;
+    send([{ type: 'dwell', targetType: null, targetId: null, path: location.pathname, ts: new Date().toISOString(), meta: { dwell: Date.now() - t0 } }]); }
+  addEventListener('pagehide', dwell);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') dwell(); });
+})();
+</script>
+</body>
+</html>

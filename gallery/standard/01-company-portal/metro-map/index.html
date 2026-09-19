@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="星澜科技业务线网：以地铁线路图的方式呈现数据中台、数据安全、智能制造、云服务与 AI 应用五大业务线路，点击车站查看客户案例与联合解决方案。">
+<meta name="theme-color" content="#FFFFFF">
+<title>星澜科技 Xinglan Tech · 业务线网图 | 数据如列车，准点抵达</title>
+<style>
+/* ==========================================================
+   星澜科技 · Metro Map 公司门户
+   制图白底 + TfL 经典线色 + Beck 三原则（0°/45°/90°、圆角转折、站距均匀）
+   ========================================================== */
+:root{
+  --paper:#FFFFFF;        /* 制图白 */
+  --ink:#1C1C1C;          /* 炭黑：站名/正文 */
+  --ink-60:rgba(28,28,28,.62);
+  --ink-40:rgba(28,28,28,.42);
+  --hair:rgba(28,28,28,.14);
+  --hair-soft:rgba(28,28,28,.08);
+  --l1:#1C3F94;           /* 1 号线 数据蓝 · 数据中台 */
+  --l2:#E32017;           /* 2 号线 安全红 · 数据安全 */
+  --l3:#00782A;           /* 3 号线 智能绿 · 智能制造 */
+  --l4:#EEA320;           /* 4 号线 云服务橙（琥珀，线体专用） */
+  --l4-deep:#B87A0E;      /* 琥珀线深色描边 */
+  --l5:#0098D4;           /* 5 号线 天蓝 · AI 应用 */
+  --f-head:"Gill Sans","Hanken Grotesk","Noto Sans SC",sans-serif;
+  --f-body:"Hanken Grotesk","Inter","Noto Sans SC",sans-serif;
+  --num:tabular-nums;
+  --r:2px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:78px;-webkit-text-size-adjust:100%}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:var(--f-body);font-size:16px;line-height:1.7;
+}
+::selection{background:var(--l1);color:#fff}
+img,svg{display:block;max-width:100%}
+a{color:var(--l1);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font-family:inherit;cursor:pointer}
+a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--l1);outline-offset:2px}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+.num{font-variant-numeric:var(--num)}
+.skip{position:absolute;left:-9999px;top:0;background:var(--ink);color:#fff;padding:8px 14px;z-index:99}
+.skip:focus{left:8px;top:8px}
+
+/* ---------- 顶部导航 ---------- */
+.hd{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.96);border-bottom:1px solid var(--hair)}
+.hd-in{display:flex;align-items:center;gap:28px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--ink)}
+.brand:hover{text-decoration:none}
+.brand svg{width:34px;height:34px}
+.brand b{font-family:var(--f-head);font-size:17px;letter-spacing:.04em}
+.brand i{font-style:normal;font-size:11px;color:var(--ink-60);letter-spacing:.14em;display:block;line-height:1.2}
+.nav{margin-left:auto;display:flex;align-items:center;gap:2px}
+.nl{position:relative;padding:8px 12px;color:var(--ink);font-size:15px;font-family:var(--f-head)}
+.nl::after{content:"";position:absolute;left:12px;right:12px;bottom:2px;height:3px;background:var(--l1);transform:scaleX(0);transform-origin:left;transition:transform .22s}
+.nl:hover{text-decoration:none}
+.nl:hover::after,.nl.on::after{transform:scaleX(1)}
+.nl.on{color:var(--l1)}
+.hd-cta{margin-left:10px}
+.btn{display:inline-block;border-radius:var(--r);font-family:var(--f-head);font-size:15px;font-weight:600;
+  padding:11px 22px;border:1.5px solid var(--l1);transition:background-color .2s,color .2s,border-color .2s;text-align:center}
+.btn-p{background:var(--l1);color:#fff}
+.btn-p:hover{background:#152F73;border-color:#152F73;text-decoration:none;color:#fff}
+.btn-g{background:#fff;color:var(--l1)}
+.btn-g:hover{background:#EEF2FA;text-decoration:none}
+.hd .btn{padding:8px 16px;font-size:14px}
+.burger{display:none;margin-left:auto;background:none;border:1px solid var(--hair);border-radius:var(--r);width:42px;height:38px;position:relative}
+.burger span{position:absolute;left:9px;right:9px;height:2px;background:var(--ink);transition:transform .2s,opacity .2s}
+.burger span:nth-child(1){top:12px}
+.burger span:nth-child(2){top:18px}
+.burger span:nth-child(3){top:24px}
+.hd.menu-open .burger span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+.hd.menu-open .burger span:nth-child(2){opacity:0}
+.hd.menu-open .burger span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+
+/* ---------- Hero ---------- */
+.hero{padding:72px 0 0;border-bottom:1px solid var(--hair)}
+.hero-grid{display:grid;grid-template-columns:1fr 250px;gap:48px;align-items:center}
+.roundel{width:250px;height:250px}
+.kicker{display:inline-flex;align-items:center;gap:10px;font-family:var(--f-head);font-size:12px;
+  letter-spacing:.2em;color:var(--ink-60);text-transform:uppercase}
+.kicker::before{content:"";width:26px;height:6px;background:var(--l1)}
+.hero h1{font-family:var(--f-head);font-size:clamp(34px,4.6vw,56px);line-height:1.22;font-weight:700;margin:18px 0 16px}
+.hero h1 em{font-style:normal;color:var(--l1)}
+.hero .lede{max-width:560px;color:var(--ink-60);font-size:17px}
+.hero-cta{display:flex;gap:14px;margin-top:28px;flex-wrap:wrap}
+.hero-note{margin-top:18px;font-size:13px;color:var(--ink-40)}
+/* hero 主线路：一条蓝线从左上横贯右侧，途经核心站点 */
+.hero-line{margin-top:56px}
+.hero-line svg{width:100%;height:auto}
+
+/* ---------- 通用分节 ---------- */
+.sec{padding:96px 0}
+.sec-head{max-width:720px;margin-bottom:44px}
+.sec-head .kicker{margin-bottom:14px}
+.sec-head h2{font-family:var(--f-head);font-size:clamp(26px,3vw,36px);line-height:1.3;font-weight:700}
+.sec-head .lede{margin-top:12px;color:var(--ink-60)}
+
+/* ---------- 线路总图 ---------- */
+#map{background:var(--paper)}
+.map-grid{display:grid;grid-template-columns:1fr 296px;gap:28px;align-items:start}
+.map-frame{border:1px solid var(--hair);border-radius:3px;background:var(--paper)}
+.map-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.map-inner{min-width:920px}
+#net{width:100%;height:auto;user-select:none}
+.map-titlebar{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:10px 14px;border-bottom:1px solid var(--hair);font-family:var(--f-head)}
+.map-titlebar b{font-size:14px}
+.map-titlebar span{font-size:11px;letter-spacing:.14em;color:var(--ink-40);text-transform:uppercase}
+.map-hint{display:none;margin-top:10px;font-size:13px;color:var(--ink-60)}
+/* 线路样式：13px 白边套 8px 色线；琥珀线加深色描边 */
+.mline .casing{fill:none;stroke:#fff;stroke-width:13;stroke-linecap:round;stroke-linejoin:round}
+.mline .body{fill:none;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;transition:stroke-width .25s}
+.mline .rim{fill:none;stroke:var(--l4-deep);stroke-width:9.5;stroke-linecap:round;stroke-linejoin:round;transition:stroke-width .25s}
+.mline[data-line="l1"] .body{stroke:var(--l1)}
+.mline[data-line="l2"] .body{stroke:var(--l2)}
+.mline[data-line="l3"] .body{stroke:var(--l3)}
+.mline[data-line="l4"] .body{stroke:var(--l4);stroke-width:6}
+.mline[data-line="l5"] .body{stroke:var(--l5)}
+.mline .hit{fill:none;stroke:transparent;stroke-width:30;pointer-events:stroke;cursor:pointer}
+/* 聚焦：hover 线路加粗提亮，其余线路降透明度 */
+#net.focus .mline{opacity:.22;transition:opacity .3s}
+#net.focus .mline.on{opacity:1}
+#net.focus .mline.on .body{stroke-width:10}
+#net.focus .mline.on[data-line="l4"] .body{stroke-width:7.5}
+#net.focus .mline.on .rim{stroke-width:11.5}
+.mline{transition:opacity .3s}
+/* 站标 */
+.st{cursor:pointer}
+.st .hit{fill:transparent}
+.st .vis,.st .ring-o,.st .ring-i{transform-box:fill-box;transform-origin:center;transition:transform .18s}
+.st:hover .vis,.st:focus-visible .vis{transform:scale(1.32)}
+.st:hover .ring-o,.st:focus-visible .ring-o{transform:scale(1.18)}
+.lbl{font-family:var(--f-head);font-size:13px;font-weight:600;fill:var(--ink);
+  paint-order:stroke;stroke:#fff;stroke-width:3.5px;stroke-linejoin:round;pointer-events:none}
+.lbl-s{font-family:var(--f-head);font-size:13px;font-weight:500;fill:var(--ink-60);
+  paint-order:stroke;stroke:#fff;stroke-width:3.5px;stroke-linejoin:round;pointer-events:none}
+.t1{font-family:var(--f-head);font-size:15px;font-weight:700;fill:var(--ink)}
+.t2{font-family:var(--f-head);font-size:10px;letter-spacing:.12em;fill:var(--ink-40)}
+/* 图例（必配） */
+.lgd-list{display:flex;flex-direction:column;gap:8px}
+.lgd{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;
+  border:1px solid var(--hair);border-radius:var(--r);padding:10px 12px;transition:border-color .2s,background-color .2s}
+.lgd:hover,.lgd[aria-pressed="true"]{border-color:var(--ink);background:#FAFBFE}
+.lgd[aria-pressed="true"]{box-shadow:inset 3px 0 0 var(--ink)}
+.lgd-bar{width:30px;height:8px;border-radius:1px;flex:none;box-shadow:0 0 0 2px #fff}
+.lgd-body{flex:1;min-width:0}
+.lgd-body strong{display:block;font-family:var(--f-head);font-size:14px;line-height:1.35}
+.lgd-body em{display:block;font-style:normal;font-size:12px;color:var(--ink-60);line-height:1.45;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lgd-n{font-size:12px;color:var(--ink-40);font-variant-numeric:var(--num);flex:none}
+.lgd-tip{font-size:12px;color:var(--ink-40);margin-top:10px;line-height:1.6}
+.sym-row{display:flex;flex-wrap:wrap;gap:22px;margin-top:14px;padding:12px 14px;border:1px solid var(--hair);border-radius:3px}
+.sym{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-60)}
+.sym svg{width:30px;height:30px;flex:none}
+/* 业务线路卡 */
+.line-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-top:36px}
+.lcard{border:1px solid var(--hair);border-radius:3px;background:#fff;transition:border-color .25s}
+.lcard:hover{border-color:var(--lc)}
+.lcard-bar{height:6px;background:var(--lc)}
+.lcard-in{padding:16px 16px 18px}
+.lcard-in h3{font-family:var(--f-head);font-size:16px;margin-bottom:2px}
+.lcard-in .en{font-size:11px;letter-spacing:.14em;color:var(--ink-40);text-transform:uppercase}
+.lcard-in p{font-size:13.5px;color:var(--ink-60);margin-top:10px;line-height:1.65}
+.lcard-in .rep{margin-top:12px;font-size:12px;color:var(--ink-40);line-height:1.6}
+.lcard-in .rep b{color:var(--ink-60);font-weight:600}
+
+/* ---------- 悬浮站牌 tooltip ---------- */
+#tip{position:absolute;z-index:30;pointer-events:none;background:var(--ink);color:#fff;
+  border-radius:var(--r);padding:8px 12px;font-size:13px;line-height:1.5;max-width:230px;
+  opacity:0;transform:translate(-50%,-100%) translateY(-10px);transition:opacity .18s,transform .18s}
+#tip.show{opacity:1;transform:translate(-50%,-100%) translateY(-14px)}
+#tip b{font-family:var(--f-head);display:block}
+#tip .dots{display:inline-flex;gap:4px;margin-right:6px;vertical-align:1px}
+#tip .dots i{width:8px;height:8px;border-radius:50%;display:inline-block}
+#tip small{color:rgba(255,255,255,.66)}
+#mapBox{position:relative}
+
+/* ---------- 关于 · 线路沿革 ---------- */
+#about{background:#FBFBFC;border-top:1px solid var(--hair-soft)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+.about-copy p{color:var(--ink-60);margin-bottom:14px}
+.about-copy p b{color:var(--ink)}
+.honors{margin-top:22px;border-top:1px solid var(--hair);padding-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:8px 24px}
+.honors li{list-style:none;font-size:13.5px;color:var(--ink-60);display:flex;gap:8px;align-items:baseline}
+.honors li::before{content:"";width:14px;height:4px;background:var(--l3);flex:none;transform:translateY(-3px)}
+.tl-title{font-family:var(--f-head);font-size:19px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.tl-title::after{content:"";flex:1;height:1px;background:var(--hair)}
+.tl{list-style:none;position:relative;padding-left:30px}
+.tl::before{content:"";position:absolute;left:8px;top:6px;bottom:6px;width:8px;
+  background:var(--l1);box-shadow:0 0 0 2.5px #fff,0 0 0 3.5px var(--hair);border-radius:4px}
+.tl li{position:relative;padding:0 0 26px 18px}
+.tl li:last-child{padding-bottom:0}
+.tl-dot{position:absolute;left:-30px;top:5px;width:24px;height:24px;border-radius:50%;
+  background:#fff;border:5px solid var(--l1)}
+.tl li[data-c] .tl-dot{border-color:var(--c,#1C3F94)}
+.tl-year{font-family:var(--f-head);font-variant-numeric:var(--num);font-weight:700;font-size:16px}
+.tl-tag{display:inline-block;margin-left:8px;font-size:12px;background:var(--ink);color:#fff;
+  border-radius:var(--r);padding:1px 8px;vertical-align:2px}
+.tl h3{font-family:var(--f-head);font-size:15.5px;margin-top:4px}
+.tl p{font-size:13.5px;color:var(--ink-60);margin-top:3px}
+
+/* ---------- 运营数据 ---------- */
+#data{background:var(--ink);color:#fff}
+#data .kicker{color:rgba(255,255,255,.62)}
+#data .kicker::before{background:var(--l4)}
+#data .sec-head .lede{color:rgba(255,255,255,.66)}
+.stat-strip{display:flex;align-items:center;gap:12px;font-size:14px;color:rgba(255,255,255,.85);
+  border:1px solid rgba(255,255,255,.22);border-radius:3px;padding:12px 16px;margin-bottom:28px}
+.stat-strip .dot{width:10px;height:10px;border-radius:50%;background:#2FAE5D;flex:none;
+  box-shadow:0 0 0 3px rgba(47,174,93,.22)}
+.stat-strip b{color:#fff}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.18)}
+.stat{background:var(--ink);padding:30px 26px}
+.stat .v{font-family:var(--f-head);font-size:clamp(30px,3.4vw,44px);font-weight:700;font-variant-numeric:var(--num);line-height:1.1}
+.stat .v small{font-size:.5em;font-weight:600;margin-left:2px}
+.stat .k{margin-top:8px;font-size:13.5px;color:rgba(255,255,255,.66)}
+.stat .s{margin-top:3px;font-size:12px;color:rgba(255,255,255,.4);font-variant-numeric:var(--num)}
+.stat-hl .v{color:var(--l5)}
+
+/* ---------- 运营公告 ---------- */
+#news .notices{border-top:1px solid var(--hair)}
+.notice{border-bottom:1px solid var(--hair)}
+.nq{display:grid;grid-template-columns:92px 1fr auto;gap:18px;align-items:baseline;width:100%;
+  background:none;border:none;text-align:left;padding:20px 4px;color:var(--ink)}
+.nq:hover{background:#FAFBFE}
+.n-meta{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-40);font-variant-numeric:var(--num)}
+.n-line{display:inline-flex;align-items:center;gap:7px;font-family:var(--f-head);font-weight:600;color:var(--ink);font-size:13px}
+.n-line i{width:18px;height:5px;display:inline-block;flex:none}
+.nq .n-title{font-family:var(--f-head);font-size:17px;font-weight:600;line-height:1.5;display:block}
+.n-toggle{font-family:var(--f-head);font-size:20px;color:var(--ink-40);transition:transform .2s;line-height:1}
+.notice.open .n-toggle{transform:rotate(45deg)}
+.n-body{display:none;padding:0 4px 22px 110px;color:var(--ink-60);max-width:820px}
+.notice.open .n-body{display:block}
+
+/* ---------- 联系 ---------- */
+#contact{background:#FBFBFC;border-top:1px solid var(--hair-soft)}
+.ct-grid{display:grid;grid-template-columns:360px 1fr;gap:32px;align-items:start}
+.ct-info{border:1px solid var(--hair);border-radius:3px;background:#fff;padding:26px}
+.ct-info h3{font-family:var(--f-head);font-size:17px;margin-bottom:16px}
+.ct-info dl{display:grid;grid-template-columns:auto 1fr;gap:12px 16px;font-size:14px}
+.ct-info dt{color:var(--ink-40);font-size:12.5px;letter-spacing:.08em;padding-top:2px}
+.ct-info dd{color:var(--ink)}
+.ct-note{margin-top:20px;padding-top:16px;border-top:1px solid var(--hair-soft);font-size:13px;color:var(--ink-60)}
+.ct-form{border:1px solid var(--hair);border-radius:3px;background:#fff;padding:30px}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.f-field{margin-bottom:18px}
+.f-field label{display:block;font-family:var(--f-head);font-size:14px;font-weight:600;margin-bottom:7px}
+.f-field label em{font-style:normal;color:var(--l2);margin-left:2px}
+.f-field input,.f-field select,.f-field textarea{
+  width:100%;border:1px solid rgba(28,28,28,.32);border-radius:var(--r);background:#fff;
+  padding:11px 12px;font-size:15px;font-family:var(--f-body);color:var(--ink);transition:border-color .2s}
+.f-field textarea{min-height:120px;resize:vertical}
+.f-field input:focus,.f-field select:focus,.f-field textarea:focus{outline:none;border-color:var(--l1);box-shadow:inset 0 0 0 1px var(--l1)}
+.f-field.bad input,.f-field.bad select,.f-field.bad textarea{border-color:var(--l2);box-shadow:inset 0 0 0 1px var(--l2)}
+.ferr{display:none;margin-top:6px;font-size:12.5px;color:var(--l2)}
+.f-field.bad .ferr{display:block}
+.f-foot{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:6px}
+.f-foot small{color:var(--ink-40)}
+.ok-panel{grid-column:1/-1;border:1px solid var(--hair);border-left:6px solid var(--l3);border-radius:3px;background:#fff;padding:36px}
+.ok-panel h3{font-family:var(--f-head);font-size:22px;margin-bottom:10px}
+.ok-panel p{color:var(--ink-60);margin-bottom:6px}
+.ok-panel .no{font-variant-numeric:var(--num);font-weight:700;color:var(--ink)}
+
+/* ---------- 页脚 · 运营信息 ---------- */
+.ft{background:var(--ink);color:rgba(255,255,255,.82);padding:56px 0 0}
+.ft-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:36px}
+.ft h4{font-family:var(--f-head);font-size:13px;letter-spacing:.16em;color:rgba(255,255,255,.5);margin-bottom:16px;text-transform:uppercase}
+.ft-brand{display:flex;align-items:center;gap:10px;color:#fff;margin-bottom:14px}
+.ft-brand svg{width:36px;height:36px}
+.ft-brand b{font-family:var(--f-head);font-size:17px}
+.ft p{font-size:13.5px;line-height:1.8}
+.ft-ver{margin-top:14px;font-size:12px;color:rgba(255,255,255,.4);font-variant-numeric:var(--num)}
+.ft ul{list-style:none;display:grid;gap:9px;font-size:13.5px}
+.ft a{color:rgba(255,255,255,.82)}
+.ft a:hover{color:#fff}
+.ft-line{display:flex;align-items:center;gap:10px;font-size:13.5px}
+.ft-line i{width:20px;height:6px;flex:none;border-radius:1px}
+.ft-bottom{margin-top:44px;border-top:1px solid rgba(255,255,255,.16);padding:18px 0;
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12.5px;color:rgba(255,255,255,.45)}
+
+/* ---------- 站牌弹层 ---------- */
+#overlay{position:fixed;inset:0;z-index:60;background:rgba(28,28,28,.5);display:none;
+  align-items:center;justify-content:center;padding:20px}
+#overlay.show{display:flex}
+.m-card{background:#fff;border-radius:3px;width:min(580px,94vw);max-height:88vh;overflow:auto;
+  transform:translateY(10px);opacity:0;transition:transform .2s,opacity .2s}
+#overlay.show .m-card{transform:translateY(0);opacity:1}
+.m-bar{height:10px}
+.m-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:16px 24px 0}
+.m-code{font-family:var(--f-head);font-variant-numeric:var(--num);font-size:12.5px;letter-spacing:.1em;
+  border:1px solid var(--hair);border-radius:var(--r);padding:2px 9px;color:var(--ink-60)}
+.m-ix{display:none;font-size:12px;background:var(--ink);color:#fff;border-radius:var(--r);padding:2px 9px;letter-spacing:.08em}
+.m-card.ix .m-ix{display:inline-block}
+.m-close{background:none;border:1px solid var(--hair);border-radius:var(--r);width:32px;height:32px;
+  font-size:16px;color:var(--ink-60);line-height:1;transition:border-color .2s,color .2s}
+.m-close:hover{border-color:var(--ink);color:var(--ink)}
+.m-body{padding:14px 24px 26px}
+.m-body h3{font-family:var(--f-head);font-size:27px;line-height:1.3;margin-bottom:6px}
+.m-tag{display:inline-block;font-size:12px;border:1px solid var(--hair);border-radius:var(--r);
+  padding:2px 9px;color:var(--ink-60);margin-bottom:14px}
+.m-desc{color:var(--ink-60);font-size:14.5px}
+.m-pts{margin:18px 0 0;border-top:1px solid var(--hair)}
+.m-pts div{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid var(--hair-soft);font-size:14px}
+.m-pts dt{color:var(--ink-60)}
+.m-pts dd{font-variant-numeric:var(--num);font-weight:700;font-family:var(--f-head)}
+.m-trans{margin-top:18px;font-size:13.5px;color:var(--ink-60);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.m-trans .dots{display:inline-flex;gap:5px}
+.m-trans .dots i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.m-foot{padding:0 24px 22px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.m-foot small{font-size:12px;color:var(--ink-40)}
+
+/* ---------- 响应式：≥1200 / 768 / 375 ---------- */
+@media (max-width:1080px){
+  .line-cards{grid-template-columns:repeat(3,1fr)}
+  .map-grid{grid-template-columns:1fr}
+  .lgd-list{flex-direction:row;flex-wrap:wrap}
+  .lgd{width:auto;flex:1 1 240px}
+  .ft-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:920px){
+  .nav{display:none;position:absolute;top:64px;left:0;right:0;background:#fff;
+    border-bottom:1px solid var(--hair);flex-direction:column;align-items:stretch;padding:10px 20px 18px;gap:4px}
+  .nl{padding:12px 4px;font-size:16px}
+  .nl::after{display:none}
+  .hd-cta{margin:8px 0 0}
+  .burger{display:block}
+  .hd.menu-open .nav{display:flex}
+  .hero-grid{grid-template-columns:1fr;gap:28px}
+  .roundel{width:180px;height:180px}
+  .map-hint{display:block}
+  .about-grid{grid-template-columns:1fr}
+  .ct-grid{grid-template-columns:1fr}
+}
+@media (max-width:768px){
+  .sec{padding:64px 0}
+  .hero{padding-top:52px}
+  .hero-line svg{min-width:640px}
+  .hero-line{overflow-x:auto}
+  .map-inner{min-width:760px}
+  .stats{grid-template-columns:1fr 1fr}
+  .line-cards{grid-template-columns:1fr 1fr}
+  .nq{grid-template-columns:1fr;gap:8px}
+  .n-meta{flex-direction:row;gap:14px;align-items:center}
+  .n-body{padding-left:4px}
+}
+@media (max-width:480px){
+  .wrap{padding:0 18px}
+  .stats{grid-template-columns:1fr}
+  .line-cards{grid-template-columns:1fr}
+  .f-row{grid-template-columns:1fr}
+  .ft-grid{grid-template-columns:1fr}
+  .hero-cta .btn{flex:1}
+  .map-inner{min-width:680px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#map">跳到线路总图</a>
+
+<!-- ================= 顶部导航 ================= -->
+<header class="hd" id="hd">
+  <div class="wrap hd-in">
+    <a class="brand" href="#home" aria-label="星澜科技 首页">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <circle cx="60" cy="60" r="42" fill="none" stroke="#1C3F94" stroke-width="13"/>
+        <rect x="6" y="50" width="108" height="20" fill="#1C3F94"/>
+        <text x="60" y="65" text-anchor="middle" font-size="14" font-weight="700" fill="#fff" font-family="Gill Sans,'Noto Sans SC',sans-serif">星澜</text>
+      </svg>
+      <span><b>星澜科技</b><i>XINGLAN TECH · 业务线网</i></span>
+    </a>
+    <button class="burger" id="burger" aria-label="打开菜单" aria-expanded="false" aria-controls="navLinks">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="nav" id="navLinks" aria-label="主导航">
+      <a class="nl on" href="#home">首页</a>
+      <a class="nl" href="#map">线路总图</a>
+      <a class="nl" href="#about">关于星澜</a>
+      <a class="nl" href="#data">运营数据</a>
+      <a class="nl" href="#news">运营公告</a>
+      <a class="nl" href="#contact">联系我们</a>
+      <a class="btn btn-p hd-cta" href="#contact">获取解决方案</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<!-- ================= Hero ================= -->
+<section class="hero" id="home" data-sec="home">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <span class="kicker">Xinglan Tech Network · Since 2012</span>
+        <h1>以数据为澜，<br>驱动产业<em>进化</em></h1>
+        <p class="lede">星澜科技是企业数字化转型服务商。我们把数据中台、数据安全、智能制造、云服务与 AI 应用铺成五条业务线路——数据如列车，在预留的轨道上准点抵达每一座工厂、银行与门店。</p>
+        <div class="hero-cta">
+          <a class="btn btn-p" href="#contact">获取解决方案</a>
+          <a class="btn btn-g" href="#map">查看业务线网图</a>
+        </div>
+        <p class="hero-note">服务 500+ 企业客户 · 覆盖 20 个行业 · 4 大研发中心（上海 / 深圳 / 成都 / 新加坡）</p>
+      </div>
+      <svg class="roundel" viewBox="0 0 260 260" role="img" aria-label="星澜科技圆标">
+        <circle cx="130" cy="130" r="92" fill="none" stroke="#1C3F94" stroke-width="22"/>
+        <rect x="16" y="110" width="228" height="40" fill="#1C3F94"/>
+        <text x="130" y="138" text-anchor="middle" font-size="25" font-weight="700" fill="#FFFFFF"
+          font-family="Gill Sans,'Hanken Grotesk','Noto Sans SC',sans-serif" letter-spacing="6">星澜科技</text>
+      </svg>
+    </div>
+  </div>
+  <!-- 主线路视觉隐喻：一条 1 号线自西向东，途经四座核心枢纽 -->
+  <div class="wrap hero-line">
+    <svg viewBox="0 0 1200 230" role="img" aria-label="星澜主线路：从澜启西出发，途经数据中台、云服务、AI 应用、智能制造四座核心枢纽">
+      <path d="M-8 158 L226 158 Q240 158 250 148 L350 48 Q360 38 374 38 L1208 38"
+            fill="none" stroke="#FFFFFF" stroke-width="13" stroke-linecap="round"/>
+      <path d="M-8 158 L226 158 Q240 158 250 148 L350 48 Q360 38 374 38 L1208 38"
+            fill="none" stroke="#1C3F94" stroke-width="8" stroke-linecap="round"/>
+      <g font-family="Gill Sans,'Hanken Grotesk','Noto Sans SC',sans-serif">
+        <g transform="translate(110 158)">
+          <circle r="13" fill="#fff"/><circle r="6.5" fill="#fff" stroke="#1C3F94" stroke-width="3.5"/>
+        </g>
+        <text x="110" y="196" text-anchor="middle" font-size="14" font-weight="600" fill="#1C1C1C">澜启西 · 起点</text>
+        <text x="110" y="214" text-anchor="middle" font-size="11" fill="rgba(28,28,28,.45)">2012 年发车</text>
+        <g transform="translate(480 38)"><circle r="13" fill="#fff"/><circle r="6.5" fill="#fff" stroke="#1C3F94" stroke-width="3.5"/></g>
+        <text x="480" y="78" text-anchor="middle" font-size="14" font-weight="600" fill="#1C1C1C">数据中台</text>
+        <rect x="471" y="88" width="18" height="4" fill="#1C3F94"/>
+        <g transform="translate(700 38)"><circle r="13" fill="#fff"/><circle r="6.5" fill="#fff" stroke="#EEA320" stroke-width="4"/></g>
+        <text x="700" y="78" text-anchor="middle" font-size="14" font-weight="600" fill="#1C1C1C">云服务</text>
+        <rect x="691" y="88" width="18" height="4" fill="#EEA320"/>
+        <g transform="translate(900 38)"><circle r="13" fill="#fff"/><circle r="6.5" fill="#fff" stroke="#0098D4" stroke-width="3.5"/></g>
+        <text x="900" y="78" text-anchor="middle" font-size="14" font-weight="600" fill="#1C1C1C">AI 应用</text>
+        <rect x="891" y="88" width="18" height="4" fill="#0098D4"/>
+        <g transform="translate(1090 38)"><circle r="13" fill="#fff"/><circle r="6.5" fill="#fff" stroke="#00782A" stroke-width="3.5"/></g>
+        <text x="1090" y="78" text-anchor="middle" font-size="14" font-weight="600" fill="#1C1C1C">智能制造</text>
+        <rect x="1081" y="88" width="18" height="4" fill="#00782A"/>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- ================= 线路总图 ================= -->
+<section class="sec" id="map" data-sec="map">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">SEC 02 · Network Map</span>
+      <h2>业务线网图：五条线路，一座换乘枢纽解决一件事</h2>
+      <p class="lede">每条线路是一项业务，每座车站是一个落地案例，两线交汇的换乘站是跨业务联合解决方案。悬停线路可单线聚焦，点击车站查看站牌档案。本图遵循 Beck 制图三原则：仅 0°/45°/90° 折角、站距均匀、圆角转折。</p>
+    </div>
+    <div class="map-grid">
+      <div class="map-frame">
+        <div class="map-titlebar">
+          <b>星澜业务线网图 · 交互版</b>
+          <span>Diagram XL-NET-2026-09 · Schematic</span>
+        </div>
+        <div id="mapBox">
+          <div class="map-scroll">
+            <div class="map-inner">
+            <svg id="net" viewBox="0 0 1200 800" role="img" aria-label="星澜业务线网图：五条业务线路、二十七座车站、六座换乘枢纽，点击车站可查看案例">
+              <!-- ====== 线路层：白边 + 色体（琥珀加深色描边），仅 0°/45°/90° 圆角折线 ====== -->
+              <g id="lineLayer">
+                <g class="mline" data-line="l1">
+                  <path class="casing" d="M100 420 L226 420 Q240 420 250 410 L330 330 Q340 320 354 320 L626 320 Q640 320 650 330 L730 410 Q740 420 754 420 L1140 420"/>
+                  <path class="body" d="M100 420 L226 420 Q240 420 250 410 L330 330 Q340 320 354 320 L626 320 Q640 320 650 330 L730 410 Q740 420 754 420 L1140 420"/>
+                  <path class="hit" d="M100 420 L226 420 Q240 420 250 410 L330 330 Q340 320 354 320 L626 320 Q640 320 650 330 L730 410 Q740 420 754 420 L1140 420"/>
+                </g>
+                <g class="mline" data-line="l2">
+                  <path class="casing" d="M100 660 L546 660 Q560 660 570 650 L690 530 Q700 520 714 520 L1086 520 Q1100 520 1100 506 L1100 340"/>
+                  <path class="body" d="M100 660 L546 660 Q560 660 570 650 L690 530 Q700 520 714 520 L1086 520 Q1100 520 1100 506 L1100 340"/>
+                  <path class="hit" d="M100 660 L546 660 Q560 660 570 650 L690 530 Q700 520 714 520 L1086 520 Q1100 520 1100 506 L1100 340"/>
+                </g>
+                <g class="mline" data-line="l3">
+                  <path class="casing" d="M1080 740 L1080 574 Q1080 560 1070 550 L930 430 Q920 420 920 406 L920 280"/>
+                  <path class="body" d="M1080 740 L1080 574 Q1080 560 1070 550 L930 430 Q920 420 920 406 L920 280"/>
+                  <path class="hit" d="M1080 740 L1080 574 Q1080 560 1070 550 L930 430 Q920 420 920 406 L920 280"/>
+                </g>
+                <g class="mline" data-line="l4">
+                  <path class="casing" d="M440 740 L440 334 Q440 320 430 310 L370 250 Q360 240 360 226 L360 120"/>
+                  <path class="rim"   d="M440 740 L440 334 Q440 320 430 310 L370 250 Q360 240 360 226 L360 120"/>
+                  <path class="body"  d="M440 740 L440 334 Q440 320 430 310 L370 250 Q360 240 360 226 L360 120"/>
+                  <path class="hit"   d="M440 740 L440 334 Q440 320 430 310 L370 250 Q360 240 360 226 L360 120"/>
+                </g>
+                <g class="mline" data-line="l5">
+                  <path class="casing" d="M80 200 L626 200 Q640 200 650 210 L710 270 Q720 280 734 280 L1180 280"/>
+                  <path class="body" d="M80 200 L626 200 Q640 200 650 210 L710 270 Q720 280 734 280 L1180 280"/>
+                  <path class="hit" d="M80 200 L626 200 Q640 200 650 210 L710 270 Q720 280 734 280 L1180 280"/>
+                </g>
+              </g>
+
+              <!-- ====== 车站层（普通站：色环圆站标） ====== -->
+              <g id="stLayer">
+                <!-- 1 号线 · 数据中台 -->
+                <g class="mline" data-line="l1">
+                  <text class="lbl" x="100" y="448" text-anchor="middle">澜启西</text>
+                  <text class="lbl" x="180" y="398" text-anchor="middle">主数据平台</text>
+                  <text class="lbl" x="560" y="348" text-anchor="middle">数据服务网关</text>
+                  <text class="lbl" x="840" y="448" text-anchor="middle">实时数仓</text>
+                  <text class="lbl" x="1090" y="396" text-anchor="end">数据资产地图</text>
+                  <g class="st" data-id="s101" tabindex="0" role="button" aria-label="澜启西，1号线总部枢纽，点击查看" transform="translate(100 420)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#1C3F94" stroke-width="3.5"/></g>
+                  <g class="st" data-id="s102" tabindex="0" role="button" aria-label="主数据平台，1号线，点击查看案例" transform="translate(180 420)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#1C3F94" stroke-width="3.5"/></g>
+                  <g class="st" data-id="s104" tabindex="0" role="button" aria-label="数据服务网关，1号线，点击查看案例" transform="translate(560 320)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#1C3F94" stroke-width="3.5"/></g>
+                  <g class="st" data-id="s105" tabindex="0" role="button" aria-label="实时数仓，1号线，点击查看案例" transform="translate(840 420)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#1C3F94" stroke-width="3.5"/></g>
+                  <g class="st" data-id="s107" tabindex="0" role="button" aria-label="数据资产地图，1号线，点击查看案例" transform="translate(1040 420)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#1C3F94" stroke-width="3.5"/></g>
+                </g>
+                <!-- 2 号线 · 数据安全 -->
+                <g class="mline" data-line="l2">
+                  <text class="lbl" x="100" y="688" text-anchor="middle">安全指挥中心</text>
+                  <text class="lbl" x="260" y="688" text-anchor="middle">数据脱敏</text>
+                  <text class="lbl" x="880" y="548" text-anchor="middle">隐私计算平台</text>
+                  <text class="lbl" x="1086" y="344" text-anchor="end">态势感知</text>
+                  <g class="st" data-id="s201" tabindex="0" role="button" aria-label="安全指挥中心，2号线，点击查看案例" transform="translate(100 660)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#E32017" stroke-width="3.5"/></g>
+                  <g class="st" data-id="s202" tabindex="0" role="button" aria-label="数据脱敏，2号线，点击查看案例" transform="translate(260 660)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#E32017" stroke-width="3.5"/></g>
+                  <g class="st" data-id="s204" tabindex="0" role="button" aria-label="隐私计算平台，2号线，点击查看案例" transform="translate(880 520)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#E32017" stroke-width="3.5"/></g>
+                  <g class="st" data-id="s206" tabindex="0" role="button" aria-label="态势感知，2号线，点击查看案例" transform="translate(1100 340)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#E32017" stroke-width="3.5"/></g>
+                </g>
+                <!-- 3 号线 · 智能制造 -->
+                <g class="mline" data-line="l3">
+                  <text class="lbl" x="1080" y="768" text-anchor="middle">柔性产线</text>
+                  <text class="lbl" x="1064" y="664" text-anchor="end">数字孪生</text>
+                  <text class="lbl" x="932" y="354" text-anchor="start">设备物联</text>
+                  <g class="st" data-id="s301" tabindex="0" role="button" aria-label="柔性产线，3号线，点击查看案例" transform="translate(1080 740)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#00782A" stroke-width="3.5"/></g>
+                  <g class="st" data-id="s302" tabindex="0" role="button" aria-label="数字孪生，3号线，点击查看案例" transform="translate(1080 660)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#00782A" stroke-width="3.5"/></g>
+                  <g class="st" data-id="s303" tabindex="0" role="button" aria-label="设备物联，3号线，点击查看案例" transform="translate(920 350)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#00782A" stroke-width="3.5"/></g>
+                </g>
+                <!-- 4 号线 · 云服务（琥珀） -->
+                <g class="mline" data-line="l4">
+                  <text class="lbl" x="360" y="98" text-anchor="middle">多云管理</text>
+                  <text class="lbl" x="452" y="444" text-anchor="start">边缘节点</text>
+                  <text class="lbl" x="452" y="564" text-anchor="start">弹性算力</text>
+                  <g class="st" data-id="s401" tabindex="0" role="button" aria-label="多云管理，4号线，点击查看案例" transform="translate(360 120)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#EEA320" stroke-width="4"/></g>
+                  <g class="st" data-id="s402" tabindex="0" role="button" aria-label="边缘节点，4号线，点击查看案例" transform="translate(440 440)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#EEA320" stroke-width="4"/></g>
+                  <g class="st" data-id="s403" tabindex="0" role="button" aria-label="弹性算力，4号线，点击查看案例" transform="translate(440 560)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#EEA320" stroke-width="4"/></g>
+                  <g class="st" data-id="s404" tabindex="0" role="button" aria-label="云灾备中心，4号线，点击查看案例" transform="translate(440 740)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#EEA320" stroke-width="4"/></g>
+                </g>
+                <!-- 5 号线 · AI 应用 -->
+                <g class="mline" data-line="l5">
+                  <text class="lbl-s" x="80" y="228" text-anchor="middle">AI 实验室</text>
+                  <text class="lbl" x="160" y="178" text-anchor="middle">澜脑 AI 中台</text>
+                  <text class="lbl" x="480" y="178" text-anchor="middle">智能文档</text>
+                  <text class="lbl" x="560" y="178" text-anchor="middle">对话式 AI</text>
+                  <text class="lbl" x="800" y="258" text-anchor="middle">智能客服</text>
+                  <text class="lbl" x="1060" y="258" text-anchor="middle">行业大模型</text>
+                  <g class="st" data-id="s501" tabindex="0" role="button" aria-label="AI 实验室，5号线，点击查看" transform="translate(80 200)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#0098D4" stroke-width="3.5"/></g>
+                  <g class="st" data-id="s502" tabindex="0" role="button" aria-label="澜脑 AI 中台，5号线，点击查看案例" transform="translate(160 200)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#0098D4" stroke-width="3.5"/></g>
+                  <g class="st" data-id="s503" tabindex="0" role="button" aria-label="智能文档，5号线，点击查看案例" transform="translate(480 200)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#0098D4" stroke-width="3.5"/></g>
+                  <g class="st" data-id="s504" tabindex="0" role="button" aria-label="对话式 AI，5号线，点击查看案例" transform="translate(560 200)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#0098D4" stroke-width="3.5"/></g>
+                  <g class="st" data-id="s505" tabindex="0" role="button" aria-label="智能客服，5号线，点击查看案例" transform="translate(800 280)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#0098D4" stroke-width="3.5"/></g>
+                  <g class="st" data-id="s506" tabindex="0" role="button" aria-label="行业大模型，5号线，点击查看案例" transform="translate(1060 280)"><circle class="hit" r="16"/><circle class="vis" r="6" fill="#fff" stroke="#0098D4" stroke-width="3.5"/></g>
+                </g>
+              </g>
+
+              <!-- ====== 换乘枢纽层：白心双环大圆（跨业务联合解决方案） ====== -->
+              <g id="ixLayer">
+                <text class="lbl" x="428" y="348" text-anchor="end">湖仓一体</text>
+                <text class="lbl" x="932" y="448" text-anchor="start">工业数据大脑</text>
+                <text class="lbl" x="452" y="690" text-anchor="start">智算中心</text>
+                <text class="lbl" x="1052" y="548" text-anchor="start">工业安全运营</text>
+                <text class="lbl" x="920" y="258" text-anchor="middle">工业视觉大模型</text>
+                <text class="lbl" x="372" y="178" text-anchor="start">模型工厂</text>
+                <g class="st ix" data-id="x01" tabindex="0" role="button" aria-label="湖仓一体，换乘站：1号线与4号线联合方案，点击查看" transform="translate(440 320)"><circle class="hit" r="18"/><circle class="ring-o" r="11" fill="#fff" stroke="#1C1C1C" stroke-width="3.5"/><circle class="ring-i" r="4.5" fill="none" stroke="#1C1C1C" stroke-width="2.5"/></g>
+                <g class="st ix" data-id="x02" tabindex="0" role="button" aria-label="工业数据大脑，换乘站：1号线与3号线联合方案，点击查看" transform="translate(920 420)"><circle class="hit" r="18"/><circle class="ring-o" r="11" fill="#fff" stroke="#1C1C1C" stroke-width="3.5"/><circle class="ring-i" r="4.5" fill="none" stroke="#1C1C1C" stroke-width="2.5"/></g>
+                <g class="st ix" data-id="x03" tabindex="0" role="button" aria-label="智算中心，换乘站：4号线与2号线联合方案，点击查看" transform="translate(440 660)"><circle class="hit" r="18"/><circle class="ring-o" r="11" fill="#fff" stroke="#1C1C1C" stroke-width="3.5"/><circle class="ring-i" r="4.5" fill="none" stroke="#1C1C1C" stroke-width="2.5"/></g>
+                <g class="st ix" data-id="x04" tabindex="0" role="button" aria-label="工业安全运营，换乘站：2号线与3号线联合方案，点击查看" transform="translate(1040 520)"><circle class="hit" r="18"/><circle class="ring-o" r="11" fill="#fff" stroke="#1C1C1C" stroke-width="3.5"/><circle class="ring-i" r="4.5" fill="none" stroke="#1C1C1C" stroke-width="2.5"/></g>
+                <g class="st ix" data-id="x05" tabindex="0" role="button" aria-label="工业视觉大模型，换乘站：3号线与5号线联合方案，点击查看" transform="translate(920 280)"><circle class="hit" r="18"/><circle class="ring-o" r="11" fill="#fff" stroke="#1C1C1C" stroke-width="3.5"/><circle class="ring-i" r="4.5" fill="none" stroke="#1C1C1C" stroke-width="2.5"/></g>
+                <g class="st ix" data-id="x06" tabindex="0" role="button" aria-label="模型工厂，换乘站：4号线与5号线联合方案，点击查看" transform="translate(360 200)"><circle class="hit" r="18"/><circle class="ring-o" r="11" fill="#fff" stroke="#1C1C1C" stroke-width="3.5"/><circle class="ring-i" r="4.5" fill="none" stroke="#1C1C1C" stroke-width="2.5"/></g>
+              </g>
+
+              <!-- ====== 图框注记 ====== -->
+              <g>
+                <text class="t1" x="36" y="748">星澜业务线网图</text>
+                <text class="t2" x="36" y="766">XINGLAN BUSINESS NETWORK · SCHEMATIC DIAGRAM · XL-NET-2026-09</text>
+                <text class="t2" x="36" y="782">2026 年 9 月版 · 示意图：仅 0°/45°/90° 折角 · 站距非真实比例</text>
+              </g>
+            </svg>
+            </div>
+          </div>
+          <div id="tip" role="tooltip" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <!-- 图例（必配）：线路色样 + 线名 -->
+      <aside>
+        <div class="lgd-list" id="lgdList">
+          <button class="lgd" data-line="l1" aria-pressed="false">
+            <span class="lgd-bar" style="background:#1C3F94"></span>
+            <span class="lgd-body"><strong>1 号线 · 数据中台</strong><em>澜启西 → 数据资产地图 · 数据中台与大数据平台</em></span>
+            <span class="lgd-n">7 站</span>
+          </button>
+          <button class="lgd" data-line="l2" aria-pressed="false">
+            <span class="lgd-bar" style="background:#E32017"></span>
+            <span class="lgd-body"><strong>2 号线 · 数据安全</strong><em>安全指挥中心 → 态势感知 · 安全与合规服务</em></span>
+            <span class="lgd-n">6 站</span>
+          </button>
+          <button class="lgd" data-line="l3" aria-pressed="false">
+            <span class="lgd-bar" style="background:#00782A"></span>
+            <span class="lgd-body"><strong>3 号线 · 智能制造</strong><em>柔性产线 → 工业视觉大模型 · 工厂智能化</em></span>
+            <span class="lgd-n">5 站</span>
+          </button>
+          <button class="lgd" data-line="l4" aria-pressed="false">
+            <span class="lgd-bar" style="background:#EEA320"></span>
+            <span class="lgd-body"><strong>4 号线 · 云服务</strong><em>多云管理 → 云灾备中心 · 算力与基础设施</em></span>
+            <span class="lgd-n">7 站</span>
+          </button>
+          <button class="lgd" data-line="l5" aria-pressed="false">
+            <span class="lgd-bar" style="background:#0098D4"></span>
+            <span class="lgd-body"><strong>5 号线 · AI 应用</strong><em>AI 实验室 → 行业大模型 · 澜脑大模型体系</em></span>
+            <span class="lgd-n">8 站</span>
+          </button>
+        </div>
+        <p class="lgd-tip">悬停线路或图例可单线聚焦，点击图例可固定 / 取消聚焦。</p>
+        <div class="sym-row">
+          <span class="sym">
+            <svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="6" fill="#fff" stroke="#1C3F94" stroke-width="3.5"/></svg>
+            车站 · 点击查看案例
+          </span>
+          <span class="sym">
+            <svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="11" fill="#fff" stroke="#1C1C1C" stroke-width="3.5"/><circle cx="15" cy="15" r="4.5" fill="none" stroke="#1C1C1C" stroke-width="2.5"/></svg>
+            换乘站 · 联合解决方案
+          </span>
+        </div>
+      </aside>
+    </div>
+
+    <!-- 五条业务线路卡 -->
+    <div class="line-cards">
+      <article class="lcard" data-line="l1" style="--lc:#1C3F94">
+        <div class="lcard-bar"></div>
+        <div class="lcard-in">
+          <h3>1 号线 · 数据中台</h3>
+          <span class="en">Data Platform</span>
+          <p>统一数据底座：湖仓一体、指标中台、实时数仓与数据资产运营，让每个业务系统说同一种数据语言。</p>
+          <p class="rep"><b>代表站点：</b>湖仓一体 · 实时数仓 · 数据资产地图</p>
+        </div>
+      </article>
+      <article class="lcard" data-line="l2" style="--lc:#E32017">
+        <div class="lcard-bar"></div>
+        <div class="lcard-in">
+          <h3>2 号线 · 数据安全</h3>
+          <span class="en">Data Security</span>
+          <p>从零信任接入到态势感知，覆盖脱敏、加密、隐私计算与合规审计，为数据列车全程护航。</p>
+          <p class="rep"><b>代表站点：</b>数据脱敏 · 隐私计算平台 · 态势感知</p>
+        </div>
+      </article>
+      <article class="lcard" data-line="l3" style="--lc:#00782A">
+        <div class="lcard-bar"></div>
+        <div class="lcard-in">
+          <h3>3 号线 · 智能制造</h3>
+          <span class="en">Smart Manufacturing</span>
+          <p>设备物联、数字孪生到柔性产线，把工厂的每一道工序搬上可调度、可追溯的数字轨道。</p>
+          <p class="rep"><b>代表站点：</b>设备物联 · 数字孪生 · 柔性产线</p>
+        </div>
+      </article>
+      <article class="lcard" data-line="l4" style="--lc:#EEA320">
+        <div class="lcard-bar"></div>
+        <div class="lcard-in">
+          <h3>4 号线 · 云服务</h3>
+          <span class="en">Cloud Infra</span>
+          <p>多云管理、弹性算力、边缘节点与两地三中心灾备，是全线网运行的供电系统与轨行区。</p>
+          <p class="rep"><b>代表站点：</b>弹性算力 · 边缘节点 · 云灾备中心</p>
+        </div>
+      </article>
+      <article class="lcard" data-line="l5" style="--lc:#0098D4">
+        <div class="lcard-bar"></div>
+        <div class="lcard-in">
+          <h3>5 号线 · AI 应用</h3>
+          <span class="en">AI Application</span>
+          <p>以澜脑 AI 中台为起点，途经智能文档、对话式 AI 与行业大模型，把模型送到业务站台。</p>
+          <p class="rep"><b>代表站点：</b>澜脑 AI 中台 · 智能客服 · 行业大模型</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 关于星澜 · 线路沿革 ================= -->
+<section class="sec" id="about" data-sec="about">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker" style="--x:0">SEC 03 · About</span>
+      <h2>关于星澜：一条越织越密的线网</h2>
+      <p class="lede">十四年，星澜把一个个项目修成了一条条线路，再把线路织成了网。</p>
+    </div>
+    <div class="about-grid">
+      <div class="about-copy">
+        <p><b>星澜科技（Xinglan Tech）</b>成立于 2012 年，总部位于上海张江，是企业数字化转型服务商。我们以「数据如列车，准点抵达」为工程信条：先修轨（云与数据底座），再通车（业务系统），最后加密班次（AI 与智能应用）。</p>
+        <p>今天，星澜的五条业务线路覆盖<b>数据中台、数据安全、智能制造、云服务与 AI 应用</b>，在制造、金融、零售、能源、政务等行业服务 500+ 企业客户，线路之间以「换乘枢纽」的方式交付跨业务联合方案。</p>
+        <p>我们相信：好的数字化，像好的地铁——乘客不需要知道信号系统如何运转，只需要知道列车一定会来。</p>
+        <ul class="honors">
+          <li>国家高新技术企业</li>
+          <li>CMMI 5 级认证</li>
+          <li>ISO/IEC 27001 信息安全认证</li>
+          <li>网络安全等级保护三级</li>
+          <li>授权专利 120 项</li>
+          <li>2026 年度数字化转型服务商榜单入选</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="tl-title">线路沿革 · Line History</h3>
+        <ul class="tl">
+          <li data-c style="--c:#1C3F94"><span class="tl-dot"></span>
+            <span class="tl-year num">2012</span><span class="tl-tag">1 号线示范段</span>
+            <h3>星澜科技成立于上海张江</h3>
+            <p>首个数据中台项目在金融行业上线，1 号线画出第一段轨道。</p>
+          </li>
+          <li data-c style="--c:#1C3F94"><span class="tl-dot"></span>
+            <span class="tl-year num">2014</span><span class="tl-tag">1 号线全线</span>
+            <h3>数据中台产品化，服务企业突破 30 家</h3>
+            <p>深圳研发中心设立，湖仓一体能力并入正线运营。</p>
+          </li>
+          <li data-c style="--c:#EEA320"><span class="tl-dot"></span>
+            <span class="tl-year num">2016</span><span class="tl-tag">4 号线开工</span>
+            <h3>云基础设施团队组建，成都研发中心成立</h3>
+            <p>弹性算力平台对外服务，为全线网提供「供电与轨行区」。</p>
+          </li>
+          <li data-c style="--c:#00782A"><span class="tl-dot"></span>
+            <span class="tl-year num">2018</span><span class="tl-tag">3 号线开通</span>
+            <h3>首座数字工厂标杆落地</h3>
+            <p>智能制造事业部组建，设备物联与 MES 能力成线运营。</p>
+          </li>
+          <li data-c style="--c:#E32017"><span class="tl-dot"></span>
+            <span class="tl-year num">2021</span><span class="tl-tag">2 号线开通</span>
+            <h3>数据安全独立成线</h3>
+            <p>通过 ISO 27001 与等保三级，安全能力从「随线附属」转为独立运营。</p>
+          </li>
+          <li data-c style="--c:#0098D4"><span class="tl-dot"></span>
+            <span class="tl-year num">2023</span><span class="tl-tag">5 号线开通</span>
+            <h3>澜脑 AI 中台 1.0 发布</h3>
+            <p>AI 应用业务规模化，模型工厂迎来第一批「换乘乘客」。</p>
+          </li>
+          <li data-c style="--c:#1C3F94"><span class="tl-dot"></span>
+            <span class="tl-year num">2026</span><span class="tl-tag">线网成型</span>
+            <h3>五线成网 · 6 座换乘枢纽 · 服务企业 500+</h3>
+            <p>新加坡研发中心设立，线网图更新至 2026 年 9 月版。</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 运营数据 ================= -->
+<section class="sec" id="data" data-sec="data">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">SEC 04 · Operations</span>
+      <h2>运营数据：线网运行实况</h2>
+      <p class="lede">像地铁客流公告一样，我们按年度公布线网「运送量」——每一字节都是一位乘客。</p>
+    </div>
+    <div class="stat-strip">
+      <span class="dot" aria-hidden="true"></span>
+      <span>线网运营状态：<b>全部正常</b> · 近 365 天无重大故障 · 下一班数据列车 正点</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="v num">500<small>+</small></div><div class="k">服务企业客户</div><div class="s">覆盖 20 个行业</div></div>
+      <div class="stat"><div class="v num">900<small>+</small></div><div class="k">交付项目</div><div class="s">按期交付率 98.4%</div></div>
+      <div class="stat stat-hl"><div class="v num">12.8<small>亿</small></div><div class="k">年数据调用量</div><div class="s">每一字节都准点抵达</div></div>
+      <div class="stat stat-hl"><div class="v num">350<small>万+</small></div><div class="k">日均承载请求</div><div class="s">早晚高峰平稳运行</div></div>
+      <div class="stat"><div class="v num">99.95<small>%</small></div><div class="k">平台可用性 SLA</div><div class="s">全年晚点 &lt; 4.4 小时</div></div>
+      <div class="stat"><div class="v num">120<small>项</small></div><div class="k">授权专利</div><div class="s">4 大研发中心持续供货</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 运营公告 ================= -->
+<section class="sec" id="news" data-sec="news">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">SEC 05 · Notices</span>
+      <h2>运营公告</h2>
+      <p class="lede">新线开通、班次加密与线网改造，都会在这里第一时间发牌公告。</p>
+    </div>
+    <div class="notices">
+      <article class="notice">
+        <button class="nq" aria-expanded="false">
+          <span class="n-meta"><span class="n-line"><i style="background:#0098D4"></i>5 号线</span><span class="num">GG-2026-08 · 2026-08-28</span></span>
+          <span class="n-title">星澜科技发布澜脑 AI 中台 3.0，推理成本降低 40%</span>
+          <span class="n-toggle" aria-hidden="true">＋</span>
+        </button>
+        <div class="n-body"><p>澜脑 AI 中台 3.0 上线「模型班次调度」引擎，支持千卡集群混部与按需弹性推理，平均推理成本降低 40%，长文本场景吞吐提升 2.1 倍。已有 200+ 企业模型接入运营，5 号线全线升级完成，不影响既有班次。</p></div>
+      </article>
+      <article class="notice">
+        <button class="nq" aria-expanded="false">
+          <span class="n-meta"><span class="n-line"><i style="background:#00782A"></i>3 号线</span><span class="num">GG-2026-07 · 2026-07-15</span></span>
+          <span class="n-title">与华东智能制造研究院达成战略合作，共建工艺模型联合实验室</span>
+          <span class="n-toggle" aria-hidden="true">＋</span>
+        </button>
+        <div class="n-body"><p>双方将在 3 号线「工业视觉大模型」换乘枢纽基础上，共建工艺模型联合实验室，首批聚焦面板与汽车零部件两大行业的缺陷检测与工艺参数寻优，成果将以行业模型包形式向制造企业开放。</p></div>
+      </article>
+      <article class="notice">
+        <button class="nq" aria-expanded="false">
+          <span class="n-meta"><span class="n-line"><i style="background:#1C3F94"></i>线网</span><span class="num">GG-2026-06 · 2026-06-30</span></span>
+          <span class="n-title">星澜科技入选 2026 年度数字化转型服务商榜单</span>
+          <span class="n-toggle" aria-hidden="true">＋</span>
+        </button>
+        <div class="n-body"><p>凭借「五线成网」的交付体系与 98.4% 的按期交付率，星澜连续三年入选该榜单，并在「制造行业数字化」细分项首次进入前三。评审特别提到换乘枢纽式联合方案的交付模式。</p></div>
+      </article>
+      <article class="notice">
+        <button class="nq" aria-expanded="false">
+          <span class="n-meta"><span class="n-line"><i style="background:#EEA320"></i>4 号线</span><span class="num">GG-2026-05 · 2026-05-20</span></span>
+          <span class="n-title">华东智算中心二期投运，算力规模提升 60%</span>
+          <span class="n-toggle" aria-hidden="true">＋</span>
+        </button>
+        <div class="n-body"><p>智算中心二期正式并网，新增液冷机柜 120 组，PUE 降至 1.25。4 号线「智算中心」换乘站同步完成扩容改造，面向金融客户的等保三级专区开放预约，首期机柜已租罄 85%。</p></div>
+      </article>
+      <article class="notice">
+        <button class="nq" aria-expanded="false">
+          <span class="n-meta"><span class="n-line"><i style="background:#E32017"></i>2 号线</span><span class="num">GG-2026-04 · 2026-04-11</span></span>
+          <span class="n-title">通过 ISO/IEC 27701 隐私信息管理体系认证</span>
+          <span class="n-toggle" aria-hidden="true">＋</span>
+        </button>
+        <div class="n-body"><p>继 ISO 27001 与等保三级之后，星澜 2 号线再添隐私管理认证，覆盖数据采集、脱敏、共享、销毁全链路。至此 2 号线具备面向金融与政务客户的全套合规「信号系统」。</p></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 联系星澜 ================= -->
+<section class="sec" id="contact" data-sec="contact">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">SEC 06 · Contact</span>
+      <h2>联系星澜：告诉我们您的目的地</h2>
+      <p class="lede">留下需求与意向线路，解决方案架构师将在 1 个工作日内为您规划换乘路线。</p>
+    </div>
+    <div class="ct-grid">
+      <div class="ct-info">
+        <h3>运营服务信息</h3>
+        <dl>
+          <dt>总部车站</dt><dd>上海市浦东新区张江高科技园区<br>澜启大厦 21F</dd>
+          <dt>服务热线</dt><dd class="num">+86 21-8000-1200</dd>
+          <dt>电子邮箱</dt><dd>hello@xinglan-tech.com</dd>
+          <dt>运营时间</dt><dd class="num">工作日 09:00 – 18:00</dd>
+          <dt>首末班车</dt><dd>需求评估 · 首班车 1 个工作日内发出</dd>
+        </dl>
+        <p class="ct-note">热线运营时间内 2 小时响应；紧急故障请致电并注明「线网抢修」。</p>
+      </div>
+      <form class="ct-form" id="cForm" novalidate>
+        <div class="f-row">
+          <div class="f-field" data-f="name">
+            <label for="fName">姓名<em>*</em></label>
+            <input id="fName" name="name" type="text" autocomplete="name" placeholder="怎么称呼您">
+            <p class="ferr">请填写至少 2 个字符的姓名。</p>
+          </div>
+          <div class="f-field" data-f="company">
+            <label for="fCompany">公司</label>
+            <input id="fCompany" name="company" type="text" autocomplete="organization" placeholder="公司 / 机构名称（选填）">
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-field" data-f="phone">
+            <label for="fPhone">联系电话<em>*</em></label>
+            <input id="fPhone" name="phone" type="tel" autocomplete="tel" placeholder="手机或座机，如 138xxxxxxxx / 021-8000-1200">
+            <p class="ferr">请填写正确的手机号或座机号。</p>
+          </div>
+          <div class="f-field" data-f="mail">
+            <label for="fMail">邮箱<em>*</em></label>
+            <input id="fMail" name="mail" type="email" autocomplete="email" placeholder="name@company.com">
+            <p class="ferr">请填写正确的邮箱地址。</p>
+          </div>
+        </div>
+        <div class="f-field" data-f="line">
+          <label for="fLine">意向业务线路</label>
+          <select id="fLine" name="line">
+            <option value="">请选择（可多线换乘，选填）</option>
+            <option>1 号线 · 数据中台</option>
+            <option>2 号线 · 数据安全</option>
+            <option>3 号线 · 智能制造</option>
+            <option>4 号线 · 云服务</option>
+            <option>5 号线 · AI 应用</option>
+            <option>换乘枢纽 · 跨业务联合方案</option>
+          </select>
+        </div>
+        <div class="f-field" data-f="msg">
+          <label for="fMsg">需求描述<em>*</em></label>
+          <textarea id="fMsg" name="msg" placeholder="请描述业务场景、规模与期望上线时间（不少于 10 个字）"></textarea>
+          <p class="ferr">请描述您的需求（不少于 10 个字），方便我们派对架构师。</p>
+        </div>
+        <div class="f-foot">
+          <button class="btn btn-p" type="submit">提交需求 · 领取班次</button>
+          <small>提交即表示同意我们就此需求与您联系。</small>
+        </div>
+      </form>
+      <div class="ok-panel" id="okPanel" hidden>
+        <h3>提交成功，列车已进站</h3>
+        <p>您的需求已进入排班系统，回执编号 <span class="no" id="okNo">XL-000000</span>。</p>
+        <p>解决方案架构师将在 1 个工作日内与您联系，为您规划最佳换乘路线。</p>
+        <p style="margin-top:16px"><button class="btn btn-g" id="againBtn" type="button">再提交一条需求</button></p>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ================= 页脚 · 运营信息 ================= -->
+<footer class="ft">
+  <div class="wrap">
+    <div class="ft-grid">
+      <div>
+        <div class="ft-brand">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle cx="60" cy="60" r="42" fill="none" stroke="#FFFFFF" stroke-width="13"/>
+            <rect x="6" y="50" width="108" height="20" fill="#FFFFFF"/>
+            <text x="60" y="65" text-anchor="middle" font-size="14" font-weight="700" fill="#1C1C1C" font-family="Gill Sans,'Noto Sans SC',sans-serif">星澜</text>
+          </svg>
+          <b>星澜科技</b>
+        </div>
+        <p>以数据为澜，驱动产业进化。<br>企业数字化转型服务商 · Since 2012。</p>
+        <p class="ft-ver num">线网图版本 XL-NET-2026-09 · 更新于 2026-09</p>
+      </div>
+      <div>
+        <h4>线路速查</h4>
+        <ul>
+          <li class="ft-line"><i style="background:#1C3F94"></i>1 号线 · 数据中台</li>
+          <li class="ft-line"><i style="background:#E32017"></i>2 号线 · 数据安全</li>
+          <li class="ft-line"><i style="background:#00782A"></i>3 号线 · 智能制造</li>
+          <li class="ft-line"><i style="background:#EEA320"></i>4 号线 · 云服务</li>
+          <li class="ft-line"><i style="background:#0098D4"></i>5 号线 · AI 应用</li>
+        </ul>
+      </div>
+      <div>
+        <h4>站点导航</h4>
+        <ul>
+          <li><a href="#home">首页 · 澜启西</a></li>
+          <li><a href="#map">线路总图</a></li>
+          <li><a href="#about">关于星澜 · 线路沿革</a></li>
+          <li><a href="#data">运营数据</a></li>
+          <li><a href="#news">运营公告</a></li>
+          <li><a href="#contact">联系我们</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>运营信息</h4>
+        <ul>
+          <li>上海市浦东新区张江高科技园区澜启大厦 21F</li>
+          <li class="num">服务热线 +86 21-8000-1200</li>
+          <li>hello@xinglan-tech.com</li>
+          <li class="num">运营时间 工作日 09:00 – 18:00</li>
+        </ul>
+      </div>
+    </div>
+    <div class="ft-bottom">
+      <span class="num">© <span id="year">2026</span> 星澜科技 Xinglan Tech · 沪ICP备2026001234号-1</span>
+      <span>本页面为地铁线路图风格概念演示站 · 数据均为示例</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ================= 站牌弹层 ================= -->
+<div id="overlay">
+  <div class="m-card" id="mCard" role="dialog" aria-modal="true" aria-labelledby="mName">
+    <div class="m-bar" id="mBar"></div>
+    <div class="m-head">
+      <span style="display:flex;gap:8px;align-items:center">
+        <span class="m-code num" id="mCode">ST-000</span>
+        <span class="m-ix">换乘站 · 联合解决方案</span>
+      </span>
+      <button class="m-close" id="mClose" aria-label="关闭站牌">✕</button>
+    </div>
+    <div class="m-body">
+      <h3 id="mName">站名</h3>
+      <span class="m-tag" id="mTag">标签</span>
+      <p class="m-desc" id="mDesc"></p>
+      <dl class="m-pts" id="mPts"></dl>
+      <div class="m-trans" id="mTrans"></div>
+    </div>
+    <div class="m-foot">
+      <small>站点档案 · 数据截至 2026-08 · 客户信息已脱敏</small>
+      <button class="btn btn-g" id="mBack" type="button">返回线网</button>
+    </div>
+  </div>
+</div>
+
+<noscript><div style="padding:12px 20px;background:#1C1C1C;color:#fff;font-size:13px">提示：当前浏览器未启用 JavaScript，线路图与站牌档案仍可浏览，但点击车站查看案例等功能不可用。</div></noscript>
+
+<script>
+/* ==========================================================
+   星澜科技 · Metro Map 交互脚本（原生 JS，无依赖）
+   ========================================================== */
+(function () {
+  'use strict';
+
+  /* ---------- 线路元数据 ---------- */
+  var LINES = {
+    l1: { n: '1 号线 · 数据中台', c: '#1C3F94' },
+    l2: { n: '2 号线 · 数据安全', c: '#E32017' },
+    l3: { n: '3 号线 · 智能制造', c: '#00782A' },
+    l4: { n: '4 号线 · 云服务',   c: '#EEA320' },
+    l5: { n: '5 号线 · AI 应用',  c: '#0098D4' }
+  };
+
+  /* ---------- 车站档案：21 座普通站 + 6 座换乘枢纽 ---------- */
+  var S = {
+    s101: { n: '澜启西', c: 'ST-101', l: ['l1'], t: 'hq', tag: '总部枢纽',
+      d: '星澜科技总部所在地：张江澜启大厦 21F。1 号线西端起点，四大研发中心之一，常设客户联合创新空间，线网的首班车从这里发出。',
+      pts: [['入驻团队', '260+ 人'], ['联合创新实验室', '8 间']] },
+    s102: { n: '主数据平台', c: 'ST-102', l: ['l1'], t: 'case', tag: '数据治理',
+      d: '某全国性零售集团主数据平台：统一 12 套业务系统的商品、客户与供应商主数据口径，一次治理、全线复用。',
+      pts: [['主数据准确率', '99.2%'], ['新品上架周期', '−30%']] },
+    s104: { n: '数据服务网关', c: 'ST-103', l: ['l1'], t: 'case', tag: '数据服务',
+      d: '某能源集团统一数据服务网关：86 个业务系统一处接入、全程审计，数据接口像站台一样有序发车。',
+      pts: [['日均 API 调用', '3,000 万次'], ['平均响应', '45ms']] },
+    s105: { n: '实时数仓', c: 'ST-104', l: ['l1'], t: 'case', tag: '实时计算',
+      d: '某连锁便利 2,000 家门店实时数仓：补货决策从「次日配送」提速到「秒级响应」，高峰时段同样准点。',
+      pts: [['门店缺货率', '−22%'], ['链路延迟', '<3s']] },
+    s107: { n: '数据资产地图', c: 'ST-105', l: ['l1'], t: 'case', tag: '数据资产',
+      d: '某城商行数据资产地图：全域数据资产可搜索、可追溯、可申请，让每个分析师都能查到「下一班列车时刻」。',
+      pts: [['资产检索耗时', '−70%'], ['资产复用率', '×3']] },
+    s201: { n: '安全指挥中心', c: 'ST-201', l: ['l2'], t: 'case', tag: '安全运营',
+      d: '某省政务云安全指挥中心：7×24 态势大屏与处置闭环运营，威胁事件像运行图一样被严格管理。',
+      pts: [['平均处置时长', '15 分钟'], ['接入单位', '120+']] },
+    s202: { n: '数据脱敏', c: 'ST-202', l: ['l2'], t: 'case', tag: '数据合规',
+      d: '某保险集团动态脱敏平台：开发测试环境的数据供给全程合规，敏感字段「持票上车、凭票下车」。',
+      pts: [['敏感字段覆盖率', '100%'], ['数据交付提速', '50%']] },
+    s204: { n: '隐私计算平台', c: 'ST-203', l: ['l2'], t: 'case', tag: '隐私计算',
+      d: '三家银行联合风控建模：数据不出域、可用不可见，在各自车站完成计算，只交换「车票」不交换「乘客」。',
+      pts: [['坏账识别率', '+18%'], ['连接数据源', '40+']] },
+    s206: { n: '态势感知', c: 'ST-204', l: ['l2'], t: 'case', tag: '态势感知',
+      d: '某制造集团级态势感知平台：10 万+ 资产测绘、攻击链自动溯源，全线网 2 号线的信号系统。',
+      pts: [['日均告警降噪', '95%'], ['资产测绘', '10 万+']] },
+    s301: { n: '柔性产线', c: 'ST-301', l: ['l3'], t: 'case', tag: 'MES',
+      d: '某家电企业柔性产线 MES：一条产线混线生产 6 种型号，换型像列车折返一样利落。',
+      pts: [['换型时间', '−45%'], ['订单交付周期', '−20%']] },
+    s302: { n: '数字孪生', c: 'ST-302', l: ['l3'], t: 'case', tag: '数字孪生',
+      d: '某注塑工厂产线数字孪生：新工艺先在虚拟线网上试跑，再放行到物理产线。',
+      pts: [['调试周期', '−50%'], ['单件能耗', '−12%']] },
+    s303: { n: '设备物联', c: 'ST-303', l: ['l3'], t: 'case', tag: '工业物联',
+      d: '某装备制造设备物联平台：5 万+ 测点分钟级接入，设备状态尽收「调度大厅」。',
+      pts: [['OEE', '+9%'], ['非计划停机', '−35%']] },
+    s401: { n: '多云管理', c: 'ST-401', l: ['l4'], t: 'case', tag: '多云管理',
+      d: '某零售集团多云管理平台：3 朵云统一纳管与成本治理，跨云调度像跨线换乘一样自然。',
+      pts: [['资源成本', '−28%'], ['资源自助交付率', '80%']] },
+    s402: { n: '边缘节点', c: 'ST-402', l: ['l4'], t: 'case', tag: '边缘计算',
+      d: '某零售品牌 500 家门店边缘节点：本地推理、断网可用，把算力修到离乘客最近的站台。',
+      pts: [['推理时延', '<20ms'], ['带宽成本', '−40%']] },
+    s403: { n: '弹性算力', c: 'ST-403', l: ['l4'], t: 'case', tag: '弹性算力',
+      d: '某电商平台大促弹性算力：10 分钟完成千核级扩容，早晚高峰加开班次、平峰缩编回库。',
+      pts: [['峰值资源成本', '−35%'], ['扩容耗时', '10 分钟']] },
+    s404: { n: '云灾备中心', c: 'ST-404', l: ['l4'], t: 'case', tag: '灾备',
+      d: '某政务云「两地三中心」灾备体系：主城故障时备车即刻上线，乘客几乎无感。',
+      pts: [['RTO', '<15 分钟'], ['RPO', '≈0']] },
+    s501: { n: 'AI 实验室', c: 'ST-501', l: ['l5'], t: 'case', tag: '前沿研发',
+      d: '澜脑实验室：大模型前沿研发与产学研合作基地，年研发投入占营收 15%，为全线网供给「新一代列车」。',
+      pts: [['授权专利', '120 项'], ['论文与开源项目', '60+']] },
+    s502: { n: '澜脑 AI 中台', c: 'ST-502', l: ['l5'], t: 'case', tag: 'AI 中台',
+      d: '澜脑 AI 中台 3.0：模型接入、评测、监控与推理调度一站式运营，是企业 AI 应用的始发站。',
+      pts: [['推理成本', '−40%'], ['接入企业模型', '200+']] },
+    s503: { n: '智能文档', c: 'ST-503', l: ['l5'], t: 'case', tag: '智能文档',
+      d: '某保险智能文档处理：单证、病历、理赔材料自动结构化，纸质站台拍照即完成「检票」。',
+      pts: [['识别准确率', '98.5%'], ['录入人力', '−70%']] },
+    s504: { n: '对话式 AI', c: 'ST-504', l: ['l5'], t: 'case', tag: '智能对话',
+      d: '某银行财富顾问助手：坐席辅助、客户经营建议实时生成，合规话术全程「报站」。',
+      pts: [['客户经理产能', '+30%'], ['合规质检覆盖', '100%']] },
+    s505: { n: '智能客服', c: 'ST-505', l: ['l5'], t: 'case', tag: '智能客服',
+      d: '某航空公司智能客服：航班动态多轮应答与改签办理，高峰期同样不排长队。',
+      pts: [['自助解决率', '85%'], ['客服人力成本', '−45%']] },
+    s506: { n: '行业大模型', c: 'ST-506', l: ['l5'], t: 'case', tag: '行业模型',
+      d: '某能源集团行业大模型：设备故障问答、检修工单自动生成，老师傅的经验变成全天候的「问询台」。',
+      pts: [['专家响应效率', '×3'], ['沉淀知识条目', '3 万+']] },
+    x01: { n: '湖仓一体', c: 'X-01', l: ['l1', 'l4'], t: 'ix', tag: '云上湖仓 · 联合方案',
+      d: '数据中台 × 云服务联合方案：某股份制银行湖仓一体平台，冷热分层、存算分离，在云上重建整座「数据枢纽站」。',
+      pts: [['日处理数据', '8TB'], ['存储成本', '−35%']] },
+    x02: { n: '工业数据大脑', c: 'X-02', l: ['l1', 'l3'], t: 'ix', tag: '工业数据大脑 · 联合方案',
+      d: '数据中台 × 智能制造联合方案：某头部车企数字工厂，产线数据一网统管，工艺、质量与能耗同屏调度。',
+      pts: [['产线效率', '+32%'], ['日分析点位', '200 万']] },
+    x03: { n: '智算中心', c: 'X-03', l: ['l4', 'l2'], t: 'ix', tag: '等保智算中心 · 联合方案',
+      d: '云服务 × 数据安全联合方案：面向金融机构的等保三级智算底座，国密改造全覆盖，安全与算力同站换乘。',
+      pts: [['连续安全运行', '1,000+ 天'], ['PUE', '1.25']] },
+    x04: { n: '工业安全运营', c: 'X-04', l: ['l2', 'l3'], t: 'ix', tag: '工业安全运营 · 联合方案',
+      d: '数据安全 × 智能制造联合方案：某港口集团智能调度与工控安全加固同期交付，调度提效与安全合规一次到站。',
+      pts: [['吞吐周期', '−18%'], ['工控安全事件', '0']] },
+    x05: { n: '工业视觉大模型', c: 'X-05', l: ['l3', 'l5'], t: 'ix', tag: '视觉质检大模型 · 联合方案',
+      d: '智能制造 × AI 应用联合方案：某面板厂外观缺陷检测，小样本缺陷自学习，质检班次三班并一班。',
+      pts: [['缺陷检出率', '99.5%'], ['质检人力', '−60%']] },
+    x06: { n: '模型工厂', c: 'X-06', l: ['l4', 'l5'], t: 'ix', tag: '模型工厂 · 联合方案',
+      d: '云服务 × AI 应用联合方案：MaaS 智算底座，从数据标注、训练到模型上线一条龙，模型像列车一样下线即发车。',
+      pts: [['千卡集群利用率', '92%'], ['模型交付周期', '−50%']] }
+  };
+
+  /* ---------- 工具 ---------- */
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+
+  /* ---------- 移动端菜单 ---------- */
+  var hd = $('#hd'), burger = $('#burger');
+  burger.addEventListener('click', function () {
+    var open = hd.classList.toggle('menu-open');
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    burger.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+  });
+  $all('#navLinks a').forEach(function (a) {
+    a.addEventListener('click', function () {
+      hd.classList.remove('menu-open');
+      burger.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  /* ---------- 锚点 scrollspy ---------- */
+  var navMap = {};
+  $all('#navLinks .nl').forEach(function (a) { navMap[a.getAttribute('href').slice(1)] = a; });
+  if ('IntersectionObserver' in window) {
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          $all('#navLinks .nl').forEach(function (a) { a.classList.remove('on'); });
+          var link = navMap[en.target.id];
+          if (link) link.classList.add('on');
+        }
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    $all('[data-sec]').forEach(function (s) { spy.observe(s); });
+  }
+
+  /* ---------- 线路聚焦（hover 高亮 + 图例点击固定） ---------- */
+  var net = $('#net'), pinned = null;
+  function setFocus(lineId) {
+    if (lineId) {
+      net.classList.add('focus');
+      $all('#net .mline').forEach(function (g) {
+        g.classList.toggle('on', g.getAttribute('data-line') === lineId);
+      });
+    } else {
+      net.classList.remove('focus');
+      $all('#net .mline').forEach(function (g) { g.classList.remove('on'); });
+    }
+    $all('.lgd').forEach(function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-line') === lineId ? 'true' : 'false');
+    });
+  }
+  $all('#lineLayer .mline').forEach(function (g) {
+    var id = g.getAttribute('data-line');
+    g.addEventListener('mouseenter', function () { setFocus(id); });
+    g.addEventListener('mouseleave', function () { setFocus(pinned); });
+  });
+  $all('.lgd').forEach(function (b) {
+    var id = b.getAttribute('data-line');
+    b.addEventListener('mouseenter', function () { setFocus(id); });
+    b.addEventListener('mouseleave', function () { setFocus(pinned); });
+    b.addEventListener('click', function () {
+      pinned = (pinned === id) ? null : id;
+      setFocus(pinned || id);
+      if (!pinned) setFocus(null);
+    });
+  });
+  $all('.lcard').forEach(function (card) {
+    var id = card.getAttribute('data-line');
+    card.addEventListener('mouseenter', function () { setFocus(id); });
+    card.addEventListener('mouseleave', function () { setFocus(pinned); });
+  });
+
+  /* ---------- 车站 tooltip ---------- */
+  var tip = $('#tip'), mapBox = $('#mapBox');
+  function showTip(g) {
+    var data = S[g.getAttribute('data-id')];
+    if (!data) return;
+    var dots = data.l.map(function (id) {
+      return '<i style="background:' + LINES[id].c + '"></i>';
+    }).join('');
+    tip.innerHTML = '<b>' + data.n + '</b>' +
+      '<span class="dots">' + dots + '</span><small>' +
+      (data.t === 'ix' ? '换乘枢纽 · 点击查看联合方案' : (data.t === 'hq' ? '点击查看站点信息' : '点击查看案例')) +
+      '</small>';
+    var r = g.getBoundingClientRect(), box = mapBox.getBoundingClientRect();
+    var x = Math.min(Math.max(r.left + r.width / 2 - box.left, 70), box.width - 70);
+    tip.style.left = x + 'px';
+    tip.style.top = (r.top - box.top) + 'px';
+    tip.classList.add('show');
+    tip.setAttribute('aria-hidden', 'false');
+  }
+  function hideTip() { tip.classList.remove('show'); tip.setAttribute('aria-hidden', 'true'); }
+
+  /* ---------- 站牌弹层 ---------- */
+  var overlay = $('#overlay'), mCard = $('#mCard'), lastFocus = null;
+  function openStation(id, opener) {
+    var d = S[id];
+    if (!d) return;
+    lastFocus = opener || document.activeElement;
+    var isIx = d.t === 'ix';
+    mCard.classList.toggle('ix', isIx);
+    if (d.l.length > 1) {
+      $('#mBar').style.background = 'linear-gradient(90deg,' + LINES[d.l[0]].c + ' 0 50%,' + LINES[d.l[1]].c + ' 50% 100%)';
+    } else {
+      $('#mBar').style.background = LINES[d.l[0]].c;
+    }
+    $('#mCode').textContent = d.c;
+    $('#mName').textContent = d.n;
+    $('#mTag').textContent = d.tag;
+    $('#mDesc').textContent = d.d;
+    $('#mPts').innerHTML = d.pts.map(function (p) {
+      return '<div><dt>' + p[0] + '</dt><dd>' + p[1] + '</dd></div>';
+    }).join('');
+    $('#mTrans').innerHTML = '线路：' + d.l.map(function (lid) {
+      return '<span class="dots"><i style="background:' + LINES[lid].c + '"></i></span>' + LINES[lid].n;
+    }).join('　') + (isIx ? '　<span style="color:var(--ink-40)">两线交汇 · 联合交付</span>' : '');
+    overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    $('#mClose').focus();
+  }
+  function closeStation() {
+    overlay.classList.remove('show');
+    document.body.style.overflow = '';
+    hideTip();
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  $('#mClose').addEventListener('click', closeStation);
+  $('#mBack').addEventListener('click', closeStation);
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) closeStation(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && overlay.classList.contains('show')) closeStation();
+  });
+
+  /* ---------- 车站事件（hover 弹摘要 / 点击开站牌 / 键盘可达） ---------- */
+  $all('#net .st').forEach(function (g) {
+    g.addEventListener('mouseenter', function () {
+      setFocus(g.getAttribute('data-id').charAt(0) === 'x' ? '' : S[g.getAttribute('data-id')].l[0]);
+      showTip(g);
+    });
+    g.addEventListener('mouseleave', function () { hideTip(); setFocus(pinned); });
+    g.addEventListener('focus', function () { showTip(g); });
+    g.addEventListener('blur', function () { hideTip(); });
+    g.addEventListener('click', function () { openStation(g.getAttribute('data-id'), g); });
+    g.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openStation(g.getAttribute('data-id'), g);
+      }
+    });
+  });
+
+  /* ---------- 运营公告手风琴 ---------- */
+  $all('.nq').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var item = btn.parentElement, open = item.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  });
+
+  /* ---------- 联系表单校验 ---------- */
+  var form = $('#cForm'), okPanel = $('#okPanel');
+  function setState(name, ok) {
+    var field = form.querySelector('[data-f="' + name + '"]');
+    if (field) field.classList.toggle('bad', !ok);
+    return ok;
+  }
+  function vName() { return setState('name', $('#fName').value.trim().length >= 2); }
+  function vPhone() {
+    var v = $('#fPhone').value.replace(/\s/g, '');
+    var ok = /^1[3-9]\d{9}$/.test(v) || /^0\d{2,3}-?\d{7,8}$/.test(v);
+    return setState('phone', ok);
+  }
+  function vMail() {
+    var ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test($('#fMail').value.trim());
+    return setState('mail', ok);
+  }
+  function vMsg() { return setState('msg', $('#fMsg').value.trim().length >= 10); }
+  $('#fName').addEventListener('blur', vName);
+  $('#fPhone').addEventListener('blur', vPhone);
+  $('#fMail').addEventListener('blur', vMail);
+  $('#fMsg').addEventListener('blur', vMsg);
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var checks = [vName(), vPhone(), vMail(), vMsg()];
+    if (checks.indexOf(false) > -1) {
+      var firstBad = form.querySelector('.f-field.bad input, .f-field.bad textarea');
+      if (firstBad) firstBad.focus();
+      return;
+    }
+    $('#okNo').textContent = 'XL-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-6);
+    form.hidden = true;
+    okPanel.hidden = false;
+    okPanel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
+  $('#againBtn').addEventListener('click', function () {
+    form.reset();
+    $all('.f-field', form).forEach(function (f) { f.classList.remove('bad'); });
+    okPanel.hidden = true;
+    form.hidden = false;
+    $('#fName').focus();
+  });
+
+  /* ---------- 页脚年份 ---------- */
+  $('#year').textContent = new Date().getFullYear();
+})();
+</script>
+</body>
+</html>

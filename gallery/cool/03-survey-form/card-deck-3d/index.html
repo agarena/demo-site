@@ -1,0 +1,3722 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="description" content="2026 城市青年阅读习惯调查 · 立体卡匣 Card Deck 3D —— 一间虚构书店「岛上书店」发起的城市共读计划问卷。">
+<title>2026 城市青年阅读习惯调查 · 立体卡匣 Card Deck 3D</title>
+<style>
+/* ==========================================================================
+   立体卡匣 Card Deck 3D —— 《2026 城市青年阅读习惯调查》
+   方向 D · 炫酷方向：把每道题做成一张悬浮在浅色空间里的立体卡片，答题 = 翻牌
+   ========================================================================== */
+
+/* ---------- 0. 设计变量 ---------- */
+:root {
+  --bg: #F4F1EC;              /* 展厅底：浅暖灰 */
+  --card: #FFFFFF;            /* 卡面白 */
+  --orange: #FF6B35;          /* 撞色橙：主按钮 / 进度 / 选中态 */
+  --orange-deep: #D4512A;     /* 橙色按压底（硬阴影） */
+  --blue: #1B9AAA;            /* 撞色蓝：题号徽章 / 链接 */
+  --ink: #22223B;             /* 深炭：标题文字 */
+  --ink-soft: #6E6B80;        /* 次级文字 */
+  --line: rgba(34, 34, 59, 0.12);
+  --shadow: rgba(34, 34, 59, 0.18);   /* 柔影 */
+  --err: #DC2626;             /* 错误红 */
+  --side-r: #E2DAC6;          /* 卡片厚度侧边（右） */
+  --side-t: #F0EADA;          /* 卡片厚度侧边（顶） */
+  --radius: 18px;
+  --font-d: "Space Grotesk", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-b: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 0.9, 0.3, 1);
+  --d: 14px;                  /* 卡片厚度 */
+}
+
+/* ---------- 1. 基础重置 ---------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-b);
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+::selection {
+  background: rgba(255, 107, 53, 0.28);
+}
+
+:focus-visible {
+  outline: 3px solid rgba(27, 154, 170, 0.65);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+button {
+  font-family: inherit;
+}
+
+.hide {
+  display: none !important;
+}
+
+/* ---------- 2. 浅色空间背景：淡网格 + 光斑 + 十字装饰 ---------- */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(34, 34, 59, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 34, 59, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 38%, #000 26%, transparent 76%);
+  mask-image: radial-gradient(ellipse at 50% 38%, #000 26%, transparent 76%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(560px 420px at 86% 4%, rgba(255, 107, 53, 0.07), transparent 70%),
+    radial-gradient(620px 480px at 8% 96%, rgba(27, 154, 170, 0.08), transparent 70%);
+}
+
+.blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(64px);
+  opacity: 0.45;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.blob-a {
+  width: 340px;
+  height: 340px;
+  left: -110px;
+  top: 16%;
+  background: rgba(255, 107, 53, 0.35);
+  animation: floaty 16s ease-in-out infinite alternate;
+}
+
+.blob-b {
+  width: 300px;
+  height: 300px;
+  right: -90px;
+  bottom: 10%;
+  background: rgba(27, 154, 170, 0.32);
+  animation: floaty 19s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes floaty {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(40px, -34px, 0) scale(1.12); }
+}
+
+.plus {
+  position: fixed;
+  width: 26px;
+  height: 26px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.55;
+  animation: floaty 12s ease-in-out infinite alternate;
+}
+
+.plus::before,
+.plus::after {
+  content: "";
+  position: absolute;
+  background: var(--blue);
+  border-radius: 2px;
+}
+
+.plus::before {
+  left: 50%;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  transform: translateX(-50%);
+}
+
+.plus::after {
+  top: 50%;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  transform: translateY(-50%);
+}
+
+.plus-a { left: 7%;  top: 22%; transform: rotate(12deg); }
+.plus-b { right: 9%; top: 18%; transform: rotate(-8deg) scale(0.7); }
+.plus-b.plus::before,
+.plus-b.plus::after { background: var(--orange); }
+.plus-c { left: 12%; bottom: 14%; transform: rotate(22deg) scale(0.55); opacity: 0.4; }
+
+/* ---------- 3. 顶部信息条 ---------- */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(16px, 4vw, 42px);
+  background: linear-gradient(rgba(244, 241, 236, 0.92), rgba(244, 241, 236, 0.55) 78%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-d);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+
+.brand-mark {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--orange);
+  box-shadow: 0 3px 0 var(--orange-deep);
+  position: relative;
+}
+
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 2px;
+  background: #FFF6F1;
+  clip-path: polygon(0 62%, 50% 18%, 100% 62%, 100% 100%, 0 100%);
+}
+
+.brand small {
+  font-weight: 500;
+  color: var(--ink-soft);
+  font-family: var(--font-b);
+  margin-left: 2px;
+}
+
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chip-timer,
+.chip-pos {
+  font-family: var(--font-d);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--ink-soft);
+}
+
+.chip-pos {
+  color: var(--orange);
+  border-color: rgba(255, 107, 53, 0.4);
+}
+
+/* ---------- 4. 左右竖排装饰标题（桌面专属） ---------- */
+.side-title {
+  position: fixed;
+  left: 26px;
+  top: 50%;
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-family: var(--font-d);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.42em;
+  color: rgba(34, 34, 59, 0.44);
+  z-index: 30;
+  display: none;
+  user-select: none;
+}
+
+.side-title::before {
+  content: "";
+  display: block;
+  width: 2px;
+  height: 44px;
+  margin: 0 auto 16px;
+  background: var(--orange);
+  border-radius: 2px;
+}
+
+.side-title-r {
+  left: auto;
+  right: 26px;
+  color: rgba(27, 154, 170, 0.55);
+  letter-spacing: 0.34em;
+}
+
+.side-title-r::before {
+  background: var(--blue);
+}
+
+@media (min-width: 1200px) {
+  .side-title { display: block; }
+}
+
+/* ---------- 5. 通用按钮（硬阴影 3D 按压感） ---------- */
+.btn {
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: var(--font-b);
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1;
+  padding: 13px 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  user-select: none;
+}
+
+.btn.solid {
+  background: var(--orange);
+  color: #fff;
+  box-shadow: 0 4px 0 var(--orange-deep), 0 12px 22px -10px rgba(255, 107, 53, 0.55);
+}
+
+.btn.solid:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 var(--orange-deep), 0 18px 30px -10px rgba(255, 107, 53, 0.6);
+}
+
+.btn.solid:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--orange-deep);
+}
+
+.btn.ghost {
+  background: #fff;
+  color: var(--ink-soft);
+  border-color: var(--line);
+  box-shadow: 0 3px 0 rgba(34, 34, 59, 0.08);
+}
+
+.btn.ghost:hover {
+  transform: translateY(-2px);
+  color: var(--ink);
+  border-color: rgba(34, 34, 59, 0.28);
+  box-shadow: 0 5px 0 rgba(34, 34, 59, 0.1);
+}
+
+.btn.ghost:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 rgba(34, 34, 59, 0.08);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+
+.btn-xl {
+  font-size: 17px;
+  padding: 17px 34px;
+  border-radius: 14px;
+  letter-spacing: 0.06em;
+}
+
+.btn .arr {
+  font-family: var(--font-d);
+  transition: transform 0.2s var(--ease);
+}
+
+.btn:hover .arr {
+  transform: translateX(4px);
+}
+
+/* ---------- 6. 开场 Hero：浅色空间 + 题卡洗牌落桌 ---------- */
+.hero {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 96px 20px 72px;
+}
+
+.hero.exit {
+  animation: heroOut 0.6s var(--ease) forwards;
+  pointer-events: none;
+}
+
+@keyframes heroOut {
+  to { opacity: 0; transform: translateY(-46px) scale(0.985); }
+}
+
+.hero-inner {
+  position: relative;
+  max-width: 780px;
+  text-align: center;
+}
+
+.hero-inner > * {
+  animation: fadeUp 0.7s var(--ease) both;
+}
+
+.hero-inner > *:nth-child(1) { animation-delay: 0.05s; }
+.hero-inner > *:nth-child(2) { animation-delay: 0.14s; }
+.hero-inner > *:nth-child(3) { animation-delay: 0.22s; }
+.hero-inner > *:nth-child(4) { animation-delay: 0.30s; }
+.hero-inner > *:nth-child(5) { animation-delay: 0.38s; }
+.hero-inner > *:nth-child(6) { animation-delay: 0.46s; }
+.hero-inner > *:nth-child(7) { animation-delay: 0.54s; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ghost-year {
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-d);
+  font-weight: 800;
+  font-size: clamp(120px, 22vw, 250px);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: rgba(34, 34, 59, 0.05);
+  -webkit-text-stroke: 2px rgba(34, 34, 59, 0.09);
+  user-select: none;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: -1;
+}
+
+.hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-d);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  color: var(--blue);
+  text-transform: uppercase;
+}
+
+.hero-kicker::before,
+.hero-kicker::after {
+  content: "";
+  width: 26px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--blue);
+  opacity: 0.5;
+}
+
+.hero-title {
+  font-family: var(--font-d);
+  font-weight: 800;
+  font-size: clamp(30px, 5.4vw, 58px);
+  line-height: 1.22;
+  letter-spacing: 0.02em;
+  margin: 18px 0 16px;
+}
+
+.hero-title em {
+  font-style: normal;
+  color: var(--orange);
+  text-shadow: 0 3px 0 rgba(255, 107, 53, 0.18);
+}
+
+.hero-sub {
+  font-size: clamp(14.5px, 1.7vw, 17px);
+  color: var(--ink-soft);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 26px 0 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  box-shadow: 0 3px 10px -6px var(--shadow);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.chip:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 107, 53, 0.5);
+  box-shadow: 0 10px 18px -8px var(--shadow);
+}
+
+.chip i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--orange);
+  transform: rotate(45deg);
+}
+
+.chip:nth-child(2) i { background: var(--blue); }
+.chip:nth-child(3) i { background: var(--ink); border-radius: 50%; transform: none; }
+
+.hero-desc {
+  font-size: 13px;
+  color: #98948f;
+  max-width: 520px;
+  margin: 6px auto 30px;
+}
+
+.cta-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.cta-note {
+  font-size: 12.5px;
+  color: var(--blue);
+  background: rgba(27, 154, 170, 0.1);
+  border: 1px dashed rgba(27, 154, 170, 0.45);
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
+/* 洗牌卡堆：页面加载时散落桌面 */
+.pile {
+  position: absolute;
+  left: 50%;
+  top: -108px;
+  width: 420px;
+  height: 190px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.pile-card {
+  position: absolute;
+  left: 50%;
+  top: 34px;
+  width: 94px;
+  height: 124px;
+  margin-left: -47px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1.5px solid rgba(34, 34, 59, 0.1);
+  box-shadow: 6px 9px 0 rgba(34, 34, 59, 0.07), 0 18px 26px -18px var(--shadow);
+  transform: translate(var(--px), var(--py)) rotate(var(--pr));
+  animation:
+    pileDrop 0.8s var(--d) var(--ease) both,
+    pileBob 4.6s calc(var(--d) + 0.85s) ease-in-out infinite alternate;
+  overflow: hidden;
+}
+
+.pile-card i {
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  background: #ECE6D8;
+  margin: 10px 12px 0;
+}
+
+.pile-card i.pc-a {
+  width: 48%;
+  height: 10px;
+  margin-top: 15px;
+  background: linear-gradient(90deg, var(--orange), #FFA26E);
+}
+
+.pile-card i:nth-of-type(3) {
+  width: 58%;
+}
+
+.pile-card::after {
+  content: "";
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 13px;
+  height: 13px;
+  border-radius: 4px;
+  background: var(--blue);
+  opacity: 0.9;
+}
+
+.pile-card:nth-child(2n)::after {
+  background: var(--orange);
+}
+
+@keyframes pileDrop {
+  0%   { transform: translate(46vw, -72vh) rotate(128deg) scale(0.5); opacity: 0; }
+  55%  { opacity: 1; }
+  100% { transform: translate(var(--px), var(--py)) rotate(var(--pr)) scale(1); opacity: 1; }
+}
+
+@keyframes pileBob {
+  from { transform: translate(var(--px), var(--py)) rotate(var(--pr)); }
+  to   { transform: translate(calc(var(--px) + 4px), calc(var(--py) - 7px)) rotate(calc(var(--pr) + 2deg)); }
+}
+
+/* ---------- 7. 3D 舞台与卡堆 ---------- */
+.stage {
+  position: relative;
+  z-index: 2;
+  display: none;
+  min-height: 100vh;
+  padding: 92px 16px 128px;
+  align-items: center;
+  justify-content: center;
+}
+
+.stage.active {
+  display: flex;
+  animation: stageIn 0.5s ease both;
+}
+
+@keyframes stageIn {
+  from { opacity: 0; transform: scale(0.985); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.deck-wrap {
+  width: min(420px, 100%);
+}
+
+.deck {
+  --deck-h: clamp(500px, calc(100vh - 250px), 640px);
+  position: relative;
+  width: 100%;
+  height: var(--deck-h);
+  perspective: 1200px;               /* 强透视：整个卡堆的 3D 空间 */
+  perspective-origin: 50% 40%;
+  touch-action: pan-y;               /* 移动端保留纵向滚动，横向留给滑动翻卡 */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.deck input,
+.deck textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* 卡堆最底部的两片装饰卡边（永远垫底，暗示卡匣的厚度） */
+.deck::before,
+.deck::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.deck::before {
+  transform: translate3d(84px, -78px, 0) rotate(11deg) scale(0.91);
+  background: #EAE3D2;
+  border: 1.5px solid rgba(34, 34, 59, 0.08);
+  box-shadow: 0 14px 30px -18px var(--shadow);
+}
+
+.deck::after {
+  transform: translate3d(96px, -88px, 0) rotate(13deg) scale(0.9);
+  background: #E0D8C3;
+  border: 1.5px solid rgba(34, 34, 59, 0.07);
+}
+
+/* ---------- 8. 题卡：状态机驱动的堆叠透视 ---------- */
+.qcard {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate3d(26px, -22px, 0) rotate(3deg) scale(0.98);
+  transition:
+    transform 0.55s var(--ease),
+    opacity 0.42s ease,
+    visibility 0s linear 0.55s;
+  will-change: transform;
+}
+
+/* 展示态：立即可见（visibility 无延迟），位移/缩放走过渡 */
+.qcard.is-current,
+.qcard.is-next1,
+.qcard.is-next2,
+.qcard.is-back1,
+.qcard.is-back2,
+.qcard.is-deep {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    transform 0.55s var(--ease),
+    opacity 0.42s ease,
+    visibility 0s;
+}
+
+.qcard.is-current {
+  transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  z-index: 40;
+  pointer-events: auto;
+}
+
+.qcard.is-next1 {
+  transform: translate3d(18px, -18px, 0) rotate(2.4deg) scale(0.982);
+  z-index: 32;
+}
+
+.qcard.is-next2 {
+  transform: translate3d(35px, -34px, 0) rotate(4.8deg) scale(0.964);
+  z-index: 24;
+}
+
+.qcard.is-back1 {
+  transform: translate3d(50px, -48px, 0) rotate(6.8deg) scale(0.946);
+  z-index: 18;
+}
+
+.qcard.is-back2 {
+  transform: translate3d(64px, -60px, 0) rotate(8.6deg) scale(0.93);
+  z-index: 14;
+}
+
+.qcard.is-deep {
+  transform: translate3d(
+      calc(72px + var(--jx, 0px)),
+      calc(-68px + var(--jy, 0px)),
+      0)
+    rotate(calc(10deg + var(--jr, 0deg))) scale(0.916);
+  z-index: 10;
+}
+
+/* 已作答：绕 Y 轴左滑飞出 + 轻微缩放（标志性翻卡瞬间） */
+.qcard.is-done {
+  transform: translate3d(-128%, -6%, 0) rotateY(-58deg) rotate(-7deg) scale(0.82);
+  opacity: 0;
+  z-index: 60;
+}
+
+/* 开局洗牌落桌：各层卡片依次从画外飞入卡位 */
+.deck.dealing .qcard.is-current { animation: dealCur 0.62s var(--ease) 0.04s both; }
+.deck.dealing .qcard.is-next1   { animation: dealN1  0.62s var(--ease) 0.16s both; }
+.deck.dealing .qcard.is-next2   { animation: dealN2  0.62s var(--ease) 0.28s both; }
+.deck.dealing .qcard.is-back1   { animation: dealB1  0.62s var(--ease) 0.40s both; }
+.deck.dealing .qcard.is-back2   { animation: dealB2  0.62s var(--ease) 0.52s both; }
+.deck.dealing .qcard.is-deep    { animation: dealDp  0.62s var(--ease) 0.62s both; }
+
+@keyframes dealCur {
+  from { opacity: 0; transform: translate3d(48vw, -48vh, 0) rotate(16deg) scale(0.7); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+}
+
+@keyframes dealN1 {
+  from { opacity: 0; transform: translate3d(48vw, -48vh, 0) rotate(16deg) scale(0.7); }
+  to   { opacity: 1; transform: translate3d(18px, -18px, 0) rotate(2.4deg) scale(0.982); }
+}
+
+@keyframes dealN2 {
+  from { opacity: 0; transform: translate3d(48vw, -48vh, 0) rotate(16deg) scale(0.7); }
+  to   { opacity: 1; transform: translate3d(35px, -34px, 0) rotate(4.8deg) scale(0.964); }
+}
+
+@keyframes dealB1 {
+  from { opacity: 0; transform: translate3d(48vw, -48vh, 0) rotate(16deg) scale(0.7); }
+  to   { opacity: 1; transform: translate3d(50px, -48px, 0) rotate(6.8deg) scale(0.946); }
+}
+
+@keyframes dealB2 {
+  from { opacity: 0; transform: translate3d(48vw, -48vh, 0) rotate(16deg) scale(0.7); }
+  to   { opacity: 1; transform: translate3d(64px, -60px, 0) rotate(8.6deg) scale(0.93); }
+}
+
+@keyframes dealDp {
+  from { opacity: 0; transform: translate3d(48vw, -48vh, 0) rotate(16deg) scale(0.7); }
+  to   {
+    opacity: 1;
+    transform: translate3d(
+        calc(72px + var(--jx, 0px)),
+        calc(-68px + var(--jy, 0px)),
+        0)
+      rotate(calc(10deg + var(--jr, 0deg))) scale(0.916);
+  }
+}
+
+/* 完成后整叠卡收拢飞出 */
+.deck.gather-out .qcard {
+  animation: gatherOut 0.6s var(--ease) forwards;
+  animation-delay: calc(var(--vi, 0) * 22ms);
+}
+
+@keyframes gatherOut {
+  0%   { opacity: 1; }
+  45%  { transform: translate3d(-4px, -10px, 0) rotate(0deg) scale(0.93); opacity: 1; }
+  100% { transform: translate3d(-36px, -64vh, 0) rotate(-9deg) scale(0.7); opacity: 0; }
+}
+
+/* ---------- 9. 卡片本体：视差层 + 厚度侧边 + 卡面 ---------- */
+.card-tilt {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  background: var(--card);
+  border: 1.5px solid rgba(34, 34, 59, 0.09);
+  border-radius: var(--radius);
+  padding: 26px 26px 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 22px 44px -20px rgba(34, 34, 59, 0.35);
+  /* 注意：不能加 overflow:hidden，否则厚度侧边（::before/::after）会被裁掉 */
+}
+
+/* 厚度侧边：右侧面（skewY）+ 顶面（skewX），与卡堆右上偏移方向一致 */
+.card-face::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 100%;
+  width: var(--d);
+  height: 100%;
+  background: linear-gradient(180deg, var(--side-t), var(--side-r));
+  transform: skewY(-45deg);
+  transform-origin: 0 0;
+  border-radius: 0 6px 6px 0;
+  z-index: -1;
+}
+
+.card-face::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  width: 100%;
+  height: var(--d);
+  background: var(--side-t);
+  transform: skewX(-45deg);
+  transform-origin: 0 100%;
+  border-radius: 6px 6px 0 0;
+  z-index: -1;
+}
+
+/* 远处的卡：阴影更小更浅（近大远小的空间感） */
+.qcard.is-next1 .card-face,
+.qcard.is-next2 .card-face,
+.qcard.is-back1 .card-face,
+.qcard.is-back2 .card-face,
+.qcard.is-deep .card-face {
+  box-shadow: 0 12px 24px -16px rgba(34, 34, 59, 0.28);
+}
+
+/* 校验失败：整卡 shake 三次 + 边框闪红 */
+.qcard.has-error .card-face {
+  animation: cardShake 0.46s ease-in-out;
+  box-shadow:
+    0 0 0 3px rgba(220, 38, 38, 0.55),
+    0 22px 44px -20px rgba(220, 38, 38, 0.3);
+}
+
+@keyframes cardShake {
+  0%   { transform: translateX(0); }
+  14%  { transform: translateX(-13px) rotate(-0.6deg); }
+  28%  { transform: translateX(11px) rotate(0.5deg); }
+  42%  { transform: translateX(-9px) rotate(-0.4deg); }
+  56%  { transform: translateX(7px) rotate(0.3deg); }
+  70%  { transform: translateX(-5px); }
+  84%  { transform: translateX(3px); }
+  100% { transform: translateX(0); }
+}
+
+/* ---------- 10. 卡内排版 ---------- */
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.q-num {
+  font-family: var(--font-d);
+  font-weight: 800;
+  font-size: 62px;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.q-num::after {
+  content: "";
+  display: block;
+  width: 34px;
+  height: 5px;
+  margin-top: 8px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--orange), var(--blue));
+}
+
+.head-tags {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.q-badge {
+  font-family: var(--font-d);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--blue);
+  background: rgba(27, 154, 170, 0.1);
+  border: 1.5px solid rgba(27, 154, 170, 0.4);
+  padding: 5px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.q-req {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  white-space: nowrap;
+}
+
+.q-req.is-req {
+  color: var(--err);
+  background: #FDECEC;
+  border-color: #F5C6C6;
+}
+
+.q-req.is-opt {
+  color: #8f8b84;
+  background: #F3F1EA;
+  border-color: #E4E0D4;
+}
+
+.q-title {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.45;
+  margin-top: 16px;
+  letter-spacing: 0.01em;
+}
+
+.q-desc {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 5px;
+}
+
+.q-body {
+  flex: 1;
+  min-height: 0;
+  margin-top: 15px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 34, 59, 0.22) transparent;
+}
+
+.q-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.q-body::-webkit-scrollbar-thumb {
+  background: rgba(34, 34, 59, 0.2);
+  border-radius: 4px;
+}
+
+.card-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 14px;
+  margin-top: 12px;
+  border-top: 1.5px dashed rgba(34, 34, 59, 0.14);
+}
+
+.card-foot .btn-prev {
+  order: 1;
+  font-size: 13.5px;
+  padding: 11px 14px;
+}
+
+.key-hint {
+  order: 2;
+  margin-left: 10px;
+  font-family: var(--font-d);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  color: #A9A5B5;
+  white-space: nowrap;
+}
+
+.card-foot .btn-next {
+  order: 3;
+  margin-left: auto;
+  font-size: 14.5px;
+  padding: 12px 20px;
+}
+
+/* 错误提示条 */
+.q-err {
+  display: none;
+  margin-top: 12px;
+  padding: 10px 13px;
+  border-radius: 10px;
+  background: #FDECEC;
+  border: 1px solid #F5C6C6;
+  color: var(--err);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.q-err.show {
+  display: flex;
+  gap: 8px;
+  animation: errIn 0.3s var(--ease);
+}
+
+.q-err::before {
+  content: "!";
+  flex: none;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--err);
+  color: #fff;
+  font-family: var(--font-d);
+  font-weight: 800;
+  font-size: 12px;
+  display: grid;
+  place-items: center;
+  margin-top: 2px;
+}
+
+@keyframes errIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- 11. 选项（单选 / 多选）：hover 浮起 + 橙色墨水扩散 ---------- */
+.opt {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1.5px solid rgba(34, 34, 59, 0.14);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.opt:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 107, 53, 0.55);
+  box-shadow: 0 10px 20px -10px var(--shadow);
+}
+
+.opt:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(27, 154, 170, 0.16);
+}
+
+.opt input[type="radio"],
+.opt input[type="checkbox"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+/* 墨水扩散层：从点击位置晕开的橙色墨迹 */
+.opt::after {
+  content: "";
+  position: absolute;
+  left: var(--ix, 50%);
+  top: var(--iy, 50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 107, 53, 0.4) 0%, rgba(255, 107, 53, 0.18) 42%, rgba(255, 107, 53, 0) 70%);
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.55s var(--ease), opacity 0.5s ease;
+}
+
+.opt.selected::after {
+  transform: translate(-50%, -50%) scale(10);
+  opacity: 1;
+}
+
+.opt-dot,
+.opt-box {
+  position: relative;
+  flex: none;
+  width: 19px;
+  height: 19px;
+  border: 2px solid rgba(34, 34, 59, 0.3);
+  background: #fff;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+  z-index: 1;
+}
+
+.opt-dot {
+  border-radius: 50%;
+}
+
+.opt-box {
+  border-radius: 5px;
+}
+
+.opt-dot::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--orange);
+  transform: scale(0);
+  transition: transform 0.2s var(--ease);
+}
+
+.opt-box::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 0px;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(42deg) scale(0);
+  transition: transform 0.16s ease;
+}
+
+.opt input:checked ~ .opt-dot {
+  border-color: var(--orange);
+}
+
+.opt input:checked ~ .opt-dot::after {
+  transform: scale(1);
+}
+
+.opt input:checked ~ .opt-box {
+  border-color: var(--orange);
+  background: var(--orange);
+}
+
+.opt input:checked ~ .opt-box::after {
+  transform: rotate(42deg) scale(1);
+}
+
+.opt-txt {
+  position: relative;
+  z-index: 1;
+  font-size: 15px;
+  color: #4A4860;
+  transition: color 0.18s ease;
+}
+
+.opt input:checked ~ .opt-txt {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.req-q {
+  color: #B4B0A6;
+  letter-spacing: 0.06em;
+}
+
+.opt input:disabled ~ .opt-txt,
+.opt input:disabled ~ .opt-dot,
+.opt input:disabled ~ .opt-box {
+  opacity: 0.4;
+}
+
+.opt:has(input:disabled) {
+  cursor: default;
+}
+
+.opt:has(input:disabled):hover {
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(34, 34, 59, 0.14);
+}
+
+.other-input {
+  position: relative;
+  z-index: 2;
+  margin-left: auto;
+  width: 148px;
+  flex: none;
+  padding: 7px 10px;
+  border: 1.5px solid rgba(34, 34, 59, 0.2);
+  border-radius: 8px;
+  font-family: var(--font-b);
+  font-size: 13.5px;
+  color: var(--ink);
+  background: #fff;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.other-input:focus {
+  outline: none;
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.14);
+}
+
+.opt-hint {
+  font-size: 12.5px;
+  color: #98948f;
+  padding: 2px 2px 0;
+}
+
+.opt-hint b {
+  color: var(--orange);
+  font-family: var(--font-d);
+}
+
+/* ---------- 12. 评分题（1-5 星） ---------- */
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.stars {
+  display: flex;
+  gap: 8px;
+}
+
+.star {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  border: 1.5px solid rgba(34, 34, 59, 0.14);
+  background: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.16s var(--ease), box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.star svg {
+  width: 27px;
+  height: 27px;
+  fill: #E4DFD2;
+  stroke: #C9C4B6;
+  stroke-width: 1.4;
+  transition: fill 0.15s ease, stroke 0.15s ease, transform 0.15s ease;
+}
+
+.star:hover {
+  transform: translateY(-4px) rotate(-5deg);
+  border-color: rgba(255, 107, 53, 0.6);
+  box-shadow: 0 12px 20px -10px var(--shadow);
+}
+
+.star.on {
+  border-color: var(--orange);
+  background: #FFF3EC;
+}
+
+.star.on svg {
+  fill: var(--orange);
+  stroke: var(--orange);
+}
+
+.rating-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  min-width: 96px;
+}
+
+/* ---------- 13. 下拉题（自定义 popover） ---------- */
+.dd {
+  position: relative;
+}
+
+.dd-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 15px;
+  border: 1.5px solid rgba(34, 34, 59, 0.16);
+  border-radius: 12px;
+  background: #fff;
+  font-family: var(--font-b);
+  font-size: 15px;
+  font-weight: 500;
+  color: #4A4860;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.dd-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 107, 53, 0.55);
+  box-shadow: 0 10px 20px -10px var(--shadow);
+}
+
+.dd.open .dd-btn,
+.dd-btn:focus-visible {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.14);
+}
+
+.dd.filled .dd-val {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.dd-val {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dd-chev {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-right: 2px solid #98948f;
+  border-bottom: 2px solid #98948f;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 0.22s var(--ease);
+}
+
+.dd.open .dd-chev {
+  transform: rotate(225deg) translateY(-2px);
+}
+
+.dd-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  list-style: none;
+  background: #fff;
+  border: 1.5px solid rgba(34, 34, 59, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 22px 44px -16px var(--shadow);
+  padding: 6px;
+  max-height: 218px;
+  overflow: auto;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.22s var(--ease);
+}
+
+.dd.open .dd-list {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.dd-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: 9px;
+  font-size: 14.5px;
+  color: #4A4860;
+  cursor: pointer;
+  transition: background 0.14s ease, transform 0.14s ease, color 0.14s ease;
+}
+
+.dd-list li:hover {
+  background: #FFF3EC;
+  transform: translateX(4px);
+}
+
+.dd-list li.sel {
+  color: var(--orange);
+  font-weight: 700;
+}
+
+.dd-list li.sel::after {
+  content: "";
+  width: 6px;
+  height: 11px;
+  border: solid var(--orange);
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(42deg);
+}
+
+/* ---------- 14. 矩阵题 ---------- */
+.matrix-scroll {
+  position: relative;
+  overflow-x: auto;
+  border-radius: 14px;
+  scrollbar-width: thin;
+}
+
+.matrix {
+  min-width: 340px;
+  border: 1.5px solid rgba(34, 34, 59, 0.12);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.mx-head,
+.mx-row {
+  display: grid;
+  grid-template-columns: 92px repeat(4, 1fr);
+  align-items: stretch;
+}
+
+.mx-head {
+  background: #F7F4EC;
+  border-bottom: 1.5px solid rgba(34, 34, 59, 0.1);
+}
+
+.mx-head span {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #8f8b84;
+  text-align: center;
+  padding: 9px 2px;
+  letter-spacing: 0.04em;
+}
+
+.mx-corner {
+  text-align: left !important;
+  padding-left: 12px !important;
+  color: var(--blue) !important;
+}
+
+.mx-row + .mx-row {
+  border-top: 1px dashed rgba(34, 34, 59, 0.12);
+}
+
+.mx-label {
+  display: flex;
+  align-items: center;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 8px 4px 8px 12px;
+  color: #4A4860;
+  transition: color 0.2s ease;
+}
+
+.mx-row.mx-done .mx-label {
+  color: var(--ink);
+}
+
+.mx-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 6px 3px;
+  cursor: pointer;
+}
+
+.mx-cell input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.mx-cell span {
+  font-size: 11.5px;
+  line-height: 1.25;
+  text-align: center;
+  color: #6E6B80;
+  padding: 5px 3px;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.mx-cell:hover span {
+  border-color: rgba(255, 107, 53, 0.55);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.mx-cell input:checked + span {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 3px 0 var(--orange-deep);
+}
+
+.mx-cell input:focus-visible + span {
+  outline: 2px solid rgba(27, 154, 170, 0.7);
+  outline-offset: 1px;
+}
+
+/* ---------- 15. 填空 / 日期 ---------- */
+.fld-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #4A4860;
+  margin-bottom: -2px;
+}
+
+.fld-sub {
+  font-weight: 500;
+  color: #98948f;
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.txt,
+.txtarea,
+.date-in {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1.5px solid rgba(34, 34, 59, 0.16);
+  border-radius: 12px;
+  background: #fff;
+  font-family: var(--font-b);
+  font-size: 15px;
+  color: var(--ink);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.txt:hover,
+.txtarea:hover,
+.date-in:hover {
+  border-color: rgba(255, 107, 53, 0.45);
+}
+
+.txt:focus,
+.txtarea:focus,
+.date-in:focus {
+  outline: none;
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.14);
+}
+
+.txtarea {
+  min-height: 96px;
+  resize: none;
+  line-height: 1.7;
+}
+
+.counter {
+  align-self: flex-end;
+  font-family: var(--font-d);
+  font-size: 12px;
+  color: #A9A5B5;
+  margin-top: -4px;
+}
+
+.counter b {
+  color: var(--ink-soft);
+}
+
+.date-wrap {
+  position: relative;
+}
+
+.date-in {
+  font-family: var(--font-d);
+  letter-spacing: 0.04em;
+  min-height: 49px;
+}
+
+/* ---------- 16. 上传题 ---------- */
+.drop {
+  border: 2px dashed rgba(34, 34, 59, 0.24);
+  border-radius: 14px;
+  background: #FCFBF7;
+  padding: 26px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.drop:hover,
+.drop.over {
+  border-color: var(--orange);
+  background: #FFF6F1;
+  transform: translateY(-2px);
+}
+
+.drop-ico {
+  width: 38px;
+  height: 38px;
+  margin: 0 auto 10px;
+  border-radius: 12px;
+  background: rgba(255, 107, 53, 0.12);
+  position: relative;
+}
+
+.drop-ico::before,
+.drop-ico::after {
+  content: "";
+  position: absolute;
+  background: var(--orange);
+  border-radius: 2px;
+  left: 50%;
+  top: 50%;
+}
+
+.drop-ico::before {
+  width: 16px;
+  height: 3px;
+  transform: translate(-50%, -50%);
+}
+
+.drop-ico::after {
+  width: 3px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+}
+
+.drop strong {
+  display: block;
+  font-size: 14px;
+}
+
+.drop small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #98948f;
+}
+
+.file-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1.5px solid rgba(34, 34, 59, 0.14);
+  border-radius: 14px;
+  padding: 10px;
+  background: #fff;
+}
+
+.f-thumb {
+  width: 62px;
+  height: 62px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex: none;
+  background: #F0EDE4;
+}
+
+.f-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.f-name {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.f-size {
+  font-size: 12px;
+  color: #98948f;
+  font-family: var(--font-d);
+}
+
+.f-remove {
+  flex: none;
+  border: 1.5px solid rgba(34, 34, 59, 0.16);
+  background: #fff;
+  color: var(--err);
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 9px;
+  padding: 8px 11px;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.f-remove:hover {
+  transform: translateY(-2px);
+  border-color: var(--err);
+}
+
+/* ---------- 17. NPS 量表（0-10） ---------- */
+.nps-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1.5px dashed rgba(34, 34, 59, 0.12);
+  padding-top: 12px;
+}
+
+.nps {
+  display: flex;
+  gap: 5px;
+}
+
+.nps button {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  border: 1.5px solid rgba(34, 34, 59, 0.16);
+  border-radius: 10px;
+  background: #fff;
+  font-family: var(--font-d);
+  font-size: 14px;
+  font-weight: 700;
+  color: #4A4860;
+  cursor: pointer;
+  transition: transform 0.14s ease, border-color 0.14s ease, color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
+}
+
+.nps button:hover {
+  transform: translateY(-3px);
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.nps button.sel {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: #fff;
+  box-shadow: 0 4px 0 var(--orange-deep);
+  transform: translateY(1px);
+}
+
+.nps-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11.5px;
+  color: #98948f;
+}
+
+/* ---------- 18. 底部进度点 ---------- */
+.dots-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.dots-bar[hidden] {
+  display: none !important;
+}
+
+.swipe-hint {
+  display: none;
+  font-size: 11.5px;
+  letter-spacing: 0.18em;
+  color: #A9A5B5;
+  font-family: var(--font-d);
+}
+
+.dots-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  pointer-events: auto;
+}
+
+.pos-txt {
+  font-family: var(--font-d);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #98948f;
+  font-variant-numeric: tabular-nums;
+}
+
+.dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1.5px solid rgba(34, 34, 59, 0.08);
+  border-radius: 999px;
+  padding: 11px 16px;
+  box-shadow: 0 14px 30px -18px var(--shadow);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 2px solid rgba(34, 34, 59, 0.28);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: width 0.28s var(--ease), background 0.22s ease, border-color 0.22s ease;
+}
+
+.dot.lit {
+  background: var(--orange);
+  border-color: var(--orange);
+}
+
+.dot.now {
+  width: 27px;
+  background: var(--orange);
+  border-color: var(--orange);
+  animation: dotPop 0.36s var(--ease);
+}
+
+.dot:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.dot:not(:disabled):hover {
+  border-color: var(--orange);
+  transform: scale(1.25);
+}
+
+@keyframes dotPop {
+  0%   { transform: scale(0.5); }
+  60%  { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- 19. 完成页：ALL DONE + 摘要 + 庆祝 ---------- */
+.done-ov {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(700px 480px at 82% 8%, rgba(255, 107, 53, 0.1), transparent 70%),
+    radial-gradient(700px 520px at 10% 92%, rgba(27, 154, 170, 0.12), transparent 70%),
+    linear-gradient(#F7F4EE, #F0ECE2);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.45s ease, visibility 0s linear 0.45s;
+}
+
+.done-ov.show {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.45s ease, visibility 0s;
+}
+
+.done-card {
+  position: relative;
+  width: min(580px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: #fff;
+  border: 1.5px solid rgba(34, 34, 59, 0.08);
+  border-radius: 22px;
+  box-shadow: 0 44px 90px -32px var(--shadow);
+  padding: clamp(24px, 4.5vw, 42px);
+  text-align: center;
+  transform: translateY(26px) scale(0.96);
+  transition: transform 0.5s var(--ease);
+}
+
+.done-ov.show .done-card {
+  transform: translateY(0) scale(1);
+}
+
+.ok {
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 6px;
+  display: block;
+}
+
+.ok-c,
+.ok-p {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ok-c {
+  stroke: var(--orange);
+  stroke-width: 5;
+  stroke-dasharray: 277;
+  stroke-dashoffset: 277;
+}
+
+.ok-p {
+  stroke: var(--ink);
+  stroke-width: 6;
+  stroke-dasharray: 80;
+  stroke-dashoffset: 80;
+}
+
+.done-ov.show .ok-c {
+  animation: draw 0.7s 0.15s var(--ease) forwards;
+}
+
+.done-ov.show .ok-p {
+  animation: draw 0.45s 0.7s var(--ease) forwards;
+}
+
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.all-done {
+  font-family: var(--font-d);
+  font-weight: 800;
+  font-size: clamp(38px, 7vw, 60px);
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+}
+
+.all-done em {
+  font-style: normal;
+  color: var(--orange);
+}
+
+.done-msg {
+  margin-top: 8px;
+  font-size: 14.5px;
+  color: var(--ink-soft);
+}
+
+.receipt {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-family: var(--font-d);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--blue);
+  background: rgba(27, 154, 170, 0.09);
+  border: 1.5px dashed rgba(27, 154, 170, 0.45);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.digest {
+  margin: 20px 0 6px;
+  text-align: left;
+  border: 1.5px dashed rgba(34, 34, 59, 0.16);
+  border-radius: 16px;
+  padding: 6px 16px;
+  max-height: 230px;
+  overflow: auto;
+}
+
+.digest-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 18px;
+  padding: 9px 0;
+  border-bottom: 1px dashed rgba(34, 34, 59, 0.1);
+  font-size: 13.5px;
+}
+
+.digest-row:last-child {
+  border-bottom: none;
+}
+
+.digest-row dt {
+  flex: none;
+  color: #98948f;
+}
+
+.digest-row dd {
+  text-align: right;
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.digest-empty {
+  padding: 14px 0;
+  font-size: 13px;
+  color: #98948f;
+  text-align: center;
+}
+
+.done-meta {
+  font-family: var(--font-d);
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+  color: #A9A5B5;
+  margin-top: 4px;
+}
+
+.done-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+/* 彩带 */
+.confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.confetti i {
+  position: absolute;
+  top: -4%;
+  left: var(--cx, 50%);
+  width: 9px;
+  height: 15px;
+  border-radius: 2px;
+  transform: rotate(0deg) scale(var(--cs, 1));
+  animation: confFall 1.9s ease-in var(--cd, 0s) forwards;
+}
+
+@keyframes confFall {
+  0%   { transform: translateY(0) rotate(0deg) scale(var(--cs, 1)); opacity: 1; }
+  100% { transform: translateY(106vh) rotate(var(--cr, 360deg)) scale(var(--cs, 1)); opacity: 0.85; }
+}
+
+/* ---------- 20. 轻提示 Toast ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 92px;
+  transform: translate(-50%, 18px);
+  z-index: 90;
+  background: var(--ink);
+  color: #fff;
+  font-size: 13.5px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  box-shadow: 0 16px 30px -14px rgba(34, 34, 59, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s var(--ease);
+  max-width: calc(100vw - 40px);
+  text-align: center;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---------- 21. 无 JS 提示 ---------- */
+.noscript-tip {
+  position: fixed;
+  inset: auto 16px 16px;
+  z-index: 99;
+  background: var(--ink);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  text-align: center;
+}
+
+/* ==========================================================================
+   响应式：≥1200px / 768px / 375px 三档
+   ========================================================================== */
+
+@media (max-width: 1199px) {
+  .side-title {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    height: 54px;
+  }
+
+  .brand small {
+    display: none;
+  }
+
+  .chip-timer {
+    display: none;
+  }
+
+  .hero {
+    padding: 84px 18px 64px;
+  }
+
+  .pile {
+    width: 330px;
+    top: -86px;
+  }
+
+  .pile-card {
+    width: 78px;
+    height: 104px;
+    margin-left: -39px;
+  }
+
+  .ghost-year {
+    top: -92px;
+  }
+
+  .stage {
+    padding: 76px 16px 132px;
+  }
+
+  /* 移动端：题卡宽度自适应至屏宽 - 32px */
+  .deck-wrap {
+    width: calc(100% - 32px);
+    max-width: 420px;
+  }
+
+  .deck {
+    --deck-h: clamp(460px, calc(100vh - 216px), 620px);
+  }
+
+  .card-face {
+    padding: 20px 20px 16px;
+  }
+
+  .q-num {
+    font-size: 46px;
+  }
+
+  .q-title {
+    font-size: 18px;
+  }
+
+  .key-hint {
+    display: none;
+  }
+
+  .card-foot .btn-next {
+    flex: 1;
+  }
+
+  .swipe-hint {
+    display: block;
+  }
+
+  .mx-head,
+  .mx-row {
+    grid-template-columns: 76px repeat(4, 1fr);
+  }
+
+  .nps button {
+    height: 37px;
+    font-size: 13px;
+  }
+
+  .toast {
+    bottom: 120px;
+  }
+}
+
+@media (max-width: 430px) {
+  :root {
+    --radius: 15px;
+    --d: 11px;
+  }
+
+  .hero-title {
+    font-size: clamp(26px, 8vw, 32px);
+  }
+
+  .chips {
+    gap: 8px;
+  }
+
+  .chip {
+    font-size: 12.5px;
+    padding: 7px 12px;
+  }
+
+  .q-num {
+    font-size: 40px;
+  }
+
+  .q-num::after {
+    width: 28px;
+    height: 4px;
+    margin-top: 6px;
+  }
+
+  .q-title {
+    font-size: 17px;
+  }
+
+  .card-face {
+    padding: 17px 16px 14px;
+  }
+
+  .opt {
+    padding: 11px 12px;
+    gap: 10px;
+  }
+
+  .opt-txt {
+    font-size: 14px;
+  }
+
+  .other-input {
+    width: 118px;
+  }
+
+  .star {
+    width: 42px;
+    height: 42px;
+  }
+
+  .star svg {
+    width: 23px;
+    height: 23px;
+  }
+
+  .nps button {
+    height: 34px;
+    font-size: 12.5px;
+    border-radius: 8px;
+  }
+
+  .mx-head,
+  .mx-row {
+    grid-template-columns: 70px repeat(4, 1fr);
+  }
+
+  .mx-label {
+    font-size: 11.5px;
+    padding-left: 9px;
+  }
+
+  .dots {
+    padding: 9px 12px;
+    gap: 6px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .dot.now {
+    width: 22px;
+  }
+
+  .pos-txt {
+    font-size: 12px;
+  }
+
+  .done-actions .btn {
+    flex: 1;
+  }
+}
+
+/* ==========================================================================
+   降级方案：prefers-reduced-motion —— 动效全部静止，卡片直接切换
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .blob,
+  .plus,
+  .pile-card,
+  .qcard,
+  .card-face,
+  .deck::before,
+  .deck::after {
+    animation: none !important;
+  }
+
+  .deck.dealing .qcard,
+  .deck.gather-out .qcard {
+    animation: none !important;
+  }
+
+  .qcard.is-done {
+    opacity: 0;
+  }
+
+  .confetti {
+    display: none;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- 背景装饰：光斑与十字 -->
+<div class="blob blob-a" aria-hidden="true"></div>
+<div class="blob blob-b" aria-hidden="true"></div>
+<span class="plus plus-a" aria-hidden="true"></span>
+<span class="plus plus-b" aria-hidden="true"></span>
+<span class="plus plus-c" aria-hidden="true"></span>
+
+<!-- 顶部信息条 -->
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span>岛上书店<small> · 城市共读计划</small></span>
+  </div>
+  <div class="top-right">
+    <span class="chip-timer" id="timer" hidden>00:00</span>
+    <span class="chip-pos" id="pos" hidden>01 / 11</span>
+  </div>
+</header>
+
+<!-- 左右竖排装饰标题（≥1200px 显示） -->
+<aside class="side-title" aria-hidden="true">2026 城市青年阅读习惯调查 · 立体卡匣</aside>
+<aside class="side-title side-title-r" aria-hidden="true">ISLAND BOOKS · CARD DECK · READING REPORT</aside>
+
+<!-- 开场：浅色空间 -->
+<section class="hero" id="hero">
+  <div class="pile" aria-hidden="true">
+    <div class="pile-card" style="--px:-158px; --py:-16px; --pr:-9deg;  --d:0.05s"><i class="pc-a"></i><i></i><i></i></div>
+    <div class="pile-card" style="--px:-96px;  --py:8px;   --pr:6deg;   --d:0.16s"><i class="pc-a"></i><i></i><i></i></div>
+    <div class="pile-card" style="--px:-34px;  --py:-14px; --pr:-3deg;  --d:0.27s"><i class="pc-a"></i><i></i><i></i></div>
+    <div class="pile-card" style="--px:30px;   --py:10px;  --pr:4deg;   --d:0.38s"><i class="pc-a"></i><i></i><i></i></div>
+    <div class="pile-card" style="--px:94px;   --py:-10px; --pr:8deg;   --d:0.49s"><i class="pc-a"></i><i></i><i></i></div>
+    <div class="pile-card" style="--px:156px;  --py:6px;   --pr:-6deg;  --d:0.60s"><i class="pc-a"></i><i></i><i></i></div>
+  </div>
+  <div class="hero-inner">
+    <div class="ghost-year" aria-hidden="true">2026</div>
+    <p class="hero-kicker">岛上书店 · 城市共读计划 No.03</p>
+    <h1 class="hero-title">2026 城市青年<em>阅读习惯</em>调查</h1>
+    <p class="hero-sub">像翻一叠向导卡一样完成这份问卷——每一张卡，都是你与这座城市阅读生活的一次对答。</p>
+    <div class="chips">
+      <span class="chip"><i aria-hidden="true"></i>12 道题目</span>
+      <span class="chip"><i aria-hidden="true"></i>预计 3 分钟</span>
+      <span class="chip"><i aria-hidden="true"></i>匿名作答 · 进度自动保存</span>
+    </div>
+    <p class="hero-desc">本问卷由一间虚构书店发起，全部数据仅用于生成年度阅读报告，不收集任何个人身份信息。</p>
+    <div class="cta-row">
+      <button type="button" class="btn solid btn-xl" id="startBtn">开始作答 <span class="arr">→</span></button>
+      <span class="cta-note" id="resumeNote" hidden>检测到未完成的作答草稿，将自动续填</span>
+    </div>
+  </div>
+</section>
+
+<!-- 3D 卡片舞台 -->
+<main class="stage" id="stage" aria-label="问卷卡片桌">
+  <div class="deck-wrap">
+    <div class="deck" id="deck"><!-- 题卡由 JS 生成 --></div>
+  </div>
+</main>
+
+<!-- 底部进度点 -->
+<div class="dots-bar" id="dotsBar" hidden>
+  <span class="swipe-hint">← 左右滑动翻卡 →</span>
+  <div class="dots-wrap">
+    <span class="pos-txt" id="posTxt">01 / 11</span>
+    <div class="dots" id="dots" role="navigation" aria-label="答题进度"></div>
+  </div>
+</div>
+
+<!-- 完成页：ALL DONE -->
+<section class="done-ov" id="doneOv" aria-hidden="true">
+  <div class="confetti" id="confetti" aria-hidden="true"></div>
+  <div class="done-card">
+    <svg class="ok" viewBox="0 0 96 96" aria-hidden="true">
+      <circle class="ok-c" cx="48" cy="48" r="44"></circle>
+      <path class="ok-p" d="M30 50 L43 63 L67 34"></path>
+    </svg>
+    <h2 class="all-done">ALL <em>DONE</em>!</h2>
+    <p class="done-msg">提交成功！你的阅读画像已加入 2026 城市共读报告。</p>
+    <p class="receipt">回执编号 <b id="receiptNo">#RD2026-0000</b></p>
+    <dl class="digest" id="digest"></dl>
+    <p class="done-meta" id="doneMeta"></p>
+    <div class="done-actions">
+      <button type="button" class="btn ghost" id="copyBtn">复制回执编号</button>
+      <button type="button" class="btn solid" id="againBtn">再填一份 <span class="arr">→</span></button>
+    </div>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<noscript>
+  <div class="noscript-tip">这份立体卡匣问卷需要启用 JavaScript 才能翻卡作答。</div>
+</noscript>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ========================================================================
+   * 0. 小工具
+   * ====================================================================== */
+  function $(s, el) { return (el || document).querySelector(s); }
+  function $$(s, el) { return Array.prototype.slice.call((el || document).querySelectorAll(s)); }
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function pad2(n) { return String(n).length < 2 ? '0' + n : String(n); }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function fmtTime(ms) {
+    var s = Math.floor(ms / 1000);
+    return pad2(Math.floor(s / 60)) + ':' + pad2(s % 60);
+  }
+  function cssPath(v) {
+    return (window.CSS && CSS.escape) ? CSS.escape(v) : String(v).replace(/"/g, '\\"');
+  }
+
+  var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var FINE = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (REDUCED) { document.documentElement.classList.add('reduced'); }
+
+  var OTHER = '其他';
+  var DRAFT_KEY = 'cd3d_survey_draft_v1';
+  var RATING_LABELS = ['很不满意', '不太满意', '一般', '比较满意', '非常满意'];
+
+  /* ========================================================================
+   * 1. 题库（第六节 12 道题目文案）
+   * ====================================================================== */
+  var QUESTIONS = [
+    {
+      id: 'q1', badge: '单选', type: 'radio', required: true,
+      title: '你的年龄段是？',
+      options: ['18-24 岁', '25-30 岁', '31-35 岁', '36 岁及以上']
+    },
+    {
+      id: 'q2', badge: '单选', type: 'radio', required: true,
+      title: '你目前的身份是？',
+      options: ['在校学生', '职场新人（0-3 年）', '资深职场人', '自由职业'],
+      other: true
+    },
+    {
+      id: 'q3', badge: '多选', type: 'checkbox', required: true, max: 4,
+      title: '过去一年你主要通过哪些方式阅读？',
+      desc: '最多选 4 项',
+      options: ['纸质书', '微信读书等电子书 App', 'Kindle／电纸书', '听书／播客', '公众号长文', '图书馆借阅'],
+      other: true
+    },
+    {
+      id: 'q4', badge: '单选', type: 'radio', required: true,
+      title: '你使用电子书阅读的频率是？',
+      desc: '条件题：第 3 题选择了电子书／Kindle 的书友才会翻到这张卡',
+      cond: function (a) {
+        return !!(a.q3 && a.q3.list && (
+          a.q3.list.indexOf('微信读书等电子书 App') >= 0 ||
+          a.q3.list.indexOf('Kindle／电纸书') >= 0));
+      },
+      options: ['几乎每天', '每周几次', '偶尔', '很少']
+    },
+    {
+      id: 'q5', badge: '评分', type: 'rating', required: true,
+      title: '你对自己过去一年的阅读量满意吗？',
+      desc: '1 星 = 很不满意，5 星 = 非常满意'
+    },
+    {
+      id: 'q6', badge: '下拉', type: 'select', required: true,
+      title: '你平均每周的阅读时长大约是？',
+      desc: '点击卡片上的选择框展开选项',
+      options: ['少于 1 小时', '1-3 小时', '3-7 小时', '7-14 小时', '14 小时以上']
+    },
+    {
+      id: 'q7', badge: '矩阵', type: 'matrix', required: true,
+      title: '过去三个月，你在以下场景的阅读频率是？',
+      desc: '每一行选择一个频率',
+      rows: [
+        { k: 'r1', label: '通勤路上' },
+        { k: 'r2', label: '睡前' },
+        { k: 'r3', label: '周末午后' },
+        { k: 'r4', label: '工作午休' }
+      ],
+      cols: ['几乎每天', '经常', '偶尔', '从不']
+    },
+    {
+      id: 'q8', badge: '填空', type: 'text', required: true,
+      title: '2026 年你读完的最后一本书的书名是？',
+      desc: '记得写完整的书名',
+      maxlength: 50, placeholder: '输入书名，如《活着》'
+    },
+    {
+      id: 'q9', badge: '多选', type: 'checkbox', required: true,
+      title: '阻碍你读更多书的主要原因是？',
+      desc: '可多选',
+      options: ['没时间', '不知道选什么书', '静不下心', '电子干扰太多', '书价高', '找不到共读伙伴']
+    },
+    {
+      id: 'q10', badge: '日期', type: 'date', required: true,
+      title: '你上一次走进实体书店或图书馆是哪一天？',
+      desc: '只统计日期，不涉及具体门店'
+    },
+    {
+      id: 'q11', badge: '上传', type: 'file', required: false,
+      title: '晒出你的书架、正在读的书或最想推荐的一本书',
+      desc: '选填 · 支持 jpg / png，不超过 5MB'
+    },
+    {
+      id: 'q12', badge: '填空 + 量表', type: 'composite', required: true, minLen: 5,
+      title: '写一句「荐书语」推荐给同城的陌生书友',
+      desc: '以及——你有多大意愿参加「城市共读计划」？0 = 绝不可能，10 = 非常愿意',
+      maxlength: 80
+    }
+  ];
+
+  /* ========================================================================
+   * 2. 全局状态
+   * ====================================================================== */
+  var answers = {};      /* 答案集 */
+  var order = [];        /* 当前可见题目序列（含逻辑跳转） */
+  var idx = 0;           /* 当前卡下标 */
+  var maxVisited = 0;    /* 走到的最远位置（用于进度点回退） */
+  var lock = false;      /* 翻卡动画锁 */
+  var started = false;
+  var finished = false;
+  var restored = false;
+  var advTimer = null;   /* 自动跳转计时器 */
+  var elapsedMs = 0;
+  var running = false;
+  var lastDotIdx = -1;
+  var cardEls = {};      /* id -> DOM */
+
+  var hero = $('#hero');
+  var stage = $('#stage');
+  var deck = $('#deck');
+  var dotsBar = $('#dotsBar');
+  var dotsEl = $('#dots');
+  var posTxt = $('#posTxt');
+  var posChip = $('#pos');
+  var timerEl = $('#timer');
+  var toastEl = $('#toast');
+  var doneOv = $('#doneOv');
+  var digestEl = $('#digest');
+
+  /* ========================================================================
+   * 3. 草稿自动保存 / 恢复（断点续填）
+   * ====================================================================== */
+  function loadDraft() {
+    try {
+      var raw = localStorage.getItem(DRAFT_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  function saveDraft() {
+    if (!started || finished) { return; }
+    try {
+      /* 预览图 dataUrl 不入库，避免超出 localStorage 配额 */
+      var slim = JSON.parse(JSON.stringify(answers));
+      if (slim.q11) { slim.q11.dataUrl = ''; }
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        a: slim, i: idx, mv: maxVisited, t: elapsedMs
+      }));
+    } catch (e) { /* 存储不可用时静默降级 */ }
+  }
+
+  function clearDraft() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) { /* noop */ }
+  }
+
+  function restoreDraft() {
+    var d = loadDraft();
+    if (!d || !d.a) { return; }
+    var has = Object.keys(d.a).some(function (k) {
+      var v = d.a[k];
+      if (!v) { return false; }
+      if (typeof v === 'string') { return !!v.trim(); }
+      if (v.list) { return v.list.length > 0; }
+      return !!(v.v || v.text || v.nps != null || v.name);
+    });
+    if (!has) { return; }
+    answers = d.a;
+    maxVisited = d.mv || 0;
+    idx = clamp(d.i || 0, 0, QUESTIONS.length - 1);
+    elapsedMs = d.t || 0;
+    restored = true;
+    var sb = $('#startBtn');
+    sb.innerHTML = '继续作答 <span class="arr">→</span>';
+    $('#resumeNote').hidden = false;
+  }
+
+  /* ========================================================================
+   * 4. 逻辑跳转：计算可见题目序列
+   * ====================================================================== */
+  function computeOrder() {
+    return QUESTIONS.filter(function (q) {
+      if (!q.cond) { return true; }
+      try { return !!q.cond(answers); } catch (e) { return false; }
+    });
+  }
+
+  function refreshOrder() {
+    var prevId = order[idx] ? order[idx].id : null;
+    order = computeOrder();
+    if (prevId) {
+      var ni = -1;
+      for (var i = 0; i < order.length; i++) {
+        if (order[i].id === prevId) { ni = i; break; }
+      }
+      if (ni >= 0) { idx = ni; }
+    }
+    idx = clamp(idx, 0, Math.max(0, order.length - 1));
+    maxVisited = clamp(maxVisited, 0, Math.max(0, order.length - 1));
+    rebuildDots();
+  }
+
+  /* ========================================================================
+   * 5. 校验（必填 / 长度 / 日期区间 / 条件补充）
+   * ====================================================================== */
+  function todayIso() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+
+  function validate(q) {
+    var a = answers[q.id];
+    switch (q.type) {
+      case 'radio':
+        if (q.required && (!a || !a.v)) { return '这是必答题，请先选择一个选项'; }
+        if (a && a.v === OTHER && !(a.other || '').trim()) { return '你选择了「其他」，请在横线上补充具体内容'; }
+        return '';
+      case 'checkbox':
+        if (q.required && (!a || !a.list || !a.list.length)) { return '这是必答题，请至少勾选一项'; }
+        if (a && a.list && a.list.indexOf(OTHER) >= 0 && !(a.other || '').trim()) {
+          return '你勾选了「其他」，请在横线上补充具体内容';
+        }
+        return '';
+      case 'select':
+        if (q.required && !a) { return '请展开下拉列表，选择一个时长区间'; }
+        return '';
+      case 'rating':
+        if (q.required && !a) { return '请点亮星星，给出 1-5 星的评价'; }
+        return '';
+      case 'matrix':
+        if (q.required) {
+          var miss = q.rows.filter(function (r) { return !a || !a[r.k]; });
+          if (miss.length) { return '还有 ' + miss.length + ' 个场景没选频率（从「' + miss[0].label + '」开始补齐吧）'; }
+        }
+        return '';
+      case 'text':
+        if (q.required && !(a || '').trim()) { return '这是必答题，请填一下书名'; }
+        return '';
+      case 'date':
+        if (q.required && !a) { return '请选择一个日期'; }
+        if (a) {
+          if (a < '2020-01-01') { return '日期不能早于 2020 年，请重新选择'; }
+          if (a > todayIso()) { return '不能选择未来的日期，请重新选择'; }
+        }
+        return '';
+      case 'composite':
+        var t = a && a.text ? a.text.trim() : '';
+        if (q.required && t.length < q.minLen) {
+          return '荐书语至少写 ' + q.minLen + ' 个字（当前 ' + t.length + ' 个字）';
+        }
+        if (q.required && (!a || a.nps == null)) { return '请为「城市共读计划」选择 0-10 的意愿分'; }
+        return '';
+      case 'file':
+        return ''; /* 选填；类型与大小在选择文件时已校验 */
+    }
+    return '';
+  }
+
+  function focusTarget(q, card) {
+    var body = $('.q-body', card);
+    switch (q.type) {
+      case 'radio': {
+        var rs = $$('input[type="radio"]', body);
+        var un = rs.filter(function (r) { return !r.disabled && !r.checked; });
+        return un[0] || rs[0];
+      }
+      case 'checkbox': {
+        var cs = $$('input[type="checkbox"]', body);
+        var uc = cs.filter(function (c) { return !c.disabled && !c.checked; });
+        return uc[0] || cs[0];
+      }
+      case 'select':
+        return $('.dd-btn', body);
+      case 'rating':
+        return $('.star', body);
+      case 'matrix': {
+        var row = $$('.mx-row', body).filter(function (r) {
+          return !$('input:checked', r);
+        })[0];
+        return (row && $('input', row)) || $('input', body);
+      }
+      case 'text':
+        return $('.txt', body);
+      case 'date':
+        return $('.date-in', body);
+      case 'composite': {
+        var a = answers[q.id] || {};
+        var t = (a.text || '').trim();
+        if (t.length < (q.minLen || 0)) { return $('.txtarea', body); }
+        return $('.nps button', body);
+      }
+      default:
+        return $('.btn-next', card);
+    }
+  }
+
+  function showError(q, msg) {
+    var card = cardEls[q.id];
+    if (!card) { return; }
+    void card.offsetWidth; /* 重置动画 */
+    card.classList.remove('has-error');
+    void card.offsetWidth;
+    card.classList.add('has-error');
+    var errEl = $('.q-err', card);
+    errEl.textContent = msg;
+    errEl.classList.add('show');
+    setTimeout(function () {
+      var f = focusTarget(q, card);
+      if (f) { try { f.focus({ preventScroll: false }); } catch (e) { f.focus(); } }
+    }, REDUCED ? 40 : 320);
+  }
+
+  function clearError(q) {
+    var card = cardEls[q.id];
+    if (!card) { return; }
+    card.classList.remove('has-error');
+    $('.q-err', card).classList.remove('show');
+  }
+
+  /* ========================================================================
+   * 6. 题卡 DOM 构建
+   * ====================================================================== */
+  function buildEl(html) {
+    var t = document.createElement('template');
+    t.innerHTML = html.trim();
+    return t.content.firstElementChild;
+  }
+
+  function optRow(type, q, op, isOther) {
+    var extra = isOther
+      ? '<input type="text" class="other-input" maxlength="30" placeholder="请填写" aria-label="「其他」补充说明">'
+      : '';
+    var tail = isOther ? '<span class="req-q">____</span>' : '';
+    if (type === 'radio') {
+      return '<label class="opt">' +
+        '<input type="radio" name="' + q.id + '" value="' + esc(op) + '">' +
+        '<span class="opt-dot" aria-hidden="true"></span>' +
+        '<span class="opt-txt">' + esc(op) + tail + '</span>' + extra +
+        '</label>';
+    }
+    return '<label class="opt">' +
+      '<input type="checkbox" name="' + q.id + '" value="' + esc(op) + '">' +
+      '<span class="opt-box" aria-hidden="true"></span>' +
+      '<span class="opt-txt">' + esc(op) + tail + '</span>' + extra +
+      '</label>';
+  }
+
+  function bodyHTML(q) {
+    switch (q.type) {
+      case 'radio': {
+        var h = q.options.map(function (op) { return optRow('radio', q, op, false); }).join('');
+        if (q.other) { h += optRow('radio', q, OTHER, true); }
+        return h;
+      }
+      case 'checkbox': {
+        var h2 = q.options.map(function (op) { return optRow('checkbox', q, op, false); }).join('');
+        if (q.other) { h2 += optRow('checkbox', q, OTHER, true); }
+        if (q.max) {
+          h2 += '<p class="opt-hint" data-hint>已选 <b>0</b> / ' + q.max + ' 项' +
+            (q.max ? '，选满后将锁定其余选项' : '') + '</p>';
+        }
+        return h2;
+      }
+      case 'rating': {
+        var stars = '';
+        for (var i = 1; i <= 5; i++) {
+          stars += '<button type="button" class="star" data-v="' + i + '" aria-label="' + i + ' 星">' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.7-6.2-3.7-6.2 3.7 1.6-6.7L2.2 8.9l6.9-.6z"/></svg>' +
+            '</button>';
+        }
+        return '<div class="rating"><div class="stars">' + stars + '</div>' +
+          '<p class="rating-label">点击星星打分</p></div>';
+      }
+      case 'select': {
+        var lis = q.options.map(function (op) {
+          return '<li role="option" data-v="' + esc(op) + '" tabindex="-1"><span>' + esc(op) + '</span></li>';
+        }).join('');
+        return '<div class="dd">' +
+          '<button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false">' +
+          '<span class="dd-val">请选择时长区间</span><i class="dd-chev" aria-hidden="true"></i></button>' +
+          '<ul class="dd-list" role="listbox">' + lis + '</ul></div>';
+      }
+      case 'matrix': {
+        var head = '<div class="mx-head"><span class="mx-corner">场景</span>' +
+          q.cols.map(function (c) { return '<span>' + esc(c) + '</span>'; }).join('') + '</div>';
+        var rows = q.rows.map(function (r) {
+          return '<div class="mx-row" data-k="' + r.k + '"><span class="mx-label">' + esc(r.label) + '</span>' +
+            q.cols.map(function (c) {
+              return '<label class="mx-cell"><input type="radio" name="mx_' + q.id + '_' + r.k + '" value="' + esc(c) + '">' +
+                '<span>' + esc(c) + '</span></label>';
+            }).join('') + '</div>';
+        }).join('');
+        return '<div class="matrix-scroll"><div class="matrix">' + head + rows + '</div></div>';
+      }
+      case 'text':
+        return '<input type="text" class="txt" maxlength="' + (q.maxlength || 60) + '" placeholder="' + esc(q.placeholder || '') + '">' +
+          '<div class="counter"><b>0</b> / ' + (q.maxlength || 60) + '</div>';
+      case 'date':
+        return '<div class="date-wrap"><input type="date" class="date-in" min="2020-01-01"></div>';
+      case 'file':
+        return '<div class="drop" role="button" tabindex="0" aria-label="点击选择图片">' +
+          '<span class="drop-ico" aria-hidden="true"></span>' +
+          '<strong>点击选择，或把照片拖到这里</strong>' +
+          '<small>jpg / png · 不超过 5MB · 仅在本页预览，不会真的上传</small>' +
+          '<input type="file" class="file-in hide" accept="image/jpeg,image/png"></div>' +
+          '<div class="file-card hide"><img class="f-thumb" alt="已选择照片的预览" draggable="false">' +
+          '<span class="f-meta"><span class="f-name"></span><br><span class="f-size"></span></span>' +
+          '<button type="button" class="f-remove">移除</button></div>';
+      case 'composite':
+        return '<label class="fld-label" for="ta_' + q.id + '">荐书语<span class="fld-sub">至少 5 个字，将展示在共读墙上</span></label>' +
+          '<textarea id="ta_' + q.id + '" class="txtarea" maxlength="' + (q.maxlength || 80) + '" ' +
+          'placeholder="例：《夜晚的潜水艇》——想象力的深夜泳池，游一圈就不想上岸。"></textarea>' +
+          '<div class="counter"><b>0</b> / ' + (q.maxlength || 80) + '</div>' +
+          '<div class="nps-wrap"><span class="fld-label">你有多大意愿参加「城市共读计划」？</span>' +
+          '<div class="nps" role="group" aria-label="意愿分 0 到 10">' +
+          (function () {
+            var b = '';
+            for (var n = 0; n <= 10; n++) {
+              b += '<button type="button" data-v="' + n + '" aria-label="' + n + ' 分">' + n + '</button>';
+            }
+            return b;
+          })() +
+          '</div><div class="nps-legend"><span>0 · 绝不可能</span><span>10 · 非常愿意</span></div></div>';
+    }
+    return '';
+  }
+
+  function buildCard(q) {
+    var card = buildEl(
+      '<article class="qcard" data-id="' + q.id + '">' +
+      '<div class="card-tilt">' +
+      '<div class="card-face">' +
+      '<header class="card-head">' +
+      '<span class="q-num" aria-hidden="true">01</span>' +
+      '<span class="head-tags">' +
+      '<span class="q-badge">' + esc(q.badge) + '</span>' +
+      '<span class="q-req ' + (q.required ? 'is-req' : 'is-opt') + '">' + (q.required ? '必填' : '选填') + '</span>' +
+      '</span>' +
+      '</header>' +
+      '<h2 class="q-title">' + esc(q.title) + '</h2>' +
+      (q.desc ? '<p class="q-desc">' + esc(q.desc) + '</p>' : '') +
+      '<div class="q-body">' + bodyHTML(q) + '</div>' +
+      '<p class="q-err" role="alert"></p>' +
+      '<footer class="card-foot">' +
+      '<button type="button" class="btn ghost btn-prev">← 上一题</button>' +
+      '<span class="key-hint">ENTER ↵ 翻卡</span>' +
+      '<button type="button" class="btn solid btn-next">下一题 <span class="arr">→</span></button>' +
+      '</footer>' +
+      '</div></div></article>'
+    );
+    /* 卡堆深处每张卡的微小错位（洗牌后的自然堆叠感） */
+    card.style.setProperty('--jx', (Math.random() * 6 - 3).toFixed(1) + 'px');
+    card.style.setProperty('--jy', (Math.random() * 5 - 2.5).toFixed(1) + 'px');
+    card.style.setProperty('--jr', (Math.random() * 2.4 - 1.2).toFixed(2) + 'deg');
+    deck.appendChild(card);
+    cardEls[q.id] = card;
+    wireCard(q, card);
+    return card;
+  }
+
+  /* ---------- 卡内交互绑定 ---------- */
+  function wireCard(q, card) {
+    var body = $('.q-body', card);
+
+    $('.btn-prev', card).addEventListener('click', goPrev);
+    $('.btn-next', card).addEventListener('click', function () { goNext(); });
+    $('.card-face', card).addEventListener('animationend', function (e) {
+      /* 只响应卡片抖动动画本身，避免子元素动画（如错误条滑入）冒泡提前中断 shake */
+      if (e && e.animationName === 'cardShake') {
+        card.classList.remove('has-error');
+      }
+    });
+
+    if (q.type === 'radio' || q.type === 'checkbox') {
+      body.addEventListener('change', function (e) {
+        var t = e.target;
+        if (q.type === 'radio' && t.matches('input[type="radio"]')) {
+          var v = t.value;
+          var prev = answers[q.id] || {};
+          answers[q.id] = { v: v, other: (v === OTHER && prev.other) ? prev.other : '' };
+          syncOptSel(q, card);
+          inkFrom(e, t);
+          afterAnswer(q, true);
+        } else if (q.type === 'checkbox' && t.matches('input[type="checkbox"]')) {
+          syncCheckboxAnswer(q, card);
+          syncOptSel(q, card);
+          syncMax(q, card);
+          inkFrom(e, t);
+          afterAnswer(q, false);
+        }
+      });
+      body.addEventListener('input', function (e) {
+        if (e.target.classList && e.target.classList.contains('other-input')) {
+          ensureOtherSelected(q, card);
+          var a = answers[q.id] || (answers[q.id] = q.type === 'checkbox' ? { list: [], other: '' } : { v: '', other: '' });
+          a.other = e.target.value;
+          saveDraft();
+        }
+      });
+    }
+
+    if (q.type === 'rating') { wireRating(q, card); }
+    if (q.type === 'select') { wireDropdown(q, card); }
+    if (q.type === 'matrix') {
+      body.addEventListener('change', function (e) {
+        if (!e.target.matches('.mx-cell input')) { return; }
+        var row = e.target.closest('.mx-row');
+        var a = answers[q.id] || (answers[q.id] = {});
+        a[row.getAttribute('data-k')] = e.target.value;
+        row.classList.add('mx-done');
+        afterAnswer(q, false);
+      });
+    }
+    if (q.type === 'text') {
+      var txt = $('.txt', body);
+      txt.addEventListener('input', function () {
+        answers[q.id] = txt.value;
+        updateCounter(txt);
+        afterAnswer(q, false);
+      });
+    }
+    if (q.type === 'date') {
+      var din = $('.date-in', body);
+      din.max = todayIso();
+      din.addEventListener('change', function () {
+        answers[q.id] = din.value;
+        afterAnswer(q, false);
+      });
+    }
+    if (q.type === 'file') { wireFile(q, card); }
+    if (q.type === 'composite') { wireComposite(q, card); }
+  }
+
+  /* ---------- 各题型辅助 ---------- */
+  function syncOptSel(q, card) {
+    $$('.opt', card).forEach(function (o) {
+      var inp = $('input', o);
+      o.classList.toggle('selected', !!(inp && inp.checked));
+    });
+  }
+
+  function syncCheckboxAnswer(q, card) {
+    var list = $$('input[type="checkbox"]', card).filter(function (c) { return c.checked; })
+      .map(function (c) { return c.value; });
+    var a = answers[q.id] || (answers[q.id] = { list: [], other: '' });
+    if (a.other != null) {
+      a.list = list;
+    } else {
+      a.list = list;
+      a.other = '';
+    }
+  }
+
+  function syncMax(q, card) {
+    if (!q.max) { return; }
+    var boxes = $$('input[type="checkbox"]', card);
+    var checkedN = boxes.filter(function (b) { return b.checked; }).length;
+    boxes.forEach(function (b) {
+      b.disabled = !b.checked && checkedN >= q.max;
+    });
+    var hint = $('[data-hint]', card);
+    if (hint) {
+      hint.innerHTML = '已选 <b>' + checkedN + '</b> / ' + q.max + ' 项' +
+        (checkedN >= q.max ? '，已达上限，取消一项可再改' : '，选满后将锁定其余选项');
+    }
+  }
+
+  function ensureOtherSelected(q, card) {
+    var otherInp = $('.other-input', card);
+    /* 「其他」输入框所在 label 里的第一个 input 就是主选项控件 */
+    var optLabel = otherInp ? otherInp.closest('.opt') : null;
+    var ctrl = optLabel ? optLabel.querySelector('input[type="radio"],input[type="checkbox"]') : null;
+    if (!ctrl || ctrl.checked) { return; }
+    if (q.type === 'checkbox') {
+      var checkedN = $$('input[type="checkbox"]', card).filter(function (b) { return b.checked; }).length;
+      if (checkedN >= q.max) { return; } /* 已满则不强选 */
+    }
+    ctrl.checked = true;
+    if (q.type === 'checkbox') {
+      syncCheckboxAnswer(q, card);
+      syncMax(q, card);
+    } else {
+      answers[q.id] = { v: ctrl.value, other: otherInp ? otherInp.value : '' };
+    }
+    syncOptSel(q, card);
+    clearError(q);
+  }
+
+  function inkFrom(e, t) {
+    var opt = t.closest ? t.closest('.opt') : null;
+    if (!opt) { return; }
+    var r = opt.getBoundingClientRect();
+    var cx = e.clientX || (r.left + r.width / 2);
+    var cy = e.clientY || (r.top + r.height / 2);
+    opt.style.setProperty('--ix', (cx - r.left) + 'px');
+    opt.style.setProperty('--iy', (cy - r.top) + 'px');
+  }
+
+  function updateCounter(input) {
+    var c = input.parentElement.querySelector('.counter b');
+    if (c) { c.textContent = String(input.value.length); }
+  }
+
+  function wireRating(q, card) {
+    var stars = $$('.star', card);
+    var lab = $('.rating-label', card);
+    function paint(n) {
+      stars.forEach(function (s, i) { s.classList.toggle('on', i < n); });
+    }
+    function setLab(n) {
+      lab.textContent = n > 0 ? n + ' 星 · ' + RATING_LABELS[n - 1] : '点击星星打分';
+    }
+    stars.forEach(function (s, i) {
+      s.addEventListener('mouseenter', function () { paint(i + 1); setLab(i + 1); });
+      s.addEventListener('click', function () {
+        answers[q.id] = i + 1;
+        paint(i + 1);
+        setLab(i + 1);
+        afterAnswer(q, true);
+      });
+    });
+    $('.stars', card).addEventListener('mouseleave', function () {
+      paint(answers[q.id] || 0);
+      setLab(answers[q.id] || 0);
+    });
+    card._paintStars = paint;
+    card._setStarLab = setLab;
+  }
+
+  function paintStars(q, card, n) {
+    if (card._paintStars) {
+      card._paintStars(n);
+      card._setStarLab(n);
+    }
+  }
+
+  function closeAllDd(except) {
+    $$('.dd.open').forEach(function (d) {
+      if (d !== except) {
+        d.classList.remove('open');
+        var b = $('.dd-btn', d);
+        if (b) { b.setAttribute('aria-expanded', 'false'); }
+      }
+    });
+  }
+
+  function setDd(q, card, v, fire) {
+    var dd = $('.dd', card);
+    $('.dd-val', dd).textContent = v;
+    $$('li', dd).forEach(function (l) {
+      l.classList.toggle('sel', l.getAttribute('data-v') === v);
+    });
+    dd.classList.add('filled');
+    dd.classList.remove('open');
+    var b = $('.dd-btn', dd);
+    if (b) { b.setAttribute('aria-expanded', 'false'); }
+    if (fire) {
+      answers[q.id] = v;
+      afterAnswer(q, true);
+    }
+  }
+
+  function wireDropdown(q, card) {
+    var dd = $('.dd', card);
+    $('.dd-btn', dd).addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = dd.classList.toggle('open');
+      this.setAttribute('aria-expanded', open ? 'true' : 'false');
+      closeAllDd(dd);
+    });
+    $$('li', dd).forEach(function (li) {
+      li.addEventListener('click', function () {
+        setDd(q, card, li.getAttribute('data-v'), true);
+      });
+    });
+    card._setDd = function (v) { setDd(q, card, v, false); };
+  }
+
+  function wireFile(q, card) {
+    var drop = $('.drop', card);
+    var fin = $('.file-in', card);
+
+    function openPick() { fin.click(); }
+    drop.addEventListener('click', openPick);
+    drop.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPick(); }
+    });
+    drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('over'); });
+    drop.addEventListener('dragleave', function () { drop.classList.remove('over'); });
+    drop.addEventListener('drop', function (e) {
+      e.preventDefault();
+      drop.classList.remove('over');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        takeFile(e.dataTransfer.files[0]);
+      }
+    });
+    fin.addEventListener('change', function () {
+      if (fin.files && fin.files[0]) { takeFile(fin.files[0]); }
+    });
+
+    function takeFile(f) {
+      if (!/^image\/(jpeg|png)$/.test(f.type)) {
+        showError(q, '仅支持 jpg / png 格式的图片，请重新选择');
+        return;
+      }
+      if (f.size > 5 * 1024 * 1024) {
+        showError(q, '这张图超过 5MB 了，请压缩后再选');
+        return;
+      }
+      var rd = new FileReader();
+      rd.onload = function (ev) {
+        answers[q.id] = { name: f.name, size: f.size, dataUrl: ev.target.result };
+        renderFile(q, card);
+        clearError(q);
+        afterAnswer(q, false);
+      };
+      rd.onerror = function () {
+        showError(q, '图片读取失败，请重试一次');
+      };
+      rd.readAsDataURL(f);
+    }
+
+    $('.f-remove', card).addEventListener('click', function () {
+      answers[q.id] = { name: '', size: 0, dataUrl: '' };
+      renderFile(q, card);
+    });
+
+    card._renderFile = function () { renderFile(q, card); };
+  }
+
+  function renderFile(q, card) {
+    var a = answers[q.id] || {};
+    var drop = $('.drop', card);
+    var fc = $('.file-card', card);
+    if (a && a.name) {
+      drop.classList.add('hide');
+      fc.classList.remove('hide');
+      var img = $('.f-thumb', fc);
+      if (a.dataUrl) {
+        img.src = a.dataUrl;
+        img.classList.remove('hide');
+      } else {
+        img.removeAttribute('src');
+        img.classList.add('hide');
+      }
+      $('.f-name', fc).textContent = a.name;
+      $('.f-size', fc).textContent = a.size ? Math.round(a.size / 1024) + ' KB' : '';
+    } else {
+      drop.classList.remove('hide');
+      fc.classList.add('hide');
+    }
+  }
+
+  function wireComposite(q, card) {
+    var ta = $('.txtarea', card);
+    ta.addEventListener('input', function () {
+      var a = answers[q.id] || (answers[q.id] = { text: '', nps: null });
+      a.text = ta.value;
+      updateCounter(ta);
+      afterAnswer(q, false);
+    });
+    $$('.nps button', card).forEach(function (b) {
+      b.addEventListener('click', function () {
+        $$('.nps button', card).forEach(function (x) { x.classList.remove('sel'); });
+        b.classList.add('sel');
+        var a = answers[q.id] || (answers[q.id] = { text: '', nps: null });
+        if (a.text == null) { a.text = ''; }
+        a.nps = parseInt(b.getAttribute('data-v'), 10);
+        afterAnswer(q, false);
+      });
+    });
+  }
+
+  /* ---------- 恢复草稿后，把答案写回控件 ---------- */
+  function initCardValues(q, card) {
+    var a = answers[q.id];
+    var body = $('.q-body', card);
+    if (!a) { return; }
+    if (q.type === 'radio' && a.v) {
+      var r = $('input[type="radio"][value="' + cssPath(a.v) + '"]', body);
+      if (r) { r.checked = true; }
+      if (a.other) {
+        var oi = $('.other-input', body);
+        if (oi) { oi.value = a.other; }
+      }
+      syncOptSel(q, card);
+    } else if (q.type === 'checkbox' && a.list) {
+      a.list.forEach(function (v) {
+        var c = $('input[type="checkbox"][value="' + cssPath(v) + '"]', body);
+        if (c) { c.checked = true; }
+      });
+      if (a.other) {
+        var oi2 = $('.other-input', body);
+        if (oi2) { oi2.value = a.other; }
+      }
+      syncOptSel(q, card);
+      syncMax(q, card);
+    } else if (q.type === 'select' && a && card._setDd) {
+      card._setDd(String(a));
+    } else if (q.type === 'rating' && a) {
+      paintStars(q, card, a);
+    } else if (q.type === 'matrix' && a) {
+      Object.keys(a).forEach(function (k) {
+        var i = $('input[name="mx_' + q.id + '_' + k + '"][value="' + cssPath(a[k]) + '"]', body);
+        if (i) {
+          i.checked = true;
+          var row = i.closest('.mx-row');
+          if (row) { row.classList.add('mx-done'); }
+        }
+      });
+    } else if (q.type === 'text' && a) {
+      var t = $('.txt', body);
+      if (t) { t.value = a; updateCounter(t); }
+    } else if (q.type === 'date' && a) {
+      var d = $('.date-in', body);
+      if (d) { d.value = a; }
+    } else if (q.type === 'file' && a.name) {
+      renderFile(q, card);
+    } else if (q.type === 'composite' && a) {
+      var ta = $('.txtarea', body);
+      if (ta && a.text) { ta.value = a.text; updateCounter(ta); }
+      if (a.nps != null) {
+        var nb = $('.nps button[data-v="' + a.nps + '"]', body);
+        if (nb) { nb.classList.add('sel'); }
+      }
+    }
+  }
+
+  /* ========================================================================
+   * 7. 布局：状态机 -> 卡堆层位 + 进度点 + 顶部计数
+   * ====================================================================== */
+  var STATES = ['is-waiting', 'is-done', 'is-current', 'is-next1', 'is-next2', 'is-back1', 'is-back2', 'is-deep'];
+
+  function setState(el, st) {
+    STATES.forEach(function (s) { el.classList.remove(s); });
+    el.classList.add(st);
+  }
+
+  function layout() {
+    order.forEach(function (q, i) {
+      var el = cardEls[q.id];
+      var st;
+      if (i < idx) { st = 'is-done'; }
+      else if (i === idx) { st = 'is-current'; }
+      else if (i === idx + 1) { st = 'is-next1'; }
+      else if (i === idx + 2) { st = 'is-next2'; }
+      else if (i === idx + 3) { st = 'is-back1'; }
+      else if (i === idx + 4) { st = 'is-back2'; }
+      else { st = 'is-deep'; }
+      setState(el, st);
+      var num = $('.q-num', el);
+      if (num) { num.textContent = pad2(i + 1); }
+      el.style.setProperty('--vi', i);
+      el.inert = (i !== idx);
+      el.setAttribute('aria-hidden', i === idx ? 'false' : 'true');
+    });
+    /* 被逻辑跳转隐藏的题卡 */
+    QUESTIONS.forEach(function (q) {
+      if (order.indexOf(q) < 0) {
+        setState(cardEls[q.id], 'is-waiting');
+        cardEls[q.id].inert = true;
+      }
+    });
+    /* 进度点状态 */
+    $$('.dot', dotsEl).forEach(function (d, i) {
+      var q = order[i];
+      if (!q) { return; }
+      d.classList.toggle('now', i === idx);
+      d.classList.toggle('lit', i !== idx && validate(q) === '');
+      d.disabled = i > maxVisited;
+    });
+    if (lastDotIdx !== idx) {
+      var cur = dotsEl.children[idx];
+      if (cur) {
+        cur.classList.remove('now');
+        void cur.offsetWidth;
+        cur.classList.add('now');
+      }
+      lastDotIdx = idx;
+    }
+    /* 计数与按钮 */
+    var txt = pad2(idx + 1) + ' / ' + pad2(order.length);
+    posTxt.textContent = txt;
+    posChip.textContent = txt;
+    var curQ = order[idx];
+    if (curQ) {
+      var curCard = cardEls[curQ.id];
+      $$('.btn-prev').forEach(function (b) { b.disabled = idx === 0; });
+      var nb = $('.btn-next', curCard);
+      if (nb) {
+        nb.innerHTML = (idx === order.length - 1)
+          ? '提交问卷 <span class="arr">↵</span>'
+          : '下一题 <span class="arr">→</span>';
+      }
+      curTilt = $('.card-tilt', curCard);
+      if (REDUCED && curTilt) { curTilt.style.transform = ''; }
+    }
+  }
+
+  var lastOrderSig = '';
+
+  function rebuildDots() {
+    /* 题目序列未变化时跳过重建，避免打字过程中进度点反复弹跳 */
+    var sig = order.map(function (q) { return q.id; }).join(',');
+    if (sig === lastOrderSig) { return; }
+    lastOrderSig = sig;
+    dotsEl.innerHTML = order.map(function (q, i) {
+      var dis = i > maxVisited ? ' disabled' : '';
+      return '<button type="button" class="dot" data-i="' + i + '" title="第 ' + (i + 1) + ' 题" ' +
+        'aria-label="回退到第 ' + (i + 1) + ' 题"' + dis + '></button>';
+    }).join('');
+    lastDotIdx = -1;
+  }
+
+  /* ========================================================================
+   * 8. 答题后的统一入口：刷新序列 + 存草稿 + 自动翻卡
+   * ====================================================================== */
+  function afterAnswer(q, auto) {
+    clearError(q);
+    refreshOrder();
+    layout();
+    saveDraft();
+    if (auto) {
+      clearTimeout(advTimer);
+      advTimer = setTimeout(function () {
+        if (!finished && !lock && started && order[idx] && order[idx].id === q.id) {
+          goNext();
+        }
+      }, 480);
+    }
+  }
+
+  /* ========================================================================
+   * 9. 翻卡导航（含校验 shake / 回退 / 提交）
+   * ====================================================================== */
+  function goNext() {
+    if (lock || finished || !started) { return; }
+    clearTimeout(advTimer);
+    var q = order[idx];
+    if (!q) { return; }
+    var msg = validate(q);
+    if (msg) {
+      showError(q, msg);
+      return;
+    }
+    clearError(q);
+    if (idx >= order.length - 1) {
+      finish();
+      return;
+    }
+    lock = true;
+    idx++;
+    maxVisited = Math.max(maxVisited, idx);
+    saveDraft();
+    layout();
+    setTimeout(function () { lock = false; }, REDUCED ? 60 : 580);
+  }
+
+  function goPrev() {
+    if (lock || finished || !started) { return; }
+    clearTimeout(advTimer);
+    if (idx <= 0) { return; }
+    var q = order[idx];
+    if (q) { clearError(q); }
+    idx--;
+    layout();
+  }
+
+  function gotoIndex(i) {
+    if (lock || finished || !started) { return; }
+    if (i < 0 || i > maxVisited || i === idx) { return; }
+    clearTimeout(advTimer);
+    var q = order[idx];
+    if (q) { clearError(q); }
+    idx = i;
+    layout();
+  }
+
+  /* ========================================================================
+   * 10. 完成：整叠卡片收拢飞出 + ALL DONE + 摘要 + 彩带
+   * ====================================================================== */
+  function genReceipt() {
+    var chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    var s = '';
+    for (var i = 0; i < 4; i++) {
+      s += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return '#RD2026-' + s;
+  }
+
+  function npsTitle(n) {
+    if (n >= 9) { return '超级共读伙伴'; }
+    if (n >= 7) { return '热心书友'; }
+    if (n >= 4) { return '随缘读者'; }
+    return '暂时观望';
+  }
+
+  function buildDigest() {
+    digestEl.innerHTML = '';
+    var rows = [];
+    function add(label, value) {
+      if (value === '' || value == null) { return; }
+      rows.push([label, String(value)]);
+    }
+    var a = answers;
+    add('年龄段', a.q1 && a.q1.v);
+    add('身份', a.q2 && a.q2.v ? a.q2.v + (a.q2.v === OTHER && a.q2.other ? '（' + a.q2.other + '）' : '') : '');
+    add('阅读方式', a.q3 && a.q3.list && a.q3.list.length
+      ? a.q3.list.join('、') + (a.q3.list.indexOf(OTHER) >= 0 && a.q3.other ? '（' + a.q3.other + '）' : '')
+      : '');
+    var q4Visible = order.some(function (q) { return q.id === 'q4'; });
+    if (q4Visible) { add('电子书频率', a.q4 && a.q4.v); }
+    if (a.q5) {
+      add('阅读量满意度', '★★★★★'.slice(0, a.q5) + '（' + RATING_LABELS[a.q5 - 1] + '）');
+    }
+    add('每周时长', typeof a.q6 === 'string' ? a.q6 : '');
+    if (a.q7) {
+      var n = Object.keys(a.q7).length;
+      if (n) { add('场景频率', '已标注 ' + n + ' / 4 个场景'); }
+    }
+    add('最后一本书', a.q8 ? '《' + String(a.q8).replace(/^《|》$/g, '') + '》' : '');
+    add('阅读阻碍', a.q9 && a.q9.list && a.q9.list.length ? a.q9.list.join('、') : '');
+    add('上次到店', typeof a.q10 === 'string' ? a.q10 : '');
+    if (a.q11 && a.q11.name) { add('晒图', a.q11.name); }
+    if (a.q12 && a.q12.text && a.q12.text.trim()) {
+      var tt = a.q12.text.trim();
+      add('荐书语', tt.length > 26 ? tt.slice(0, 26) + '…' : tt);
+    }
+    if (a.q12 && a.q12.nps != null) {
+      add('共读意愿', a.q12.nps + ' / 10 · ' + npsTitle(a.q12.nps));
+    }
+    if (!rows.length) {
+      var empty = document.createElement('div');
+      empty.className = 'digest-empty';
+      empty.textContent = '这份问卷快得像一阵风——所有题目都是选填的空 answers。';
+      digestEl.appendChild(empty);
+      return;
+    }
+    rows.forEach(function (r) {
+      var row = document.createElement('div');
+      row.className = 'digest-row';
+      var dt = document.createElement('dt');
+      dt.textContent = r[0];
+      var dd = document.createElement('dd');
+      dd.textContent = r[1];
+      row.appendChild(dt);
+      row.appendChild(dd);
+      digestEl.appendChild(row);
+    });
+  }
+
+  function confettiBurst() {
+    if (REDUCED) { return; }
+    var box = $('#confetti');
+    var colors = ['#FF6B35', '#1B9AAA', '#FFC53D', '#22223B', '#7BC950'];
+    for (var i = 0; i < 38; i++) {
+      var p = document.createElement('i');
+      p.style.setProperty('--cx', (Math.random() * 100).toFixed(1) + '%');
+      p.style.setProperty('--cd', (Math.random() * 0.55).toFixed(2) + 's');
+      p.style.setProperty('--cr', Math.round(Math.random() * 720 - 360) + 'deg');
+      p.style.setProperty('--cs', (0.6 + Math.random() * 0.9).toFixed(2));
+      p.style.background = colors[i % colors.length];
+      if (i % 3 === 0) { p.style.borderRadius = '50%'; }
+      box.appendChild(p);
+    }
+    setTimeout(function () { box.innerHTML = ''; }, 2800);
+  }
+
+  function finish() {
+    finished = true;
+    running = false;
+    lock = true;
+    clearTimeout(advTimer);
+    clearDraft();
+    deck.classList.add('gather-out');
+    setTimeout(function () {
+      buildDigest();
+      $('#receiptNo').textContent = genReceipt();
+      $('#doneMeta').textContent = '共 ' + order.length + ' 题有效作答 · 用时 ' + fmtTime(elapsedMs);
+      doneOv.classList.add('show');
+      doneOv.setAttribute('aria-hidden', 'false');
+      confettiBurst();
+      setTimeout(function () {
+        try { $('#againBtn').focus(); } catch (e) { /* noop */ }
+      }, 650);
+    }, REDUCED ? 120 : 820);
+  }
+
+  /* ========================================================================
+   * 11. 鼠标视差 + 触屏滑动拖拽（作用于当前卡的 tilt 层）
+   * ====================================================================== */
+  var curTilt = null;
+  var pt = { x: 0, y: 0 };    /* 目标倾斜（-1..1） */
+  var ctv = { x: 0, y: 0 };   /* 当前倾斜（lerp） */
+  var drag = { dx: 0, dy: 0 };
+
+  function frame() {
+    ctv.x += (pt.x - ctv.x) * 0.09;
+    ctv.y += (pt.y - ctv.y) * 0.09;
+    if (curTilt) {
+      var ry = ctv.x * 3 + drag.dx * 0.06;   /* ±3° 视差 + 拖拽跟手 */
+      var rx = -ctv.y * 2.4;
+      curTilt.style.transform =
+        'translate3d(' + drag.dx.toFixed(1) + 'px,' + (drag.dy * 0.25).toFixed(1) + 'px,0) ' +
+        'rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg)';
+    }
+    requestAnimationFrame(frame);
+  }
+
+  if (FINE && !REDUCED) {
+    requestAnimationFrame(frame);
+    window.addEventListener('mousemove', function (e) {
+      pt.x = clamp((e.clientX / window.innerWidth - 0.5) * 2, -1, 1);
+      pt.y = clamp((e.clientY / window.innerHeight - 0.5) * 2, -1, 1);
+    }, { passive: true });
+    document.documentElement.addEventListener('mouseleave', function () {
+      pt.x = 0; pt.y = 0;
+    });
+  }
+
+  function applyDragNow() {
+    if (curTilt) {
+      curTilt.style.transform =
+        'translate3d(' + drag.dx.toFixed(1) + 'px,0,0) rotateY(' + (drag.dx * 0.06).toFixed(2) + 'deg)';
+    }
+  }
+
+  /* 触屏：左右滑动翻卡 */
+  var ts = null;
+  stage.addEventListener('touchstart', function (e) {
+    if (!started || finished) { return; }
+    ts = { x: e.touches[0].clientX, y: e.touches[0].clientY, drag: false };
+  }, { passive: true });
+
+  stage.addEventListener('touchmove', function (e) {
+    if (!ts) { return; }
+    var dx = e.touches[0].clientX - ts.x;
+    var dy = e.touches[0].clientY - ts.y;
+    if (!ts.drag && Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.35) {
+      ts.drag = true;
+    }
+    if (ts.drag) {
+      e.preventDefault();
+      drag.dx = clamp(dx, -150, 150);
+      drag.dy = 0;
+      if (REDUCED) { applyDragNow(); }
+    }
+  }, { passive: false });
+
+  stage.addEventListener('touchend', function () {
+    if (ts && ts.drag) {
+      var dx = drag.dx;
+      drag.dx = 0; drag.dy = 0;
+      if (REDUCED) { applyDragNow(); }
+      if (dx < -58) { goNext(); }
+      else if (dx > 58) { goPrev(); }
+    }
+    ts = null;
+  }, { passive: true });
+
+  /* ========================================================================
+   * 12. 全局事件
+   * ====================================================================== */
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest || !e.target.closest('.dd')) { closeAllDd(null); }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { closeAllDd(null); return; }
+    if (finished) { return; }
+    if (!started) {
+      if (e.key === 'Enter') { e.preventDefault(); start(); }
+      return;
+    }
+    var t = e.target;
+    var tag = t && t.tagName;
+    if (tag === 'BUTTON') { return; } /* 焦点在按钮上时交给原生点击，避免双重翻卡 */
+    var typing = tag === 'TEXTAREA' || (tag === 'INPUT' && t.type !== 'radio' && t.type !== 'checkbox');
+    if (e.key === 'Enter' && !typing) {
+      e.preventDefault();
+      goNext();
+    } else if (e.key === 'ArrowRight' && !typing && tag !== 'INPUT') {
+      goNext();
+    } else if (e.key === 'ArrowLeft' && !typing && tag !== 'INPUT') {
+      goPrev();
+    }
+  });
+
+  dotsEl.addEventListener('click', function (e) {
+    var d = e.target.closest('.dot');
+    if (!d) { return; }
+    gotoIndex(parseInt(d.getAttribute('data-i'), 10));
+  });
+
+  $('#startBtn').addEventListener('click', start);
+
+  $('#copyBtn').addEventListener('click', function () {
+    var code = $('#receiptNo').textContent;
+    function fallbackCopy() {
+      toast('回执编号：' + code);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(function () {
+        toast('回执编号已复制');
+      }, fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
+  });
+
+  $('#againBtn').addEventListener('click', function () {
+    location.reload();
+  });
+
+  window.addEventListener('beforeunload', saveDraft);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') { saveDraft(); }
+  });
+
+  /* 计时器 */
+  setInterval(function () {
+    if (running && !finished) {
+      elapsedMs += 1000;
+      timerEl.textContent = fmtTime(elapsedMs);
+      if (elapsedMs % 10000 === 0) { saveDraft(); }
+    }
+  }, 1000);
+
+  /* Toast */
+  var toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      toastEl.classList.remove('show');
+    }, 2300);
+  }
+
+  /* ========================================================================
+   * 13. 启动流程
+   * ====================================================================== */
+  function start() {
+    if (started) { return; }
+    started = true;
+    running = true;
+    hero.classList.add('exit');
+    setTimeout(function () {
+      if (hero && hero.parentNode) { hero.parentNode.removeChild(hero); }
+    }, 700);
+    stage.classList.add('active');
+    dotsBar.hidden = false;
+    timerEl.hidden = false;
+    posChip.hidden = false;
+    timerEl.textContent = fmtTime(elapsedMs);
+    refreshOrder();
+    layout();
+    /* 洗牌落桌：各层卡片依次飞入卡位 */
+    if (!REDUCED) {
+      requestAnimationFrame(function () {
+        deck.classList.add('dealing');
+        setTimeout(function () { deck.classList.remove('dealing'); }, 1250);
+      });
+    }
+    if (restored) { toast('已恢复上次作答进度，接着翻卡吧'); }
+    saveDraft();
+  }
+
+  /* ---------- 初始化 ---------- */
+  restoreDraft();
+  QUESTIONS.forEach(buildCard);
+  order = computeOrder();
+  QUESTIONS.forEach(function (q) { initCardValues(q, cardEls[q.id]); });
+  refreshOrder();
+  layout();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="慢速缓存 Slow Cache —— 沈知远的个人博客。写 Web 性能、设计工程、独立开发，也写城市与生活。把值得想的事，写在会呼吸的页面上。">
+<meta name="author" content="沈知远">
+<meta name="theme-color" content="#FAF7F0">
+<title>慢速缓存 Slow Cache · 沈知远的个人博客</title>
+<script>document.documentElement.classList.add('js');</script>
+<style>
+/* ==========================================================
+   慢速缓存 · Slow Cache —— 粒子文字个人博客
+   风格：Particle Text（粒子即文字：采样聚合 / 扰动 / 炸散重组）
+   色板：纸白 #FAF7F0 · 墨青 #31506B · 淡青 #9FBFD4 · 朱橙 #D96C3F · 墨黑 #26241F
+   ========================================================== */
+:root{
+  --paper:#FAF7F0;
+  --paper-2:#F5F0E4;
+  --card:#FFFDF8;
+  --ink:#26241F;
+  --ink-soft:#3A382F;
+  --muted:#8A8072;
+  --line:#E4DCC9;
+  --blue:#31506B;
+  --blue-deep:#263F55;
+  --pale:#9FBFD4;
+  --orange:#D96C3F;
+  --serif:"Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --mono:"JetBrains Mono","Cascadia Code",Consolas,"Courier New",monospace;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--sans);
+  background:var(--paper);
+  color:var(--ink);
+  line-height:1.7;
+  overflow-x:hidden;
+}
+::selection{background:var(--blue);color:var(--paper)}
+a{color:inherit;text-decoration:none;transition:color .25s}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:fixed;top:-48px;left:16px;z-index:99;background:var(--blue);color:var(--paper);padding:8px 16px;font-size:13px;transition:top .3s}
+.skip:focus{top:10px}
+
+/* ---------- 阅读进度 ---------- */
+#progress{
+  position:fixed;top:0;left:0;right:0;height:3px;z-index:80;
+  background:linear-gradient(90deg,var(--blue) 55%,var(--orange));
+  transform:scaleX(0);transform-origin:0 50%;pointer-events:none;
+}
+
+/* ---------- 页头 ---------- */
+.site-head{
+  position:sticky;top:0;z-index:50;
+  background:rgba(250,247,240,.88);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.head-in{
+  max-width:1200px;margin:0 auto;padding:0 28px;height:60px;
+  display:flex;align-items:center;gap:22px;
+}
+.brand{
+  font-family:var(--serif);font-weight:700;font-size:20px;
+  color:var(--ink);white-space:nowrap;display:flex;align-items:baseline;gap:8px;
+}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--orange);flex:none;transform:translateY(-1px)}
+.brand-en{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.14em;color:var(--muted)}
+.main-nav{display:flex;gap:2px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+.main-nav::-webkit-scrollbar{display:none}
+.main-nav a{
+  position:relative;padding:8px 12px;font-size:14px;color:var(--muted);
+  white-space:nowrap;border-radius:4px;
+}
+.main-nav a:hover{color:var(--ink)}
+.main-nav a.on{color:var(--blue);font-weight:600}
+.main-nav a.on::after{
+  content:"";position:absolute;left:12px;right:12px;bottom:3px;height:2px;
+  background:var(--orange);border-radius:2px;
+}
+.sub-cta{
+  flex:none;border:1px solid var(--blue);color:var(--blue);
+  padding:6px 18px;border-radius:999px;font-size:13px;letter-spacing:.08em;white-space:nowrap;
+}
+.sub-cta:hover{background:var(--blue);color:var(--paper)}
+
+/* ---------- Hero：粒子舞台 ---------- */
+.hero{
+  position:relative;height:clamp(480px,64vh,660px);
+  border-bottom:1px solid var(--line);overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 8%,#FDFBF5 0%,var(--paper) 62%);
+  touch-action:pan-y;
+}
+#fx{position:absolute;inset:0;display:block}
+#heroTitle{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);font-weight:800;letter-spacing:.01em;line-height:1.3;
+  font-size:clamp(56px,11vw,180px);white-space:nowrap;
+  color:var(--blue);pointer-events:none;
+}
+/* 引擎启动后：DOM 标题转为透明，由粒子接管字形（SEO 文本仍在） */
+.hero.fx-on #heroTitle{color:transparent}
+.hero-slogan{
+  position:absolute;left:4%;bottom:34px;max-width:430px;
+  animation:riseIn .9s .95s var(--ease) both;
+}
+.hero-slogan .slogan{
+  font-family:var(--serif);font-size:17px;color:var(--ink);line-height:1.8;
+}
+.hero-slogan .slogan-meta{
+  margin-top:8px;font-family:var(--mono);font-size:11px;
+  letter-spacing:.14em;color:var(--muted);
+}
+.hero-slogan .slogan-meta b{color:var(--orange);font-weight:400}
+.scroll-hint{
+  position:absolute;right:4%;bottom:34px;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  writing-mode:vertical-rl;font-size:11px;letter-spacing:.34em;color:var(--muted);
+  animation:riseIn .9s 1.35s var(--ease) both;
+}
+.scroll-hint i{width:1px;height:52px;background:var(--line);position:relative;overflow:hidden}
+.scroll-hint i::after{
+  content:"";position:absolute;left:0;top:-40%;width:100%;height:40%;
+  background:var(--orange);animation:hintdrop 2.2s ease-in-out infinite;
+}
+@keyframes hintdrop{0%{top:-40%}70%,100%{top:110%}}
+@keyframes riseIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ---------- 视图切换 ---------- */
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+.js .view{display:none}
+.js .view.active{display:block;animation:viewIn .5s var(--ease) both}
+@keyframes viewIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+/* ---------- 滚动显现 ---------- */
+.js .reveal{
+  opacity:0;transform:translateY(22px);
+  transition:opacity .7s var(--ease),transform .7s var(--ease);
+  transition-delay:calc(var(--d,0)*60ms);
+}
+.js .reveal.in{opacity:1;transform:none}
+
+/* ---------- 栏目引言 ---------- */
+.col-intro{
+  margin:42px 0 0;padding:20px 26px;line-height:1.85;font-size:14.5px;
+  background:linear-gradient(120deg,rgba(159,191,212,.16),rgba(159,191,212,0) 72%);
+  border-left:3px solid var(--pale);color:var(--ink-soft);
+}
+.col-intro strong{font-family:var(--serif);font-size:17px;color:var(--blue)}
+
+/* ---------- 区块头 ---------- */
+.sec-head{
+  display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;
+  margin:60px 0 8px;border-bottom:1px solid var(--line);padding-bottom:14px;
+}
+.sec-title{font-family:var(--serif);font-size:26px;font-weight:700}
+.sec-sub{color:var(--muted);font-size:13px}
+.back-all{display:none;margin-left:auto;font-size:13px;color:var(--blue)}
+.back-all:hover{color:var(--orange)}
+.view.filtered .back-all{display:inline-block}
+
+/* ---------- 精选置顶 ---------- */
+.featured{margin-top:44px}
+.feat-kicker{
+  font-family:var(--mono);font-size:11px;letter-spacing:.32em;
+  color:var(--orange);margin-bottom:12px;
+}
+.feat-link{
+  display:block;position:relative;padding:32px 30px 30px;
+  border:1px solid var(--line);background:linear-gradient(160deg,#FFFFFF 0%,#FBF8F1 70%);
+  transition:transform .35s var(--ease),box-shadow .35s var(--ease),border-color .35s;
+}
+.feat-link::before{
+  content:"";position:absolute;left:-1px;top:22px;bottom:22px;width:4px;
+  background:var(--orange);border-radius:0 3px 3px 0;
+  transform:scaleY(.4);transform-origin:50% 50%;transition:transform .4s var(--ease);
+}
+.feat-link:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(49,80,107,.12);border-color:var(--pale)}
+.feat-link:hover::before{transform:scaleY(1)}
+.feat-no{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--orange)}
+.feat-title{
+  font-family:var(--serif);font-size:clamp(22px,3vw,30px);line-height:1.5;
+  margin:10px 0 12px;
+}
+.feat-ex{color:var(--muted);font-size:14px;line-height:1.9;max-width:62ch}
+.feat-meta{
+  display:flex;gap:14px;align-items:center;margin-top:18px;
+  font-size:12.5px;color:var(--muted);
+}
+.feat-meta time{font-family:var(--mono)}
+.feat-more{
+  display:inline-block;margin-left:auto;color:var(--blue);
+  font-size:13px;letter-spacing:.1em;
+}
+.feat-link:hover .feat-more{color:var(--orange)}
+
+/* ---------- 文章列表（行式排版） ---------- */
+#postList{list-style:none;margin:6px 0 0}
+.post-row{border-bottom:1px solid var(--line)}
+.post-row.row-hide{display:none}
+.row-link{
+  display:grid;grid-template-columns:82px 1fr 216px;gap:18px;align-items:center;
+  padding:20px 8px;
+  transition:background .3s;
+}
+.row-link:hover{
+  background:linear-gradient(90deg,rgba(159,191,212,.14),rgba(159,191,212,0) 80%);
+}
+.row-no{font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:var(--orange)}
+.row-main{min-width:0}
+.row-title{
+  display:inline;position:relative;font-family:var(--serif);font-size:19px;
+  font-weight:700;line-height:1.6;padding-bottom:3px;
+  background-image:linear-gradient(90deg,rgba(49,80,107,0) 0%,var(--blue) 5%,var(--blue) 95%,rgba(49,80,107,0));
+  background-repeat:no-repeat;background-position:0 100%;background-size:0% 2px;
+  transition:background-size .45s var(--ease),color .3s;
+}
+.row-link:hover .row-title{background-size:100% 2px}
+.row-ex{
+  display:block;color:var(--muted);font-size:13.5px;line-height:1.75;
+  margin-top:6px;
+}
+.row-meta{
+  display:flex;gap:12px;align-items:center;justify-content:flex-end;
+  font-size:12.5px;color:var(--muted);
+}
+.row-meta time{font-family:var(--mono);letter-spacing:.02em}
+.cat{
+  font-style:normal;border:1px solid currentColor;color:var(--blue);
+  padding:2px 9px;border-radius:999px;font-size:11px;letter-spacing:.06em;white-space:nowrap;
+}
+/* hover 行内微粒子点缀 */
+.dots{position:absolute;top:-4px;margin-left:8px;width:36px;height:16px;display:inline-block;pointer-events:none}
+.dots b{
+  position:absolute;top:7px;left:14px;width:3px;height:3px;border-radius:50%;
+  background:var(--blue);opacity:0;
+}
+.dots b:nth-child(1){--dx:15px;background:var(--blue)}
+.dots b:nth-child(2){--dx:22px;left:18px;background:var(--orange)}
+.dots b:nth-child(3){--dx:8px;left:9px;background:var(--pale)}
+.dots b:nth-child(4){--dx:28px;left:21px;background:var(--blue)}
+.dots b:nth-child(5){--dx:2px;left:12px;background:var(--orange)}
+.row-link:hover .dots b,.feat-link:hover .dots b{animation:dotfly .95s ease-out both}
+.row-link:hover .dots b:nth-child(2),.feat-link:hover .dots b:nth-child(2){animation-delay:.08s}
+.row-link:hover .dots b:nth-child(3),.feat-link:hover .dots b:nth-child(3){animation-delay:.16s}
+.row-link:hover .dots b:nth-child(4),.feat-link:hover .dots b:nth-child(4){animation-delay:.24s}
+.row-link:hover .dots b:nth-child(5),.feat-link:hover .dots b:nth-child(5){animation-delay:.32s}
+@keyframes dotfly{
+  0%{opacity:0;transform:translate(0,0) scale(.5)}
+  22%{opacity:.95}
+  100%{opacity:0;transform:translate(var(--dx,10px),-12px) scale(1)}
+}
+
+/* ---------- 订阅 ---------- */
+.subscribe{
+  margin:84px auto 90px;max-width:860px;text-align:center;
+  padding:56px 30px;border:1px solid var(--line);background:
+    radial-gradient(90% 120% at 50% 0%,rgba(159,191,212,.15),transparent 62%),var(--card);
+}
+.sub-kicker{font-family:var(--mono);font-size:11px;letter-spacing:.38em;color:var(--orange)}
+.sub-title{font-family:var(--serif);font-size:clamp(24px,3vw,30px);margin:12px 0 10px}
+.sub-desc{color:var(--muted);font-size:14px;max-width:52ch;margin:0 auto;line-height:2}
+.sub-desc code{font-family:var(--mono);font-size:12px;color:var(--blue);background:rgba(159,191,212,.16);padding:2px 6px;border-radius:3px}
+.sub-desc .rss-link{color:var(--blue);border-bottom:1px solid var(--pale)}
+.sub-desc .rss-link:hover{color:var(--orange);border-color:var(--orange)}
+#subForm{display:flex;gap:10px;max-width:470px;margin:28px auto 0}
+#subForm.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}55%{transform:translateX(6px)}80%{transform:translateX(-3px)}}
+#subEmail{
+  flex:1;min-width:0;padding:12px 16px;font-size:14px;font-family:var(--sans);
+  border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:3px;
+}
+#subEmail::placeholder{color:#B4AC9C}
+#subEmail:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(49,80,107,.13)}
+#subForm button{
+  padding:12px 30px;border:none;border-radius:3px;cursor:pointer;
+  background:var(--blue);color:var(--paper);font-size:14px;letter-spacing:.28em;text-indent:.28em;
+  transition:background .3s;
+}
+#subForm button:hover{background:var(--blue-deep)}
+#subForm.hide{display:none}
+#subMsg{min-height:22px;margin-top:14px;font-size:13px;color:var(--orange)}
+#subMsg.err{color:#B4472E}
+#subDone{display:none;margin-top:26px}
+#subDone.show{display:block;animation:viewIn .5s var(--ease) both}
+#subDone .done-big{font-family:var(--serif);font-size:20px;color:var(--blue)}
+#subDone .done-desc{color:var(--muted);font-size:13.5px;margin-top:8px}
+#subDone a{color:var(--orange);font-size:12.5px;border-bottom:1px dashed var(--orange)}
+.sub-note{margin-top:16px;font-size:12px;color:var(--muted);letter-spacing:.05em}
+
+/* ---------- 完整文章 ---------- */
+.art-crumb{max-width:760px;margin:34px auto 0;font-size:12.5px}
+.art-crumb a{color:var(--muted)}
+.art-crumb a:hover{color:var(--orange)}
+.art-head{max-width:760px;margin:18px auto 0;text-align:center}
+.art-kicker{
+  display:flex;gap:14px;justify-content:center;align-items:center;
+  font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--orange);
+}
+.art-title{
+  font-family:var(--serif);font-size:clamp(27px,4vw,40px);
+  line-height:1.45;margin:18px 0 16px;font-weight:700;
+}
+.art-title::after{
+  content:"";display:block;width:52px;height:3px;margin:20px auto 0;
+  background:var(--orange);border-radius:2px;
+}
+.art-meta{
+  color:var(--muted);font-size:13px;display:flex;gap:10px;
+  justify-content:center;flex-wrap:wrap;
+}
+.art-meta time{font-family:var(--mono)}
+.art-body{
+  max-width:700px;margin:46px auto 0;
+  font-family:var(--serif);font-size:17px;line-height:1.92;color:var(--ink);
+}
+.art-body p{margin:0 0 26px;text-align:justify}
+.art-body > p:first-of-type::first-letter{
+  font-size:54px;font-weight:700;float:left;line-height:1;
+  padding:8px 12px 0 0;color:var(--blue);
+}
+.art-body h2{
+  font-size:23px;line-height:1.55;margin:46px 0 18px;
+  padding-left:14px;border-left:4px solid var(--orange);
+}
+.art-body h3{font-size:19px;margin:32px 0 14px}
+.art-body blockquote{
+  margin:30px 0;padding:18px 26px;font-size:16px;color:#41546B;
+  border-left:3px solid var(--pale);background:rgba(159,191,212,.1);line-height:1.9;
+}
+.art-body ul{margin:0 0 26px;padding-left:24px}
+.art-body li{margin:9px 0;line-height:1.85}
+.art-body li::marker{color:var(--orange)}
+.codeblock{margin:30px 0;background:#26241F;border-radius:6px;overflow:hidden}
+.codeblock figcaption{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:9px 16px;background:#1D1B17;color:#9A917F;
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+}
+.code-copy{
+  background:none;border:1px solid #4A453B;color:#C9C0AC;
+  font-size:11px;padding:3px 12px;cursor:pointer;border-radius:3px;font-family:var(--mono);
+  transition:all .25s;
+}
+.code-copy:hover{border-color:var(--orange);color:var(--orange)}
+.codeblock pre{margin:0;padding:18px 20px;overflow-x:auto}
+.codeblock code{font-family:var(--mono);font-size:13px;line-height:1.85;color:#E8E1D2}
+.codeblock .cm{color:#7E7561}
+.data-table{width:100%;border-collapse:collapse;margin:30px 0;font-size:14.5px;font-family:var(--sans)}
+.data-table th{
+  text-align:left;padding:10px 12px;font-size:13px;letter-spacing:.06em;
+  color:var(--blue);border-bottom:2px solid var(--blue);
+}
+.data-table td{padding:11px 12px;border-bottom:1px solid var(--line)}
+.data-table td:nth-child(2){color:var(--muted)}
+.data-table td:nth-child(3){color:var(--blue);font-weight:600;font-variant-numeric:tabular-nums}
+.data-table caption{
+  caption-side:bottom;font-size:12px;color:var(--muted);
+  padding-top:10px;font-family:var(--mono);letter-spacing:.06em;
+}
+.art-foot{max-width:700px;margin:60px auto 0;border-top:1px solid var(--line);padding-top:28px}
+.art-nav{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.art-nav a,.art-nav span{
+  display:block;padding:16px 18px;border:1px solid var(--line);
+  font-size:14px;line-height:1.7;transition:border-color .3s,transform .3s var(--ease);
+}
+.art-nav a{font-family:var(--serif);font-weight:600}
+.art-nav a:hover{border-color:var(--blue);transform:translateY(-2px);color:var(--blue)}
+.art-nav .dir{
+  display:block;font-size:11px;color:var(--muted);letter-spacing:.24em;
+  margin-bottom:6px;font-family:var(--mono);
+}
+.art-nav span.off{color:var(--muted);background:#FBF8F1;font-size:13.5px}
+.related{margin-top:32px}
+.related h4{
+  font-family:var(--mono);font-size:12px;font-weight:400;
+  letter-spacing:.26em;color:var(--muted);margin-bottom:4px;
+}
+.related a{
+  display:inline-block;margin:12px 14px 0 0;padding:8px 16px;
+  border:1px solid var(--line);font-size:13.5px;
+}
+.related a:hover{border-color:var(--blue);color:var(--blue)}
+.comment-note{
+  margin-top:34px;font-size:13.5px;color:var(--muted);
+  border-left:3px solid var(--orange);padding-left:14px;line-height:1.9;
+}
+.art-back{display:block;text-align:center;margin:44px 0 70px;font-size:13px;color:var(--blue)}
+.art-back:hover{color:var(--orange)}
+
+/* ---------- 归档 ---------- */
+.year-group{margin-top:44px}
+.year-group h3{
+  font-family:var(--serif);font-size:24px;display:flex;align-items:baseline;gap:12px;
+  border-bottom:1px solid var(--line);padding-bottom:10px;
+}
+.year-group h3 span{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.1em}
+.arch-list{list-style:none;margin:4px 0 0}
+.arch-list li{
+  display:flex;gap:16px;align-items:baseline;
+  padding:13px 6px;border-bottom:1px dashed var(--line);font-size:15px;
+}
+.arch-list time{font-family:var(--mono);font-size:12.5px;color:var(--muted);min-width:86px;flex:none}
+.arch-list .a-title{font-family:var(--serif);font-weight:600}
+.arch-list a.a-title:hover{color:var(--orange)}
+.arch-list .cat{margin-left:auto}
+.arch-note{margin:48px 0;color:var(--muted);font-size:13px;line-height:1.9}
+
+/* ---------- 关于我 ---------- */
+.about-grid{
+  display:grid;grid-template-columns:300px 1fr;gap:46px;
+  margin-top:48px;align-items:start;
+}
+.about-card{
+  border:1px solid var(--line);background:var(--card);
+  padding:28px 26px;text-align:center;
+}
+.about-card svg{width:100%;height:auto;display:block}
+.about-name{font-family:var(--serif);font-size:22px;margin-top:16px;font-weight:700}
+.about-role{color:var(--muted);font-size:12.5px;margin-top:6px;letter-spacing:.08em;line-height:1.9}
+.about-lede{
+  font-family:var(--serif);font-size:20px;line-height:1.9;
+  color:var(--blue);margin-bottom:22px;
+}
+.about-text p{font-size:15px;line-height:2;margin-bottom:16px;color:var(--ink-soft)}
+.about-text em{font-style:normal;color:var(--orange)}
+.now-box{
+  margin-top:26px;border:1px dashed var(--pale);
+  padding:20px 24px;background:rgba(159,191,212,.08);
+}
+.now-box h4{
+  font-family:var(--mono);font-size:12px;font-weight:400;
+  letter-spacing:.32em;color:var(--blue);margin-bottom:12px;
+}
+.now-box ul{list-style:none}
+.now-box li{font-size:14px;margin:9px 0;padding-left:20px;position:relative}
+.now-box li::before{content:"—";position:absolute;left:0;color:var(--pale)}
+.contact-row{margin-top:26px;display:flex;gap:12px;flex-wrap:wrap}
+.contact-row a,.contact-row span{
+  border:1px solid var(--line);padding:8px 18px;font-size:13px;color:var(--ink-soft);
+}
+.contact-row a:hover{border-color:var(--blue);color:var(--blue)}
+.contact-row .mono{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.about-stats{
+  margin-top:30px;font-family:var(--mono);font-size:12px;
+  letter-spacing:.08em;color:var(--muted);
+}
+.about-stats b{color:var(--orange);font-weight:400}
+
+/* ---------- 页脚 ---------- */
+.site-foot{border-top:1px solid var(--line);background:var(--paper-2);margin-top:30px}
+.foot-grid{
+  max-width:1080px;margin:0 auto;padding:52px 28px 40px;
+  display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:36px;
+}
+.foot-grid h4{
+  font-size:12px;letter-spacing:.24em;color:var(--muted);
+  margin-bottom:14px;font-weight:400;font-family:var(--mono);
+}
+.foot-grid p{font-size:13.5px;color:#5A554A;line-height:2.1}
+.foot-grid nav a{display:block;font-size:13.5px;color:#5A554A;line-height:2.2}
+.foot-grid nav a:hover{color:var(--blue)}
+.foot-brand{font-family:var(--serif);font-size:18px;font-weight:700;margin-bottom:8px}
+.foot-brand .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--orange);margin-right:8px}
+.copyright{
+  border-top:1px dashed var(--line);text-align:center;
+  padding:18px;font-size:12px;color:var(--muted);letter-spacing:.05em;
+}
+
+/* ---------- 悬浮件 ---------- */
+#toTop{
+  position:fixed;right:26px;bottom:26px;z-index:60;
+  width:44px;height:44px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--blue);background:rgba(250,247,240,.92);color:var(--blue);
+  font-size:15px;opacity:0;visibility:hidden;transform:translateY(10px);
+  transition:all .35s var(--ease);
+}
+#toTop.show{opacity:1;visibility:visible;transform:none}
+#toTop:hover{background:var(--blue);color:var(--paper)}
+#toast{
+  position:fixed;left:50%;bottom:88px;z-index:70;
+  transform:translate(-50%,16px);max-width:86vw;
+  background:var(--ink);color:#F5F1E6;padding:11px 22px;
+  font-size:13.5px;border-radius:4px;text-align:center;
+  opacity:0;visibility:hidden;transition:all .35s var(--ease);
+  box-shadow:0 10px 30px rgba(38,36,31,.3);
+}
+#toast.show{opacity:1;visibility:visible;transform:translate(-50%,0)}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1199px){
+  .head-in{padding:0 20px;gap:14px}
+  .wrap{padding:0 22px}
+  .foot-grid{padding:48px 22px 36px}
+}
+@media (max-width:900px){
+  .about-grid{grid-template-columns:1fr;gap:30px}
+  .about-card{max-width:340px;margin:0 auto}
+  .foot-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:767px){
+  .head-in{flex-wrap:wrap;height:auto;padding:12px 16px 0;gap:10px}
+  .brand{font-size:18px}
+  .sub-cta{margin-left:auto;padding:5px 14px}
+  .main-nav{
+    width:100%;margin:8px -16px 0;padding:0 16px 6px;
+    border-top:1px dashed var(--line);padding-top:8px;
+  }
+  .main-nav a{padding:6px 10px;font-size:13.5px}
+  .main-nav a.on::after{left:10px;right:10px}
+  .hero{height:clamp(380px,52vh,480px)}
+  .hero-slogan{left:18px;bottom:22px;max-width:72%}
+  .hero-slogan .slogan{font-size:14.5px}
+  .scroll-hint{display:none}
+  .wrap{padding:0 16px}
+  .col-intro{margin-top:32px;padding:16px 18px}
+  .featured{margin-top:34px}
+  .feat-link{padding:22px 18px}
+  .sec-head{margin-top:46px}
+  .sec-title{font-size:22px}
+  .row-link{grid-template-columns:1fr;gap:7px;padding:16px 4px}
+  .row-no{font-size:12px}
+  .row-title{font-size:17px}
+  .row-ex{font-size:12.5px}
+  .row-meta{justify-content:flex-start;gap:10px;font-size:12px}
+  .subscribe{margin:60px auto 70px;padding:40px 20px}
+  #subForm{flex-direction:column}
+  #subForm button{width:100%}
+  .art-body{font-size:16px;margin-top:36px}
+  .art-body > p:first-of-type::first-letter{font-size:44px;padding:5px 9px 0 0}
+  .art-nav{grid-template-columns:1fr}
+  .arch-list li{flex-wrap:wrap;gap:8px 12px}
+  .arch-list .cat{margin-left:0}
+  .foot-grid{grid-template-columns:1fr;gap:26px;padding:38px 16px 30px}
+  #toTop{right:16px;bottom:16px}
+}
+@media (max-width:380px){
+  .hero{height:clamp(330px,50vh,420px)}
+  .brand-en{display:none}
+  .art-title{font-size:24px}
+  .feat-title{font-size:20px}
+}
+/* ---------- 降级：减少动态 ---------- */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{
+    animation-duration:.001s !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001s !important;
+  }
+  .js .reveal{opacity:1;transform:none}
+  .scroll-hint i::after{animation:none;top:110%}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<div id="progress" aria-hidden="true"></div>
+
+<!-- ================= 页头 ================= -->
+<header class="site-head">
+  <div class="head-in">
+    <a class="brand" href="#view-home" data-nav="home" aria-label="慢速缓存 · 回到首页">
+      <span class="dot" aria-hidden="true"></span>慢速缓存<span class="brand-en">SLOW CACHE</span>
+    </a>
+    <nav class="main-nav" aria-label="栏目导航">
+      <a href="#view-home" data-nav="home">首页</a>
+      <a href="#col-lunzi" data-nav="col:lunzi">造轮子</a>
+      <a href="#col-guan" data-nav="col:guan">观展记</a>
+      <a href="#col-city" data-nav="col:city">城市漫步</a>
+      <a href="#col-zheteng" data-nav="col:zheteng">折腾录</a>
+      <a href="#col-garden" data-nav="col:garden">半成品</a>
+      <a href="#view-archive" data-nav="archive">归档</a>
+      <a href="#view-about" data-nav="about">关于</a>
+    </nav>
+    <a class="sub-cta" href="#subscribe" data-subjump>订阅</a>
+  </div>
+</header>
+
+<!-- ================= 粒子 Hero ================= -->
+<section class="hero" id="hero" aria-label="博客标题粒子动画">
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <!-- 透明 DOM 标题：SEO / 无 canvas / 减少动态时的兜底实字 -->
+  <h1 id="heroTitle">慢速缓存</h1>
+  <div class="hero-slogan">
+    <p class="slogan">「把值得想的事，写在会呼吸的页面上。」</p>
+    <p class="slogan-meta">沈知远 · 前端工程师 / 业余写作者 · <b>slowcache.dev</b></p>
+  </div>
+  <div class="scroll-hint" aria-hidden="true">向下滚动<i></i></div>
+</section>
+
+<main id="main">
+
+  <!-- ================= 首页视图 ================= -->
+  <div class="view active" id="view-home">
+    <div class="wrap">
+      <div class="col-intro reveal" id="colIntro">这里是我的公开笔记本：写性能与轮子，也写展览与街道。更新不快，但每一篇都慢慢磨过才发出来。</div>
+
+      <!-- 精选置顶 -->
+      <section class="featured reveal">
+        <p class="feat-kicker">置顶 · 精选</p>
+        <a class="feat-link" href="#view-art1" data-article="art1" data-title="No.011">
+          <span class="feat-no">No.011 / 2026-08-12 / 约 14 分钟</span>
+          <h3 class="feat-title">把博客首屏压进 300ms：一次性能考古<i class="dots" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b></i></h3>
+          <p class="feat-ex">Lighthouse 45 分到 98 分的全过程：一次诚实的测量、一次字体子集化、一次关键 CSS 内联——以及所有我决定不做的事。</p>
+          <span class="feat-meta"><em class="cat">造轮子</em><time datetime="2026-08-12">2026-08-12</time><span>约 14 分钟</span><span class="feat-more">阅读全文 →</span></span>
+        </a>
+      </section>
+
+      <!-- 最新文章 -->
+      <div class="sec-head reveal">
+        <h2 class="sec-title" id="listTitle">最新文章</h2>
+        <span class="sec-sub">共 11 篇 · 每月更新 1–2 篇</span>
+        <a class="back-all" href="#view-home" data-nav="home">← 返回全部文章</a>
+      </div>
+
+      <ol id="postList">
+        <li class="post-row reveal" data-cat="lunzi">
+          <a class="row-link" href="#view-art1" data-article="art1" data-title="No.011">
+            <span class="row-no">No.011</span>
+            <span class="row-main">
+              <span class="row-title">把博客首屏压进 300ms：一次性能考古<i class="dots" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b></i></span>
+              <span class="row-ex">Lighthouse 45 分到 98 分的全过程：字体子集化、关键 CSS 内联，与一次诚实的测量。</span>
+            </span>
+            <span class="row-meta"><em class="cat">造轮子</em><time datetime="2026-08-12">2026-08-12</time><span>14 min</span></span>
+          </a>
+        </li>
+        <li class="post-row reveal" data-cat="city">
+          <a class="row-link" href="#view-art2" data-article="art2" data-title="No.010">
+            <span class="row-no">No.010</span>
+            <span class="row-main">
+              <span class="row-title">凌晨四点的杭州菜市场<i class="dots" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b></i></span>
+              <span class="row-ex">跟着送货三轮车走完一条街，天光和鱼腥气一起醒来。</span>
+            </span>
+            <span class="row-meta"><em class="cat">城市漫步</em><time datetime="2026-07-03">2026-07-03</time><span>9 min</span></span>
+          </a>
+        </li>
+        <li class="post-row reveal" data-cat="lunzi">
+          <a class="row-link" href="#view-home" data-soon="我用 90 天写了个零依赖的静态站点生成器">
+            <span class="row-no">No.009</span>
+            <span class="row-main">
+              <span class="row-title">我用 90 天写了个零依赖的静态站点生成器<i class="dots" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b></i></span>
+              <span class="row-ex">只用 Node 标准库，从零写一个 300 行的生成器，附架构图与完整的踩坑清单。</span>
+            </span>
+            <span class="row-meta"><em class="cat">造轮子</em><time datetime="2026-06-18">2026-06-18</time><span>18 min</span></span>
+          </a>
+        </li>
+        <li class="post-row reveal" data-cat="lunzi">
+          <a class="row-link" href="#view-home" data-soon="CSS 滚动时间轴入门：不写一行 JS 的滚动动画">
+            <span class="row-no">No.008</span>
+            <span class="row-main">
+              <span class="row-title">CSS 滚动时间轴入门：不写一行 JS 的滚动动画<i class="dots" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b></i></span>
+              <span class="row-ex">animation-timeline 实战手记，附六个可以直接抄走的渐进增强案例。</span>
+            </span>
+            <span class="row-meta"><em class="cat">造轮子</em><time datetime="2026-05-30">2026-05-30</time><span>11 min</span></span>
+          </a>
+        </li>
+        <li class="post-row reveal" data-cat="guan">
+          <a class="row-link" href="#view-home" data-soon="滚动即叙事：拆解 3 个获奖网站的动效节奏">
+            <span class="row-no">No.007</span>
+            <span class="row-main">
+              <span class="row-title">滚动即叙事：拆解 3 个获奖网站的动效节奏<i class="dots" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b></i></span>
+              <span class="row-ex">逐帧拆解三个获奖长文网站：pinned 章节怎么钉、动效节拍怎么数、留白留给谁。</span>
+            </span>
+            <span class="row-meta"><em class="cat">观展记</em><time datetime="2026-05-02">2026-05-02</time><span>12 min</span></span>
+          </a>
+        </li>
+        <li class="post-row reveal" data-cat="guan">
+          <a class="row-link" href="#view-home" data-soon="衬线体为什么在屏幕上「活」了回来">
+            <span class="row-no">No.006</span>
+            <span class="row-main">
+              <span class="row-title">衬线体为什么在屏幕上「活」了回来<i class="dots" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b></i></span>
+              <span class="row-ex">从铅字排印史讲到可变字体：杂志感回潮背后的技术原因。</span>
+            </span>
+            <span class="row-meta"><em class="cat">观展记</em><time datetime="2026-04-11">2026-04-11</time><span>10 min</span></span>
+          </a>
+        </li>
+        <li class="post-row reveal" data-cat="garden">
+          <a class="row-link" href="#view-home" data-soon="数字花园第一年：种下 214 条笔记之后">
+            <span class="row-no">No.005</span>
+            <span class="row-main">
+              <span class="row-title">数字花园第一年：种下 214 条笔记之后<i class="dots" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b></i></span>
+              <span class="row-ex">成熟度统计、双链心得，以及放弃完美主义之后收获的三样东西。</span>
+            </span>
+            <span class="row-meta"><em class="cat">半成品 🌲</em><time datetime="2026-03-22">2026-03-22</time><span>13 min</span></span>
+          </a>
+        </li>
+        <li class="post-row reveal" data-cat="zheteng">
+          <a class="row-link" href="#view-home" data-soon="给十年前的 Kindle 刷了个「慢读」系统">
+            <span class="row-no">No.004</span>
+            <span class="row-main">
+              <span class="row-title">给十年前的 Kindle 刷了个「慢读」系统<i class="dots" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b></i></span>
+              <span class="row-ex">越狱、换字体、关掉商城：把墨水屏改成一台只读长文的慢读终端。</span>
+            </span>
+            <span class="row-meta"><em class="cat">折腾录</em><time datetime="2026-02-14">2026-02-14</time><span>15 min</span></span>
+          </a>
+        </li>
+        <li class="post-row reveal" data-cat="zheteng">
+          <a class="row-link" href="#view-home" data-soon="润轴两小时：一把键盘的手感改造记">
+            <span class="row-no">No.003</span>
+            <span class="row-main">
+              <span class="row-title">润轴两小时：一把键盘的手感改造记<i class="dots" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b></i></span>
+              <span class="row-ex">润轴、润滑、调卫星轴——一场手指的修行，和手指教会我的耐心。</span>
+            </span>
+            <span class="row-meta"><em class="cat">折腾录</em><time datetime="2026-01-20">2026-01-20</time><span>8 min</span></span>
+          </a>
+        </li>
+        <li class="post-row reveal" data-cat="city">
+          <a class="row-link" href="#view-home" data-soon="西湖以西：一条不用排队的徒步线">
+            <span class="row-no">No.002</span>
+            <span class="row-main">
+              <span class="row-title">西湖以西：一条不用排队的徒步线<i class="dots" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b></i></span>
+              <span class="row-ex">从龙井村到天竺，三个小时只遇见十一个人，和一整个秋天。</span>
+            </span>
+            <span class="row-meta"><em class="cat">城市漫步</em><time datetime="2025-11-08">2025-11-08</time><span>7 min</span></span>
+          </a>
+        </li>
+        <li class="post-row reveal" data-cat="garden">
+          <a class="row-link" href="#view-home" data-soon="仙人掌教我的延迟满足">
+            <span class="row-no">No.001</span>
+            <span class="row-main">
+              <span class="row-title">仙人掌教我的延迟满足<i class="dots" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b></i></span>
+              <span class="row-ex">窗台上那盆三个月没浇水的仙人掌活得好好的，它教我重新理解「慢慢来」。</span>
+            </span>
+            <span class="row-meta"><em class="cat">半成品 🌿</em><time datetime="2025-09-30">2025-09-30</time><span>6 min</span></span>
+          </a>
+        </li>
+      </ol>
+
+      <!-- 订阅 -->
+      <section class="subscribe reveal" id="subscribe">
+        <p class="sub-kicker">NEWSLETTER</p>
+        <h2 class="sub-title">缓存到你的收件箱</h2>
+        <p class="sub-desc">
+          每月一封，只写值得读的：一篇技术深潜、一篇城市漫步，以及这个月遇到的最有趣的一个链接。
+          不用注册，不用登录，RSS 阅读器直达：<code>slowcache.dev/feed.xml</code>。
+        </p>
+        <form id="subForm" novalidate action="#">
+          <label class="sr-only" for="subEmail">邮箱地址</label>
+          <input id="subEmail" type="email" placeholder="you@example.com" autocomplete="email">
+          <button type="submit">订阅</button>
+        </form>
+        <p id="subMsg" role="status" aria-live="polite"></p>
+        <div id="subDone">
+          <p class="done-big">✓ 已缓存到你的收件箱</p>
+          <p class="done-desc">每月一封，只写值得读的；随时可以退订，我不会挽留。<a href="#subscribe" id="subReset">换一个邮箱</a></p>
+        </div>
+        <p class="sub-note">已有 1,024 位读者订阅 · 从不发广告，也从不卖数据</p>
+      </section>
+    </div>
+  </div>
+
+  <!-- ================= 完整文章 1 ================= -->
+  <div class="view view-article" id="view-art1">
+    <div class="wrap">
+      <p class="art-crumb reveal"><a href="#view-home" data-nav="home">← 首页</a> / 造轮子</p>
+      <article>
+        <header class="art-head reveal">
+          <p class="art-kicker"><em class="cat">造轮子</em><span>No.011</span></p>
+          <h2 class="art-title">把博客首屏压进 300ms：一次性能考古</h2>
+          <p class="art-meta"><time datetime="2026-08-12">2026 年 8 月 12 日</time><span>·</span><span>约 14 分钟</span><span>·</span><span>沈知远</span></p>
+        </header>
+        <div class="art-body">
+          <p>三个月前的一个深夜，我把这份博客的首页丢进 Lighthouse，跑出一个刺眼的 45 分：首屏要 4.7 秒才能稳定下来，传输体积 1.9MB。作为一个天天把「性能」挂在嘴边的前端，这大概算一种行为艺术。这篇文章记录把它做到 98 分、0.9 秒的全过程——测量、字体、CSS、图片，以及我决定不做的事。</p>
+
+          <h2 id="s1">一份 45 分的报告，和一次诚实的测量</h2>
+          <p>打开性能报告，最常见的反应是照着建议清单逐条执行：压缩、懒加载、上 CDN。我第一遍也是这么干的，忙了一整个晚上，分数从 45 涨到 58。第二天我停下来，先打开 Performance 面板，给一次冷启动的加载录了像。</p>
+          <p>瀑布图里最长的三根柱子非常诚实：两个共 2.4MB 的中文 webfont、一张 1.2MB 的头图，以及一段 300KB 的「全家桶」JS——里面一大半函数在整个会话里一次都没有被调用过。结论比我预想的简单：这首先不是一个 JS 问题，是一个资产问题。</p>
+          <blockquote>性能优化的第一步不是优化，是把「感觉慢」变成「哪里慢、慢了多少」。测量不是流程，是方向盘。</blockquote>
+          <p>于是我按「收益 ÷ 成本」给所有候选动作排了个序：字体子集化（收益巨大、成本半天）、关键 CSS 内联（收益大、成本两小时）、图片响应式（收益大、成本一下午）、JS 拆包（收益中等、成本两天）。前三个做完，分数就已经停在 96 了。</p>
+
+          <h2 id="s2">字体：最大的一块石头</h2>
+          <p>中文 webfont 有个天然的悖论：想好看就得收全字库，而全字库意味着 5–8MB 起步。我原来直接引用了整套思源宋体，等于让每一位访客为一篇两千字的文章，扛下一整部《辞海》。</p>
+          <p>解法是子集化。先用一行 shell 统计全站实际出现过的汉字——断断续续写了三年、十一篇，总共只用到 2174 个字符——再用 pyftsubset 把字体切成 48KB 的 woff2。新文章发布时在 CI 里重跑这一步，保证永远不缺字。</p>
+          <figure class="codeblock">
+            <figcaption><span>shell · 字体子集化</span><button class="code-copy" type="button">复制</button></figcaption>
+            <pre><code><span class="cm"># 统计全站用到的汉字，生成子集字符表</span>
+cat posts/*.md | grep -o &apos;[一-龥]&apos; | sort -u &gt; used-chars.txt
+
+<span class="cm"># 只保留这些字符，切成 woff2</span>
+pyftsubset SourceHanSerif-Regular.otf \
+  --text-file=used-chars.txt \
+  --output-file=hanzi-sub.woff2 \
+  --flavor=woff2</code></pre>
+          </figure>
+          <p>光有子集还不够，还得管好加载前后的体验：<code style="font-family:var(--mono);font-size:.85em">font-display: swap</code> 让文字先用本地字体渲染，不至于白屏干等；再给回退字体设置 size-adjust，让切换字体的那一瞬间行高不跳、滚动条不抖。这些小数点后的细节，用户说不出名字，但身体感觉得到。</p>
+
+          <h3 id="s2-1">关键 CSS 内联</h3>
+          <p>首屏真正用到的样式只有约 7KB：排版、页头、hero。把这 7KB 直接内联进 head，其余样式异步加载，渲染阻塞的请求数就从 3 个降到 0 个。</p>
+          <figure class="codeblock">
+            <figcaption><span>html · 关键 CSS 内联</span><button class="code-copy" type="button">复制</button></figcaption>
+            <pre><code>&lt;!-- 内联首屏关键样式（约 7KB） --&gt;
+&lt;style&gt;/* 排版、页头、hero */&lt;/style&gt;
+
+&lt;!-- 其余样式异步加载，不阻塞渲染 --&gt;
+&lt;link rel=&quot;preload&quot; href=&quot;blog.css&quot; as=&quot;style&quot;
+      onload=&quot;this.rel=&apos;stylesheet&apos;&quot;&gt;
+&lt;noscript&gt;
+  &lt;link rel=&quot;stylesheet&quot; href=&quot;blog.css&quot;&gt;
+&lt;/noscript&gt;</code></pre>
+          </figure>
+          <p>代价是维护成本：改样式要记得同步两处。我的办法是让构建脚本自动抽取首屏选择器，人不碰这份内联样式——工具应该替人记住麻烦事，而不是相反。</p>
+
+          <h2 id="s3">图片：把选择权交还浏览器</h2>
+          <p>那张 1.2MB 的头图是我从相机里直出的 JPEG：1800 像素宽，而它在大多数屏幕上只显示 700 像素。重新导出三档尺寸，配上 WebP 与 AVIF 双源，交给 srcset 去选，平均一张能落到 90KB。</p>
+          <ul>
+            <li>题图之外的所有图片一律 <code style="font-family:var(--mono);font-size:.85em">loading="lazy"</code>，首屏之外的成本，推迟到真正需要的时候再付；</li>
+            <li>摄影类文章的图统一过一道 8% 暖色滤镜再导出，视觉统一了，压缩率也顺带更好；</li>
+            <li>给每张图写好 width 和 height，占位先立起来，CLS 直接归零。</li>
+          </ul>
+          <p>三板斧加起来，图片总传输从 1.4MB 降到 210KB，而且肉眼几乎看不出差别。</p>
+
+          <h2 id="s4">结果，以及我决定不做的事</h2>
+          <table class="data-table">
+            <caption>表 4-1 · 本次性能考古前后对照（本地 4G 节流）</caption>
+            <thead><tr><th>指标</th><th>优化前</th><th>优化后</th></tr></thead>
+            <tbody>
+              <tr><td>Lighthouse 性能分</td><td>45</td><td>98</td></tr>
+              <tr><td>LCP（最大内容绘制）</td><td>4.7 s</td><td>0.9 s</td></tr>
+              <tr><td>首屏传输体积</td><td>1.9 MB</td><td>310 KB</td></tr>
+              <tr><td>中文字体体积</td><td>2.4 MB</td><td>48 KB</td></tr>
+              <tr><td>布局偏移 CLS</td><td>0.21</td><td>0.01</td></tr>
+            </tbody>
+          </table>
+          <p>最后那 2 分我没再去追——98 到 100 的距离，比 45 到 98 远得多。更重要的是那张「不做」清单：没有为了 SSR 重写整套站点，一个 300 行的生成器还够用；没有上 Service Worker 离线缓存，等有稳定的回头客再说；没有为了 0.05 秒引入任何新的依赖。</p>
+          <p>「慢速缓存」的意思从来不是慢，而是别让工具跑到问题前面。性能优化的尽头不是满分，是你敢在某个深夜打开自己的网站，并且愿意多停留一会儿。</p>
+          <blockquote>把值得想的事，写在会呼吸的页面上——前提是，页面真的呼吸得动。</blockquote>
+        </div>
+        <footer class="art-foot">
+          <div class="art-nav">
+            <span class="off"><span class="dir">PREV</span>已是最新一篇，往前翻请去归档。</span>
+            <a href="#view-art2" data-article="art2" data-title="No.010"><span class="dir">NEXT</span>凌晨四点的杭州菜市场 →</a>
+          </div>
+          <div class="related">
+            <h4>相关阅读</h4>
+            <a href="#col-guan" data-col="guan">滚动即叙事：拆解 3 个获奖网站的动效节奏</a>
+            <a href="#col-lunzi" data-col="lunzi">CSS 滚动时间轴入门：不写一行 JS 的滚动动画</a>
+          </div>
+          <p class="comment-note">想法不同才有意思，欢迎反对意见。评论请到 GitHub Discussions，或者直接回信到 hi@slowcache.dev，我都会读。</p>
+        </footer>
+        <a class="art-back" href="#view-home" data-nav="home">← 回到首页列表</a>
+      </article>
+    </div>
+  </div>
+
+  <!-- ================= 完整文章 2 ================= -->
+  <div class="view view-article" id="view-art2">
+    <div class="wrap">
+      <p class="art-crumb reveal"><a href="#view-home" data-nav="home">← 首页</a> / 城市漫步</p>
+      <article>
+        <header class="art-head reveal">
+          <p class="art-kicker"><em class="cat">城市漫步</em><span>No.010</span></p>
+          <h2 class="art-title">凌晨四点的杭州菜市场</h2>
+          <p class="art-meta"><time datetime="2026-07-03">2026 年 7 月 3 日</time><span>·</span><span>约 9 分钟</span><span>·</span><span>沈知远</span></p>
+        </header>
+        <div class="art-body">
+          <p>闹钟定在三点五十。摄影师朋友阿澈半夜发来消息，说想拍一组「城市醒来的第一小时」，机位不在西湖，也不在钱江新城，在凤起路背后那条开了三十年的农贸市场。他说：你写的那些街道，得趁天亮之前去看，那才是素颜。</p>
+          <p>我说我不拍照，就跟着走。于是四点整，我们站在了还亮着路灯的街口。</p>
+
+          <h2 id="m1">四点的路灯比想象中亮</h2>
+          <p>骑车穿过市中心，红绿灯还在一丝不苟地给不存在的车流分配路权，空荡的斑马线干净得像刚铺好的稿纸。这座城市已经运行了上千个日夜，却很少有人见过它重启的瞬间——系统日志每天都在写，只是没有人翻。</p>
+          <p>阿澈把相机举起来，又放下了：「光还没到。」他说拍照是等光。我说那我们先进市场等人。</p>
+
+          <h2 id="m2">鱼摊的第一刀</h2>
+          <p>市场里最先醒的是水产区。三轮车倒车进过道，泡沫箱摞到一人高，冰块哗啦一声倒进池子，整条街的睡意被这一声响凿开了一个口子。老板娘的围裙还反穿着，手里的刀已经落下第一刀，鳞片溅在灯光里，亮得像碎掉的金箔。</p>
+          <p>「要活的还是刚杀的？」她问的不是我们，是第一位骑着电驴赶来的饭店采购。这是这座城市今天的第一次交易，发生在四点二十一分，比大多数人一天的开始早了五个小时。讨价还价的声音很短、很快，是夜里才有的效率。</p>
+          <blockquote>阿澈后来在片子里挑出一张：老板娘低头刮鳞，热气从她身后的汤锅里升起来。他说，人比光好看。</blockquote>
+
+          <h2 id="m3">豆浆、代驾与头班公交</h2>
+          <p>五点半，早点摊的卷帘门哗啦啦拉开，第一屉包子的蒸汽和第一锅豆浆的香气先后占领街道。环卫工阿姨把扫帚靠在电线杆上，接过一杯滚豆浆，和摊主聊起昨夜那场没下透的雨。代驾司机折叠着小电瓶车往家走，眼睛里的红血丝和天边的鱼肚白一起出现。</p>
+          <p>头班公交车进站的时候，车厢是空的，司机却把每一站都停得一丝不苟。我忽然明白阿澈为什么非要这个机位：一座城市对待「没有任何观众的时刻」的态度，才是它真正的性格。</p>
+
+          <h2 id="m4">天亮之前收笔</h2>
+          <p>六点过一刻，天光彻底上来，第一批游客模样的面孔出现在街口。市场迅速卸下「奇观」的身份，变回那个写在美食攻略里的「市井烟火」。我们往回走，谁都没说话，像刚看完一场只放映一次、不设重映的电影。</p>
+          <p>我在路口买了两根还带着露水的玉米。回家路上想起这个站的名字——慢速缓存，长期保鲜。有些东西，你就是得起个大早，才能拿到第一手的新鲜。</p>
+        </div>
+        <footer class="art-foot">
+          <div class="art-nav">
+            <a href="#view-art1" data-article="art1" data-title="No.011"><span class="dir">PREV</span>← 把博客首屏压进 300ms：一次性能考古</a>
+            <span class="off"><span class="dir">NEXT</span>《我用 90 天写了个零依赖的静态站点生成器》整理中。</span>
+          </div>
+          <div class="related">
+            <h4>相关阅读</h4>
+            <a href="#col-city" data-col="city">西湖以西：一条不用排队的徒步线</a>
+            <a href="#col-garden" data-col="garden">仙人掌教我的延迟满足</a>
+          </div>
+          <p class="comment-note">想法不同才有意思，欢迎反对意见。评论请到 GitHub Discussions，或者直接回信到 hi@slowcache.dev，我都会读。</p>
+        </footer>
+        <a class="art-back" href="#view-home" data-nav="home">← 回到首页列表</a>
+      </article>
+    </div>
+  </div>
+
+  <!-- ================= 归档 ================= -->
+  <div class="view" id="view-archive">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <h2 class="sec-title">归档</h2>
+        <span class="sec-sub">共 11 篇 · 按年份倒序 · 可切换时间轴视图</span>
+      </div>
+      <section class="year-group reveal">
+        <h3>2026<span>9 篇</span></h3>
+        <ol class="arch-list">
+          <li><time datetime="2026-08-12">08-12</time><a class="a-title" href="#view-art1" data-article="art1" data-title="No.011">把博客首屏压进 300ms：一次性能考古</a><em class="cat">造轮子</em></li>
+          <li><time datetime="2026-07-03">07-03</time><a class="a-title" href="#view-art2" data-article="art2" data-title="No.010">凌晨四点的杭州菜市场</a><em class="cat">城市漫步</em></li>
+          <li><time datetime="2026-06-18">06-18</time><a class="a-title" href="#view-home" data-soon="我用 90 天写了个零依赖的静态站点生成器">我用 90 天写了个零依赖的静态站点生成器</a><em class="cat">造轮子</em></li>
+          <li><time datetime="2026-05-30">05-30</time><a class="a-title" href="#view-home" data-soon="CSS 滚动时间轴入门">CSS 滚动时间轴入门：不写一行 JS 的滚动动画</a><em class="cat">造轮子</em></li>
+          <li><time datetime="2026-05-02">05-02</time><a class="a-title" href="#view-home" data-soon="滚动即叙事">滚动即叙事：拆解 3 个获奖网站的动效节奏</a><em class="cat">观展记</em></li>
+          <li><time datetime="2026-04-11">04-11</time><a class="a-title" href="#view-home" data-soon="衬线体为什么在屏幕上「活」了回来">衬线体为什么在屏幕上「活」了回来</a><em class="cat">观展记</em></li>
+          <li><time datetime="2026-03-22">03-22</time><a class="a-title" href="#view-home" data-soon="数字花园第一年">数字花园第一年：种下 214 条笔记之后</a><em class="cat">半成品 🌲</em></li>
+          <li><time datetime="2026-02-14">02-14</time><a class="a-title" href="#view-home" data-soon="给十年前的 Kindle 刷了个「慢读」系统">给十年前的 Kindle 刷了个「慢读」系统</a><em class="cat">折腾录</em></li>
+          <li><time datetime="2026-01-20">01-20</time><a class="a-title" href="#view-home" data-soon="润轴两小时">润轴两小时：一把键盘的手感改造记</a><em class="cat">折腾录</em></li>
+        </ol>
+      </section>
+      <section class="year-group reveal">
+        <h3>2025<span>2 篇</span></h3>
+        <ol class="arch-list">
+          <li><time datetime="2025-11-08">11-08</time><a class="a-title" href="#view-home" data-soon="西湖以西">西湖以西：一条不用排队的徒步线</a><em class="cat">城市漫步</em></li>
+          <li><time datetime="2025-09-30">09-30</time><a class="a-title" href="#view-home" data-soon="仙人掌教我的延迟满足">仙人掌教我的延迟满足</a><em class="cat">半成品 🌿</em></li>
+        </ol>
+      </section>
+      <p class="arch-note reveal">更早的文字住在旧站和草稿箱里，会慢慢搬过来。归档也提供 RSS 全量输出：<code style="font-family:var(--mono)">slowcache.dev/feed.xml</code>。</p>
+    </div>
+  </div>
+
+  <!-- ================= 关于我 ================= -->
+  <div class="view" id="view-about">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <h2 class="sec-title">关于我</h2>
+        <span class="sec-sub">ABOUT · Now 页每年更新一次</span>
+      </div>
+      <div class="about-grid">
+        <aside class="about-card reveal">
+          <svg viewBox="0 0 240 240" role="img" aria-label="沈知远的手绘线稿头像：戴圆框眼镜的人和一盆仙人掌">
+            <circle cx="120" cy="120" r="112" fill="#EAF1F5"/>
+            <circle cx="120" cy="120" r="112" fill="none" stroke="#31506B" stroke-width="1.5" opacity=".3"/>
+            <path d="M52 210 Q66 158 120 156 Q174 158 188 210" fill="#FFFDF8" stroke="#31506B" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M84 92 Q84 56 120 56 Q156 56 156 92 L156 118 Q156 152 120 156 Q84 152 84 118 Z" fill="#FFFDF8" stroke="#31506B" stroke-width="2.5" stroke-linejoin="round"/>
+            <path d="M82 96 Q78 48 120 44 Q162 48 158 96 Q150 70 120 68 Q90 70 82 96 Z" fill="#31506B"/>
+            <circle cx="103" cy="106" r="13" fill="none" stroke="#31506B" stroke-width="2.2"/>
+            <circle cx="137" cy="106" r="13" fill="none" stroke="#31506B" stroke-width="2.2"/>
+            <path d="M116 106 L124 106" stroke="#31506B" stroke-width="2.2"/>
+            <path d="M90 104 L83 99 M150 104 L157 99" stroke="#31506B" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="103" cy="107" r="2.6" fill="#26241F"/>
+            <circle cx="137" cy="107" r="2.6" fill="#26241F"/>
+            <path d="M110 134 Q120 141 130 134" fill="none" stroke="#31506B" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M198 210 L202 178 L216 178 L220 210 Z" fill="#FFFDF8" stroke="#31506B" stroke-width="2.2" stroke-linejoin="round"/>
+            <path d="M206 178 L206 150 Q206 141 211 141 Q216 141 216 150 L216 178" fill="none" stroke="#31506B" stroke-width="2.2"/>
+            <path d="M206 164 Q197 164 197 155 Q197 148 202 148" fill="none" stroke="#31506B" stroke-width="2.2"/>
+            <circle cx="211" cy="138" r="4" fill="#D96C3F"/>
+          </svg>
+          <p class="about-name">沈知远</p>
+          <p class="about-role">前端工程师 / 业余写作者<br>杭州 · 慢速缓存站长</p>
+        </aside>
+        <div class="about-text reveal">
+          <p class="about-lede">「白天写组件，晚上写句子。这里是沈知远的公开笔记本。」</p>
+          <p>沈知远，1997 年生，住在杭州。白天在一家做设计工具的公司写前端，晚上和周末维护这台名叫「慢速缓存」的小站点。关注 <em>Web 性能</em>、<em>设计工程</em> 与 <em>独立开发</em>，偶尔给开源项目提交一些小补丁。</p>
+          <p>信条是「<em>慢速缓存，长期保鲜</em>」：写得不快，但尽量让每篇文章两年之后还不用改。桌上有 2015 年的 Kindle（已刷成慢读系统）和一盆叫「重启」的仙人掌——它教我的东西，比很多技术书都多。</p>
+          <p>为什么写博客？把折腾的过程写成可供检索的思考。如果这里的某一篇帮你省下了一个下午，那就值回票价。</p>
+          <div class="now-box">
+            <h4>NOW · 最近在</h4>
+            <ul>
+              <li>写：《静态站点生成器 90 天》的续篇，关于插件系统该怎么设计</li>
+              <li>读：一堆 CSS 规范草案，和一本讲排印史的旧书</li>
+              <li>折腾：把博客的 LCP 再往下压 0.1 秒（大概率徒劳，但过程好玩）</li>
+              <li>听：城市漫步时的环境音，用一台 1998 年的录音笔录下来</li>
+            </ul>
+          </div>
+          <div class="contact-row">
+            <a href="mailto:hi@slowcache.dev">✉ hi@slowcache.dev</a>
+            <span class="mono">GitHub @shenzhiyuan</span>
+            <span class="mono">RSS slowcache.dev/feed.xml</span>
+          </div>
+          <p class="about-stats">写作第 <b>3</b> 年 · <b>11</b> 篇文章 · <b>5</b> 个栏目 · <b>0</b> 条广告</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ================= 页脚 ================= -->
+<footer class="site-foot">
+  <div class="foot-grid">
+    <div>
+      <p class="foot-brand"><span class="dot" aria-hidden="true"></span>慢速缓存 · Slow Cache</p>
+      <p>沈知远的个人博客。把值得想的事，写在会呼吸的页面上。本站由一个 300 行的零依赖生成器驱动，首屏 0.9 秒。</p>
+    </div>
+    <nav aria-label="页脚栏目导航">
+      <h4>栏目</h4>
+      <a href="#view-home" data-nav="home">首页</a>
+      <a href="#col-lunzi" data-nav="col:lunzi">造轮子</a>
+      <a href="#col-city" data-nav="col:city">城市漫步</a>
+      <a href="#col-garden" data-nav="col:garden">半成品</a>
+      <a href="#view-archive" data-nav="archive">归档</a>
+      <a href="#view-about" data-nav="about">关于我</a>
+    </nav>
+    <div>
+      <h4>订阅</h4>
+      <p>RSS：slowcache.dev/feed.xml<br>不用注册，不用登录，阅读器直达。<br><a href="#subscribe" data-subjump style="color:var(--blue);border-bottom:1px solid var(--pale)">缓存到你的收件箱 →</a></p>
+    </div>
+  </div>
+  <p class="copyright">© 2026 沈知远 · 慢速缓存 Slow Cache · 慢速缓存，长期保鲜</p>
+</footer>
+
+<button id="toTop" type="button" aria-label="回到顶部">↑</button>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var doc = document;
+  var win = window;
+  var reduceMotion = !!(win.matchMedia && win.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  function $(s, c) { return (c || doc).querySelector(s); }
+  function $all(s, c) { return Array.prototype.slice.call((c || doc).querySelectorAll(s)); }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function rand(a, b) { return a + Math.random() * (b - a); }
+
+  /* ============================================================
+     一、粒子文字引擎
+     离屏 fillText 像素采样 → spring-damping 聚合 → 指针斥力 →
+     章节切换炸散 + 0.6s 后二次聚合 → 呼吸微漂 → 滚动拖尾
+     ============================================================ */
+  var hero = $('#hero');
+  var canvas = $('#fx');
+  var titleEl = $('#heroTitle');
+  var ctx = null;
+  var engineOn = false;
+  var W = 0, H = 0, dpr = 1;
+  var particles = [];
+  var budget = 1600;
+  var currentHeroTitle = '慢速缓存';
+  var running = false;
+  var rafId = 0;
+  var heroVisible = true;
+  var coasting = false;
+  var reformTimer = 0;
+  var lastReformAt = 0;
+  var trailFrames = 0;
+  var scrollBoost = 0;
+  var lastScrollY = 0;
+  var tick = 0;
+  var mouse = { x: -9999, y: -9999, r: 90 };
+
+  /* 粒子配色与站点主题一致：墨青主粒 / 淡青辅粒 / 朱橙强调(约5%) */
+  function pickColor() {
+    var r = Math.random();
+    if (r < 0.05) return '#D96C3F';
+    if (r < 0.30) return '#9FBFD4';
+    return '#31506B';
+  }
+
+  function resizeEngine() {
+    var rect = hero.getBoundingClientRect();
+    W = Math.max(300, Math.round(rect.width));
+    H = Math.max(260, Math.round(rect.height));
+    dpr = clamp(win.devicePixelRatio || 1, 1, 2);           /* DPR 钳制 */
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var mobile = W < 768;
+    mouse.r = mobile ? 60 : 90;                              /* 触点扰动半径收缩 */
+    if (mobile) budget = clamp(Math.round(W * H / 260), 600, 1200);   /* 移动端减量 */
+    else budget = clamp(Math.round(W * H / 300), 1200, 2600);
+    budget = Math.min(budget, 3500);                         /* 硬上限 */
+  }
+
+  /* 离屏 canvas：大标题 fillText → getImageData 按步长采样 alpha>128 像素为目标点 */
+  function sampleTitle(text) {
+    var off = doc.createElement('canvas');
+    var octx = off.getContext('2d');
+    if (!octx) return null;
+    var family = '"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif';
+    var probe = 100;
+    octx.font = '800 ' + probe + 'px ' + family;
+    var tw = octx.measureText(text).width || probe;
+    var fs = Math.min((W * 0.86) / tw * probe, H * 0.5, 200);
+    fs = Math.max(Math.round(fs), 42);
+    octx.font = '800 ' + fs + 'px ' + family;
+    tw = Math.ceil(octx.measureText(text).width);
+    var pad = Math.ceil(fs * 0.25);
+    var h = Math.ceil(fs * 1.5);
+    off.width = tw + pad * 2;
+    off.height = h;
+    octx.font = '800 ' + fs + 'px ' + family;   /* 画布尺寸重置后必须重新设定 */
+    octx.textBaseline = 'middle';
+    octx.fillStyle = '#fff';
+    octx.fillText(text, pad, Math.round(h / 2));
+
+    /* 中文字形复杂：步长 3-4px 保证笔画完整可读；纯西文放宽到 4px */
+    var hasCJK = /[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]/.test(text);
+    var step = hasCJK ? (fs > 160 ? 4 : 3) : 4;
+
+    var data = octx.getImageData(0, 0, off.width, off.height).data;
+    var raw = [];
+    for (var y = 0; y < h; y += step) {
+      for (var x = 0; x < off.width; x += step) {
+        if (data[(y * off.width + x) * 4 + 3] > 128) raw.push(x, y);
+      }
+    }
+    var count = raw.length / 2;
+    var limit = Math.floor(budget * 1.08);
+    if (count > limit) {
+      /* 行主序等距抽稀：空间均匀，不破坏字形 */
+      var k = count / limit;
+      var thin = [];
+      for (var i = 0; i < limit; i++) {
+        var j = Math.floor(i * k);
+        thin.push(raw[j * 2], raw[j * 2 + 1]);
+      }
+      raw = thin;
+      count = limit;
+    }
+    var pts = [];
+    for (var t = 0; t < count; t++) pts.push({ x: raw[t * 2], y: raw[t * 2 + 1] });
+    /* 洗牌配对：炸散重组时飞行轨迹更自然 */
+    for (var s = pts.length - 1; s > 0; s--) {
+      var q = (Math.random() * (s + 1)) | 0;
+      var tmp = pts[s]; pts[s] = pts[q]; pts[q] = tmp;
+    }
+    var ox = (W - off.width) / 2;
+    var oy = (H - h) / 2 - H * 0.03;
+    for (var u = 0; u < pts.length; u++) { pts[u].x += ox; pts[u].y += oy; }
+    if (titleEl) titleEl.style.fontSize = fs + 'px';  /* DOM 兜底标题与粒子字号对齐 */
+    return pts;
+  }
+
+  function spawnParticles() {
+    particles.length = 0;
+    for (var i = 0; i < budget; i++) {
+      particles.push({
+        x: rand(0, W), y: rand(0, H),          /* 开场：全屏四散 */
+        vx: rand(-1.2, 1.2), vy: rand(-1.2, 1.2),
+        bx: W / 2, by: H / 2,
+        ph: rand(0, Math.PI * 2),              /* 呼吸相位 */
+        sp: rand(0.5, 1.3),
+        c: pickColor(),
+        s: Math.random() < 0.12 ? 3 : 2,       /* fillRect 2px 为主 */
+        free: true
+      });
+    }
+  }
+
+  function assignTargets(pts) {
+    if (!pts || !pts.length) { coasting = true; return; }
+    coasting = false;
+    var n = particles.length, m = pts.length;
+    for (var i = 0; i < n; i++) {
+      var p = particles[i];
+      if (i < m) {
+        p.free = false;
+        p.bx = pts[i].x; p.by = pts[i].y;
+      } else {
+        /* 超出目标点数量的粒子转为背景微尘 */
+        p.free = true;
+        p.bx = rand(0, W); p.by = rand(0, H);
+      }
+    }
+  }
+
+  /* 章节切换第一步：全体粒子获得向四周的爆发速度（+随机湍流） */
+  function explode() {
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      var a = Math.random() * Math.PI * 2;
+      var f = rand(5, 16);
+      p.vx += Math.cos(a) * f;
+      p.vy += Math.sin(a) * f;
+    }
+    coasting = true;
+  }
+
+  /* 章节切换：炸散 → 0.6s 后被新标题目标点捕获，二次聚合（300ms 节流防雪崩） */
+  function reform(titleText) {
+    var now = Date.now();
+    if (now - lastReformAt < 300) return;
+    lastReformAt = now;
+    win.clearTimeout(reformTimer);
+    explode();
+    reformTimer = win.setTimeout(function () {
+      try { assignTargets(sampleTitle(titleText)); }
+      catch (e) { assignTargets(null); }
+    }, 600);
+  }
+
+  /* 点击彩蛋：半径 140px 的一次性冲击波脉冲，随后弹簧回弹重组 */
+  function shockwave(x, y) {
+    var R = 140;
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      var dx = p.x - x, dy = p.y - y;
+      var d2 = dx * dx + dy * dy;
+      if (d2 < R * R) {
+        var d = Math.sqrt(d2) || 0.001;
+        var f = (1 - d / R) * 15 + 3;
+        p.vx += (dx / d) * f;
+        p.vy += (dy / d) * f;
+      }
+    }
+  }
+
+  function loop() {
+    rafId = requestAnimationFrame(loop);
+    if (!heroVisible) return;                 /* hero 滚出视口时跳过计算 */
+
+    tick++;
+    /* 滚动联动：快速滚动 → 粒子滞后拖拽 + 速度上限提升 + 拖尾 */
+    var sy = win.pageYOffset || doc.documentElement.scrollTop || 0;
+    var dy = sy - lastScrollY;
+    lastScrollY = sy;
+    if (dy !== 0) scrollBoost = clamp(scrollBoost + dy, -240, 240);
+    scrollBoost *= 0.86;
+    var pull = clamp(scrollBoost * 0.05, -12, 12);
+    var fastScroll = Math.abs(scrollBoost) > 55;
+    if (fastScroll) trailFrames = 8;
+    else if (trailFrames > 0) trailFrames--;
+
+    if (trailFrames > 0) {
+      ctx.fillStyle = 'rgba(250,247,240,0.28)';   /* 半透明覆盖 = 残影拖尾 */
+      ctx.fillRect(0, 0, W, H);
+    } else {
+      ctx.clearRect(0, 0, W, H);
+    }
+
+    var spring = coasting ? 0 : 0.02;         /* stiffness ≈0.02 */
+    var damp = coasting ? 0.965 : 0.88;       /* damping ≈0.88 */
+    var maxV = fastScroll ? 30 : 16;
+    var mx = mouse.x, my = mouse.y, mr = mouse.r, mr2 = mr * mr;
+    var lastC = '';
+
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      /* 目标微漂 ±1.2px：文字整体呼吸 */
+      var tx = p.free ? p.bx : p.bx + Math.sin(tick * 0.02 * p.sp + p.ph) * 1.2;
+      var ty = p.free ? p.by : p.by + Math.cos(tick * 0.016 * p.sp + p.ph) * 1.2;
+      p.vx += (tx - p.x) * spring;
+      p.vy += (ty - p.y) * spring;
+
+      /* 指针斥力：f = (1 - d/R) * strength，推离后靠弹簧阻尼回弹 */
+      var ddx = p.x - mx, ddy = p.y - my;
+      var dd2 = ddx * ddx + ddy * ddy;
+      if (dd2 < mr2) {
+        var dd = Math.sqrt(dd2) || 0.001;
+        var f = (1 - dd / mr) * 2.6;
+        p.vx += (ddx / dd) * f;
+        p.vy += (ddy / dd) * f;
+      }
+
+      p.vy += pull * 0.12;                    /* 滚动拖拽 */
+      p.vx *= damp;
+      p.vy *= damp;
+      var v2 = p.vx * p.vx + p.vy * p.vy;
+      if (v2 > maxV * maxV) {
+        var sc = maxV / Math.sqrt(v2);
+        p.vx *= sc; p.vy *= sc;
+      }
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.c !== lastC) { ctx.fillStyle = p.c; lastC = p.c; }
+      ctx.fillRect(p.x, p.y, p.s, p.s);
+    }
+  }
+
+  function startEngine() {
+    if (!hero || !canvas || !titleEl || !('getContext' in canvas)) return;
+    try { ctx = canvas.getContext('2d'); } catch (e) { ctx = null; }
+    if (!ctx) return;                          /* 无 canvas：DOM 实字标题兜底 */
+    engineOn = true;
+    hero.classList.add('fx-on');               /* DOM 标题转透明，粒子接管字形 */
+    try {
+      resizeEngine();
+      spawnParticles();
+      assignTargets(sampleTitle(currentHeroTitle));   /* 开场：四散 → 聚合为博客名 */
+    } catch (e) {
+      engineOn = false;
+      hero.classList.remove('fx-on');
+      return;
+    }
+    running = true;
+    lastScrollY = win.pageYOffset || 0;
+    rafId = requestAnimationFrame(loop);
+
+    hero.addEventListener('pointermove', function (e) {
+      var r = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - r.left;
+      mouse.y = e.clientY - r.top;
+    });
+    hero.addEventListener('pointerleave', function () {
+      mouse.x = -9999; mouse.y = -9999;
+    });
+    hero.addEventListener('pointerdown', function (e) {
+      var r = canvas.getBoundingClientRect();
+      shockwave(e.clientX - r.left, e.clientY - r.top);
+    });
+
+    if ('IntersectionObserver' in win) {
+      new IntersectionObserver(function (entries) {
+        heroVisible = entries[0].isIntersecting;
+      }, { threshold: 0.02 }).observe(hero);
+    }
+
+    /* 页签隐藏时暂停 rAF */
+    doc.addEventListener('visibilitychange', function () {
+      if (doc.hidden) {
+        if (rafId) { win.cancelAnimationFrame(rafId); rafId = 0; }
+      } else if (running && !rafId) {
+        lastScrollY = win.pageYOffset || 0;
+        rafId = requestAnimationFrame(loop);
+      }
+    });
+
+    /* resize：防抖 300ms 后重新采样并重聚合 */
+    var rz = 0;
+    win.addEventListener('resize', function () {
+      win.clearTimeout(rz);
+      rz = win.setTimeout(function () {
+        if (!engineOn) return;
+        try {
+          resizeEngine();
+          spawnParticles();
+          assignTargets(sampleTitle(currentHeroTitle));
+        } catch (e) { /* 采样失败时保持现状 */ }
+      }, 300);
+    });
+  }
+
+  if (!reduceMotion) {
+    try { startEngine(); } catch (e) {
+      engineOn = false;
+      if (hero) hero.classList.remove('fx-on');
+    }
+  }
+  /* prefers-reduced-motion：引擎不启动，DOM 实字标题静态呈现 */
+
+  function setHeroTitle(text) {
+    currentHeroTitle = text;
+    if (titleEl) titleEl.textContent = text;
+    if (engineOn) reform(text);
+  }
+
+  /* ============================================================
+     二、视图路由 / 栏目筛选
+     ============================================================ */
+  var COLUMNS = {
+    lunzi:   { name: '造轮子', tag: '技术深水区', desc: '性能、构建、渲染，以及那些「别人造过的轮子我为什么还要再造一遍」的执念。' },
+    guan:    { name: '观展记', tag: '设计与艺术', desc: '展览、电影与排印的现场笔记，把打动过我的东西，一件件搬回浏览器里。' },
+    city:    { name: '城市漫步', tag: '散文', desc: '用脚步丈量杭州：街巷、菜场、湖山，以及清晨六点之前的那座城市。' },
+    zheteng: { name: '折腾录', tag: '硬件工具', desc: '旧物改造与工具调校的手记，享受「让它变好用」的完整过程。' },
+    garden:  { name: '半成品', tag: '数字花园', desc: '公开生长的笔记：🌱 幼苗、🌿 成长中、🌲 常青。允许不完美，欢迎路过。' }
+  };
+  var VIEW_TITLES = {
+    'view-home': '慢速缓存',
+    'view-archive': '归档',
+    'view-about': '关于我',
+    'view-art1': 'No.011',
+    'view-art2': 'No.010'
+  };
+  var VIEW_DOC_TITLES = {
+    'view-art1': '把博客首屏压进 300ms：一次性能考古',
+    'view-art2': '凌晨四点的杭州菜市场',
+    'view-archive': '归档',
+    'view-about': '关于我'
+  };
+  var currentView = 'view-home';
+  var sectionTitle = '慢速缓存';
+  var homeView = $('#view-home');
+
+  function setDocTitle(t) {
+    doc.title = t ? t + '｜慢速缓存 Slow Cache' : '慢速缓存 Slow Cache · 沈知远的个人博客';
+  }
+
+  function setNavActive(key) {
+    $all('[data-nav]').forEach(function (a) {
+      a.classList.toggle('on', a.getAttribute('data-nav') === key);
+    });
+  }
+
+  function showView(id) {
+    $all('.view').forEach(function (v) {
+      if (v.classList.contains('active')) v.classList.remove('active');
+    });
+    var target = doc.getElementById(id);
+    if (target) target.classList.add('active');
+    currentView = id;
+  }
+
+  function scrollTop(smooth) {
+    win.scrollTo({ top: 0, behavior: smooth && !reduceMotion ? 'smooth' : 'auto' });
+  }
+
+  function goView(id, title, smooth) {
+    showView(id);
+    setNavActive('');
+    sectionTitle = title || VIEW_TITLES[id] || '慢速缓存';
+    setHeroTitle(sectionTitle);
+    setDocTitle(VIEW_DOC_TITLES[id] || '');
+    scrollTop(smooth !== false);
+  }
+
+  function setFilter(cat) {
+    var shown = 0;
+    $all('#postList .post-row').forEach(function (row) {
+      var show = cat === 'all' || row.getAttribute('data-cat') === cat;
+      row.classList.toggle('row-hide', !show);
+      if (show) shown++;
+    });
+    var intro = $('#colIntro');
+    var head = $('#listTitle');
+    if (cat === 'all') {
+      if (intro) intro.textContent = '这里是我的公开笔记本：写性能与轮子，也写展览与街道。更新不快，但每一篇都慢慢磨过才发出来。';
+      if (head) head.textContent = '最新文章';
+      setNavActive('home');
+    } else {
+      var col = COLUMNS[cat];
+      if (intro) intro.textContent = col.name + ' · ' + col.tag + ' —— ' + col.desc;
+      if (head) head.textContent = col.name + ' · ' + shown + ' 篇';
+      setNavActive('col:' + cat);
+    }
+    if (homeView) homeView.classList.toggle('filtered', cat !== 'all');
+  }
+
+  function goHome(cat, smooth) {
+    showView('view-home');
+    setFilter(cat || 'all');
+    sectionTitle = (cat && cat !== 'all') ? COLUMNS[cat].name : '慢速缓存';
+    setHeroTitle(sectionTitle);
+    setDocTitle(cat && cat !== 'all' ? COLUMNS[cat].name : '');
+    scrollTop(smooth !== false);
+  }
+
+  /* 导航（页头 + 页脚统一处理）：栏目切换触发粒子炸散重组为新栏目名 */
+  $all('[data-nav]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var key = a.getAttribute('data-nav');
+      if (key === 'home') goHome('all');
+      else if (key.indexOf('col:') === 0) goHome(key.slice(4));
+      else if (key === 'archive') goView('view-archive', '归档');
+      else if (key === 'about') goView('view-about', '关于我');
+    });
+  });
+
+  /* 完整文章入口 */
+  $all('[data-article]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var id = 'view-' + a.getAttribute('data-article');
+      goView(id, a.getAttribute('data-title') || '');
+    });
+  });
+
+  /* 尚未搬家的文章：诚实提示而非死链 */
+  $all('[data-soon]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      toast('《' + a.getAttribute('data-soon') + '》还躺在旧站草稿箱里，搬家进行中——先读读已上线的两篇长文吧。');
+    });
+  });
+
+  /* 相关阅读 → 对应栏目 */
+  $all('[data-col]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      goHome(a.getAttribute('data-col'));
+    });
+  });
+
+  /* 页头 / 页脚「订阅」：先回首页再平滑滚到订阅区 */
+  $all('[data-subjump]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (currentView !== 'view-home') goHome('all', false);
+      win.setTimeout(function () {
+        var target = $('#subscribe');
+        if (!target) return;
+        var top = target.getBoundingClientRect().top + (win.pageYOffset || 0) - 64;
+        win.scrollTo({ top: top, behavior: reduceMotion ? 'auto' : 'smooth' });
+      }, 80);
+    });
+  });
+
+  /* ============================================================
+     三、滚动显现 / 进度条 / 回到顶部
+     ============================================================ */
+  var revealEls = $all('.reveal');
+
+  /* 文章正文子元素自动加入显现队列（错峰入场） */
+  $all('.art-body').forEach(function (body) {
+    Array.prototype.forEach.call(body.children, function (el, i) {
+      el.classList.add('reveal');
+      el.style.setProperty('--d', Math.min(i, 7));
+      revealEls.push(el);
+    });
+  });
+  /* 列表行错峰 */
+  $all('#postList .post-row').forEach(function (r, i) {
+    r.style.setProperty('--d', i % 9);
+  });
+
+  if ('IntersectionObserver' in win && !reduceMotion) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          en.target.classList.add('in');
+          io.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -6% 0px' });
+    revealEls.forEach(function (el) { io.observe(el); });
+  } else {
+    revealEls.forEach(function (el) { el.classList.add('in'); });
+  }
+
+  var progress = $('#progress');
+  var toTop = $('#toTop');
+  function onScroll() {
+    var y = win.pageYOffset || doc.documentElement.scrollTop || 0;
+    var max = doc.documentElement.scrollHeight - win.innerHeight;
+    if (progress) progress.style.transform = 'scaleX(' + (max > 0 ? clamp(y / max, 0, 1) : 0) + ')';
+    if (toTop) toTop.classList.toggle('show', y > 640);
+  }
+  win.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  if (toTop) toTop.addEventListener('click', function () { scrollTop(true); });
+
+  /* ============================================================
+     四、Toast / 订阅表单 / 代码复制
+     ============================================================ */
+  var toastEl = $('#toast');
+  var toastTimer = 0;
+  function toast(msg) {
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    win.clearTimeout(toastTimer);
+    toastTimer = win.setTimeout(function () { toastEl.classList.remove('show'); }, 3000);
+  }
+
+  var subForm = $('#subForm');
+  var subInput = $('#subEmail');
+  var subMsg = $('#subMsg');
+  var subDone = $('#subDone');
+  function subFeedback(text, isErr) {
+    if (!subMsg) return;
+    subMsg.textContent = text;
+    subMsg.classList.toggle('err', !!isErr);
+  }
+  if (subForm && subInput) {
+    subForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var v = (subInput.value || '').trim();
+      if (!v) {
+        subFeedback('请先填写邮箱地址。', true);
+        subForm.classList.remove('shake');
+        void subForm.offsetWidth;
+        subForm.classList.add('shake');
+        subInput.focus();
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) {
+        subFeedback('邮箱格式好像不太对，再检查一下？', true);
+        subForm.classList.remove('shake');
+        void subForm.offsetWidth;
+        subForm.classList.add('shake');
+        subInput.focus();
+        return;
+      }
+      subFeedback('', false);
+      subForm.classList.add('hide');
+      if (subDone) subDone.classList.add('show');
+      toast('订阅成功，下一期月底见。');
+      /* 彩蛋：粒子在空中短暂重组为「已订阅」，随后恢复当前标题 */
+      if (engineOn) {
+        setHeroTitle('已订阅');
+        win.setTimeout(function () {
+          if (currentHeroTitle === '已订阅') setHeroTitle(sectionTitle);
+        }, 2400);
+      }
+    });
+  }
+  var subReset = $('#subReset');
+  if (subReset) {
+    subReset.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (subDone) subDone.classList.remove('show');
+      if (subForm) subForm.classList.remove('hide');
+      if (subInput) { subInput.value = ''; subInput.focus(); }
+      subFeedback('', false);
+    });
+  }
+
+  /* 代码块复制 */
+  $all('.code-copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var fig = btn.closest('.codeblock');
+      var code = fig ? fig.querySelector('code') : null;
+      if (!code) return;
+      var txt = code.textContent;
+      function done() {
+        btn.textContent = '已复制 ✓';
+        win.setTimeout(function () { btn.textContent = '复制'; }, 1800);
+      }
+      function fallback() {
+        try {
+          var ta = doc.createElement('textarea');
+          ta.value = txt;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          doc.body.appendChild(ta);
+          ta.select();
+          doc.execCommand('copy');
+          doc.body.removeChild(ta);
+          done();
+        } catch (e) { toast('复制失败，请手动选择复制。'); }
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(done, fallback);
+      } else {
+        fallback();
+      }
+    });
+  });
+
+  /* 初始化 */
+  setFilter('all');
+  setNavActive('home');
+  setDocTitle('');
+})();
+</script>
+</body>
+</html>

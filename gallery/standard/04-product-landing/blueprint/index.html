@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURA HALO 1 · 产品总图 AURA-H1-2026 · 晒图蓝图</title>
+<meta name="description" content="AURA Halo 1 头戴式主动降噪耳机——以工程晒图蓝图呈现的产品介绍页：三视图、尺寸标注、BOM 装配表与工程订货单。">
+<style>
+/* ==========================================================
+   AURA HALO 1 · 蓝图工程制图 Blueprint
+   晒图蓝底白线 · 8px 网格 · 图框标题栏 · SVG 尺寸标注 · 图层显隐
+   ========================================================== */
+:root{
+  --bp-bg:#0D3D8C;                 /* 晒图蓝底 */
+  --bp-bg-deep:#0A3070;
+  --ink:#E8F0FE;                   /* 线稿白 */
+  --line:rgba(232,240,254,.45);    /* 次级线 */
+  --line-soft:rgba(232,240,254,.22);
+  --grid:rgba(255,255,255,.08);    /* 8px 网格线 */
+  --grid-major:rgba(255,255,255,.12);
+  --amber:#FFD23F;                 /* 标注黄 */
+  --red:#E4572E;                   /* 警示红（章） */
+  --red-text:#FF9B7A;              /* 高可读错误红 */
+  --mono:"IBM Plex Mono","JetBrains Mono","Consolas","Courier New",monospace;
+  --disp:"Archivo","Arial Narrow","Helvetica Neue","Noto Sans SC","Microsoft YaHei",sans-serif;
+  --sheet-pad:clamp(18px,3.4vw,44px);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--mono);
+  color:var(--ink);
+  background-color:var(--bp-bg);
+  /* 8px 细格 + 64px 主格 */
+  background-image:
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px),
+    linear-gradient(var(--grid-major) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid-major) 1px,transparent 1px);
+  background-size:8px 8px,8px 8px,64px 64px,64px 64px;
+  font-size:14px;line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+}
+body.no-grid{background-image:none}
+::selection{background:var(--amber);color:var(--bp-bg)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+a{color:var(--ink)}
+img,svg{display:block;max-width:100%}
+button{font-family:var(--mono)}
+
+/* ---------- 图框 SHEET ---------- */
+.sheet{
+  position:relative;
+  max-width:1360px;
+  margin:24px auto;
+  border:1.5px solid var(--ink);
+  padding:var(--sheet-pad);
+  background:rgba(10,48,112,.18);
+}
+.sheet::after{ /* 内框细线 */
+  content:"";position:absolute;inset:6px;
+  border:1px solid var(--line-soft);pointer-events:none;z-index:0;
+}
+/* 四角十字规线 */
+.cm{position:absolute;width:16px;height:16px;z-index:3;pointer-events:none}
+.cm::before{content:"";position:absolute;top:50%;left:0;right:0;height:1px;background:var(--ink)}
+.cm::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--ink)}
+.cm-tl{top:12px;left:12px}.cm-tr{top:12px;right:12px}
+.cm-bl{bottom:12px;left:12px}.cm-br{bottom:12px;right:12px}
+
+/* ---------- 吸顶：图号目录 + 图层控制 ---------- */
+.topbar{position:sticky;top:0;z-index:50;background:var(--bp-bg);
+  border-bottom:1px solid var(--ink);
+  margin:calc(var(--sheet-pad) * -1) calc(var(--sheet-pad) * -1) 0;
+  padding:0 var(--sheet-pad);
+  box-shadow:0 6px 18px rgba(4,20,50,.35);
+}
+.nav{display:flex;align-items:center;gap:18px;padding:10px 0;border-bottom:1px solid var(--line-soft)}
+.nav .brand{font-family:var(--disp);font-weight:700;letter-spacing:.14em;font-size:15px;white-space:nowrap}
+.nav .brand small{display:block;font-family:var(--mono);font-weight:400;font-size:10px;letter-spacing:.22em;color:var(--line);text-transform:uppercase}
+.nav ul{list-style:none;display:flex;gap:2px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+.nav ul::-webkit-scrollbar{display:none}
+.nav ul a{
+  display:block;padding:6px 12px;font-size:12px;letter-spacing:.1em;
+  text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;
+  transition:color .2s,border-color .2s;
+}
+.nav ul a:hover{color:var(--amber)}
+.nav ul a.on{color:var(--amber);border-bottom-color:var(--amber)}
+/* 图层控制条 */
+.layers{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 0;font-size:11px;letter-spacing:.12em}
+.layers .lt{color:var(--amber);letter-spacing:.2em;border:1px solid var(--line);padding:2px 8px}
+.layers label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 2px;text-transform:uppercase}
+.layers input[type=checkbox]{width:15px;height:15px;accent-color:var(--amber);cursor:pointer}
+.layers .meta{margin-left:auto;color:var(--line);white-space:nowrap;font-size:11px;letter-spacing:.14em}
+.layers .meta b{color:var(--ink);font-weight:400}
+
+/* ---------- 通用区块 ---------- */
+section{scroll-margin-top:120px;padding:clamp(40px,6vw,72px) 0}
+section + section{border-top:1px dashed var(--line-soft)}
+.sec-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  border-bottom:1.5px solid var(--ink);padding-bottom:12px;margin-bottom:30px}
+.sec-no{font-size:13px;color:var(--amber);letter-spacing:.2em}
+.sec-head h2{font-family:var(--disp);font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;font-size:clamp(20px,2.6vw,28px)}
+.sec-head .en{margin-left:auto;font-size:11px;color:var(--line);letter-spacing:.24em;text-transform:uppercase}
+.note-k{color:var(--amber)}
+
+/* ---------- 按钮 ---------- */
+.btn{display:inline-block;border:1.5px solid var(--ink);background:transparent;color:var(--ink);
+  padding:11px 22px;font-size:12px;letter-spacing:.18em;cursor:pointer;text-transform:uppercase;
+  text-decoration:none;transition:background .2s,color .2s,border-color .2s,transform .2s}
+.btn:hover{background:rgba(232,240,254,.1)}
+.btn.primary{background:var(--amber);border-color:var(--amber);color:#0A2E6B;font-weight:700}
+.btn.primary:hover{background:#ffe27d;border-color:#ffe27d}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--bp-bg);font-weight:700}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ---------- 00 封面 ---------- */
+.cover{display:grid;grid-template-columns:minmax(320px,5fr) minmax(360px,6fr);gap:clamp(24px,4vw,56px);align-items:center}
+.kicker{font-size:11px;letter-spacing:.3em;color:var(--amber);text-transform:uppercase;border:1px solid var(--line);
+  display:inline-block;padding:4px 10px;margin-bottom:18px}
+.cover h1{font-family:var(--disp);font-weight:700;text-transform:uppercase;
+  font-size:clamp(40px,5.6vw,76px);line-height:1.02;letter-spacing:.06em}
+.cover .model-cn{font-size:clamp(15px,1.6vw,19px);letter-spacing:.5em;margin:10px 0 26px;color:var(--ink)}
+.slogan{font-family:var(--disp);font-weight:700;font-size:clamp(21px,2.4vw,30px);letter-spacing:.06em;
+  padding-left:14px;border-left:3px solid var(--amber);margin-bottom:12px}
+.cover .sub{color:var(--line);letter-spacing:.08em;margin-bottom:30px}
+.cover .cta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:30px}
+.legend{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--line);letter-spacing:.06em}
+.legend b{color:var(--amber);font-weight:400;margin-right:8px}
+.hero-wrap{position:relative}
+.hero-wrap svg{width:100%;height:auto}
+.hero-caption{margin-top:14px;font-size:11px;color:var(--line);letter-spacing:.16em;text-transform:uppercase;
+  display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+/* 封面标题栏（图框右下） */
+.tb{margin:34px 0 0 auto;display:grid;grid-template-columns:repeat(6,minmax(96px,auto));
+  border:1px solid var(--ink);font-size:11px;text-transform:uppercase}
+.tb div{padding:6px 10px;border-left:1px solid var(--line);min-width:0}
+.tb div:first-child{border-left:none}
+.tb b{display:block;font-weight:400;color:var(--line);font-size:9px;letter-spacing:.2em;margin-bottom:2px}
+.tb span{color:var(--ink);letter-spacing:.08em}
+
+/* ---------- 盖章 ---------- */
+.stamp{
+  display:inline-block;border:2px solid var(--red);color:var(--red);
+  padding:8px 18px;font-weight:700;letter-spacing:.32em;text-transform:uppercase;
+  transform:rotate(-8deg);border-radius:4px;position:relative;
+  box-shadow:inset 0 0 0 1px rgba(228,87,46,.55);
+  background:rgba(13,61,140,.35);
+}
+.stamp::after{content:"";position:absolute;inset:3px;border:1px solid rgba(228,87,46,.5);border-radius:2px}
+.stamp small{display:block;font-weight:400;letter-spacing:.18em;font-size:9px;margin-top:2px}
+.stamp.approved{position:absolute;top:6px;right:2px;opacity:.92;pointer-events:none;z-index:2}
+
+/* ---------- SVG 工程图通用 ---------- */
+.blueprint{overflow:visible}
+.blueprint text{font-family:var(--mono);font-size:11px;fill:var(--ink);letter-spacing:.05em}
+.blueprint .t-am{fill:var(--amber)}
+.s1{stroke:var(--ink);stroke-width:1;fill:none}
+.s15{stroke:var(--ink);stroke-width:1.5;fill:none}
+.s2{stroke:var(--ink);stroke-width:2;fill:none}
+.ln{stroke:var(--line);stroke-width:1;fill:none}
+.cl{stroke:var(--line);stroke-width:1;fill:none;stroke-dasharray:16 5 2 5;opacity:.55}
+.dim-t{fill:var(--ink)}
+/* 图层：尺寸线 / 注记 */
+body.no-dim .dim{display:none}
+body.no-note .note{display:none}
+/* 引出标注 leader：hover 高亮为标注黄并延长 */
+.leader{cursor:crosshair}
+.leader line{transition:stroke .2s}
+.leader .dot{fill:var(--ink);transition:fill .2s}
+.leader .ext{transform:scaleX(0);transform-box:fill-box;transform-origin:left center;transition:transform .25s ease}
+.leader:hover line,.leader.lit line{stroke:var(--amber)}
+.leader:hover .dot,.leader.lit .dot{fill:var(--amber)}
+.leader:hover .ext,.leader.lit .ext{transform:scaleX(1);stroke:var(--amber)}
+.leader:hover circle.bal,.leader.lit circle.bal{stroke:var(--amber)}
+.leader:hover text,.leader.lit text{fill:var(--amber)}
+.dim text{transition:fill .2s}
+.dim:hover text{fill:var(--amber)}
+
+/* ---------- 01 三视图 ---------- */
+.viewctl{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px}
+.views{display:flex;gap:26px;flex-wrap:wrap}
+.view{flex:1 1 280px;border:1px solid var(--line-soft);padding:18px 18px 12px;position:relative;min-width:0;
+  transition:border-color .2s}
+.view:hover{border-color:var(--line)}
+.view figcaption{margin-top:10px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--line);
+  border-top:1px solid var(--line-soft);padding-top:10px}
+.views.single .view{display:none}
+.views.single .view.active{display:block;flex:1 1 100%}
+.views.single .view.active svg{max-height:520px;margin:0 auto}
+.view-tag{position:absolute;top:-1px;left:-1px;background:var(--ink);color:var(--bp-bg);
+  font-size:10px;letter-spacing:.2em;padding:3px 10px;font-weight:700}
+.views-foot{margin-top:22px;font-size:11px;color:var(--line);letter-spacing:.08em;border-left:2px solid var(--amber);padding-left:12px}
+
+/* ---------- 02 技术参数表 ---------- */
+.params-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start}
+table{width:100%;border-collapse:collapse;font-size:13px}
+caption{caption-side:top;text-align:left;font-size:11px;letter-spacing:.22em;color:var(--line);
+  text-transform:uppercase;padding-bottom:10px}
+th,td{border:1px solid var(--line);padding:10px 14px;text-align:left;vertical-align:top}
+th{font-weight:400;letter-spacing:.14em;background:rgba(232,240,254,.07);text-transform:uppercase;font-size:11px}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:rgba(255,255,255,.05)}
+td.k{color:var(--line);width:38%}
+td.v{color:var(--ink)}
+td.v em{font-style:normal;color:var(--amber)}
+.tbl-foot{margin-top:14px;font-size:11px;color:var(--line);letter-spacing:.06em}
+
+/* ---------- 03 卖点 · 引线注释 ---------- */
+.features{display:grid;grid-template-columns:minmax(300px,5fr) minmax(320px,6fr);gap:clamp(24px,4vw,60px);align-items:start}
+.fig-stick{position:sticky;top:132px;border:1px solid var(--line-soft);padding:16px}
+.fig-stick figcaption{margin-top:8px;font-size:10px;color:var(--line);letter-spacing:.2em;text-transform:uppercase;text-align:center}
+.annos{display:flex;flex-direction:column;gap:4px}
+.anno{display:flex;align-items:flex-start;gap:0;padding:12px 10px;border-bottom:1px dashed var(--line-soft);
+  cursor:crosshair;transition:background .2s}
+.anno:hover,.anno.lit,.anno:focus-visible{background:rgba(255,210,63,.06)}
+.anno .num{flex:0 0 34px;height:34px;border:1.5px solid var(--ink);border-radius:50%;
+  display:grid;place-items:center;font-size:12px;transition:color .2s,border-color .2s;background:rgba(13,61,140,.5)}
+.anno .lead{flex:0 0 46px;height:1px;background:var(--ink);position:relative;margin-top:17px;transition:background .2s}
+.anno .lead::before{content:"";position:absolute;left:-4px;top:-2.5px;width:6px;height:6px;border-radius:50%;background:var(--ink)}
+.anno .lead::after{content:"";position:absolute;left:100%;top:0;width:34px;height:1px;background:var(--amber);
+  transform:scaleX(0);transform-origin:left;transition:transform .25s}
+.anno-body{padding-left:24px;min-width:0}
+.anno-body h3{font-family:var(--disp);font-size:16px;letter-spacing:.1em;font-weight:700;transition:color .2s}
+.anno-body p{font-size:12px;color:var(--line);line-height:1.8}
+.anno:hover .num,.anno.lit .num{border-color:var(--amber);color:var(--amber)}
+.anno:hover .lead,.anno.lit .lead{background:var(--amber)}
+.anno:hover .lead::after,.anno.lit .lead::after{transform:scaleX(1)}
+.anno:hover h3,.anno.lit h3{color:var(--amber)}
+
+/* ---------- 04 装配分解 BOM ---------- */
+.bom-wrap{border:1px solid var(--line-soft);overflow-x:auto}
+.bom{min-width:640px}
+.bom td{font-size:12.5px}
+tr.bom-main{cursor:pointer}
+tr.bom-main td.no{color:var(--amber);letter-spacing:.1em;white-space:nowrap}
+.bom-toggle{display:inline-grid;place-items:center;width:20px;height:20px;border:1px solid var(--line);
+  color:var(--ink);background:transparent;cursor:pointer;margin-right:8px;font-size:13px;line-height:1;
+  transition:transform .2s,border-color .2s,color .2s}
+tr.bom-main:hover .bom-toggle{border-color:var(--amber);color:var(--amber)}
+tr.bom-main.open .bom-toggle{transform:rotate(45deg);border-color:var(--amber);color:var(--amber)}
+tr.bom-detail td{background:rgba(232,240,254,.05);border-top:1px dashed var(--line-soft)}
+.bom-detail dl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 20px;font-size:11.5px}
+.bom-detail dt{color:var(--line);letter-spacing:.14em;font-size:10px;text-transform:uppercase}
+.bom-detail dd{color:var(--ink)}
+.bom-hint{margin-top:12px;font-size:11px;color:var(--line);letter-spacing:.1em}
+
+/* ---------- 05 规格对比 ---------- */
+.cmp-wrap{overflow-x:auto}
+.cmp{min-width:640px}
+.cmp th,.cmp td{text-align:center}
+.cmp td:first-child,.cmp th:first-child{text-align:left;color:var(--line)}
+.cmp .rec{background:rgba(255,210,63,.07);border-left:1px solid rgba(255,210,63,.65);border-right:1px solid rgba(255,210,63,.65)}
+.cmp thead .rec{border-top:2px solid var(--amber);position:relative}
+.cmp .rec-tag{display:inline-block;background:var(--amber);color:#0A2E6B;font-size:9px;letter-spacing:.2em;
+  padding:2px 8px;font-weight:700;margin-left:6px;vertical-align:middle}
+.cmp td.price{font-size:18px;letter-spacing:.06em;color:var(--amber)}
+.cmp td.price s{color:var(--line);font-size:11px;margin-left:8px}
+.cmp .choose{border:1px solid var(--line);background:transparent;color:var(--ink);padding:8px 16px;
+  font-size:11px;letter-spacing:.16em;cursor:pointer;transition:all .2s;text-transform:uppercase}
+.cmp .choose:hover{border-color:var(--amber);color:var(--amber)}
+.cmp .choose.reced{background:var(--amber);border-color:var(--amber);color:#0A2E6B;font-weight:700}
+
+/* ---------- 06 订货单 ---------- */
+.order{display:grid;grid-template-columns:minmax(340px,7fr) minmax(280px,4fr);gap:clamp(24px,4vw,52px);align-items:start}
+.panel{border:1.5px solid var(--ink);padding:clamp(18px,2.6vw,30px);position:relative;background:rgba(10,48,112,.28)}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:22px}
+.panel-head h3{font-family:var(--disp);letter-spacing:.12em;font-size:18px;text-transform:uppercase}
+.panel-head .pno{font-size:11px;color:var(--line);letter-spacing:.16em}
+.f{margin-bottom:18px}
+.f label{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--line);margin-bottom:6px}
+.f label b{color:var(--red-text);font-weight:400}
+.f input,.f select,.f textarea{
+  width:100%;background:rgba(232,240,254,.06);border:1px solid var(--line);color:var(--ink);
+  font-family:var(--mono);font-size:14px;padding:10px 12px;letter-spacing:.04em;border-radius:0;
+  transition:border-color .2s,box-shadow .2s;
+}
+.f textarea{resize:vertical;min-height:74px}
+.f select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),linear-gradient(135deg,var(--ink) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+.f select option{background:var(--bp-bg);color:var(--ink)}
+.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+.f .err{display:none;color:var(--red-text);font-size:11px;letter-spacing:.06em;margin-top:5px}
+.f.bad input,.f.bad select,.f.bad textarea{border-color:var(--red-text);box-shadow:0 0 0 1px rgba(255,155,122,.4)}
+.f.bad .err{display:block}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-foot{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:6px}
+.form-foot .hint{font-size:11px;color:var(--line);letter-spacing:.08em}
+fieldset{border:none}
+fieldset:disabled{opacity:.55}
+/* 已受理章 */
+.stamp.received{position:absolute;top:-16px;right:18px;transform:rotate(9deg) scale(1.5);opacity:0;
+  pointer-events:none;transition:transform .22s cubic-bezier(.2,1.6,.4,1),opacity .22s;z-index:5;text-align:center}
+.stamp.received.show{transform:rotate(9deg) scale(1);opacity:.95}
+.receipt{display:none;margin-top:20px;border:1px dashed var(--amber);padding:14px 16px;font-size:12px;letter-spacing:.06em}
+.receipt.show{display:block}
+.receipt b{color:var(--amber);font-weight:400}
+/* 侧栏 QC/口碑 */
+.qc{display:flex;flex-direction:column;gap:22px}
+.qc-card{border:1px solid var(--line-soft);padding:18px}
+.qc-card h4{font-size:11px;letter-spacing:.24em;color:var(--amber);text-transform:uppercase;margin-bottom:12px}
+.quote{font-family:var(--disp);font-size:15px;letter-spacing:.04em;line-height:1.7;margin-bottom:6px}
+.quote-src{font-size:11px;color:var(--line);letter-spacing:.14em}
+.rate{font-size:13px;letter-spacing:.1em}
+.rate .stars{color:var(--amber);letter-spacing:.2em}
+.rate small{display:block;color:var(--line);margin-top:4px;letter-spacing:.08em}
+.qc-card ul{list-style:none;font-size:12px;color:var(--line);display:flex;flex-direction:column;gap:8px;letter-spacing:.05em}
+.qc-card ul li::before{content:"—";color:var(--amber);margin-right:8px}
+
+/* ---------- 页脚 · 签名栏 ---------- */
+.foot{border-top:1.5px solid var(--ink);margin-top:20px;padding-top:0}
+.foot-tb{display:grid;grid-template-columns:repeat(8,1fr);border:1px solid var(--ink);margin-top:34px;font-size:11px}
+.foot-tb>div{padding:8px 12px;border-left:1px solid var(--line);min-height:64px}
+.foot-tb>div:first-child{border-left:none}
+.foot-tb b{display:block;font-weight:400;color:var(--line);font-size:9px;letter-spacing:.2em;
+  text-transform:uppercase;margin-bottom:4px}
+.foot-tb .sig{color:var(--ink);letter-spacing:.1em}
+.foot-tb .sig svg{width:76px;height:20px;color:var(--ink);margin-top:2px}
+.foot-tb .blank::after{content:"";display:block;border-bottom:1px solid var(--line);width:70%;margin-top:14px}
+.foot-bottom{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:16px 0 4px;font-size:10px;color:var(--line);letter-spacing:.14em;text-transform:uppercase}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1200px){
+  .cover{grid-template-columns:1fr 1fr}
+  .tb{grid-template-columns:repeat(3,1fr)}
+  .tb div{border-top:1px solid var(--line-soft)}
+  .tb div:nth-child(-n+3){border-top:none}
+  .tb div:nth-child(3n+1){border-left:none}
+}
+@media (max-width:900px){
+  .cover{grid-template-columns:1fr}
+  .hero-wrap{order:-1}
+  .params-grid{grid-template-columns:1fr}
+  .features{grid-template-columns:1fr}
+  .fig-stick{position:static;max-width:460px;margin:0 auto}
+  .order{grid-template-columns:1fr}
+  .foot-tb{grid-template-columns:repeat(4,1fr)}
+  .foot-tb>div{border-top:1px solid var(--line-soft)}
+  .foot-tb>div:nth-child(-n+4){border-top:none}
+  .foot-tb>div:nth-child(4n+1){border-left:none}
+}
+@media (max-width:620px){
+  .sheet{margin:10px;padding:14px}
+  .nav{gap:10px}
+  .nav .brand small{display:none}
+  .nav ul a{padding:6px 8px;font-size:11px}
+  .layers .meta{display:none}
+  .tb{grid-template-columns:repeat(2,1fr)}
+  .tb div{border-left:none;border-top:1px solid var(--line-soft)}
+  .tb div:nth-child(-n+2){border-top:none}
+  .f-row{grid-template-columns:1fr}
+  .foot-tb{grid-template-columns:repeat(2,1fr)}
+  .foot-tb>div{border-left:none;border-top:1px solid var(--line-soft)}
+  .foot-tb>div:nth-child(-n+2){border-top:none}
+  section{scroll-margin-top:150px}
+  .bom-detail dl{grid-template-columns:1fr}
+}
+
+/* ---------- 打印降级（蓝底转白 / 线转黑） ---------- */
+@media print{
+  :root{--bp-bg:#FFFFFF;--bp-bg-deep:#fff;--ink:#111;--line:#888;--line-soft:#bbb;
+    --grid:transparent;--grid-major:transparent;--amber:#a97b00;--red:#b03010;--red-text:#b03010}
+  body{background:#fff;background-image:none}
+  .topbar,.viewctl,.btn,.choose,.bom-toggle{display:none!important}
+  .sheet{margin:0;max-width:none;border-color:#111}
+  .stamp{background:#fff}
+  .views.single .view{display:block!important}
+}
+
+/* ---------- 动效降级 ---------- */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <span class="cm cm-tl" aria-hidden="true"></span>
+  <span class="cm cm-tr" aria-hidden="true"></span>
+  <span class="cm cm-bl" aria-hidden="true"></span>
+  <span class="cm cm-br" aria-hidden="true"></span>
+
+  <!-- ============ 吸顶：图号目录 + 图层控制 ============ -->
+  <div class="topbar">
+    <nav class="nav" aria-label="图纸目录">
+      <div class="brand">AURA·H1<small>DWG INDEX / 图纸目录</small></div>
+      <ul>
+        <li><a href="#cover" data-spy="cover">00 封面</a></li>
+        <li><a href="#views" data-spy="views">01 三视图</a></li>
+        <li><a href="#params" data-spy="params">02 参数</a></li>
+        <li><a href="#features" data-spy="features">03 卖点</a></li>
+        <li><a href="#bom" data-spy="bom">04 装配</a></li>
+        <li><a href="#compare" data-spy="compare">05 对比</a></li>
+        <li><a href="#order" data-spy="order">06 订购</a></li>
+      </ul>
+    </nav>
+    <div class="layers" role="group" aria-label="图层控制">
+      <span class="lt">图层 LAYERS</span>
+      <label><input type="checkbox" id="lyGrid" checked>网格 GRID</label>
+      <label><input type="checkbox" id="lyDim" checked>尺寸线 DIM</label>
+      <label><input type="checkbox" id="lyNote" checked>注记 NOTE</label>
+      <span class="meta">单位 <b>mm</b> ／ 比例 <b>1:2</b> ／ 图号 <b>AURA-H1-2026</b></span>
+    </div>
+  </div>
+
+  <main>
+    <!-- ============ 00 封面 ============ -->
+    <section id="cover" aria-labelledby="coverTitle">
+      <div class="cover">
+        <div>
+          <span class="kicker">General Assembly · 产品总图</span>
+          <h1 id="coverTitle">AURA<br>HALO 1</h1>
+          <p class="model-cn">头戴式主动降噪耳机</p>
+          <p class="slogan">「世界静音，只剩音乐。」</p>
+          <p class="sub">48 小时续航 · 逐点降噪 · 一副听完全球。</p>
+          <div class="cta">
+            <a class="btn primary" href="#order">预约订购 ORDER</a>
+            <a class="btn" href="#views">查看图纸 VIEWS</a>
+          </div>
+          <ul class="legend">
+            <li><b>01</b>头梁组件 · 镁铝合金弓架，阳极氧化喷砂</li>
+            <li><b>02</b>记忆海绵耳垫 · 蛋白质皮革，厚 12mm</li>
+            <li><b>03</b>驱动单元 · 40mm 复合振膜，阻抗 32Ω</li>
+          </ul>
+        </div>
+
+        <figure class="hero-wrap">
+          <div class="stamp approved" aria-hidden="true">Approved<small>已批准 · QC.09.08</small></div>
+          <!-- 主视图：白线工程制图 + 尺寸标注 + 零件引线 -->
+          <svg class="blueprint" viewBox="0 0 460 400" role="img" aria-label="AURA Halo 1 正视图：含尺寸标注与零件编号引线">
+            <defs>
+              <marker id="arH" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="12" markerHeight="10"
+                      orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+                <path d="M0 0 L10 4 L0 8 Z" fill="#E8F0FE"/>
+              </marker>
+            </defs>
+            <!-- 中心线 -->
+            <path class="cl" d="M230 40 V336"/>
+            <path class="cl" d="M66 190 H394"/>
+            <!-- 头梁 -->
+            <path class="s2" d="M115 190 A115 115 0 0 1 345 190"/>
+            <path class="s1" d="M330 190 A100 100 0 0 0 130 190"/>
+            <path class="s1" d="M115 190 H130 M330 190 H345"/>
+            <!-- 滑臂 / 轭架 -->
+            <path class="s15" d="M122.5 190 V210 M115 210 H130"/>
+            <path class="s15" d="M337.5 190 V210 M330 210 H345"/>
+            <!-- 耳罩 -->
+            <rect class="s2" x="86" y="210" width="58" height="76" rx="24"/>
+            <rect class="s2" x="316" y="210" width="58" height="76" rx="24"/>
+            <rect class="s1" x="95" y="219" width="40" height="58" rx="17"/>
+            <rect class="s1" x="325" y="219" width="40" height="58" rx="17"/>
+            <!-- 驱动单元 -->
+            <circle class="s1" cx="115" cy="248" r="12"/>
+            <circle class="s1" cx="115" cy="248" r="5"/>
+            <circle class="s1" cx="345" cy="248" r="12"/>
+            <circle class="s1" cx="345" cy="248" r="5"/>
+            <!-- 尺寸：总宽 168 -->
+            <g class="dim">
+              <path class="ln" d="M86 292 V322 M374 292 V322"/>
+              <path class="s1" d="M86 316 H374" marker-start="url(#arH)" marker-end="url(#arH)"/>
+              <text class="dim-t" x="230" y="309" text-anchor="middle">168</text>
+            </g>
+            <!-- 尺寸：总高 192 -->
+            <g class="dim">
+              <path class="ln" d="M230 75 H412 M380 286 H412"/>
+              <path class="s1" d="M406 75 V286" marker-start="url(#arH)" marker-end="url(#arH)"/>
+              <text class="dim-t" transform="rotate(-90 424 182)" x="424" y="182" text-anchor="middle">192</text>
+            </g>
+            <!-- 半径 R115 -->
+            <g class="dim">
+              <path class="ln" d="M222 190 H238 M230 182 V198"/>
+              <path class="s1" d="M230 190 L311 109" marker-end="url(#arH)"/>
+              <text class="dim-t" x="318" y="106">R115</text>
+            </g>
+            <!-- 零件引线 01 头梁 -->
+            <g class="note leader">
+              <circle class="dot" cx="170" cy="95" r="3"/>
+              <path class="s1" d="M170 95 L140 58"/>
+              <path class="s1 ext" d="M140 58 H96"/>
+              <circle class="bal s15" cx="84" cy="58" r="12"/>
+              <text x="84" y="62" text-anchor="middle">01</text>
+            </g>
+            <!-- 零件引线 02 耳垫 -->
+            <g class="note leader">
+              <circle class="dot" cx="95" cy="236" r="3"/>
+              <path class="s1" d="M95 236 L62 214"/>
+              <path class="s1 ext" d="M62 214 H44"/>
+              <circle class="bal s15" cx="30" cy="214" r="12"/>
+              <text x="30" y="218" text-anchor="middle">02</text>
+            </g>
+            <!-- 零件引线 03 驱动 -->
+            <g class="note leader">
+              <circle class="dot" cx="345" cy="260" r="3"/>
+              <path class="s1" d="M345 260 L312 288"/>
+              <path class="s1 ext" d="M312 288 H294"/>
+              <circle class="bal s15" cx="282" cy="288" r="12"/>
+              <text x="282" y="292" text-anchor="middle">03</text>
+            </g>
+          </svg>
+          <figcaption class="hero-caption">
+            <span>Fig.1 正视图 FRONT VIEW</span>
+            <span>第三角法 THIRD-ANGLE</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <!-- 封面标题栏 -->
+      <div class="tb" role="table" aria-label="图框标题栏">
+        <div><b>项目 PROJ.</b><span>AURA HALO 1</span></div>
+        <div><b>图号 DWG NO.</b><span>AURA-H1-2026</span></div>
+        <div><b>比例 SCALE</b><span>1 : 2</span></div>
+        <div><b>单位 UNIT</b><span>mm</span></div>
+        <div><b>日期 DATE</b><span>2026-09-08</span></div>
+        <div><b>审核 CHK.</b><span>AURA.QC</span></div>
+      </div>
+    </section>
+
+    <!-- ============ 01 三视图 ============ -->
+    <section id="views" aria-labelledby="viewsTitle">
+      <header class="sec-head">
+        <span class="sec-no">01</span>
+        <h2 id="viewsTitle">三视图</h2>
+        <span class="en">Orthographic Views · 正 / 侧 / 顶</span>
+      </header>
+
+      <div class="viewctl" role="group" aria-label="视图切换">
+        <button class="btn" type="button" data-view="front" aria-pressed="false">正视图 FRONT</button>
+        <button class="btn" type="button" data-view="side" aria-pressed="false">侧视图 SIDE</button>
+        <button class="btn" type="button" data-view="top" aria-pressed="false">顶视图 TOP</button>
+        <button class="btn" type="button" data-view="all" aria-pressed="true">并排 ALL</button>
+      </div>
+
+      <div class="views all" id="viewWrap">
+        <!-- 正视图 -->
+        <figure class="view active" id="view-front" data-viewname="front">
+          <span class="view-tag">A</span>
+          <svg class="blueprint" viewBox="0 0 460 400" role="img" aria-label="正视图">
+            <defs>
+              <marker id="arF" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="12" markerHeight="10"
+                      orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+                <path d="M0 0 L10 4 L0 8 Z" fill="#E8F0FE"/>
+              </marker>
+            </defs>
+            <path class="cl" d="M230 40 V336"/>
+            <path class="cl" d="M66 190 H394"/>
+            <path class="s2" d="M115 190 A115 115 0 0 1 345 190"/>
+            <path class="s1" d="M330 190 A100 100 0 0 0 130 190"/>
+            <path class="s1" d="M115 190 H130 M330 190 H345"/>
+            <path class="s15" d="M122.5 190 V210 M115 210 H130"/>
+            <path class="s15" d="M337.5 190 V210 M330 210 H345"/>
+            <rect class="s2" x="86" y="210" width="58" height="76" rx="24"/>
+            <rect class="s2" x="316" y="210" width="58" height="76" rx="24"/>
+            <rect class="s1" x="95" y="219" width="40" height="58" rx="17"/>
+            <rect class="s1" x="325" y="219" width="40" height="58" rx="17"/>
+            <circle class="s1" cx="115" cy="248" r="12"/>
+            <circle class="s1" cx="345" cy="248" r="12"/>
+            <g class="dim">
+              <path class="ln" d="M86 292 V322 M374 292 V322"/>
+              <path class="s1" d="M86 316 H374" marker-start="url(#arF)" marker-end="url(#arF)"/>
+              <text class="dim-t" x="230" y="309" text-anchor="middle">168</text>
+            </g>
+            <g class="dim">
+              <path class="ln" d="M230 75 H412 M380 286 H412"/>
+              <path class="s1" d="M406 75 V286" marker-start="url(#arF)" marker-end="url(#arF)"/>
+              <text class="dim-t" transform="rotate(-90 424 182)" x="424" y="182" text-anchor="middle">192</text>
+            </g>
+            <g class="dim">
+              <path class="ln" d="M222 190 H238 M230 182 V198"/>
+              <path class="s1" d="M230 190 L311 109" marker-end="url(#arF)"/>
+              <text class="dim-t" x="318" y="106">R115</text>
+            </g>
+            <g class="note leader">
+              <circle class="dot" cx="170" cy="95" r="3"/>
+              <path class="s1" d="M170 95 L140 58"/>
+              <path class="s1 ext" d="M140 58 H96"/>
+              <circle class="bal s15" cx="84" cy="58" r="12"/>
+              <text x="84" y="62" text-anchor="middle">01</text>
+            </g>
+            <g class="note leader">
+              <circle class="dot" cx="95" cy="236" r="3"/>
+              <path class="s1" d="M95 236 L62 214"/>
+              <path class="s1 ext" d="M62 214 H44"/>
+              <circle class="bal s15" cx="30" cy="214" r="12"/>
+              <text x="30" y="218" text-anchor="middle">02</text>
+            </g>
+            <g class="note leader">
+              <circle class="dot" cx="345" cy="260" r="3"/>
+              <path class="s1" d="M345 260 L312 288"/>
+              <path class="s1 ext" d="M312 288 H294"/>
+              <circle class="bal s15" cx="282" cy="288" r="12"/>
+              <text x="282" y="292" text-anchor="middle">03</text>
+            </g>
+          </svg>
+          <figcaption><span>正视图 FRONT</span><span>总宽 168 · 总高 192</span></figcaption>
+        </figure>
+
+        <!-- 侧视图（剖视） -->
+        <figure class="view" id="view-side" data-viewname="side">
+          <span class="view-tag">B</span>
+          <svg class="blueprint" viewBox="0 0 300 400" role="img" aria-label="侧视图，耳垫剖开可见剖面线">
+            <defs>
+              <marker id="arS" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="12" markerHeight="10"
+                      orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+                <path d="M0 0 L10 4 L0 8 Z" fill="#E8F0FE"/>
+              </marker>
+              <pattern id="hatS" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+                <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(232,240,254,.55)" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <path class="cl" d="M150 58 V316"/>
+            <path class="cl" d="M84 208 H216"/>
+            <!-- 头梁截面（剖面线） -->
+            <path class="s1" d="M118 96 A40 40 0 0 1 182 96 L174 96 A32 32 0 0 0 126 96 Z" fill="url(#hatS)"/>
+            <path class="s1" d="M118 96 A40 40 0 0 1 182 96"/>
+            <path class="s1" d="M174 96 A32 32 0 0 0 126 96"/>
+            <path class="s15" d="M150 92 V130 M143 130 H157"/>
+            <!-- 耳罩：外轮廓 + 内腔环形剖面 -->
+            <path d="M150 130 A46 46 0 0 1 196 176 V240 A46 46 0 0 1 150 286 A46 46 0 0 1 104 240 V176 A46 46 0 0 1 150 130 Z
+                     M150 146 A28 28 0 0 1 178 174 V242 A28 28 0 0 1 150 270 A28 28 0 0 1 122 242 V174 A28 28 0 0 1 150 146 Z"
+                  fill="url(#hatS)" fill-rule="evenodd" stroke="none"/>
+            <path class="s2" d="M150 130 A46 46 0 0 1 196 176 V240 A46 46 0 0 1 150 286 A46 46 0 0 1 104 240 V176 A46 46 0 0 1 150 130 Z"/>
+            <path class="s1" d="M150 146 A28 28 0 0 1 178 174 V242 A28 28 0 0 1 150 270 A28 28 0 0 1 122 242 V174 A28 28 0 0 1 150 146 Z"/>
+            <!-- 驱动单元侧影 -->
+            <path class="s1" d="M150 197 V219" />
+            <circle class="s1" cx="150" cy="208" r="5"/>
+            <!-- 尺寸：耳罩高 91 -->
+            <g class="dim">
+              <path class="ln" d="M150 130 H62 M150 286 H62"/>
+              <path class="s1" d="M68 130 V286" marker-start="url(#arS)" marker-end="url(#arS)"/>
+              <text class="dim-t" transform="rotate(-90 56 208)" x="56" y="208" text-anchor="middle">91</text>
+            </g>
+            <!-- 尺寸：耳罩厚 54 -->
+            <g class="dim">
+              <path class="ln" d="M104 292 V322 M196 292 V322"/>
+              <path class="s1" d="M104 316 H196" marker-start="url(#arS)" marker-end="url(#arS)"/>
+              <text class="dim-t" x="150" y="309" text-anchor="middle">54</text>
+            </g>
+            <!-- 零件引线 04 滑臂 -->
+            <g class="note leader">
+              <circle class="dot" cx="150" cy="80" r="3"/>
+              <path class="s1" d="M150 80 L186 48"/>
+              <path class="s1 ext" d="M186 48 H204"/>
+              <circle class="bal s15" cx="218" cy="48" r="12"/>
+              <text x="218" y="52" text-anchor="middle">04</text>
+            </g>
+            <!-- 零件引线 05 耳垫剖面 -->
+            <g class="note leader">
+              <circle class="dot" cx="196" cy="230" r="3"/>
+              <path class="s1" d="M196 230 L234 254"/>
+              <path class="s1 ext" d="M234 254 H252"/>
+              <circle class="bal s15" cx="266" cy="254" r="12"/>
+              <text x="266" y="258" text-anchor="middle">05</text>
+            </g>
+          </svg>
+          <figcaption><span>侧视图 SIDE · A-A 剖</span><span>耳罩高 91 · 厚 54</span></figcaption>
+        </figure>
+
+        <!-- 顶视图 -->
+        <figure class="view" id="view-top" data-viewname="top">
+          <span class="view-tag">C</span>
+          <svg class="blueprint" viewBox="0 0 460 230" role="img" aria-label="顶视图">
+            <defs>
+              <marker id="arT" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="12" markerHeight="10"
+                      orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+                <path d="M0 0 L10 4 L0 8 Z" fill="#E8F0FE"/>
+              </marker>
+            </defs>
+            <path class="cl" d="M230 40 V210"/>
+            <path class="cl" d="M64 172 H396"/>
+            <!-- 头梁（俯视弧线） -->
+            <path class="s2" d="M112 168 A130 130 0 0 1 348 168"/>
+            <path class="s1" d="M336 168 A118 118 0 0 0 124 168"/>
+            <path class="s1" d="M112 168 H124 M336 168 H348"/>
+            <!-- 耳罩（俯视） -->
+            <rect class="s2" x="88" y="136" width="48" height="64" rx="16"/>
+            <rect class="s2" x="324" y="136" width="48" height="64" rx="16"/>
+            <rect class="s1" x="96" y="144" width="32" height="48" rx="10"/>
+            <rect class="s1" x="332" y="144" width="32" height="48" rx="10"/>
+            <!-- 尺寸：总宽 168 -->
+            <g class="dim">
+              <path class="ln" d="M88 204 V218 M372 204 V218"/>
+              <path class="s1" d="M88 212 H372" marker-start="url(#arT)" marker-end="url(#arT)"/>
+              <text class="dim-t" x="230" y="205" text-anchor="middle">168</text>
+            </g>
+            <!-- 尺寸：冠顶至耳罩后缘 64 -->
+            <g class="dim">
+              <path class="ln" d="M236 93 H412 M378 200 H412"/>
+              <path class="s1" d="M406 93 V200" marker-start="url(#arT)" marker-end="url(#arT)"/>
+              <text class="dim-t" transform="rotate(-90 421 146)" x="421" y="146" text-anchor="middle">64</text>
+            </g>
+            <!-- 零件引线 07 电池 -->
+            <g class="note leader">
+              <circle class="dot" cx="324" cy="190" r="3"/>
+              <path class="s1" d="M324 190 L310 172"/>
+              <path class="s1 ext" d="M310 172 H290"/>
+              <circle class="bal s15" cx="278" cy="172" r="12"/>
+              <text x="278" y="176" text-anchor="middle">07</text>
+            </g>
+            <!-- 零件引线 08 USB-C -->
+            <g class="note leader">
+              <circle class="dot" cx="112" cy="200" r="3"/>
+              <path class="s1" d="M112 200 L96 176"/>
+              <path class="s1 ext" d="M96 176 H78"/>
+              <circle class="bal s15" cx="64" cy="176" r="12"/>
+              <text x="64" y="180" text-anchor="middle">08</text>
+            </g>
+          </svg>
+          <figcaption><span>顶视图 TOP</span><span>冠顶距 64</span></figcaption>
+        </figure>
+      </div>
+
+      <p class="views-foot">注：图中尺寸均为设计值（单位 mm），实际以出厂检验记录为准；零件 01–08 明细见「04 装配分解 BOM 表」，未示零件详见图纸目录。</p>
+    </section>
+
+    <!-- ============ 02 技术参数 ============ -->
+    <section id="params" aria-labelledby="paramsTitle">
+      <header class="sec-head">
+        <span class="sec-no">02</span>
+        <h2 id="paramsTitle">技术参数</h2>
+        <span class="en">Specifications · HALO 1 标准版</span>
+      </header>
+      <div class="params-grid">
+        <table>
+          <caption>Table 2-1 · 声学与降噪</caption>
+          <tbody>
+            <tr><td class="k">驱动单元</td><td class="v"><em>40mm</em> 复合振膜</td></tr>
+            <tr><td class="k">降噪深度</td><td class="v"><em>-42dB</em> 逐点自适应</td></tr>
+            <tr><td class="k">频响范围</td><td class="v">20Hz – 40kHz</td></tr>
+            <tr><td class="k">阻抗 / 灵敏度</td><td class="v">32Ω / 103dB</td></tr>
+            <tr><td class="k">通话麦克风</td><td class="v">4 麦克风阵列</td></tr>
+          </tbody>
+        </table>
+        <table>
+          <caption>Table 2-2 · 续航与连接</caption>
+          <tbody>
+            <tr><td class="k">续航（开降噪）</td><td class="v"><em>40h</em></td></tr>
+            <tr><td class="k">快充</td><td class="v"><em>5min → 4h</em></td></tr>
+            <tr><td class="k">蓝牙</td><td class="v">5.4 · AAC / LDAC</td></tr>
+            <tr><td class="k">重量</td><td class="v"><em>198g</em> 云感佩戴</td></tr>
+            <tr><td class="k">充电 / 防护</td><td class="v">USB-C 5V⎓1.5A · IPX4</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tbl-foot">测量条件：环境噪声 1kHz/100dB，ANC 开启，音量 50%；数据编号 QT-2026-0912，存档于质检科。</p>
+    </section>
+
+    <!-- ============ 03 卖点 · 引线注释 ============ -->
+    <section id="features" aria-labelledby="featTitle">
+      <header class="sec-head">
+        <span class="sec-no">03</span>
+        <h2 id="featTitle">设计说明</h2>
+        <span class="en">Design Notes · 引线注释</span>
+      </header>
+      <div class="features">
+        <figure class="fig-stick">
+          <svg class="blueprint" viewBox="0 0 460 380" role="img" aria-label="标注了六个卖点位置的耳机轮廓图">
+            <path class="cl" d="M230 40 V330"/>
+            <path class="s2" d="M115 190 A115 115 0 0 1 345 190"/>
+            <path class="s1" d="M330 190 A100 100 0 0 0 130 190"/>
+            <path class="s1" d="M115 190 H130 M330 190 H345"/>
+            <path class="s15" d="M122.5 190 V210 M115 210 H130"/>
+            <path class="s15" d="M337.5 190 V210 M330 210 H345"/>
+            <rect class="s2" x="86" y="210" width="58" height="76" rx="24"/>
+            <rect class="s2" x="316" y="210" width="58" height="76" rx="24"/>
+            <rect class="s1" x="95" y="219" width="40" height="58" rx="17"/>
+            <rect class="s1" x="325" y="219" width="40" height="58" rx="17"/>
+            <circle class="s1" cx="115" cy="248" r="12"/>
+            <circle class="s1" cx="345" cy="248" r="12"/>
+            <!-- fb1 降噪麦克风 -->
+            <g class="note leader" id="fb1" data-part="1">
+              <circle class="dot" cx="337" cy="198" r="3"/>
+              <path class="s1" d="M337 198 L372 168"/>
+              <path class="s1 ext" d="M372 168 H390"/>
+              <circle class="bal s15" cx="402" cy="168" r="12"/>
+              <text x="402" y="172" text-anchor="middle">1</text>
+            </g>
+            <!-- fb2 电池续航 -->
+            <g class="note leader" id="fb2" data-part="2">
+              <circle class="dot" cx="115" cy="286" r="3"/>
+              <path class="s1" d="M115 286 L82 306"/>
+              <path class="s1 ext" d="M82 306 H64"/>
+              <circle class="bal s15" cx="52" cy="306" r="12"/>
+              <text x="52" y="310" text-anchor="middle">2</text>
+            </g>
+            <!-- fb3 双设备芯片 -->
+            <g class="note leader" id="fb3" data-part="3">
+              <circle class="dot" cx="300" cy="99" r="3"/>
+              <path class="s1" d="M300 99 L334 76"/>
+              <path class="s1 ext" d="M334 76 H352"/>
+              <circle class="bal s15" cx="364" cy="76" r="12"/>
+              <text x="364" y="80" text-anchor="middle">3</text>
+            </g>
+            <!-- fb4 驱动振膜 -->
+            <g class="note leader" id="fb4" data-part="4">
+              <circle class="dot" cx="345" cy="260" r="3"/>
+              <path class="s1" d="M345 260 L380 286"/>
+              <path class="s1 ext" d="M380 286 H398"/>
+              <circle class="bal s15" cx="410" cy="286" r="12"/>
+              <text x="410" y="290" text-anchor="middle">4</text>
+            </g>
+            <!-- fb5 云感耳垫 -->
+            <g class="note leader" id="fb5" data-part="5">
+              <circle class="dot" cx="95" cy="244" r="3"/>
+              <path class="s1" d="M95 244 L62 262"/>
+              <path class="s1 ext" d="M62 262 H44"/>
+              <circle class="bal s15" cx="32" cy="262" r="12"/>
+              <text x="32" y="266" text-anchor="middle">5</text>
+            </g>
+            <!-- fb6 USB-C 快充 -->
+            <g class="note leader" id="fb6" data-part="6">
+              <circle class="dot" cx="86" cy="266" r="3"/>
+              <path class="s1" d="M86 266 L56 236"/>
+              <path class="s1 ext" d="M56 236 H40"/>
+              <circle class="bal s15" cx="28" cy="236" r="12"/>
+              <text x="28" y="240" text-anchor="middle">6</text>
+            </g>
+          </svg>
+          <figcaption>Fig.3 · 说明图 Design Notes</figcaption>
+        </figure>
+
+        <div class="annos">
+          <div class="anno" data-part="1" tabindex="0">
+            <span class="num">1</span><span class="lead" aria-hidden="true"></span>
+            <div class="anno-body">
+              <h3>逐点自适应降噪</h3>
+              <p>每 200ms 扫描一次环境声，地铁、机舱、咖啡馆各有各的安静法。</p>
+            </div>
+          </div>
+          <div class="anno" data-part="2" tabindex="0">
+            <span class="num">2</span><span class="lead" aria-hidden="true"></span>
+            <div class="anno-body">
+              <h3>48 小时超长续航</h3>
+              <p>北京飞纽约往返，一次充电就够了。</p>
+            </div>
+          </div>
+          <div class="anno" data-part="3" tabindex="0">
+            <span class="num">3</span><span class="lead" aria-hidden="true"></span>
+            <div class="anno-body">
+              <h3>双设备无缝切换</h3>
+              <p>电脑会议、手机来电，0.3 秒自动接续。</p>
+            </div>
+          </div>
+          <div class="anno" data-part="4" tabindex="0">
+            <span class="num">4</span><span class="lead" aria-hidden="true"></span>
+            <div class="anno-body">
+              <h3>40mm 复合振膜</h3>
+              <p>高音透亮、低音下潜，久听不闷。</p>
+            </div>
+          </div>
+          <div class="anno" data-part="5" tabindex="0">
+            <span class="num">5</span><span class="lead" aria-hidden="true"></span>
+            <div class="anno-body">
+              <h3>198g 云感佩戴</h3>
+              <p>记忆海绵耳垫，戴一天也只是「没戴」。</p>
+            </div>
+          </div>
+          <div class="anno" data-part="6" tabindex="0">
+            <span class="num">6</span><span class="lead" aria-hidden="true"></span>
+            <div class="anno-body">
+              <h3>5 分钟快充 4 小时</h3>
+              <p>出门前刷牙的时间，够听一整个通勤。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 04 装配分解 BOM ============ -->
+    <section id="bom" aria-labelledby="bomTitle">
+      <header class="sec-head">
+        <span class="sec-no">04</span>
+        <h2 id="bomTitle">装配分解</h2>
+        <span class="en">Assembly · BOM 明细表</span>
+      </header>
+      <div class="bom-wrap">
+        <table class="bom">
+          <caption>Table 4-1 · 零件目录（点击行号展开明细）</caption>
+          <thead>
+            <tr>
+              <th>序号 NO.</th><th>代号 PART-NO</th><th>名称与规格</th><th>数量 QTY</th><th>材料 / 备注</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="bom-main">
+              <td class="no"><button class="bom-toggle" type="button" aria-expanded="false" aria-controls="bd1">+</button>01</td>
+              <td>HL-01</td><td>头梁组件</td><td>×1</td><td>镁锂合金 · 弓架</td>
+            </tr>
+            <tr class="bom-detail" id="bd1" hidden><td colspan="5"><dl>
+              <div><dt>材料</dt><dd>镁锂合金 LZ91</dd></div>
+              <div><dt>表面处理</dt><dd>阳极氧化喷砂</dd></div>
+              <div><dt>重量</dt><dd>32g</dd></div>
+              <div><dt>工序</dt><dd>CNC → 阳极 → 丝印</dd></div>
+              <div><dt>检验</dt><dd>盐雾 48h 达标</dd></div>
+              <div><dt>供应</dt><dd>AURA 精工车间</dd></div>
+            </dl></td></tr>
+
+            <tr class="bom-main">
+              <td class="no"><button class="bom-toggle" type="button" aria-expanded="false" aria-controls="bd2">+</button>02</td>
+              <td>HL-02</td><td>伸缩滑臂</td><td>×2</td><td>SUS304 · 30mm 行程</td>
+            </tr>
+            <tr class="bom-detail" id="bd2" hidden><td colspan="5"><dl>
+              <div><dt>调节行程</dt><dd>30mm / 12 段卡扣</dd></div>
+              <div><dt>材料</dt><dd>不锈钢 SUS304</dd></div>
+              <div><dt>寿命</dt><dd>10,000 次伸缩</dd></div>
+              <div><dt>阻尼</dt><dd>恒力 8N</dd></div>
+              <div><dt>检验</dt><dd>推拉力抽检全检</dd></div>
+              <div><dt>供应</dt><dd>精密冲压外协</dd></div>
+            </dl></td></tr>
+
+            <tr class="bom-main">
+              <td class="no"><button class="bom-toggle" type="button" aria-expanded="false" aria-controls="bd3">+</button>03</td>
+              <td>HL-03</td><td>耳罩外壳</td><td>×2</td><td>PC+ABS · 手感漆</td>
+            </tr>
+            <tr class="bom-detail" id="bd3" hidden><td colspan="5"><dl>
+              <div><dt>材料</dt><dd>PC+ABS 合金</dd></div>
+              <div><dt>表面</dt><dd>手感漆 2.5 道</dd></div>
+              <div><dt>重量</dt><dd>18g / 只</dd></div>
+              <div><dt>工艺</dt><dd>精密注塑 · 苛性纹</dd></div>
+              <div><dt>检验</dt><dd>色差 ΔE ≤ 1.2</dd></div>
+              <div><dt>供应</dt><dd>注塑车间 B 线</dd></div>
+            </dl></td></tr>
+
+            <tr class="bom-main">
+              <td class="no"><button class="bom-toggle" type="button" aria-expanded="false" aria-controls="bd4">+</button>04</td>
+              <td>HL-04</td><td>记忆海绵耳垫</td><td>×2</td><td>蛋白质皮革 · 厚 12mm</td>
+            </tr>
+            <tr class="bom-detail" id="bd4" hidden><td colspan="5"><dl>
+              <div><dt>海绵</dt><dd>慢回弹记忆棉</dd></div>
+              <div><dt>包覆</dt><dd>蛋白质皮革</dd></div>
+              <div><dt>厚度</dt><dd>12mm 压缩前</dd></div>
+              <div><dt>透气</dt><dd>内衬网布可拆洗</dd></div>
+              <div><dt>检验</dt><dd>回弹率 ≥ 92%</dd></div>
+              <div><dt>供应</dt><dd>包覆工段</dd></div>
+            </dl></td></tr>
+
+            <tr class="bom-main">
+              <td class="no"><button class="bom-toggle" type="button" aria-expanded="false" aria-controls="bd5">+</button>05</td>
+              <td>HL-05</td><td>驱动单元 40mm</td><td>×2</td><td>复合振膜 · 32Ω</td>
+            </tr>
+            <tr class="bom-detail" id="bd5" hidden><td colspan="5"><dl>
+              <div><dt>振膜</dt><dd>PET 镀钛复合</dd></div>
+              <div><dt>阻抗</dt><dd>32Ω ± 15%</dd></div>
+              <div><dt>灵敏度</dt><dd>103dB/mW</dd></div>
+              <div><dt>磁路</dt><dd>钕磁 N52 双磁</dd></div>
+              <div><dt>检验</dt><dd>逐只扫频听检</dd></div>
+              <div><dt>供应</dt><dd>声学实验室</dd></div>
+            </dl></td></tr>
+
+            <tr class="bom-main">
+              <td class="no"><button class="bom-toggle" type="button" aria-expanded="false" aria-controls="bd6">+</button>06</td>
+              <td>HL-06</td><td>降噪麦克风</td><td>×4</td><td>前馈 ×2 · 反馈 ×2</td>
+            </tr>
+            <tr class="bom-detail" id="bd6" hidden><td colspan="5"><dl>
+              <div><dt>布局</dt><dd>前馈 ×2 / 反馈 ×2</dd></div>
+              <div><dt>信噪比</dt><dd>65dB</dd></div>
+              <div><dt>拾音孔</dt><dd>Φ0.8mm 防尘网</dd></div>
+              <div><dt>采样</dt><dd>200ms 逐点扫描</dd></div>
+              <div><dt>检验</dt><dd>消音室标定</dd></div>
+              <div><dt>供应</dt><dd>SMT 车间</dd></div>
+            </dl></td></tr>
+
+            <tr class="bom-main">
+              <td class="no"><button class="bom-toggle" type="button" aria-expanded="false" aria-controls="bd7">+</button>07</td>
+              <td>HL-07</td><td>电池模块</td><td>×1</td><td>720mAh · 40h 续航</td>
+            </tr>
+            <tr class="bom-detail" id="bd7" hidden><td colspan="5"><dl>
+              <div><dt>容量</dt><dd>720mAh / 2.8Wh</dd></div>
+              <div><dt>续航</dt><dd>40h（开降噪）</dd></div>
+              <div><dt>快充</dt><dd>5min → 4h</dd></div>
+              <div><dt>认证</dt><dd>UN38.3 / CB</dd></div>
+              <div><dt>循环</dt><dd>500 次后 ≥ 80%</dd></div>
+              <div><dt>供应</dt><dd>电芯外协 A 厂</dd></div>
+            </dl></td></tr>
+
+            <tr class="bom-main">
+              <td class="no"><button class="bom-toggle" type="button" aria-expanded="false" aria-controls="bd8">+</button>08</td>
+              <td>HL-08</td><td>USB-C 接口</td><td>×1</td><td>USB 2.0 · 5V⎓1.5A</td>
+            </tr>
+            <tr class="bom-detail" id="bd8" hidden><td colspan="5"><dl>
+              <div><dt>规格</dt><dd>USB 2.0 Type-C</dd></div>
+              <div><dt>输入</dt><dd>5V⎓1.5A</dd></div>
+              <div><dt>插拔寿命</dt><dd>10,000 次</dd></div>
+              <div><dt>防护</dt><dd>整 机 IPX4</dd></div>
+              <div><dt>检验</dt><dd>接触阻抗 ≤ 0.1Ω</dd></div>
+              <div><dt>供应</dt><dd>连接器外协 C 厂</dd></div>
+            </dl></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="bom-hint">装配顺序：01 头梁 → 02 滑臂 → 03 耳壳 → 05 驱动 → 07 电池 → 06 麦克风 → 08 接口 → 04 耳垫，扭矩标准 0.4N·m。</p>
+    </section>
+
+    <!-- ============ 05 规格对比 ============ -->
+    <section id="compare" aria-labelledby="cmpTitle">
+      <header class="sec-head">
+        <span class="sec-no">05</span>
+        <h2 id="cmpTitle">规格对比</h2>
+        <span class="en">Model Comparison · SE / 标准 / PRO</span>
+      </header>
+      <div class="cmp-wrap">
+        <table class="cmp">
+          <caption>Table 5-1 · 三档型谱</caption>
+          <thead>
+            <tr>
+              <th>参数 ITEM</th>
+              <th>Halo 1 SE</th>
+              <th class="rec">Halo 1 标准<span class="rec-tag">推荐</span></th>
+              <th>Halo 1 Pro</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>降噪深度</td><td>-32dB</td><td class="rec"><em class="note-k">-42dB</em></td><td>-48dB</td></tr>
+            <tr><td>续航（开降噪）</td><td>30h</td><td class="rec">40h</td><td>48h</td></tr>
+            <tr><td>驱动单元</td><td>38mm</td><td class="rec">40mm</td><td>40mm 镀铍</td></tr>
+            <tr><td>蓝牙</td><td>5.3</td><td class="rec">5.4</td><td>5.4 + LC3</td></tr>
+            <tr><td>重量</td><td>205g</td><td class="rec">198g</td><td>192g</td></tr>
+            <tr><td>快充</td><td>10min→2h</td><td class="rec">5min→4h</td><td>5min→5h</td></tr>
+            <tr>
+              <td>订购价</td>
+              <td class="price">¥899</td>
+              <td class="rec price">¥1,299<s>¥1,499</s></td>
+              <td class="price">¥1,799</td>
+            </tr>
+            <tr>
+              <td>操作</td>
+              <td><button class="choose" type="button" data-choose="SE">选此型号</button></td>
+              <td class="rec"><button class="choose" type="button" data-choose="STD">选此型号</button></td>
+              <td><button class="choose" type="button" data-choose="PRO">选此型号</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tbl-foot">三档共用同一张总图 AURA-H1-2026，差异件以版本号 REV 区分；全系赠送收纳袋与 3.5mm 备用线。</p>
+    </section>
+
+    <!-- ============ 06 预约订购 ============ -->
+    <section id="order" aria-labelledby="orderTitle">
+      <header class="sec-head">
+        <span class="sec-no">06</span>
+        <h2 id="orderTitle">预约订购</h2>
+        <span class="en">Order Sheet · 工程订货单</span>
+      </header>
+      <div class="order">
+        <div class="panel">
+          <div class="stamp received" id="stampRec" aria-hidden="true">已受理<small>ACCEPTED</small></div>
+          <div class="panel-head">
+            <h3>订货单 ORDER</h3>
+            <span class="pno">单号 P-2026-09 · 一式两联</span>
+          </div>
+          <form id="orderForm" novalidate>
+            <fieldset id="orderFieldset">
+              <div class="f-row">
+                <div class="f" data-field="model">
+                  <label for="fModel">订购型号 <b>*</b></label>
+                  <select id="fModel" name="model">
+                    <option value="">— 选择型号 —</option>
+                    <option value="SE">Halo 1 SE · ¥899</option>
+                    <option value="STD">Halo 1 标准 · ¥1,299（推荐）</option>
+                    <option value="PRO">Halo 1 Pro · ¥1,799</option>
+                  </select>
+                  <small class="err">请选择订购型号</small>
+                </div>
+                <div class="f" data-field="qty">
+                  <label for="fQty">数量 QTY <b>*</b></label>
+                  <input id="fQty" name="qty" type="number" min="1" max="99" step="1" placeholder="1–99" inputmode="numeric">
+                  <small class="err">数量需为 1–99 的整数</small>
+                </div>
+              </div>
+              <div class="f-row">
+                <div class="f" data-field="name">
+                  <label for="fName">姓名 NAME <b>*</b></label>
+                  <input id="fName" name="name" type="text" maxlength="20" placeholder="收货人姓名" autocomplete="name">
+                  <small class="err">请填写姓名（至少 2 字）</small>
+                </div>
+                <div class="f" data-field="phone">
+                  <label for="fPhone">手机 TEL <b>*</b></label>
+                  <input id="fPhone" name="phone" type="tel" maxlength="11" placeholder="11 位手机号" autocomplete="tel">
+                  <small class="err">请填写 11 位中国大陆手机号</small>
+                </div>
+              </div>
+              <div class="f" data-field="addr">
+                <label for="fAddr">收货地址 ADDRESS <b>*</b></label>
+                <input id="fAddr" name="addr" type="text" maxlength="80" placeholder="省 / 市 / 区 + 详细地址" autocomplete="street-address">
+                <small class="err">地址过短，请填写完整收货地址</small>
+              </div>
+              <div class="f" data-field="memo">
+                <label for="fMemo">备注 MEMO</label>
+                <textarea id="fMemo" name="memo" maxlength="120" placeholder="刻字、发票、期望到货时间等（选填）"></textarea>
+                <small class="err"></small>
+              </div>
+              <div class="form-foot">
+                <button class="btn primary" type="submit" id="submitBtn">提交订货单 SUBMIT</button>
+                <span class="hint">提交后 24 小时内电话确认 · 顺丰包邮</span>
+              </div>
+            </fieldset>
+          </form>
+          <div class="receipt" id="receipt" role="status">
+            <p><b>受理编号 NO.</b> <span id="rcNo">—</span></p>
+            <p><b>受理日期 DATE</b> <span id="rcDate">—</span></p>
+            <p><b>型号 MODEL</b> <span id="rcModel">—</span> ／ <b>数量 QTY</b> <span id="rcQty">—</span></p>
+            <p style="margin-top:6px">订货单已受理，质检科将在 24 小时内与您电话确认并安排发货。</p>
+          </div>
+        </div>
+
+        <aside class="qc">
+          <div class="qc-card">
+            <h4>检验记录 QC</h4>
+            <p class="quote">「戴上的一瞬间，办公室消失了。」</p>
+            <p class="quote-src">— 数字尾巴</p>
+            <p class="quote">「年度续航怪物。」</p>
+            <p class="quote-src">— 极客公园</p>
+          </div>
+          <div class="qc-card">
+            <h4>用户评分 RATING</h4>
+            <p class="rate"><span class="stars" aria-hidden="true">★★★★★</span> 4.9 / 5
+              <small>基于 12,847 条已验证评价</small></p>
+          </div>
+          <div class="qc-card">
+            <h4>交付条款 TERMS</h4>
+            <ul>
+              <li>顺丰包邮，48 小时内出库</li>
+              <li>7 天无理由 · 15 天换新</li>
+              <li>整机 2 年质保 · 电芯 1 年</li>
+              <li>全系附收纳袋与 3.5mm 线材</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ 页脚 · 审核批准签名栏 ============ -->
+  <footer class="foot" aria-label="图框签署栏">
+    <div class="foot-tb">
+      <div><b>设计 DESIGNED</b><span class="sig">AURA LAB
+        <svg viewBox="0 0 90 24" aria-hidden="true"><path d="M4 16 C10 4 14 22 20 12 C24 6 26 18 32 12 C40 4 44 20 52 10 C56 5 60 16 68 9 C74 4 80 14 86 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </span></div>
+      <div><b>审核 CHECKED</b><span class="sig blank" aria-label="审核签名待签">AURA.QC</span></div>
+      <div><b>批准 APPROVED</b><span class="sig blank" aria-label="批准签名待签">G.MO</span></div>
+      <div><b>日期 DATE</b><span class="sig">2026-09-08</span></div>
+      <div><b>图号 DWG NO.</b><span class="sig">AURA-H1-2026</span></div>
+      <div><b>版本 REV</b><span class="sig">C</span></div>
+      <div><b>比例 SCALE</b><span class="sig">1 : 2</span></div>
+      <div><b>张次 SHEET</b><span class="sig">1 / 1</span></div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 AURA ACOUSTICS LAB · 本页为虚构产品演示图纸</span>
+      <span>第三角法 · 公差未注按 GB/T 1804-m</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $ = function(s,c){ return (c||document).querySelector(s); };
+  var $$ = function(s,c){ return Array.prototype.slice.call((c||document).querySelectorAll(s)); };
+
+  /* ---------- 图层显隐（checkbox） ---------- */
+  var lyGrid = $('#lyGrid'), lyDim = $('#lyDim'), lyNote = $('#lyNote');
+  if (lyGrid) lyGrid.addEventListener('change', function(){ document.body.classList.toggle('no-grid', !lyGrid.checked); });
+  if (lyDim)  lyDim.addEventListener('change',  function(){ document.body.classList.toggle('no-dim',  !lyDim.checked); });
+  if (lyNote) lyNote.addEventListener('change', function(){ document.body.classList.toggle('no-note', !lyNote.checked); });
+
+  /* ---------- 三视图：切换 / 并排 ---------- */
+  var viewWrap = $('#viewWrap');
+  var viewBtns = $$('[data-view].btn');
+  function setView(name){
+    if (!viewWrap) return;
+    if (name === 'all'){
+      viewWrap.classList.remove('single');
+      viewWrap.classList.add('all');
+      $$('.view', viewWrap).forEach(function(v){ v.classList.remove('active'); });
+    } else {
+      viewWrap.classList.add('single');
+      viewWrap.classList.remove('all');
+      $$('.view', viewWrap).forEach(function(v){
+        v.classList.toggle('active', v.getAttribute('data-viewname') === name);
+      });
+    }
+    viewBtns.forEach(function(b){
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-view') === name));
+    });
+  }
+  viewBtns.forEach(function(b){
+    b.addEventListener('click', function(){ setView(b.getAttribute('data-view')); });
+  });
+  if (viewWrap){
+    setView(window.matchMedia && window.matchMedia('(max-width: 900px)').matches ? 'front' : 'all');
+  }
+
+  /* ---------- 目录滚动高亮 ---------- */
+  var spyLinks = $$('.nav ul a[data-spy]');
+  var spyMap = {};
+  spyLinks.forEach(function(a){ spyMap[a.getAttribute('data-spy')] = a; });
+  var spyTargets = Object.keys(spyMap).map(function(id){ return document.getElementById(id); }).filter(Boolean);
+  if ('IntersectionObserver' in window && spyTargets.length){
+    var spy = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting){
+          spyLinks.forEach(function(a){ a.classList.remove('on'); });
+          var a = spyMap[en.target.id];
+          if (a) a.classList.add('on');
+        }
+      });
+    }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+    spyTargets.forEach(function(t){ spy.observe(t); });
+  }
+
+  /* ---------- BOM 行展开 ---------- */
+  $$('.bom-main').forEach(function(tr){
+    tr.addEventListener('click', function(e){
+      var detail = tr.nextElementSibling;
+      if (!detail || !detail.classList.contains('bom-detail')) return;
+      var toggle = $('.bom-toggle', tr);
+      var isOpen = !detail.hidden;
+      detail.hidden = isOpen;
+      tr.classList.toggle('open', !isOpen);
+      if (toggle) toggle.setAttribute('aria-expanded', String(!isOpen));
+    });
+  });
+
+  /* ---------- 卖点引线 ↔ 图上气泡 双向高亮 ---------- */
+  function bindPair(el, svgGroup){
+    if (!el || !svgGroup) return;
+    var on  = function(){ el.classList.add('lit');  svgGroup.classList.add('lit'); };
+    var off = function(){ el.classList.remove('lit'); svgGroup.classList.remove('lit'); };
+    el.addEventListener('mouseenter', on);
+    el.addEventListener('mouseleave', off);
+    el.addEventListener('focus', on);
+    el.addEventListener('blur', off);
+    svgGroup.addEventListener('mouseenter', on);
+    svgGroup.addEventListener('mouseleave', off);
+  }
+  $$('.anno[data-part]').forEach(function(el){
+    bindPair(el, document.getElementById('fb' + el.getAttribute('data-part')));
+  });
+
+  /* ---------- 订货单：校验 + 受理章 ---------- */
+  var form = $('#orderForm');
+  if (form){
+    var fModel = $('#fModel'), fQty = $('#fQty'), fName = $('#fName'),
+        fPhone = $('#fPhone'), fAddr = $('#fAddr'), fMemo = $('#fMemo');
+    var fieldset = $('#orderFieldset');
+    var stamp = $('#stampRec'), receipt = $('#receipt'), submitBtn = $('#submitBtn');
+
+    function wrap(input){ return input ? input.closest('.f') : null; }
+    function setBad(input, bad){
+      var w = wrap(input);
+      if (w) w.classList.toggle('bad', bad);
+      if (input) input.setAttribute('aria-invalid', bad ? 'true' : 'false');
+    }
+    var rules = [
+      { el: fModel, ok: function(v){ return !!v; } },
+      { el: fQty,   ok: function(v){ var n = Number(v); return v !== '' && Number.isInteger(n) && n >= 1 && n <= 99; } },
+      { el: fName,  ok: function(v){ return v.trim().length >= 2; } },
+      { el: fPhone, ok: function(v){ return /^1[3-9]\d{9}$/.test(v.trim()); } },
+      { el: fAddr,  ok: function(v){ return v.trim().length >= 8; } }
+    ];
+    rules.forEach(function(r){
+      if (!r.el) return;
+      r.el.addEventListener('input', function(){ setBad(r.el, false); });
+      r.el.addEventListener('change', function(){ setBad(r.el, false); });
+    });
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var firstBad = null;
+      rules.forEach(function(r){
+        var good = r.el && r.ok(r.el.value);
+        setBad(r.el, !good);
+        if (!good && !firstBad) firstBad = r.el;
+      });
+      if (firstBad){
+        firstBad.focus();
+        return;
+      }
+      /* 生成受理信息 */
+      var modelText = fModel.options[fModel.selectedIndex].text;
+      var no = 'AURA-' + Date.now().toString(36).toUpperCase().slice(-6);
+      var now = new Date();
+      var pad = function(n){ return (n < 10 ? '0' : '') + n; };
+      var dateStr = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+      var setText = function(id, v){ var n = document.getElementById(id); if (n) n.textContent = v; };
+      setText('rcNo', no);
+      setText('rcDate', dateStr);
+      setText('rcModel', modelText);
+      setText('rcQty', fQty.value + ' 件');
+      /* 盖章 + 反馈 */
+      if (receipt) receipt.classList.add('show');
+      if (stamp){
+        stamp.setAttribute('aria-hidden', 'false');
+        stamp.classList.add('show');
+      }
+      if (fieldset) fieldset.disabled = true;
+      if (submitBtn){ submitBtn.textContent = '已受理 ACCEPTED'; submitBtn.disabled = true; }
+    });
+  }
+
+  /* ---------- 对比表：选此型号 → 回填订货单 ---------- */
+  var chooseBtns = $$('.choose[data-choose]');
+  var modelSel = $('#fModel');
+  chooseBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var val = btn.getAttribute('data-choose');
+      if (modelSel) modelSel.value = val;
+      chooseBtns.forEach(function(b){ b.classList.remove('reced'); });
+      btn.classList.add('reced');
+      var target = document.getElementById('order');
+      if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+})();
+</script>
+</body>
+</html>

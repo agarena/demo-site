@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="深海电台 DEEP SEA RADIO —— 把播放器沉入海沟的沉浸式音乐站：垂直深度渐变、海雪粒子、发光水母随节拍律动、声呐波纹与 0→3800m 深度计。全部声音由 Web Audio 实时合成。">
+<title>深海电台 DEEP SEA RADIO · FM 3800</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='3' fill='%234FD8C8'/%3E%3Cpath d='M12 4a8 8 0 0 1 8 8M12 7.5A4.5 4.5 0 0 1 16.5 12' fill='none' stroke='%234FD8C8' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+/* ============================================================
+   深海电台 DEEP SEA RADIO · 样式
+   页面 = 垂直深海：上浅下深，滚动 = 下潜
+   ============================================================ */
+:root{
+  --abyss:#02090F;            /* 深渊黑蓝 */
+  --trench:#062033;           /* 海沟蓝 */
+  --biolum:#4FD8C8;           /* 生物光青 */
+  --jelly:#E88A9A;            /* 水母桃光 */
+  --snow:rgba(220,235,240,.5);/* 海雪白 */
+  --gold:#C9A870;             /* 仪表金（读数专用） */
+  --ink:#E8F4F6;              /* 主文字 */
+  --dim:#9DBCC4;              /* 次级文字 */
+  --line:rgba(79,216,200,.16);/* 描边 */
+  --panel:linear-gradient(180deg,rgba(10,46,63,.46),rgba(2,9,15,.6));
+  --beat:0;                   /* 全局节拍能量 0..1（JS 每帧写入） */
+  --font-main:"HarmonyOS Sans SC","PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  --font-disp:"Bahnschrift","Segoe UI","HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --font-mono:"Cascadia Code","JetBrains Mono","IBM Plex Mono",Consolas,"Courier New",monospace;
+}
+
+/* ---------- 基础 ---------- */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  min-height:100vh;
+  color:var(--ink);
+  font-family:var(--font-main);
+  font-size:16px;
+  line-height:1.75;
+  overflow-x:hidden;
+  /* 深度塔：固定方向感，永远是上浅下深（禁横向渐变） */
+  background:linear-gradient(180deg,
+    #10425A 0%,
+    #0A2E3F 14%,
+    #062033 38%,
+    #041523 66%,
+    #02090F 100%);
+  padding-bottom:128px;
+}
+::selection{background:rgba(79,216,200,.35);color:#E9FBF8}
+::-webkit-scrollbar{width:10px}
+::-webkit-scrollbar-track{background:#02090F}
+::-webkit-scrollbar-thumb{background:#0E3346;border-radius:5px;border:2px solid #02090F}
+::-webkit-scrollbar-thumb:hover{background:#1A5A6E}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+:focus-visible{outline:2px solid rgba(79,216,200,.85);outline-offset:2px;border-radius:4px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+
+/* ---------- 环境层：光柱 / canvas / 水母 / 脉动膜 / 暗角 ---------- */
+.rays{
+  position:fixed;left:0;right:0;top:0;height:62vh;
+  z-index:1;pointer-events:none;overflow:hidden;
+}
+.rays i{
+  position:absolute;top:-14%;height:130%;
+  background:linear-gradient(180deg,rgba(150,228,238,.15),rgba(150,228,238,.03) 55%,transparent 78%);
+  filter:blur(6px);
+  animation:raySway 12s ease-in-out infinite alternate;
+}
+.rays i:nth-child(1){left:6%;width:11vw;animation-delay:-1s;opacity:.5}
+.rays i:nth-child(2){left:27%;width:16vw;animation-delay:-5s;opacity:.65}
+.rays i:nth-child(3){left:52%;width:10vw;animation-delay:-3s;opacity:.45}
+.rays i:nth-child(4){left:74%;width:15vw;animation-delay:-8s;opacity:.6}
+@keyframes raySway{
+  from{transform:skewX(-15deg) translateX(-1.5vw)}
+  to{transform:skewX(-7deg) translateX(2.5vw)}
+}
+#seaCanvas{
+  position:fixed;inset:0;z-index:2;
+  pointer-events:none;
+  mix-blend-mode:screen;   /* 海雪 / 声呐 / 气泡统一叠加发光 */
+}
+.jelly{
+  position:fixed;left:0;top:0;
+  width:300px;height:380px;
+  z-index:3;pointer-events:none;
+  opacity:0;
+  transition:opacity 1.4s ease;
+  will-change:transform;
+}
+body.has-jelly .jelly{opacity:.4}
+body.has-jelly.playing .jelly{opacity:.95}
+#jHalo{transition:fill 1.2s ease}
+body.playing #jHalo{animation:haloB 5.5s ease-in-out infinite}
+@keyframes haloB{0%,100%{opacity:.55}50%{opacity:1}}
+#pulseVeil{ /* 背景亮度微脉动：透明度由 JS 按 --beat 驱动 */
+  position:fixed;inset:0;z-index:4;pointer-events:none;opacity:0;
+  background:radial-gradient(58% 46% at 50% 40%,rgba(79,216,200,.55),transparent 72%);
+}
+#vignette{ /* 深度暗角：越深越浓（背景色温随深度微调） */
+  position:fixed;inset:0;z-index:5;pointer-events:none;opacity:.25;
+  background:radial-gradient(130% 96% at 50% 8%,transparent 38%,rgba(1,7,13,.9) 100%);
+}
+#surface{ /* 下潜瞬间：海面反光闪过 */
+  position:fixed;inset:0;z-index:130;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,rgba(214,246,250,.55),rgba(214,246,250,.08) 34%,transparent 60%);
+}
+#surface.flash{animation:surfaceFlash 1s ease-out forwards}
+@keyframes surfaceFlash{
+  0%{opacity:1}
+  100%{opacity:0}
+}
+
+/* ---------- 顶栏 ---------- */
+.topbar{
+  position:fixed;left:0;right:0;top:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 28px;
+  background:rgba(3,14,22,.55);
+  backdrop-filter:blur(14px) saturate(130%);
+  -webkit-backdrop-filter:blur(14px) saturate(130%);
+  border-bottom:1px solid var(--line);
+}
+.brand{
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--font-disp);font-size:17px;letter-spacing:.14em;
+  color:#EAFCF9;
+}
+.brand svg{color:var(--biolum);flex:none}
+.brand .brand-en{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.22em;
+  color:var(--dim);margin-left:4px;padding-top:3px;
+}
+.topnav{display:flex;gap:26px;font-size:13.5px;letter-spacing:.1em;color:var(--dim)}
+.topnav a{transition:color .25s;padding:4px 2px}
+.topnav a:hover{color:#EAFCF9}
+.live{
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;
+  color:var(--gold);border:1px solid rgba(201,168,112,.4);
+  padding:5px 12px;border-radius:999px;
+}
+.live i{
+  width:7px;height:7px;border-radius:50%;background:#3E5A66;flex:none;
+}
+body.playing .live i{
+  background:var(--biolum);
+  box-shadow:0 0 8px rgba(79,216,200,.9);
+  animation:livePulse 1.2s ease-in-out infinite;
+}
+@keyframes livePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
+
+/* ---------- Hero：海面 / 透光层 ---------- */
+.hero{
+  position:relative;z-index:10;
+  min-height:94vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:120px 24px 80px;
+}
+.ident{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.3em;
+  color:var(--gold);
+  border:1px solid rgba(201,168,112,.35);
+  padding:8px 18px;border-radius:999px;
+  background:rgba(2,9,15,.3);
+}
+.ident .dot{width:6px;height:6px;border-radius:50%;background:var(--biolum);box-shadow:0 0 8px rgba(79,216,200,.9)}
+.hero h1{
+  font-family:var(--font-disp);
+  font-size:clamp(52px,9vw,108px);
+  font-weight:600;
+  letter-spacing:.18em;
+  margin:34px 0 6px;
+  color:#F2FBFA;
+  text-shadow:0 0 42px rgba(79,216,200,.35);
+}
+.hero .h1-en{
+  font-family:var(--font-mono);
+  font-size:clamp(11px,1.4vw,14px);
+  letter-spacing:.62em;
+  text-indent:.62em;
+  color:var(--dim);
+  margin-bottom:30px;
+}
+.slogan{
+  max-width:560px;font-size:16.5px;color:var(--dim);line-height:2;
+}
+.hero-cta{display:flex;align-items:center;gap:22px;margin:44px 0 26px;flex-wrap:wrap;justify-content:center}
+.cta{
+  display:inline-flex;align-items:center;gap:12px;
+  font-family:var(--font-disp);font-size:17px;letter-spacing:.24em;text-indent:.1em;
+  color:#03231F;
+  background:linear-gradient(180deg,#43D2C0,#1E8A7D);
+  padding:17px 44px;border-radius:8px;
+  box-shadow:0 0 34px rgba(79,216,200,.35),inset 0 1px 0 rgba(255,255,255,.35);
+  transition:transform .2s ease,box-shadow .3s ease,filter .3s ease;
+}
+.cta svg{flex:none}
+.cta:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 6px 44px rgba(79,216,200,.5),inset 0 1px 0 rgba(255,255,255,.35)}
+.cta:active{transform:translateY(1px)}
+.cta.done{
+  background:rgba(79,216,200,.12);color:#BFEFE8;
+  border:1px solid rgba(79,216,200,.5);
+  box-shadow:none;cursor:default;
+}
+.cta.done:hover{transform:none;filter:none}
+.ghost{
+  font-size:14px;letter-spacing:.14em;color:var(--dim);
+  border-bottom:1px dashed rgba(157,188,196,.5);
+  padding-bottom:3px;transition:color .25s,border-color .25s;
+}
+.ghost:hover{color:#EAFCF9;border-color:var(--biolum)}
+.now-line{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;
+  color:var(--dim);
+  min-height:24px;
+}
+.scroll-hint{
+  position:absolute;bottom:26px;left:50%;transform:translateX(-50%);
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.22em;
+  color:rgba(157,188,196,.75);
+  animation:hintBob 3.2s ease-in-out infinite;
+  white-space:nowrap;
+}
+@keyframes hintBob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,8px)}}
+
+/* ---------- 通用区块 ---------- */
+.sec{
+  position:relative;z-index:10;
+  max-width:1100px;margin:0 auto;
+  padding:88px 24px 40px;
+}
+.sec-head{margin-bottom:36px}
+.sec-head em{
+  display:block;font-style:normal;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.34em;
+  color:var(--gold);margin-bottom:12px;
+}
+.sec-head h2{
+  font-family:var(--font-disp);font-size:clamp(26px,3.4vw,38px);
+  font-weight:600;letter-spacing:.12em;color:#F0FAF9;
+}
+.sec-head p{color:var(--dim);font-size:14.5px;margin-top:8px}
+
+/* ---------- 深度歌单（三个水层） ---------- */
+.layer-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:22px;
+}
+.layer-card{
+  position:relative;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:26px 24px 22px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:transform .35s ease,border-color .35s ease,box-shadow .35s ease;
+}
+.layer-card::before{ /* 顶部水层色带 */
+  content:'';position:absolute;left:0;right:0;top:0;height:3px;
+  background:linear-gradient(90deg,transparent,var(--lc),transparent);
+  opacity:.9;
+}
+.layer-card::after{ /* 卡内微光 */
+  content:'';position:absolute;left:0;top:-40%;width:100%;height:90%;
+  background:radial-gradient(60% 60% at 50% 0%,var(--lcglow),transparent 75%);
+  opacity:.5;pointer-events:none;
+  transition:opacity .35s ease;
+}
+.layer-card:hover{transform:translateY(-5px);border-color:rgba(79,216,200,.45);box-shadow:0 14px 40px rgba(0,0,0,.4)}
+.layer-card:hover::after{opacity:.9}
+.lc-range{
+  font-family:var(--font-mono);font-size:26px;letter-spacing:.06em;
+  color:var(--lc);text-shadow:0 0 18px var(--lcglow);
+}
+.lc-name{
+  font-family:var(--font-disp);font-size:21px;letter-spacing:.16em;
+  margin:10px 0 8px;color:#F0FAF9;
+}
+.lc-desc{font-size:13.5px;color:var(--dim);line-height:1.9;min-height:96px}
+.lc-meta{
+  display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 18px;
+}
+.lc-meta span{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;
+  color:var(--dim);
+  border:1px solid rgba(157,188,196,.28);
+  padding:3px 9px;border-radius:999px;
+}
+.lc-btn{
+  width:100%;text-align:center;
+  font-family:var(--font-disp);font-size:14px;letter-spacing:.26em;text-indent:.13em;
+  color:#DFF6F2;
+  border:1px solid rgba(79,216,200,.45);
+  background:rgba(79,216,200,.08);
+  padding:12px 0;border-radius:6px;
+  transition:background .3s ease,color .3s ease;
+}
+.lc-btn:hover{background:rgba(79,216,200,.2);color:#FFFFFF}
+
+/* ---------- 曲目库 ---------- */
+.tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px}
+.tab{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;
+  color:var(--dim);
+  border:1px solid rgba(157,188,196,.3);
+  padding:8px 16px;border-radius:999px;
+  transition:all .25s ease;
+}
+.tab .t-n{color:var(--gold);margin-left:6px}
+.tab:hover{color:#EAFCF9;border-color:rgba(79,216,200,.5)}
+.tab.on{
+  color:#03231F;background:linear-gradient(180deg,#43D2C0,#23998C);
+  border-color:transparent;
+}
+.tab.on .t-n{color:#063B34}
+.songs{list-style:none;border-top:1px solid rgba(79,216,200,.12)}
+.song{
+  display:grid;
+  grid-template-columns:2.6rem minmax(0,1fr) 6.4rem 10.5rem 4.2rem 2.4rem;
+  gap:14px;align-items:center;
+  padding:13px 14px;
+  border-bottom:1px solid rgba(79,216,200,.09);
+  cursor:pointer;
+  position:relative;
+  transition:background .25s ease;
+}
+.song::before{ /* 当前播放行左侧生物光条 */
+  content:'';position:absolute;left:0;top:18%;bottom:18%;width:2px;
+  background:var(--biolum);border-radius:2px;opacity:0;
+  box-shadow:0 0 10px rgba(79,216,200,.9);
+  transition:opacity .3s ease;
+}
+.song:hover{background:rgba(79,216,200,.05)}
+.song.current{background:rgba(79,216,200,.06)}
+.song.current::before{opacity:1}
+body.playing .song.current{animation:rowBreath 2.4s ease-in-out infinite}
+@keyframes rowBreath{
+  0%,100%{background:rgba(79,216,200,.05)}
+  50%{background:rgba(79,216,200,.13)}
+}
+.s-idx{
+  font-family:var(--font-mono);font-size:13px;color:var(--dim);
+  text-align:center;
+}
+.s-eq{display:none;align-items:flex-end;gap:3px;height:16px;justify-content:center}
+.s-eq i{width:3px;height:5px;border-radius:2px;background:var(--biolum);box-shadow:0 0 6px rgba(79,216,200,.8)}
+.song.current .s-idx{display:none}
+.song.current .s-eq{display:inline-flex}
+body.playing .song.current .s-eq i{animation:eqB .9s ease-in-out infinite}
+body.playing .song.current .s-eq i:nth-child(2){animation-delay:.18s}
+body.playing .song.current .s-eq i:nth-child(3){animation-delay:.36s}
+@keyframes eqB{0%,100%{height:5px}50%{height:15px}}
+.s-main{min-width:0}
+.s-name{
+  display:block;font-size:15.5px;font-weight:600;color:#EFFAF8;
+  letter-spacing:.04em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.song.current .s-name{
+  text-shadow:0 0 calc(6px + var(--beat)*16px) rgba(79,216,200,.75);
+}
+.s-artist{
+  display:block;font-size:12.5px;color:var(--dim);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.s-msub{display:none}
+.s-bpm{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;
+  color:var(--gold);text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.song.current .s-bpm{
+  text-shadow:0 0 calc(4px + var(--beat)*12px) rgba(201,168,112,.9);
+}
+.s-layer{
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.06em;
+  color:var(--dim);
+  font-variant-numeric:tabular-nums;
+}
+.s-layer b{
+  font-weight:normal;color:var(--lc);
+  border:1px solid color-mix(in srgb,var(--lc) 45%,transparent);
+  border-radius:999px;padding:1px 8px;margin-right:8px;
+  font-size:10.5px;letter-spacing:.12em;
+}
+.s-dur{
+  font-family:var(--font-mono);font-size:12.5px;color:var(--dim);
+  text-align:right;font-variant-numeric:tabular-nums;
+}
+.s-fav{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border-radius:50%;
+  color:rgba(157,188,196,.55);
+  transition:color .25s ease,transform .2s ease;
+}
+.s-fav:hover{color:var(--jelly);transform:scale(1.15)}
+.s-fav.faved{color:var(--jelly)}
+.s-fav.faved svg path{fill:currentColor}
+.s-fav svg{width:16px;height:16px}
+.s-fav svg path{fill:none;stroke:currentColor;stroke-width:1.8}
+
+/* ---------- 收听须知 ---------- */
+.rule-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.rule{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:26px 24px;
+}
+.rule h3{
+  font-family:var(--font-disp);font-size:17px;letter-spacing:.16em;
+  color:var(--biolum);margin-bottom:12px;
+}
+.rule h3 b{
+  font-family:var(--font-mono);font-weight:normal;font-size:11px;
+  color:var(--gold);display:block;letter-spacing:.3em;margin-bottom:6px;
+}
+.rule p{font-size:13.5px;color:var(--dim);line-height:1.95}
+.stats{
+  display:flex;flex-wrap:wrap;gap:12px;margin-top:26px;justify-content:center;
+}
+.stats span{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;
+  color:var(--dim);
+  border:1px dashed rgba(157,188,196,.35);
+  padding:8px 18px;border-radius:999px;
+}
+.stats b{color:var(--gold);font-weight:normal}
+
+/* ---------- 页脚 ---------- */
+.foot{
+  position:relative;z-index:10;
+  margin-top:70px;
+  border-top:1px solid rgba(79,216,200,.12);
+  background:rgba(1,6,11,.55);
+  text-align:center;
+  padding:52px 24px 44px;
+}
+.foot-brand{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  font-family:var(--font-disp);font-size:19px;letter-spacing:.2em;color:#EFFAF8;
+}
+.foot-brand svg{color:var(--biolum)}
+.foot-brand .brand-en{
+  font-family:var(--font-mono);font-size:10px;color:var(--dim);
+  letter-spacing:.3em;padding-top:4px;
+}
+.foot-line{color:var(--dim);font-size:14px;margin:14px 0 22px;letter-spacing:.1em}
+.foot-nav{display:flex;justify-content:center;gap:28px;margin-bottom:24px;flex-wrap:wrap}
+.foot-nav a{
+  font-size:13px;letter-spacing:.12em;color:var(--dim);
+  transition:color .25s;
+}
+.foot-nav a:hover{color:var(--biolum)}
+.foot-note{
+  font-size:12px;color:rgba(157,188,196,.65);line-height:2;
+  max-width:640px;margin:0 auto;
+}
+
+/* ---------- 深度计（右侧刻度尺） ---------- */
+.gauge{
+  position:fixed;right:22px;top:50%;transform:translateY(-50%);
+  height:72vh;width:70px;z-index:40;
+  pointer-events:none;
+  font-family:var(--font-mono);
+}
+.g-band{
+  position:absolute;left:34px;right:6px;
+  border-left:1px solid rgba(157,188,196,.22);
+}
+.g-band::after{
+  content:attr(data-n);
+  position:absolute;left:-14px;top:50%;
+  transform:translate(-50%,-50%) ;
+  writing-mode:vertical-rl;
+  font-size:9px;letter-spacing:.32em;
+  color:rgba(157,188,196,.5);
+}
+.g-tw{top:0;height:31.6%;background:linear-gradient(180deg,rgba(79,216,200,.1),rgba(79,216,200,.02))}
+.g-md{top:31.6%;height:31.6%;background:linear-gradient(180deg,rgba(111,183,217,.08),rgba(111,183,217,.02))}
+.g-ab{top:63.2%;height:36.8%;background:linear-gradient(180deg,rgba(232,138,154,.07),rgba(232,138,154,.01))}
+.g-tick{
+  position:absolute;left:34px;width:9px;height:1px;
+  background:rgba(157,188,196,.35);
+}
+.g-tick.major{width:15px;background:rgba(201,168,112,.6)}
+.g-lab{
+  position:absolute;left:0;transform:translateY(-50%);
+  font-size:9px;font-weight:normal;color:var(--gold);
+  opacity:.85;letter-spacing:.06em;
+}
+.g-cap{
+  position:absolute;left:22px;font-size:9px;color:var(--gold);
+  letter-spacing:.1em;opacity:.9;
+}
+.g-cap.g-top{top:-20px}
+.g-cap.g-bot{bottom:-20px}
+.g-needle{
+  position:absolute;left:14px;right:0;height:0;
+  border-top:1px solid rgba(233,251,248,.85);
+  box-shadow:0 0 8px rgba(79,216,200,.6);
+  transition:top .12s linear;
+}
+.g-needle::after{
+  content:'';position:absolute;right:-2px;top:-3.5px;
+  width:7px;height:7px;border-radius:50%;
+  background:var(--gold);
+  box-shadow:0 0 10px rgba(201,168,112,.95);
+}
+.g-read{
+  position:absolute;right:14px;top:-19px;
+  font-size:11px;letter-spacing:.08em;
+  color:var(--gold);
+  text-shadow:0 0 10px rgba(201,168,112,.6);
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+
+/* ---------- 底部播放条 ---------- */
+.player{
+  position:fixed;left:0;right:0;bottom:0;z-index:100;
+  display:grid;
+  grid-template-columns:auto minmax(0,1.1fr) minmax(0,2fr) auto;
+  grid-template-areas:"left info center right";
+  gap:22px;align-items:center;
+  padding:14px 26px;
+  background:rgba(2,10,17,.82);
+  backdrop-filter:blur(18px) saturate(140%);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);
+  border-top:1px solid rgba(79,216,200,.22);
+}
+.p-left{display:flex;align-items:center;gap:12px;grid-area:left}
+.pctl{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:40px;height:40px;border-radius:50%;
+  color:#DFF6F2;
+  border:1px solid rgba(157,188,196,.35);
+  transition:border-color .25s,background .25s,color .25s;
+}
+.pctl svg{width:17px;height:17px;fill:currentColor}
+.pctl:hover{border-color:var(--biolum);background:rgba(79,216,200,.12)}
+.pctl.big{
+  width:54px;height:54px;
+  background:linear-gradient(180deg,#43D2C0,#1E8A7D);
+  border:none;color:#03231F;
+  /* 播放键脉冲：随 --beat 缩放 + 光环（暂停时 --beat=0 → 静止） */
+  transform:scale(calc(1 + var(--beat)*.055));
+  box-shadow:0 0 calc(10px + var(--beat)*36px) rgba(79,216,200,calc(.35 + var(--beat)*.45));
+}
+.pctl.big svg{width:21px;height:21px}
+.p-info{min-width:0;grid-area:info}
+.p-title{
+  display:flex;align-items:center;gap:10px;min-width:0;
+}
+.p-title #npTitle{
+  font-size:15.5px;font-weight:600;color:#F0FAF9;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.p-layerchip{
+  flex:none;font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;
+  color:var(--lc,#9DBCC4);
+  border:1px solid color-mix(in srgb,var(--lc,#9DBCC4) 45%,transparent);
+  border-radius:999px;padding:1px 9px;
+}
+.p-sub{
+  display:flex;gap:12px;align-items:baseline;
+  font-size:12px;color:var(--dim);
+  white-space:nowrap;overflow:hidden;
+}
+.p-bpm{font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:.1em}
+.p-center{grid-area:center;min-width:0}
+.p-times{
+  display:flex;justify-content:space-between;align-items:baseline;
+  font-family:var(--font-mono);font-size:11px;color:var(--dim);
+  margin-bottom:2px;font-variant-numeric:tabular-nums;
+}
+.p-depth{color:var(--gold);letter-spacing:.08em}
+.p-track{
+  position:relative;height:26px;cursor:pointer;touch-action:none;
+}
+.p-rail{
+  position:absolute;left:0;right:0;top:11px;height:4px;border-radius:2px;
+  background:rgba(157,188,196,.22);
+}
+.p-zones{ /* 进度轨 = 迷你深度塔：三段水层色 */
+  position:absolute;left:0;right:0;top:11px;height:4px;border-radius:2px;
+  background:linear-gradient(90deg,
+    rgba(79,216,200,.3) 0 31.6%,
+    rgba(111,183,217,.3) 31.6% 63.2%,
+    rgba(232,138,154,.3) 63.2% 100%);
+  mix-blend-mode:screen;
+}
+.p-fill{
+  position:absolute;left:0;top:11px;height:4px;border-radius:2px;width:0;
+  background:linear-gradient(90deg,#4FD8C8,#6FB7D9 60%,#E88A9A);
+  box-shadow:0 0 8px rgba(79,216,200,.55);
+}
+.p-knob{
+  position:absolute;left:0;top:13px;width:11px;height:11px;border-radius:50%;
+  background:#EAFCF9;transform:translate(-50%,-50%);
+  box-shadow:0 0 10px rgba(79,216,200,.9);
+}
+.p-right{display:flex;align-items:center;gap:12px;grid-area:right}
+.chip{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;
+  color:var(--dim);
+  border:1px solid rgba(157,188,196,.35);
+  padding:7px 13px;border-radius:999px;
+  transition:all .25s;white-space:nowrap;
+}
+.chip:hover{color:#EAFCF9;border-color:var(--biolum)}
+#vol{width:92px;accent-color:#4FD8C8;cursor:pointer}
+
+/* ---------- 轻提示 ---------- */
+#toast{
+  position:fixed;left:50%;bottom:118px;transform:translate(-50%,14px);
+  z-index:120;
+  font-size:13px;letter-spacing:.1em;color:#E9FBF8;
+  background:rgba(4,22,32,.92);
+  border:1px solid rgba(79,216,200,.4);
+  border-radius:999px;
+  padding:10px 22px;
+  opacity:0;pointer-events:none;
+  transition:opacity .3s ease,transform .3s ease;
+}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1199px){
+  .gauge{right:10px;transform:translateY(-50%) scale(.88)}
+  .layer-grid{gap:16px}
+  .songs .s-layer{display:none}
+  .song{grid-template-columns:2.6rem minmax(0,1fr) 6.4rem 4.2rem 2.4rem}
+}
+@media (max-width:767px){
+  body{padding-bottom:196px}
+  .topbar{padding:10px 16px}
+  .topnav{display:none}
+  .live{display:none}
+  .hero{min-height:88vh;padding-top:96px}
+  .scroll-hint{font-size:10px;letter-spacing:.12em}
+  .sec{padding:64px 18px 28px}
+  .layer-grid{grid-template-columns:1fr}
+  .lc-desc{min-height:0}
+  .rule-grid{grid-template-columns:1fr}
+  .jelly{width:190px;height:241px;opacity:0}
+  body.has-jelly .jelly{opacity:.55}
+  .gauge{display:none}
+  .song{
+    grid-template-columns:1.9rem minmax(0,1fr) 3.6rem 2rem;
+    gap:10px;padding:12px 10px;
+  }
+  .s-bpm,.s-layer{display:none}
+  .s-msub{
+    display:block;font-family:var(--font-mono);font-size:10.5px;
+    color:var(--gold);letter-spacing:.06em;margin-top:2px;
+  }
+  .player{
+    grid-template-columns:auto 1fr;
+    grid-template-areas:
+      "info info"
+      "center center"
+      "left right";
+    gap:8px 14px;padding:10px 16px 12px;
+  }
+  .p-info{min-width:0}
+  .p-sub .p-bpm{display:none}
+  .p-left{justify-self:start}
+  .p-right{justify-self:end}
+  #vol{display:none}
+  #toast{bottom:212px;width:max-content;max-width:88vw}
+}
+@media (max-width:374px){
+  .cta{padding:14px 30px;font-size:15px}
+  .pctl.big{width:48px;height:48px}
+  .chip{padding:6px 9px}
+}
+
+/* ---------- 降级：prefers-reduced-motion → 静态深海 ---------- */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.15s !important;
+  }
+  .rays{display:none}
+  .scroll-hint{animation:none}
+}
+body.reduced .rays{display:none}
+</style>
+</head>
+<body>
+<noscript>
+  <div style="position:fixed;inset:auto 0 0 0;z-index:999;background:#04161F;color:#E8F4F6;padding:14px;text-align:center;font-size:13px;">
+    深海电台需要启用 JavaScript 才能合成声音与海流——当前浏览器已将其禁用。
+  </div>
+</noscript>
+
+<!-- 环境层 -->
+<div class="rays" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<canvas id="seaCanvas" aria-hidden="true"></canvas>
+
+<!-- 发光水母：正在播放曲目的唯一语义载体（不承担任何数字） -->
+<svg class="jelly" id="jelly" viewBox="0 0 300 380" aria-hidden="true" focusable="false">
+  <defs>
+    <radialGradient id="bellGrad" cx="50%" cy="36%" r="62%">
+      <stop id="gs1" offset="0%" stop-color="#D9FFF9" stop-opacity=".95"></stop>
+      <stop id="gs2" offset="52%" stop-color="#4FD8C8" stop-opacity=".55"></stop>
+      <stop id="gs3" offset="100%" stop-color="#4FD8C8" stop-opacity=".08"></stop>
+    </radialGradient>
+    <filter id="jellyGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5" result="b1"></feGaussianBlur>
+      <feMerge>
+        <feMergeNode in="b1"></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+  </defs>
+  <g id="jellyScale">
+    <ellipse id="jHalo" cx="150" cy="118" rx="130" ry="114" fill="rgba(79,216,200,.09)"></ellipse>
+    <g id="tentacles" fill="none" stroke-linecap="round"></g>
+    <g id="armsG" fill="none" stroke-linecap="round"></g>
+    <path id="bellPath" fill="url(#bellGrad)" filter="url(#jellyGlow)"></path>
+    <path id="bellRim" fill="none" stroke="rgba(233,251,248,.5)" stroke-width="1.1"></path>
+    <ellipse id="glowCyan" fill="rgba(79,216,200,.5)"></ellipse>
+    <ellipse id="glowPeach" fill="rgba(232,138,154,.4)"></ellipse>
+  </g>
+</svg>
+
+<div id="pulseVeil" aria-hidden="true"></div>
+<div id="vignette" aria-hidden="true"></div>
+<div id="surface" aria-hidden="true"></div>
+
+<!-- 顶栏 -->
+<header class="topbar">
+  <a class="brand" href="#top">
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
+      <path d="M12 4a8 8 0 0 1 8 8M12 7.5A4.5 4.5 0 0 1 16.5 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+    </svg>
+    深海电台<span class="brand-en">DEEP SEA RADIO</span>
+  </a>
+  <nav class="topnav">
+    <a href="#layers">深度歌单</a>
+    <a href="#library">曲目库</a>
+    <a href="#about">收听须知</a>
+  </nav>
+  <span class="live" id="liveChip"><i></i>LIVE · 深海环流</span>
+</header>
+
+<main>
+  <!-- 海面 Hero -->
+  <section class="hero" id="top">
+    <div class="hero-inner">
+      <p class="ident"><span class="dot"></span>DEEP SEA RADIO · FM 3800 · 深海环流广播</p>
+      <h1>深海电台</h1>
+      <p class="h1-en">SINK YOUR EARS · 3800 METERS DOWN</p>
+      <p class="slogan">把耳朵沉进海沟，让心跳跟上 BPM。<br>十五首深海曲目由振荡器当场合成，自透光层一路排到三千八百米——你按下的每一次播放，都是全球首播。</p>
+      <div class="hero-cta">
+        <button class="cta" id="btnDive">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <circle cx="12" cy="10" r="2.6" fill="currentColor"></circle>
+            <path d="M12 3.5a6.5 6.5 0 0 1 6.5 6.5M12 6.8a3.2 3.2 0 0 1 3.2 3.2M5 17.5h14M8.5 21h7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+          </svg>
+          下潜收听
+        </button>
+        <a class="ghost" href="#layers">不下潜，先看看海</a>
+      </div>
+      <p class="now-line" id="nowLine">本台待机中 · 所有声音将在你点击的瞬间当场合成</p>
+    </div>
+    <p class="scroll-hint">↓ 向下滚动即开始下潜 · 页面底端 ≈ 3800 m</p>
+  </section>
+
+  <!-- 深度歌单 -->
+  <section class="sec" id="layers">
+    <header class="sec-head">
+      <em>PLAYLISTS · 按水层下潜</em>
+      <h2>深度歌单</h2>
+      <p>按海水光照分层排布：越深越慢，越慢越沉。选择一层，电台自动为你下潜。</p>
+    </header>
+    <div class="layer-grid">
+      <article class="layer-card" data-layer="twilight" style="--lc:#4FD8C8;--lcglow:rgba(79,216,200,.18)">
+        <p class="lc-range">0 – 1200 m</p>
+        <h3 class="lc-name">暮光层</h3>
+        <p class="lc-desc">残余阳光与浮游萤火共存的地带。节拍仍然清晰，像远处洋流给你的每一次推背——适合下潜初期校准呼吸。</p>
+        <div class="lc-meta"><span>5 首</span><span>84 – 96 BPM</span><span>灯笼鱼出没</span></div>
+        <button class="lc-btn" data-play-layer="twilight">下潜至本层</button>
+      </article>
+      <article class="layer-card" data-layer="midnight" style="--lc:#6FB7D9;--lcglow:rgba(111,183,217,.18)">
+        <p class="lc-range">1200 – 2400 m</p>
+        <h3 class="lc-name">午夜层</h3>
+        <p class="lc-desc">阳光到此为止，低频接管一切。鲸落与热泉在黑暗里交换体温，鼓点变成心跳的回声。</p>
+        <div class="lc-meta"><span>4 首</span><span>64 – 76 BPM</span><span>鎏金琵琶鱼出没</span></div>
+        <button class="lc-btn" data-play-layer="midnight">下潜至本层</button>
+      </article>
+      <article class="layer-card" data-layer="abyss" style="--lc:#E88A9A;--lcglow:rgba(232,138,154,.16)">
+        <p class="lc-range">2400 – 3800 m</p>
+        <h3 class="lc-name">深渊层</h3>
+        <p class="lc-desc">三百八十个大气压之下，BPM 低于你的静息心率。这里的声音不是音乐，是海水本身在想事情。</p>
+        <div class="lc-meta"><span>6 首</span><span>40 – 60 BPM</span><span>狮子鱼 · 海雪</span></div>
+        <button class="lc-btn" data-play-layer="abyss">下潜至本层</button>
+      </article>
+    </div>
+  </section>
+
+  <!-- 曲目库 -->
+  <section class="sec" id="library">
+    <header class="sec-head">
+      <em>TRACKS · 每一轨都有它自己的深度</em>
+      <h2>曲目库</h2>
+      <p>点击任意一行，电台立刻为你单独合成一版；收藏的小圆心会把歌沉进你的私人海沟。</p>
+    </header>
+    <div class="tabs" id="tabs" role="tablist" aria-label="按深度层筛选"></div>
+    <ol class="songs" id="songList"></ol>
+  </section>
+
+  <!-- 收听须知 -->
+  <section class="sec" id="about">
+    <header class="sec-head">
+      <em>NOTICE · 下潜之前请阅读</em>
+      <h2>收听须知</h2>
+    </header>
+    <div class="rule-grid">
+      <div class="rule">
+        <h3><b>RULE 01</b>零采样宣言</h3>
+        <p>全部鼓点、水滴与低频环流均由振荡器在你的浏览器里实时合成——本台不存储任何音频文件，每次收听都是即兴的、不可复制的全球首播。</p>
+      </div>
+      <div class="rule">
+        <h3><b>RULE 02</b>低频提示</h3>
+        <p>部分曲目含有 36–55Hz 的次声贝斯与长延音 drone。建议佩戴耳机，并将音量调整到「感觉胸腔被海水轻轻按住」的水位即可。</p>
+      </div>
+      <div class="rule">
+        <h3><b>RULE 03</b>静泊机制</h3>
+        <p>暂停或切走页签时，海雪停驻、水母悬停、声呐静默——深海从不打扰不在线的耳朵。回来时，环流会从你离开的那一米继续。</p>
+      </div>
+    </div>
+    <div class="stats">
+      <span>合成乐器 <b>5 件</b></span>
+      <span>采样文件 <b>0 个</b></span>
+      <span>常驻环流 <b>24 h</b></span>
+      <span>最深曲目 <b>3800 m</b></span>
+      <span>海雪浓度 <b>3 层</b></span>
+    </div>
+  </section>
+</main>
+
+<!-- 页脚 -->
+<footer class="foot">
+  <div class="foot-brand">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
+      <path d="M12 4a8 8 0 0 1 8 8M12 7.5A4.5 4.5 0 0 1 16.5 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+    </svg>
+    深海电台<span class="brand-en">DEEP SEA RADIO</span>
+  </div>
+  <p class="foot-line">把耳朵沉进海沟，让心跳跟上 BPM。</p>
+  <nav class="foot-nav">
+    <a href="#top">回到海面</a>
+    <a href="#layers">深度歌单</a>
+    <a href="#library">曲目库</a>
+    <a href="#about">收听须知</a>
+  </nav>
+  <p class="foot-note">本站为风格演示：全部歌名与艺人均属虚构，所有声音由 Web Audio 在你的浏览器内实时合成，不含任何外部音频与图片。<br>© 2026 深海环流唱片行 · FM 3800 · 无真实广播执照，只有真实海水。</p>
+</footer>
+
+<!-- 深度计 -->
+<aside class="gauge" id="gauge" aria-hidden="true">
+  <div class="g-band g-tw" data-n="暮光层"></div>
+  <div class="g-band g-md" data-n="午夜层"></div>
+  <div class="g-band g-ab" data-n="深渊层"></div>
+  <div id="gTicks"></div>
+  <div class="g-needle" id="gNeedle">
+    <span class="g-read" id="gDepth">0 m</span>
+  </div>
+  <span class="g-cap g-top">0 m · 海面</span>
+  <span class="g-cap g-bot">3800 m · 海沟</span>
+</aside>
+
+<!-- 底部播放条 -->
+<div class="player" id="player" role="region" aria-label="深海电台播放条">
+  <div class="p-left">
+    <button class="pctl" id="btnPrev" aria-label="上一首">
+      <svg viewBox="0 0 24 24"><path d="M6 6h2.2v12H6zM18.5 6l-9.5 6 9.5 6z"></path></svg>
+    </button>
+    <button class="pctl big" id="btnPlay" aria-label="播放">
+      <svg viewBox="0 0 24 24" id="icoPlay"><path d="M8.2 5.4l11 6.6-11 6.6z"></path></svg>
+      <svg viewBox="0 0 24 24" id="icoPause" style="display:none"><path d="M7 5h3.4v14H7zM13.6 5H17v14h-3.6z"></path></svg>
+    </button>
+    <button class="pctl" id="btnNext" aria-label="下一首">
+      <svg viewBox="0 0 24 24"><path d="M15.8 6H18v12h-2.2zM5.5 6l9.5 6-9.5 6z"></path></svg>
+    </button>
+  </div>
+  <div class="p-info">
+    <div class="p-title">
+      <span id="npTitle">—</span>
+      <span class="p-layerchip" id="npLayer">待机</span>
+    </div>
+    <div class="p-sub">
+      <span id="npArtist">选择一首歌，点亮这盆海水</span>
+      <span class="p-bpm" id="npBpm"></span>
+    </div>
+  </div>
+  <div class="p-center">
+    <div class="p-times">
+      <span id="tCur">00:00</span>
+      <span class="p-depth" id="npDepth">0 m</span>
+      <span id="tDur">00:00</span>
+    </div>
+    <div class="p-track" id="pTrack" aria-label="播放进度（即下潜深度）">
+      <div class="p-zones"></div>
+      <div class="p-rail"></div>
+      <div class="p-fill" id="pFill"></div>
+      <div class="p-knob" id="pKnob"></div>
+    </div>
+  </div>
+  <div class="p-right">
+    <button class="chip" id="btnMode" aria-label="切换循环模式">顺序下潜</button>
+    <button class="pctl" id="btnMute" aria-label="静音">
+      <svg viewBox="0 0 24 24" id="icoVol"><path d="M4 9.2v5.6h3.6L13 19V5L7.6 9.2H4z"></path><path d="M15.5 8.6a4.6 4.6 0 0 1 0 6.8M17.8 6.2a7.8 7.8 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+      <svg viewBox="0 0 24 24" id="icoMute" style="display:none"><path d="M4 9.2v5.6h3.6L13 19V5L7.6 9.2H4z"></path><path d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+    </button>
+    <input type="range" id="vol" min="0" max="100" value="70" aria-label="音量">
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   工具
+   ============================================================ */
+function $(s,r){return (r||document).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+function lerp(a,b,k){return a+(b-a)*k;}
+function rnd(a,b){return a+Math.random()*(b-a);}
+function pad2(n){return (n<10?'0':'')+n;}
+function fmt(s){s=Math.max(0,Math.floor(s||0));return pad2(Math.floor(s/60))+':'+pad2(s%60);}
+function debounce(fn,ms){var t=null;return function(){clearTimeout(t);var a=arguments,s=this;t=setTimeout(function(){fn.apply(s,a);},ms);};}
+function avgBins(a,i0,i1){var s=0,n=0,i;for(i=i0;i<i1&&i<a.length;i++){s+=a[i];n++;}return n?s/n:0;}
+var SVGNS='http://www.w3.org/2000/svg';
+var RM=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+/* ============================================================
+   数据：三个深度层 + 十五首曲目
+   ============================================================ */
+var LAYERS={
+  twilight:{
+    name:'暮光层',range:'0 – 1200 m',color:'#4FD8C8',rgb:[79,216,200],root:55,
+    core:'#D9FFF9',mid:'rgba(79,216,200,.62)',rim:'rgba(79,216,200,.10)',
+    drop:.5,bass:2,drone:.05,shimmer:true
+  },
+  midnight:{
+    name:'午夜层',range:'1200 – 2400 m',color:'#6FB7D9',rgb:[111,183,217],root:43.65,
+    core:'#E3F6FF',mid:'rgba(111,183,217,.6)',rim:'rgba(111,183,217,.10)',
+    drop:.3,bass:1.2,drone:.075,shimmer:false
+  },
+  abyss:{
+    name:'深渊层',range:'2400 – 3800 m',color:'#E88A9A',rgb:[232,138,154],root:36.71,
+    core:'#FFE9EF',mid:'rgba(232,138,154,.62)',rim:'rgba(232,138,154,.12)',
+    drop:.12,bass:.6,drone:.1,shimmer:false
+  }
+};
+var TRACKS=[
+  {t:'海面下第一缕蓝',a:'盐粒 SaltGrain',d:208,bpm:84,m:90,  l:'twilight',s:0},
+  {t:'暮光渗透',      a:'硅藻乐团',       d:227,bpm:88,m:220, l:'twilight',s:-2},
+  {t:'浮游生物夜航',  a:'蓝藻电台',       d:252,bpm:92,m:380, l:'twilight',s:3},
+  {t:'洋流邮差',      a:'潮汐研究所',     d:302,bpm:96,m:640, l:'twilight',s:-4},
+  {t:'磷虾星群',      a:'微光合唱团',     d:221,bpm:90,m:830, l:'twilight',s:2},
+  {t:'午夜层巡航',    a:'深潜者 DeepDiver',d:271,bpm:72,m:1280,l:'midnight',s:0},
+  {t:'鲸落进行曲',    a:'鲸骨爵士',       d:365,bpm:64,m:1620,l:'midnight',s:2},
+  {t:'无人舷窗',      a:'静水 QuietWater',d:285,bpm:68,m:1980,l:'midnight',s:-3},
+  {t:'热泉口的华尔兹',a:'黑烟囱三重奏',   d:235,bpm:76,m:2300,l:'midnight',s:1},
+  {t:'深渊电梯',      a:'海沟管理局',     d:318,bpm:56,m:2600,l:'abyss',s:0},
+  {t:'发光乌贼的情书',a:'生物光实验室',   d:248,bpm:60,m:2950,l:'abyss',s:-1},
+  {t:'马里亚纳邮箱',  a:'空气潜航员',     d:298,bpm:52,m:3300,l:'abyss',s:2},
+  {t:'一万米之前请安静',a:'深海麦克风',   d:384,bpm:48,m:3560,l:'abyss',s:-2},
+  {t:'海雪安魂曲',    a:'白色降落',       d:432,bpm:44,m:3720,l:'abyss',s:1},
+  {t:'3800 米的晚安', a:'电台台长',       d:216,bpm:40,m:3800,l:'abyss',s:3}
+];
+var MODES=['顺序下潜','单曲环流','随机巡游'];
+var MAX_DEPTH=3800;
+var HEART='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.6-9.3-8.6C.9 8 2.6 4.5 6 4.5c2 0 3.4 1.1 4.2 2.4l1.8 1.7 1.8-1.7c.8-1.3 2.2-2.4 4.2-2.4 3.4 0 5.1 3.5 3.3 6.9C19 15.4 12 20 12 20z"></path></svg>';
+
+/* ============================================================
+   状态
+   ============================================================ */
+var S={
+  current:0, playing:false, started:false,
+  progress:0, lastCtxT:0,
+  mode:0, volume:0.7, muted:false,
+  filter:'all',
+  beat:0, bell:0, bass:0, mid:0,
+  favs:{}, depthShown:-1
+};
+function track(){return TRACKS[S.current];}
+function rootHz(){return LAYERS[track().l].root*Math.pow(2,track().s/12);}
+
+/* ============================================================
+   Web Audio 引擎：程序化合成（drone / 低频心跳 / 贝斯 / 水滴 / 微光）
+   点击手势触发创建；AnalyserNode 供节拍检测
+   ============================================================ */
+var audio={
+  ok:false,ctx:null,bus:null,master:null,comp:null,analyser:null,freq:null,
+  echoIn:null,dly:null,
+  droneO1:null,droneO2:null,droneFlt:null,droneGain:null,
+  bpm:88,root:55,cfg:LAYERS.twilight,
+  step:0,nextTime:0,timer:null,queue:[],
+  init:function(){
+    if(this.ok){return true;}
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC){return false;}
+      var c=this.ctx=new AC();
+      this.bus=c.createGain();
+      this.master=c.createGain();
+      this.master.gain.value=S.muted?0:S.volume*0.6;
+      this.comp=c.createDynamicsCompressor();
+      this.comp.threshold.value=-20;
+      this.comp.knee.value=18;
+      this.comp.ratio.value=5;
+      this.comp.attack.value=0.01;
+      this.comp.release.value=0.3;
+      this.analyser=c.createAnalyser();
+      this.analyser.fftSize=512;
+      this.analyser.smoothingTimeConstant=0.72;
+      this.freq=new Uint8Array(this.analyser.frequencyBinCount);
+      this.bus.connect(this.master);
+      this.master.connect(this.comp);
+      this.comp.connect(this.analyser);
+      this.analyser.connect(c.destination);
+      /* 水下回声：delay 反馈链（声呐 ping 与水滴的空间感） */
+      this.echoIn=c.createGain();this.echoIn.gain.value=0.9;
+      this.dly=c.createDelay(1.5);this.dly.delayTime.value=0.42;
+      var fb=c.createGain();fb.gain.value=0.34;
+      var lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1600;
+      var wet=c.createGain();wet.gain.value=0.26;
+      this.echoIn.connect(this.dly);
+      this.dly.connect(fb);fb.connect(lp);lp.connect(this.dly);
+      this.dly.connect(wet);wet.connect(this.master);
+      this.buildDrone();
+      this.ok=true;
+      return true;
+    }catch(e){
+      /* WebAudio 不可用：静默降级为 BPM 模拟节拍 + 走秒进度 */
+      this.ok=false;
+      return false;
+    }
+  },
+  buildDrone:function(){
+    var c=this.ctx;
+    this.droneFlt=c.createBiquadFilter();
+    this.droneFlt.type='lowpass';this.droneFlt.frequency.value=300;this.droneFlt.Q.value=0.8;
+    this.droneGain=c.createGain();this.droneGain.gain.value=0.0001;
+    this.droneO1=c.createOscillator();this.droneO1.type='sine';this.droneO1.frequency.value=this.root;
+    this.droneO2=c.createOscillator();this.droneO2.type='triangle';this.droneO2.frequency.value=this.root*1.4983;
+    var g1=c.createGain();g1.gain.value=0.9;
+    var g2=c.createGain();g2.gain.value=0.45;
+    var lfo=c.createOscillator();lfo.type='sine';lfo.frequency.value=0.06;
+    var lfoG=c.createGain();lfoG.gain.value=70;
+    lfo.connect(lfoG);lfoG.connect(this.droneFlt.frequency);
+    this.droneO1.connect(g1);g1.connect(this.droneFlt);
+    this.droneO2.connect(g2);g2.connect(this.droneFlt);
+    this.droneFlt.connect(this.droneGain);
+    this.droneGain.connect(this.bus);
+    this.droneO1.start();this.droneO2.start();lfo.start();
+  },
+  applyTrack:function(tr){
+    this.bpm=tr.bpm;
+    this.cfg=LAYERS[tr.l];
+    this.root=this.cfg.root*Math.pow(2,tr.s/12);
+    this.step=0;
+    this.queue.length=0;
+    if(!this.ok){return;}
+    var t=this.ctx.currentTime;
+    if(this.dly){this.dly.delayTime.setTargetAtTime((60/tr.bpm)*0.75,t,0.6);}
+    if(this.droneO1){
+      this.droneO1.frequency.setTargetAtTime(this.root,t,0.9);
+      this.droneO2.frequency.setTargetAtTime(this.root*1.4983,t,0.9);
+    }
+    if(this.droneGain){this.droneGain.gain.setTargetAtTime(this.cfg.drone,t,1.4);}
+  },
+  play:function(){
+    if(!this.ok){return;}
+    var c=this.ctx;
+    if(c.state==='suspended'){c.resume();}
+    this.nextTime=Math.max(this.nextTime,c.currentTime+0.08);
+    if(!this.timer){this.timer=setInterval(this.tickFn.bind(this),30);}
+  },
+  pause:function(){
+    if(this.timer){clearInterval(this.timer);this.timer=null;}
+    if(this.ok&&this.ctx&&this.ctx.state==='running'){this.ctx.suspend();}
+  },
+  tickFn:function(){
+    var c=this.ctx;
+    if(!c||!S.playing){return;}
+    var spb=60/this.bpm;
+    while(this.nextTime<c.currentTime+0.15){
+      this.stepFn(this.step,this.nextTime,spb);
+      this.step++;
+      this.nextTime+=spb;
+    }
+  },
+  stepFn:function(step,t,spb){
+    var beat=step%4,bar=Math.floor(step/4),cfg=this.cfg;
+    /* 低频心跳：每一拍一次，小节首拍更重 —— 节拍引擎的声源 */
+    this.sub(t,beat===0?0.42:0.26);
+    /* 贝斯：按小调五声排布，越深越稀 */
+    if(cfg.bass>0&&(beat===0||beat===2||(cfg.bass>1&&beat===3))){
+      var sc=[0,3,5,7,10];
+      var n=sc[(bar*2+beat)%sc.length];
+      this.bassN(t,this.root*Math.pow(2,n/12)*2,spb*0.9,0.13*cfg.bass);
+    }
+    /* 氛围垫：每两小节一次长和弦 */
+    if(step%8===0){this.pad(t,bar);}
+    /* 水滴：各层概率不同 */
+    if(Math.random()<cfg.drop){this.drop(t+spb*0.5);}
+    if(cfg.shimmer&&Math.random()<0.18){this.shim(t+spb*0.25);}
+    /* 视觉节拍入队（rAF 里按 audioContext 时间精确触发） */
+    this.queue.push({t:t,strong:beat===0});
+    if(this.queue.length>64){this.queue.shift();}
+  },
+  sub:function(t,amp){
+    var c=this.ctx,o=c.createOscillator(),g=c.createGain();
+    o.type='sine';
+    o.frequency.setValueAtTime(Math.max(26,this.root),t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(24,this.root*0.84),t+0.55);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(amp,t+0.035);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.95);
+    o.connect(g);g.connect(this.bus);
+    o.start(t);o.stop(t+1.05);
+  },
+  bassN:function(t,f,dur,amp){
+    var c=this.ctx,o=c.createOscillator(),flt=c.createBiquadFilter(),g=c.createGain();
+    o.type='triangle';o.frequency.value=f;
+    flt.type='lowpass';flt.frequency.value=300;flt.Q.value=1.1;
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(amp,t+0.04);
+    g.gain.setValueAtTime(amp,t+dur*0.55);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(flt);flt.connect(g);g.connect(this.bus);
+    o.start(t);o.stop(t+dur+0.1);
+  },
+  pad:function(t,bar){
+    var c=this.ctx,f0=this.root*4;
+    var ratios=(bar%2===0)?[1,1.4983,2]:[1,1.3348,1.7818];
+    var flt=c.createBiquadFilter();flt.type='lowpass';flt.frequency.value=820;
+    flt.connect(this.bus);
+    for(var i=0;i<ratios.length;i++){
+      var o=c.createOscillator(),g=c.createGain();
+      o.type='triangle';
+      o.frequency.value=f0*ratios[i];
+      o.detune.value=rnd(-5,5);
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.04,t+1.8);
+      g.gain.setValueAtTime(0.04,t+3.4);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+6.5);
+      o.connect(g);g.connect(flt);
+      o.start(t);o.stop(t+6.7);
+    }
+  },
+  drop:function(t){
+    var c=this.ctx,o=c.createOscillator(),g=c.createGain();
+    var f0=rnd(900,2100);
+    o.type='sine';
+    o.frequency.setValueAtTime(f0,t);
+    o.frequency.exponentialRampToValueAtTime(f0*rnd(0.22,0.34),t+0.16);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(rnd(0.12,0.2),t+0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.38);
+    o.connect(g);g.connect(this.bus);g.connect(this.echoIn);
+    o.start(t);o.stop(t+0.45);
+  },
+  shim:function(t){
+    var c=this.ctx,o=c.createOscillator(),g=c.createGain();
+    o.type='sine';o.frequency.value=rnd(1600,2600);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.035,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.9);
+    o.connect(g);g.connect(this.bus);g.connect(this.echoIn);
+    o.start(t);o.stop(t+1);
+  },
+  ping:function(t){
+    if(!this.ok){return;}
+    var c=this.ctx,o=c.createOscillator(),g=c.createGain();
+    o.type='sine';
+    o.frequency.setValueAtTime(640,t);
+    o.frequency.exponentialRampToValueAtTime(170,t+0.5);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.2,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.8);
+    o.connect(g);g.connect(this.bus);g.connect(this.echoIn);
+    o.start(t);o.stop(t+0.9);
+  },
+  setVolume:function(){
+    if(this.ok&&this.master){
+      this.master.gain.setTargetAtTime(S.muted?0:S.volume*0.6,this.ctx.currentTime,0.05);
+    }
+  }
+};
+
+/* ============================================================
+   Canvas：海雪（三层视差·缓慢上浮） + 声呐波纹 + 气泡
+   ============================================================ */
+var cv=$('#seaCanvas'),cx=cv.getContext('2d');
+var W=window.innerWidth,H=window.innerHeight,snow=[],ripples=[],bubbles=[],lastSy=window.scrollY;
+var btnPlay=$('#btnPlay');
+
+function sizeCanvas(){
+  var dpr=Math.min(window.devicePixelRatio||1,1.5); /* DPR 钳制 */
+  W=window.innerWidth;H=window.innerHeight;
+  cv.width=Math.round(W*dpr);
+  cv.height=Math.round(H*dpr);
+  cv.style.width=W+'px';
+  cv.style.height=H+'px';
+  cx.setTransform(dpr,0,0,dpr,0,0);
+  makeSnow();
+}
+function makeSnow(){
+  snow.length=0;
+  var area=W*H;
+  var cap=(W<768)?80:220; /* 移动端海雪 80 粒封顶 */
+  var defs=[
+    {f:0.14,s0:0.6,s1:1.2,a:0.26,v0:3, v1:7, n:area/26000},
+    {f:0.34,s0:1.1,s1:2.0,a:0.4, v0:7, v1:13,n:area/28000},
+    {f:0.62,s0:1.8,s1:3.2,a:0.55,v0:13,v1:22,n:area/36000}
+  ];
+  for(var d=0;d<defs.length;d++){
+    var def=defs[d];
+    var n=Math.min(Math.round(def.n),60);
+    for(var i=0;i<n&&snow.length<cap;i++){
+      snow.push({
+        x:Math.random()*W,
+        y:Math.random()*H,
+        r:rnd(def.s0,def.s1),
+        a:def.a*rnd(0.7,1),
+        vy:rnd(def.v0,def.v1),
+        f:def.f,
+        ph:Math.random()*6.28
+      });
+    }
+  }
+}
+function spawnRipple(strong){
+  if(RM||!btnPlay){return;}
+  var r=btnPlay.getBoundingClientRect();
+  ripples.push({
+    x:r.left+r.width/2,
+    y:r.top+r.height/2,
+    r:r.width*0.5,
+    max:r.width*(strong?3.4:2.4),
+    a:strong?0.62:0.42
+  });
+  if(ripples.length>28){ripples.shift();}
+}
+function burstBubbles(n){
+  if(RM){return;}
+  var ox=btnPlay?btnPlay.getBoundingClientRect().left+rnd(-160,160):W*rnd(0.3,0.7);
+  for(var i=0;i<n;i++){
+    bubbles.push({
+      x:clamp(ox+rnd(-70,70),10,W-10),
+      y:H-rnd(0,40),
+      r:rnd(1.5,4.5),
+      vy:rnd(80,170),
+      a:rnd(0.35,0.7),
+      life:0
+    });
+  }
+  if(bubbles.length>90){bubbles.splice(0,bubbles.length-90);}
+}
+function drawSea(dt,t){
+  cx.clearRect(0,0,W,H);
+  var sy=window.scrollY||0;
+  var sd=sy-lastSy; /* 滚动即下潜：海雪相对上浮加速 */
+  lastSy=sy;
+  var i,f;
+  /* 海雪（三层视差） */
+  for(i=0;i<snow.length;i++){
+    f=snow[i];
+    if(!RM){
+      f.y-=f.vy*dt;
+      f.y-=sd*f.f*0.5;
+      f.x+=Math.sin(t*0.4+f.ph)*4*dt;
+      if(f.y<-12){f.y=H+8;f.x=Math.random()*W;}
+      if(f.y>H+14){f.y=-8;}
+      if(f.x<-10){f.x=W+8;}
+      if(f.x>W+10){f.x=-8;}
+    }
+    cx.globalAlpha=f.a;
+    cx.fillStyle='#DCEBF0';
+    cx.beginPath();
+    cx.arc(f.x,f.y,f.r,0,6.2832);
+    cx.fill();
+  }
+  /* 声呐波纹：节拍触发，自播放键扩散 */
+  var col=LAYERS[track().l].rgb;
+  for(i=ripples.length-1;i>=0;i--){
+    var rp=ripples[i];
+    if(!RM){
+      rp.r+=dt*95;
+    }
+    var k=1-rp.r/rp.max;
+    if(k<=0){ripples.splice(i,1);continue;}
+    cx.globalAlpha=1;
+    cx.strokeStyle='rgba('+col[0]+','+col[1]+','+col[2]+','+(k*rp.a).toFixed(3)+')';
+    cx.lineWidth=1.6;
+    cx.beginPath();cx.arc(rp.x,rp.y,rp.r,0,6.2832);cx.stroke();
+    cx.strokeStyle='rgba('+col[0]+','+col[1]+','+col[2]+','+(k*rp.a*0.45).toFixed(3)+')';
+    cx.lineWidth=1;
+    cx.beginPath();cx.arc(rp.x,rp.y,rp.r*0.7,0,6.2832);cx.stroke();
+  }
+  /* 气泡：下潜 / 切歌时上冒 */
+  for(i=bubbles.length-1;i>=0;i--){
+    var b=bubbles[i];
+    if(!RM){
+      b.life+=dt;
+      b.y-=b.vy*dt;
+      b.x+=Math.sin(b.life*4)*9*dt;
+      b.a-=dt*0.45;
+      if(b.a<=0||b.y<-10){bubbles.splice(i,1);continue;}
+    }
+    cx.globalAlpha=Math.max(0,b.a);
+    cx.strokeStyle='rgba(200,240,245,.8)';
+    cx.lineWidth=1;
+    cx.beginPath();cx.arc(b.x,b.y,b.r,0,6.2832);cx.stroke();
+  }
+  cx.globalAlpha=1;
+}
+
+/* ============================================================
+   水母：SVG 伞盖（随节拍收缩推进） + 触须（随波形摆动）
+   ============================================================ */
+var jellyEl=$('#jelly'),jellyScale=$('#jellyScale'),
+    bellPath=$('#bellPath'),bellRim=$('#bellRim'),
+    glowCyan=$('#glowCyan'),glowPeach=$('#glowPeach'),
+    jHalo=$('#jHalo'),tentG=$('#tentacles'),armsG=$('#armsG'),
+    gs1=$('#gs1'),gs2=$('#gs2'),gs3=$('#gs3');
+var T_N=(window.innerWidth<768)?6:10;
+var tentacles=[],arms=[];
+var J={x:window.innerWidth*0.78,y:window.innerHeight*0.4,ox:0,oy:0,imp:0};
+var P={x:-9999,y:-9999};
+
+function buildJellyLimbs(){
+  tentG.innerHTML='';
+  armsG.innerHTML='';
+  tentacles=[];
+  arms=[];
+  var i,p;
+  for(i=0;i<T_N;i++){
+    p=document.createElementNS(SVGNS,'path');
+    p.setAttribute('stroke-width',(i%3===0)?1.6:1.1);
+    tentG.appendChild(p);
+    tentacles.push(p);
+  }
+  for(i=0;i<4;i++){
+    p=document.createElementNS(SVGNS,'path');
+    p.setAttribute('stroke-width','5');
+    p.setAttribute('stroke-opacity','0.22');
+    armsG.appendChild(p);
+    arms.push(p);
+  }
+}
+function bellGeometry(c){
+  var w=100*(1+c*0.055);
+  var h=96*(1-c*0.13);
+  var cxx=150,top=42+c*14,by=top+h;
+  var dome='M '+(cxx-w)+' '+by+
+    ' C '+(cxx-w)+' '+(top+h*0.32)+', '+(cxx-w*0.6)+' '+top+', '+cxx+' '+top+
+    ' C '+(cxx+w*0.6)+' '+top+', '+(cxx+w)+' '+(top+h*0.32)+', '+(cxx+w)+' '+by;
+  var sc=4,bottom='';
+  for(var i=0;i<sc;i++){
+    var x1=cxx+w-(2*w)*i/sc;
+    var x2=cxx+w-(2*w)*(i+1)/sc;
+    var mx=(x1+x2)/2;
+    bottom+=' Q '+mx+' '+(by+13-c*4)+', '+x2+' '+(by-2);
+  }
+  return {d:dome+bottom+' Z',rim:'M '+(cxx+w)+' '+by+bottom,cx:cxx,top:top,by:by,w:w,h:h};
+}
+function updateJelly(dt,t){
+  if(!S.started){return;}
+  if(RM){
+    J.x=W*0.78;J.y=H*0.4;
+    placeJelly(0,t);
+    return;
+  }
+  var homeX=(W<768)?W*0.72:W*0.78;
+  var homeY=(W<768)?H*0.3:H*0.4;
+  J.imp*=Math.exp(-dt*2.2);
+  var tx=homeX+Math.sin(t*0.1)*44+J.ox;
+  var ty=homeY+Math.sin(t*0.073)*30+J.imp+J.oy;
+  var k=Math.min(1,dt*1.7);
+  J.x=lerp(J.x,tx,k);
+  J.y=lerp(J.y,ty,k);
+  /* 指针轻微避让（半径 130px） */
+  var dx=J.x-P.x,dy=J.y-P.y,pd=Math.sqrt(dx*dx+dy*dy);
+  if(pd<130&&pd>0.1){
+    var push=(1-pd/130)*46;
+    J.ox+=dx/pd*push*dt*8;
+    J.oy+=dy/pd*push*dt*8;
+  }
+  J.ox*=Math.exp(-dt*1.6);
+  J.oy*=Math.exp(-dt*1.6);
+  placeJelly(dt,t);
+}
+function placeJelly(dt,t){
+  var cw=jellyEl.clientWidth||300,ch=jellyEl.clientHeight||380;
+  jellyEl.style.transform='translate3d('+(J.x-cw/2).toFixed(1)+'px,'+(J.y-ch*0.32).toFixed(1)+'px,0)';
+  var g=bellGeometry(S.bell);
+  bellPath.setAttribute('d',g.d);
+  bellRim.setAttribute('d',g.rim);
+  var ks=1+S.bell*0.02; /* 整体轻微推进放大 */
+  jellyScale.setAttribute('transform','translate('+(150*(1-ks))+' '+(120*(1-ks))+') scale('+ks+')');
+  glowCyan.setAttribute('cx',g.cx);glowCyan.setAttribute('cy',g.top+g.h*0.42);
+  glowCyan.setAttribute('rx',g.w*0.6);glowCyan.setAttribute('ry',g.h*0.36);
+  glowPeach.setAttribute('cx',g.cx);glowPeach.setAttribute('cy',g.top+g.h*0.55);
+  glowPeach.setAttribute('rx',g.w*0.68);glowPeach.setAttribute('ry',g.h*0.4);
+  var breathe=0.5+0.32*Math.sin(t*0.85)+S.beat*0.35;
+  glowCyan.setAttribute('opacity',clamp(breathe,0.15,1).toFixed(3));
+  glowPeach.setAttribute('opacity',clamp(0.28+0.22*Math.sin(t*0.6+1.4)+S.beat*0.3,0.1,0.9).toFixed(3));
+  /* 触须：正弦相位差摆动，摆幅随中频能量（波形）变化 */
+  var swayK=0.5+S.mid*1.6;
+  var n=tentacles.length,i,p,d;
+  for(i=0;i<n;i++){
+    var fx=g.cx+(n===1?0:(i/(n-1)-0.5))*g.w*1.5;
+    var len=(112+(i%4)*20)*(0.9+S.bell*0.12);
+    var ph=i*0.7;
+    var s1=Math.sin(t*1.5+ph)*(10+S.mid*30)*swayK;
+    var s2=Math.sin(t*1.1+ph*1.35+1.2)*(16+S.mid*40)*swayK;
+    d='M '+fx.toFixed(1)+' '+g.by+
+      ' C '+(fx+s1*0.4).toFixed(1)+' '+(g.by+len*0.35).toFixed(1)+
+      ', '+(fx+s1).toFixed(1)+' '+(g.by+len*0.7).toFixed(1)+
+      ', '+(fx+s1*0.5+s2*0.7).toFixed(1)+' '+(g.by+len).toFixed(1);
+    p=tentacles[i];
+    p.setAttribute('d',d);
+    p.setAttribute('stroke','rgba('+LAYERS[track().l].rgb.join(',')+','+(0.5-(i%3)*0.1).toFixed(2)+')');
+  }
+  for(i=0;i<arms.length;i++){
+    var ax=g.cx+(i-1.5)*g.w*0.3;
+    var alen=(70+(i%2)*18)*(0.9+S.bell*0.1);
+    var asw=Math.sin(t*1.2+i*1.1)*(8+S.mid*20)*swayK;
+    d='M '+ax.toFixed(1)+' '+g.by+
+      ' C '+(ax+asw*0.5).toFixed(1)+' '+(g.by+alen*0.4).toFixed(1)+
+      ', '+(ax-asw*0.6).toFixed(1)+' '+(g.by+alen*0.75).toFixed(1)+
+      ', '+(ax+asw*0.3).toFixed(1)+' '+(g.by+alen).toFixed(1);
+    p=arms[i];
+    p.setAttribute('d',d);
+    p.setAttribute('stroke','rgba(232,138,154,.35)');
+  }
+}
+function applyJellyLayer(){
+  var L=LAYERS[track().l];
+  gs1.setAttribute('stop-color',L.core);
+  gs2.setAttribute('stop-color',L.mid);
+  gs3.setAttribute('stop-color',L.rim);
+  jHalo.setAttribute('fill','rgba('+L.rgb.join(',')+',.09)');
+}
+window.addEventListener('pointermove',function(e){
+  P.x=e.clientX;P.y=e.clientY;
+},{passive:true});
+
+/* ============================================================
+   节拍引擎：AnalyserNode 低频检测 + 调度器精确节拍（定时兜底）
+   驱动：水母伞盖 / 声呐波纹 / 行呼吸 / 背景脉动 / 播放键 / BPM 灯
+   ============================================================ */
+function fireBeat(strong){
+  S.beat=strong?1:0.62;
+  if(S.playing&&!RM){
+    spawnRipple(strong);
+    J.imp=Math.max(J.imp-(strong?38:18),-140); /* 伞盖收缩 → 向上推进 */
+  }
+}
+var lastFrame=performance.now(),lastRead=0,lastBeatMs=0,fBeatN=0,lastV=-1;
+
+function frame(now){
+  rafId=requestAnimationFrame(frame);
+  var dt=(now-lastFrame)/1000;
+  lastFrame=now;
+  if(dt<0){dt=0;}
+  if(dt>0.1){dt=0.1;}
+  var tr=track();
+  /* 播放进度（音频钟优先，模拟钟兜底） */
+  if(S.playing){
+    if(audio.ok&&audio.ctx){
+      var ct=audio.ctx.currentTime;
+      if(S.lastCtxT>0){S.progress+=Math.max(0,ct-S.lastCtxT);}
+      S.lastCtxT=ct;
+    }else{
+      S.progress+=dt;
+    }
+    if(S.progress>=tr.d){handleEnded();tr=track();}
+  }
+  /* 节拍来源：调度队列（精确）→ Analyser 不可用时按 BPM 定时兜底 */
+  var beat=null;
+  if(audio.ok&&audio.ctx){
+    var q=audio.queue;
+    while(q.length&&q[0].t<=audio.ctx.currentTime+0.02){beat=q.shift();}
+  }else if(S.playing){
+    var iv=60000/tr.bpm;
+    if(now-lastBeatMs>=iv){lastBeatMs=now;fBeatN++;beat={strong:(fBeatN%4)===0};}
+  }
+  if(beat&&S.playing){fireBeat(beat.strong);}
+  /* Analyser 低频/中频能量（跨域分析受限时自然为 0，走兜底） */
+  var bE=0,mE=0;
+  if(audio.ok&&audio.analyser&&S.playing){
+    try{
+      audio.analyser.getByteFrequencyData(audio.freq);
+      bE=avgBins(audio.freq,1,6)/255;
+      mE=avgBins(audio.freq,8,28)/255;
+    }catch(e){bE=0;mE=0;}
+  }
+  S.bass+=(bE-S.bass)*0.16;
+  S.mid+=(mE-S.mid)*0.12;
+  S.beat*=Math.exp(-dt*4.4);
+  var v=RM?0:clamp(S.beat+S.bass*0.5,0,1);
+  if(v!==lastV){
+    lastV=v;
+    document.documentElement.style.setProperty('--beat',v.toFixed(3));
+    veil.style.opacity=(v*0.08).toFixed(3);
+  }
+  S.bell+=((S.playing&&!RM?S.beat:0)-S.bell)*Math.min(1,dt*9);
+  /* 绘制 */
+  drawSea(dt,now/1000);
+  updateJelly(dt,now/1000);
+  /* 光柱随下潜淡出 + 暗角随深度变浓 */
+  if(now-lastRead>120){
+    lastRead=now;
+    updateReadouts();
+  }
+  var sy=window.scrollY||0;
+  var rayOp=clamp(1-sy/(H*0.9),0,1)*0.85;
+  raysEl.style.opacity=rayOp.toFixed(3);
+}
+
+/* ============================================================
+   深度计 + 读数
+   ============================================================ */
+var gNeedle=$('#gNeedle'),gDepth=$('#gDepth'),gTicks=$('#gTicks'),
+    tCur=$('#tCur'),tDur=$('#tDur'),npDepth=$('#npDepth'),
+    pFill=$('#pFill'),pKnob=$('#pKnob'),
+    veil=$('#pulseVeil'),vig=$('#vignette'),raysEl=$('.rays');
+
+function buildGaugeTicks(){
+  var frag=document.createDocumentFragment(),m;
+  for(m=0;m<=MAX_DEPTH;m+=100){
+    var tk=document.createElement('i');
+    tk.className='g-tick'+(m%500===0?' major':'');
+    tk.style.top=(m/MAX_DEPTH*100)+'%';
+    frag.appendChild(tk);
+    if(m%1000===0){
+      var lb=document.createElement('b');
+      lb.className='g-lab';
+      lb.style.top=(m/MAX_DEPTH*100)+'%';
+      lb.textContent=m+'';
+      frag.appendChild(lb);
+    }
+  }
+  gTicks.appendChild(frag);
+}
+function updateReadouts(){
+  var tr=track();
+  var frac=clamp(S.progress/tr.d,0,1);
+  var depth=Math.round(frac*MAX_DEPTH);
+  if(depth!==S.depthShown){
+    S.depthShown=depth;
+    gDepth.textContent=depth+' m';
+    npDepth.textContent=depth+' m';
+  }
+  gNeedle.style.top=(frac*100).toFixed(2)+'%';
+  tCur.textContent=fmt(S.progress);
+  tDur.textContent=fmt(tr.d);
+  pFill.style.width=(frac*100).toFixed(2)+'%';
+  pKnob.style.left=(frac*100).toFixed(2)+'%';
+  vig.style.opacity=(0.25+frac*0.45).toFixed(3);
+}
+
+/* ============================================================
+   曲目库渲染 + 播放控制
+   ============================================================ */
+var songList=$('#songList'),tabsEl=$('#tabs'),
+    npTitle=$('#npTitle'),npArtist=$('#npArtist'),npBpm=$('#npBpm'),
+    npLayer=$('#npLayer'),nowLine=$('#nowLine'),
+    btnPlayEl=$('#btnPlay'),icoPlay=$('#icoPlay'),icoPause=$('#icoPause'),
+    btnMode=$('#btnMode'),toastEl=$('#toast'),btnDive=$('#btnDive'),surfaceEl=$('#surface');
+
+function renderTabs(){
+  var defs=[
+    {k:'all',n:'全部深度'},
+    {k:'twilight',n:'暮光层'},
+    {k:'midnight',n:'午夜层'},
+    {k:'abyss',n:'深渊层'}
+  ];
+  var html='';
+  for(var i=0;i<defs.length;i++){
+    var d=defs[i];
+    var count=(d.k==='all')?TRACKS.length:TRACKS.filter(function(t){return t.l===d.k;}).length;
+    html+='<button class="tab'+(S.filter===d.k?' on':'')+'" role="tab" aria-selected="'+(S.filter===d.k)+'" data-tab="'+d.k+'">'+d.n+'<span class="t-n">'+count+'</span></button>';
+  }
+  tabsEl.innerHTML=html;
+}
+function renderList(){
+  var html='';
+  for(var i=0;i<TRACKS.length;i++){
+    var tr=TRACKS[i];
+    if(S.filter!=='all'&&tr.l!==S.filter){continue;}
+    var L=LAYERS[tr.l];
+    html+='<li class="song'+(i===S.current?' current':'')+'" data-i="'+i+'"'+(i===S.current?' aria-current="true"':'')+'>'+
+      '<span class="s-idx mono">'+pad2(i+1)+'</span>'+
+      '<span class="s-eq" aria-hidden="true"><i></i><i></i><i></i></span>'+
+      '<span class="s-main"><span class="s-name">'+tr.t+'</span><span class="s-artist">'+tr.a+'</span><span class="s-msub">'+tr.bpm+' BPM · '+L.name+' '+tr.m+' m</span></span>'+
+      '<span class="s-bpm">'+tr.bpm+' BPM</span>'+
+      '<span class="s-layer" style="--lc:'+L.color+'"><b>'+L.name+'</b>'+tr.m+' m</span>'+
+      '<span class="s-dur">'+fmt(tr.d)+'</span>'+
+      '<button class="s-fav'+(S.favs[i]?' faved':'')+'" data-fav="'+i+'" aria-label="收藏 '+tr.t+'">'+HEART+'</button>'+
+      '</li>';
+  }
+  songList.innerHTML=html;
+}
+function markRows(){
+  $$('.song',songList).forEach(function(li){
+    var i=+li.getAttribute('data-i');
+    li.classList.toggle('current',i===S.current);
+    if(i===S.current){li.setAttribute('aria-current','true');}
+    else{li.removeAttribute('aria-current');}
+  });
+}
+function updatePlayerUI(){
+  var tr=track(),L=LAYERS[tr.l];
+  npTitle.textContent='《'+tr.t+'》';
+  npArtist.textContent=tr.a+' · '+L.range;
+  npBpm.textContent=tr.bpm+' BPM';
+  npLayer.textContent=L.name;
+  npLayer.style.setProperty('--lc',L.color);
+  document.title='《'+tr.t+'》 · 深海电台 DEEP SEA RADIO';
+  nowLine.textContent='正在播出：《'+tr.t+'》 · '+tr.bpm+' BPM · '+tr.m+' m 深度层 · '+tr.a;
+  applyJellyLayer();
+}
+function setPlaying(on){
+  S.playing=on;
+  document.body.classList.toggle('playing',on);
+  icoPlay.style.display=on?'none':'';
+  icoPause.style.display=on?'':'none';
+  btnPlayEl.setAttribute('aria-label',on?'暂停':'播放');
+  if(on){
+    if(audio.ok){audio.play();}
+    S.lastCtxT=0;
+  }else{
+    if(audio.ok){audio.pause();}
+  }
+}
+function playTrack(i,autoplay){
+  S.current=i;
+  S.progress=0;
+  S.lastCtxT=0;
+  S.depthShown=-1;
+  S.started=true;
+  document.body.classList.add('has-jelly');
+  audio.init();
+  audio.applyTrack(track());
+  updatePlayerUI();
+  markRows();
+  if(autoplay!==false){
+    setPlaying(true);
+    burstBubbles(window.innerWidth<768?10:18);
+    if(audio.ok){try{audio.ping(audio.ctx.currentTime+0.05);}catch(e){}}
+  }
+}
+function togglePlay(){
+  if(!S.started){playTrack(S.current,true);return;}
+  if(S.playing){setPlaying(false);}
+  else{setPlaying(true);}
+}
+function nextIndex(dir){
+  var n=TRACKS.length;
+  if(S.mode===2){
+    var r;
+    do{r=Math.floor(Math.random()*n);}while(r===S.current&&n>1);
+    return r;
+  }
+  return (S.current+dir+n)%n;
+}
+function handleEnded(){
+  if(S.mode===1){playTrack(S.current,true);}
+  else{playTrack(nextIndex(1),true);}
+}
+function seekTo(frac){
+  frac=clamp(frac,0,1);
+  S.progress=frac*track().d;
+  S.lastCtxT=0;
+  S.depthShown=-1;
+  updateReadouts();
+}
+function seekBy(sec){
+  if(!S.started){return;}
+  seekTo(clamp((S.progress+sec)/track().d,0,1));
+}
+
+/* ---------- 轻提示 ---------- */
+var toastTimer=null;
+function toast(msg){
+  toastEl.textContent=msg;
+  toastEl.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){toastEl.classList.remove('on');},2200);
+}
+
+/* ---------- 下潜开场 ---------- */
+function dive(){
+  if(S.started){
+    $('#library').scrollIntoView({behavior:RM?'auto':'smooth'});
+    toast('你已在海里 · 当前播放《'+track().t+'》');
+    return;
+  }
+  playTrack(0,true);
+  btnDive.classList.add('done');
+  btnDive.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="currentColor"></circle><path d="M12 5.5a6.5 6.5 0 0 1 6.5 6.5M12 8.8a3.2 3.2 0 0 1 3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>已下潜 · 正在收听';
+  surfaceEl.classList.add('flash');
+  setTimeout(function(){surfaceEl.classList.remove('flash');},1100);
+  burstBubbles(28);
+  setTimeout(function(){
+    $('#layers').scrollIntoView({behavior:RM?'auto':'smooth'});
+  },260);
+  toast('开始下潜 · 电台上线 · 目标深度 3800 m');
+}
+
+/* ============================================================
+   事件绑定
+   ============================================================ */
+btnDive.addEventListener('click',dive);
+btnPlayEl.addEventListener('click',togglePlay);
+$('#btnPrev').addEventListener('click',function(){
+  if(S.progress>3){seekTo(0);}
+  else{playTrack(nextIndex(-1),true);}
+});
+$('#btnNext').addEventListener('click',function(){playTrack(nextIndex(1),true);});
+btnMode.addEventListener('click',function(){
+  S.mode=(S.mode+1)%MODES.length;
+  btnMode.textContent=MODES[S.mode];
+  toast('循环模式：'+MODES[S.mode]);
+});
+var icoVol=$('#icoVol'),icoMute=$('#icoMute');
+$('#btnMute').addEventListener('click',function(){
+  S.muted=!S.muted;
+  icoVol.style.display=S.muted?'none':'';
+  icoMute.style.display=S.muted?'':'none';
+  audio.setVolume();
+  toast(S.muted?'已静音 · 海水暂时失语':'声音恢复');
+});
+$('#vol').addEventListener('input',function(e){
+  S.volume=(+e.target.value)/100;
+  S.muted=false;
+  icoVol.style.display='';
+  icoMute.style.display='none';
+  audio.setVolume();
+});
+/* 进度条拖拽（进度 = 深度进度） */
+var pTrack=$('#pTrack'),dragging=false;
+function seekFromEvent(e){
+  var r=pTrack.getBoundingClientRect();
+  seekTo((e.clientX-r.left)/r.width);
+}
+pTrack.addEventListener('pointerdown',function(e){
+  dragging=true;
+  try{pTrack.setPointerCapture(e.pointerId);}catch(err){}
+  seekFromEvent(e);
+});
+pTrack.addEventListener('pointermove',function(e){if(dragging){seekFromEvent(e);}});
+pTrack.addEventListener('pointerup',function(){dragging=false;});
+pTrack.addEventListener('pointercancel',function(){dragging=false;});
+/* 列表代理点击：播放 / 收藏 */
+songList.addEventListener('click',function(e){
+  var fav=e.target.closest('.s-fav');
+  if(fav){
+    var fi=+fav.getAttribute('data-fav');
+    S.favs[fi]=!S.favs[fi];
+    fav.classList.toggle('faved',!!S.favs[fi]);
+    toast(S.favs[fi]?'已沉入你的私人海沟：《'+TRACKS[fi].t+'》':'已从海沟捞起：《'+TRACKS[fi].t+'》');
+    return;
+  }
+  var li=e.target.closest('.song');
+  if(!li){return;}
+  var i=+li.getAttribute('data-i');
+  if(i===S.current&&S.playing){setPlaying(false);}
+  else if(i===S.current&&!S.started){playTrack(i,true);}
+  else if(i===S.current){setPlaying(true);}
+  else{playTrack(i,true);}
+});
+/* 层筛选 tab */
+tabsEl.addEventListener('click',function(e){
+  var tab=e.target.closest('.tab');
+  if(!tab){return;}
+  S.filter=tab.getAttribute('data-tab');
+  renderTabs();
+  renderList();
+});
+/* 深度歌单卡：下潜至本层 */
+$$('.layer-card').forEach(function(card){
+  card.addEventListener('click',function(){
+    var layer=card.getAttribute('data-layer');
+    S.filter=layer;
+    renderTabs();
+    renderList();
+    var idx=-1;
+    for(var i=0;i<TRACKS.length;i++){
+      if(TRACKS[i].l===layer){idx=i;break;}
+    }
+    if(idx>=0){playTrack(idx,true);}
+    $('#library').scrollIntoView({behavior:RM?'auto':'smooth'});
+    toast('正在下潜至'+LAYERS[layer].name+' · '+LAYERS[layer].range);
+  });
+});
+/* 键盘：空格播放 / 左右快进快退 */
+document.addEventListener('keydown',function(e){
+  var tag=e.target&&e.target.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'){return;}
+  if(e.code==='Space'){
+    e.preventDefault();
+    togglePlay();
+  }else if(e.code==='ArrowRight'){
+    seekBy(5);
+  }else if(e.code==='ArrowLeft'){
+    seekBy(-5);
+  }
+});
+/* 页签隐藏暂停：深海静泊 */
+var wasPlayingHidden=false;
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){
+    if(rafId){cancelAnimationFrame(rafId);rafId=0;}
+    if(S.playing){wasPlayingHidden=true;setPlaying(false);}
+  }else{
+    lastFrame=performance.now();
+    if(!rafId){rafId=requestAnimationFrame(frame);}
+    if(wasPlayingHidden){wasPlayingHidden=false;setPlaying(true);}
+  }
+});
+/* resize：重建画布与海雪（防抖） */
+window.addEventListener('resize',debounce(function(){
+  sizeCanvas();
+  J.x=Math.min(J.x,window.innerWidth);
+  J.y=Math.min(J.y,window.innerHeight);
+},220));
+
+/* ============================================================
+   启动
+   ============================================================ */
+var rafId=0;
+buildGaugeTicks();
+buildJellyLimbs();
+renderTabs();
+renderList();
+updatePlayerUI();
+markRows();
+sizeCanvas();
+if(RM){document.body.classList.add('reduced');}
+updateReadouts();
+rafId=requestAnimationFrame(frame);
+try{
+  console.log('%c深海电台 FM 3800 · 海雪已就位，等待下潜指令','color:#4FD8C8;font-size:13px');
+}catch(e){}
+})();
+</script>
+</body>
+</html>

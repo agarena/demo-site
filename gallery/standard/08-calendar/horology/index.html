@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="黄铜辰历 HOROLOGE HL-2026 —— 机械钟表风格的 2026 年历：主表盘月历、黄铜指针选日、表冠快拨、秒针/月相/倒计时子表盘、事件上链。">
+<title>黄铜辰历 HOROLOGE HL-2026 · 机械钟表日历</title>
+<style>
+/* ==========================================================
+   黄铜辰历 HOROLOGE HL-2026 —— 机械钟表 Horology 标准风格
+   象牙盘面 / 黄铜 / 拉丝钢 / 石墨 / 秒针红（仅今日与错误态）
+   ========================================================== */
+:root{
+  --ivory:#EFEAE0; --ivory-2:#E6DFD0; --paper:#F6F1E7;
+  --graphite:#22252C; --graphite-2:#2C303A; --ink:#20242B;
+  --brass:#B08D57; --brass-d:#8A6A33; --brass-hi:#E6CC8F;
+  --steel:#9BA1AA; --steel-d:#5E6570;
+  --red:#C33B2E;
+  --serif:"Marcellus","Cormorant Garamond","Noto Serif SC","Songti SC","SimSun",serif;
+  --mono:"IBM Plex Mono","JetBrains Mono","Consolas","Courier New",monospace;
+  --sans:"Inter","Segoe UI","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans); color:var(--ink); background:var(--ivory);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(32,36,43,.014) 0 1px, transparent 1px 3px),
+    radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,.5), transparent 60%);
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit}
+a{color:inherit}
+.mono{font-family:var(--mono)}
+.serif{font-family:var(--serif)}
+section{scroll-margin-top:76px}
+
+/* ---------- 通用：螺丝钉 / 铆钉 / 铜线标题 ---------- */
+.screw{
+  width:10px;height:10px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #EAD9AC, #A9884F 62%, #6F5626);
+  box-shadow:inset 0 -1px 1px rgba(0,0,0,.45), 0 1px 1px rgba(0,0,0,.25);
+  position:relative; flex:none;
+}
+.screw::after{
+  content:''; position:absolute; left:14%; right:14%; top:calc(50% - 1px); height:2px;
+  background:linear-gradient(90deg, rgba(58,44,20,.2), rgba(58,44,20,.85), rgba(58,44,20,.2));
+  transform:rotate(38deg); border-radius:2px;
+}
+.screw.tl{position:absolute;top:8px;left:8px}
+.screw.tr{position:absolute;top:8px;right:8px}
+.screw.bl{position:absolute;bottom:8px;left:8px}
+.screw.br{position:absolute;bottom:8px;right:8px}
+.rivet{
+  width:7px;height:7px;border-radius:50%;flex:none;
+  background:radial-gradient(circle at 35% 30%, #EAD9AC, #A9884F 62%, #6F5626);
+  box-shadow:0 1px 1px rgba(0,0,0,.3);
+}
+.rulehead{display:flex;align-items:center;gap:14px;width:100%}
+.rulehead .line{flex:1;height:1px;background:linear-gradient(90deg, rgba(176,141,87,0), var(--brass))}
+.rulehead .line.r{background:linear-gradient(90deg, var(--brass), rgba(176,141,87,0))}
+.rulehead h2{font:400 15px/1 var(--serif); letter-spacing:.34em; color:var(--brass-d); white-space:nowrap; text-indent:.34em}
+.rulehead.dark h2{color:var(--brass-hi)}
+
+/* ---------- 顶栏 ---------- */
+.site-head{
+  position:sticky; top:0; z-index:50;
+  display:flex; align-items:center; gap:28px;
+  padding:13px 4vw;
+  background:linear-gradient(180deg,#2A2E37,#22252C);
+  border-bottom:1px solid rgba(176,141,87,.6);
+  box-shadow:0 2px 12px rgba(20,22,27,.35);
+}
+.site-head::before{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 1px, transparent 1px 3px);
+}
+.brand{display:flex; align-items:center; gap:12px; position:relative}
+.brand svg{width:26px;height:26px;flex:none}
+.brand .b-cn{font:600 18px/1 var(--serif); letter-spacing:.3em; color:var(--ivory)}
+.brand .b-en{font:9px/1.5 var(--mono); letter-spacing:.3em; color:var(--steel)}
+.site-head nav{display:flex; gap:22px; margin-left:auto}
+.site-head nav a{
+  font:11px/1 var(--mono); letter-spacing:.24em; color:var(--steel);
+  text-decoration:none; padding:8px 2px 6px; border-bottom:1px solid transparent;
+  transition:color .2s var(--ease), border-color .2s var(--ease);
+}
+.site-head nav a:hover{color:var(--brass-hi); border-color:var(--brass)}
+.head-right{display:flex; align-items:center; gap:16px; position:relative}
+#headClock{font:12px var(--mono); letter-spacing:.14em; color:var(--brass-hi); font-variant-numeric:tabular-nums}
+.pusher-btn{
+  font:11px/1 var(--mono); letter-spacing:.18em; color:var(--ivory);
+  background:linear-gradient(180deg,#3A404B,#2A2E37);
+  border:1px solid rgba(176,141,87,.55); border-radius:3px;
+  padding:8px 14px; cursor:pointer; transition:.2s var(--ease);
+}
+.pusher-btn:hover{border-color:var(--brass-hi); color:var(--brass-hi)}
+.pusher-btn:active{transform:translateY(1px)}
+
+/* ---------- 铭牌式 HERO ---------- */
+.hero{max-width:1180px; margin:0 auto; padding:52px 4vw 26px; text-align:center}
+.spec-line{
+  font:11px/1 var(--mono); letter-spacing:.3em; color:var(--steel-d);
+  padding-bottom:14px; margin-bottom:22px;
+  border-bottom:1px solid rgba(176,141,87,.5);
+  display:inline-block;
+}
+.hero h1{
+  font:400 clamp(34px, 5vw, 54px)/1.15 var(--serif);
+  letter-spacing:.22em; text-indent:.22em; color:var(--ink);
+}
+.hero h1 b{
+  font-weight:400;
+  background:linear-gradient(180deg, var(--brass-hi), var(--brass-d));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.hero .hero-sub{margin-top:16px; font:15px/1.9 var(--sans); color:var(--steel-d); letter-spacing:.1em}
+.hero .stats{
+  margin-top:26px; display:flex; justify-content:center; flex-wrap:wrap; gap:12px 30px;
+  font:10.5px/1 var(--mono); letter-spacing:.22em; color:var(--brass-d);
+}
+.hero .stats span{display:flex; align-items:center; gap:8px}
+.hero .stats i{width:4px;height:4px;border-radius:50%;background:var(--brass);flex:none}
+
+/* ---------- 工作台布局 ---------- */
+.workbench{
+  max-width:1280px; margin:0 auto; padding:34px 4vw 80px;
+  display:grid; grid-template-columns:minmax(0,1fr) 380px;
+  gap:44px; align-items:start;
+}
+.workbench > .rulehead{grid-column:1/-1; margin-bottom:2px}
+
+/* ---------- 表盘 ---------- */
+.dial-wrap{display:flex; flex-direction:column; align-items:center; gap:20px; position:relative; min-width:0}
+.dial{
+  --dial:min(680px, 46vw, 76vh);
+  width:var(--dial); height:var(--dial); position:relative; border-radius:50%;
+  background:repeating-conic-gradient(from 8deg, #474D58 0 3deg, #333943 3deg 6deg);
+  box-shadow:
+    0 26px 54px -18px rgba(27,30,36,.5),
+    0 4px 12px rgba(27,30,36,.28),
+    inset 0 2px 3px rgba(255,255,255,.28),
+    inset 0 -4px 8px rgba(0,0,0,.5);
+}
+.dial::after{ /* 象牙盘面 */
+  content:''; position:absolute; inset:16px; border-radius:50%; z-index:0;
+  background:radial-gradient(circle at 36% 30%, #F7F2E8 0%, #EDE7D9 55%, #DFD6C2 100%);
+  box-shadow:inset 0 4px 12px rgba(27,30,36,.4), inset 0 -2px 6px rgba(255,255,255,.5);
+}
+.guilloche{ /* 盘心扭索纹：重复径向渐变，透明度 ≤6% */
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:24%; aspect-ratio:1; border-radius:50%; z-index:1; pointer-events:none;
+  background:repeating-radial-gradient(circle at 46% 44%, rgba(32,36,43,.055) 0 1px, transparent 1px 6px);
+  -webkit-mask-image:radial-gradient(circle, #000 58%, transparent 72%);
+  mask-image:radial-gradient(circle, #000 58%, transparent 72%);
+}
+.ring-svg{position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none}
+.ring-svg .tick{stroke:#9A927E; stroke-width:1.5}
+.ring-svg .tick.maj{stroke:#6F6A5C; stroke-width:3}
+.ring-svg .sep{fill:none; stroke:rgba(32,36,43,.16); stroke-width:1}
+.ring-svg .tick-hl{stroke:var(--brass-hi); stroke-width:4.5; opacity:0; transition:opacity .18s var(--ease)}
+.ring-svg .tick-hl.on{opacity:1}
+.ring-svg #selSector{fill:rgba(176,141,87,.10)}
+.ring-svg #hovSector{fill:rgba(176,141,87,.07); opacity:0; transition:opacity .18s var(--ease)}
+.ring-svg #hovSector.on{opacity:1}
+.ring-svg .wl{font:600 16px var(--sans); fill:var(--steel-d); transition:fill .18s}
+.ring-svg .wl.lit{fill:var(--brass-d)}
+.ring-svg #hubTopT{font:600 15px var(--serif); fill:var(--brass-d); letter-spacing:2px}
+.ring-svg #hubBotT{font:8px var(--mono); fill:var(--steel-d); letter-spacing:1.6px}
+
+/* ---------- 极坐标日历格 ---------- */
+.grid{position:absolute; inset:0; z-index:2}
+.cell{
+  position:absolute; left:var(--px); top:var(--py);
+  width:6.57%; height:4.57%; transform:translate(-50%,-50%);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:1px; border-radius:5px; cursor:pointer;
+  background:rgba(250,247,240,.55);
+  border:1px solid rgba(32,36,43,.10);
+  box-shadow:0 1px 2px rgba(27,30,36,.08);
+  transition:background .18s var(--ease), border-color .18s var(--ease),
+             box-shadow .18s var(--ease), transform .18s var(--ease);
+}
+.cell .d{
+  position:relative; font-family:var(--sans); font-weight:600;
+  font-size:calc(var(--dial) * .0215); line-height:1.05;
+  font-variant-numeric:tabular-nums; letter-spacing:.02em; color:var(--ink);
+}
+.cell.today .d::before{
+  content:''; position:absolute; inset:-14% -30%;
+  border:1.5px solid var(--red); border-radius:50%;
+}
+.cell .sub{
+  max-width:94%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:max(8px, calc(var(--dial) * .0128)); line-height:1.1; color:#7A7263;
+}
+.cell .sub.f{color:var(--brass-d); font-weight:700}
+.cell .sub.t{color:var(--steel-d)}
+.cell .sub.m{color:var(--brass-d)}
+.cell.we{background:rgba(176,141,87,.10)}
+.cell.dim{opacity:.34; background:transparent; box-shadow:none; border-style:dashed; pointer-events:none}
+.cell:hover{background:#FFFDF6; border-color:var(--brass); z-index:4;
+  transform:translate(-50%,-50%) translateY(-2px);
+  box-shadow:0 3px 8px rgba(27,30,36,.16)}
+.cell.sel{border-color:var(--brass); background:#FFF9EC;
+  box-shadow:0 0 0 1.5px var(--brass), 0 3px 10px rgba(138,106,51,.28); z-index:3}
+.cell.sel:hover{transform:translate(-50%,-50%)}
+.cell:focus-visible{outline:2px solid var(--brass-d); outline-offset:2px; z-index:5}
+.tag-off,.tag-on{
+  position:absolute; top:-2px; right:-2px; padding:0 3px; border-radius:2px 0 5px 0;
+  font-size:max(7px, calc(var(--dial) * .011)); line-height:1.5; letter-spacing:0;
+}
+.tag-off{background:var(--brass); color:#FFFDF6}
+.tag-on{border:1px solid var(--steel); color:var(--steel-d); background:rgba(255,255,255,.85)}
+.evdot{position:absolute; bottom:5%; left:50%; transform:translateX(-50%); display:flex; gap:2px}
+.evdot i{width:max(3px, calc(var(--dial) * .0062)); aspect-ratio:1; border-radius:50%; background:var(--c)}
+
+/* 盘面翻月交叉动画 */
+.grid{transition:opacity .24s var(--ease), transform .24s var(--ease)}
+.grid.leaving{opacity:0; transform:rotate(-5deg) scale(.965)}
+.grid.entering{opacity:0; transform:rotate(4deg) scale(.975)}
+
+/* ---------- 指针 ---------- */
+.hands-layer{position:absolute; inset:0; z-index:5; pointer-events:none}
+.rig{position:absolute; inset:0; transform:rotate(var(--a,0deg)); transition:transform .7s var(--ease)}
+.rig.no-anim{transition:none}
+.rig .main{
+  position:absolute; left:50%; bottom:50%; transform:translateX(-50%);
+  width:calc(var(--dial) * .013); height:47%;
+  background:linear-gradient(180deg, var(--brass-hi), var(--brass) 58%, #7A5C2C);
+  clip-path:polygon(50% 0, 100% 11%, 76% 100%, 24% 100%, 0 11%);
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));
+}
+.rig .tail{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:calc(var(--dial) * .034); aspect-ratio:1; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #F0DCAB, var(--brass) 58%, #6F5626);
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+}
+.rig.today-rig{z-index:4; transition:transform .7s var(--ease), opacity .4s var(--ease)}
+.rig.today-rig .main{
+  width:max(1.5px, calc(var(--dial) * .0035)); height:40%;
+  background:var(--red); clip-path:none; border-radius:2px; opacity:.92; filter:none;
+}
+.rig.today-rig .tail{
+  width:calc(var(--dial) * .02);
+  background:radial-gradient(circle at 35% 30%, #E4705F, var(--red) 70%);
+}
+.rig.today-rig.far{opacity:0}
+.hubcap{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:calc(var(--dial) * .045); aspect-ratio:1; border-radius:50%; z-index:6;
+  background:radial-gradient(circle at 35% 30%, #F0DCAB, var(--brass) 55%, #6F5626);
+  box-shadow:0 2px 5px rgba(0,0,0,.45), inset 0 -2px 4px rgba(0,0,0,.3);
+}
+.hubcap::after{
+  content:''; position:absolute; inset:30%; border-radius:50%;
+  background:linear-gradient(90deg, transparent 44%, rgba(60,45,20,.85) 44% 56%, transparent 56%);
+  transform:rotate(38deg);
+}
+
+/* ---------- 表冠与按钮 ---------- */
+.crown-cluster{
+  position:absolute; right:calc(var(--dial) * -0.048); top:50%; transform:translateY(-50%);
+  display:flex; flex-direction:column; gap:12px; z-index:7;
+}
+.crown{
+  width:30px; height:58px; border-radius:9px; cursor:pointer;
+  border:1px solid #565D69;
+  background:repeating-linear-gradient(180deg, #C9AD76 0 3px, #93764A 3px 6px);
+  box-shadow:inset 0 2px 3px rgba(255,255,255,.35), inset 0 -3px 5px rgba(0,0,0,.4), 3px 3px 7px rgba(27,30,36,.35);
+  font:700 16px/1 var(--mono); color:#2E3138;
+  text-shadow:0 1px 0 rgba(255,255,255,.3);
+  transition:filter .2s;
+}
+.crown:hover{filter:brightness(1.08)}
+.crown:active{transform:translateX(-2px)}
+.crown:disabled{opacity:.4; cursor:not-allowed}
+.crown.turn{animation:crownTurn .5s var(--ease)}
+@keyframes crownTurn{35%{transform:translateX(-3px)}100%{transform:none}}
+.dial-pusher{
+  position:absolute; left:calc(var(--dial) * -0.03); top:21%;
+  width:calc(var(--dial) * .055); aspect-ratio:1; border-radius:50%; z-index:7; cursor:pointer;
+  background:radial-gradient(circle at 35% 30%, #F0DCAB, var(--brass) 58%, #6F5626);
+  border:1px solid #565D69;
+  box-shadow:2px 3px 7px rgba(27,30,36,.4), inset 0 -2px 3px rgba(0,0,0,.35);
+  font:600 calc(var(--dial) * .021) var(--serif); color:#3A2C14;
+}
+.dial-pusher:active{transform:translateX(-1px)}
+.dial-pusher:hover{filter:brightness(1.07)}
+
+/* 小屏专用：盘面条带 / 周头 / 角螺丝 */
+.m-strip{display:none; align-items:baseline; justify-content:space-between; gap:10px;
+  background:linear-gradient(180deg,#2C303A,#1E222A); border-radius:8px; padding:9px 14px; color:var(--ivory)}
+.m-strip .mm{font:600 17px var(--serif); letter-spacing:.2em; color:var(--brass-hi)}
+.m-strip .mt{font:9px var(--mono); letter-spacing:.18em; color:var(--steel)}
+.wk-head{display:none; grid-template-columns:repeat(7,1fr); gap:3px}
+.wk-head span{text-align:center; font:600 11px/1 var(--sans); color:var(--steel);
+  background:rgba(255,255,255,.06); border-radius:4px; padding:5px 0}
+.wk-head span.we{color:var(--brass-hi)}
+.corner-screw{display:none}
+.corner-screw.c1{top:6px;left:6px}
+.corner-screw.c2{top:6px;right:6px}
+.corner-screw.c3{bottom:6px;left:6px}
+.corner-screw.c4{bottom:6px;right:6px}
+
+/* ---------- 图注铭牌 ---------- */
+.cap-plaque{
+  width:min(100%, calc(var(--dial) + 90px));
+  background:linear-gradient(180deg,#2C303A,#22252C); color:var(--ivory);
+  border:1px solid #14161B; border-radius:6px; padding:13px 20px;
+  display:flex; align-items:center; gap:16px;
+  box-shadow:0 6px 18px -6px rgba(27,30,36,.5), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.cap-plaque .cap-txt{flex:1; min-width:0}
+#capMain{font:600 16px/1.4 var(--serif); letter-spacing:.12em}
+#capSub{font:10.5px/1.7 var(--mono); letter-spacing:.1em; color:var(--steel); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+
+/* ---------- 侧栏面板 ---------- */
+.panel{display:flex; flex-direction:column; gap:22px; min-width:0}
+.block{
+  position:relative; border-radius:6px; padding:20px 18px 18px;
+  background:linear-gradient(180deg,#F3EEE3,#ECE5D5);
+  border:1px solid #D8CFBB;
+  box-shadow:0 2px 10px rgba(27,30,36,.07), inset 0 1px 0 #FFFDF6;
+}
+.block.brushed{
+  background-image:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg,#31353F,#262A32);
+  border-color:#1B1E24; color:var(--ivory);
+  box-shadow:0 3px 12px rgba(27,30,36,.3), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.blk-t{
+  display:flex; align-items:center; gap:9px; margin-bottom:14px;
+  font:600 11px/1 var(--mono); letter-spacing:.26em; color:var(--steel-d);
+}
+.blk-t::before{content:''; width:16px; height:1px; background:var(--brass)}
+.block.brushed .blk-t{color:var(--brass-hi)}
+
+/* 子表盘 */
+.sd-row{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+.sd{display:flex; flex-direction:column; align-items:center; gap:9px; min-width:0}
+.sd-face{
+  width:100%; max-width:106px; aspect-ratio:1; border-radius:50%; position:relative;
+  background:radial-gradient(circle at 40% 32%, #2E333D, #1B1F27 72%);
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.75), 0 2px 5px rgba(27,30,36,.3),
+    0 0 0 3px #D9D2C2, 0 0 0 4px #8F8672, 0 0 0 5px rgba(143,134,114,.4);
+}
+.sd-tick{position:absolute; left:50%; top:50%; height:46%; width:0;
+  transform:translate(-50%,-50%) rotate(var(--ta)); pointer-events:none}
+.sd-tick::before{content:''; position:absolute; top:2px; left:50%; transform:translateX(-50%);
+  width:1.5px; height:6px; background:#7E8592}
+.sd-tick.mj::before{width:3px; height:9px; background:var(--brass)}
+.sd-pin{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:7px; height:7px; border-radius:50%; background:var(--brass-hi);
+  box-shadow:0 0 3px rgba(0,0,0,.7); z-index:3}
+.sd-hand{position:absolute; left:50%; bottom:50%; width:2px; height:37%;
+  background:linear-gradient(180deg,var(--brass-hi),var(--brass));
+  transform-origin:50% 100%; border-radius:2px; box-shadow:0 0 3px rgba(0,0,0,.6); z-index:2}
+.sd-label{font:9.5px/1 var(--mono); letter-spacing:.14em; color:var(--steel-d); text-align:center}
+.sd-name{font:600 11px/1 var(--sans); letter-spacing:.2em; color:var(--brass-d); text-align:center}
+.moon-win{position:absolute; inset:13%; border-radius:50%; background:#0F1219; overflow:hidden;
+  box-shadow:inset 0 2px 8px #000}
+.moon-win svg{width:100%; height:100%; display:block}
+.sd-num{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:2px; z-index:2; pointer-events:none}
+.sd-num b{font:700 21px/1 var(--mono); color:var(--brass-hi); font-variant-numeric:tabular-nums}
+.sd-num small{font:8px/1.3 var(--mono); letter-spacing:.08em; color:var(--steel); max-width:86%;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.sd-ring{position:absolute; inset:5%; border-radius:50%; z-index:1;
+  background:conic-gradient(var(--brass) calc(var(--p,0) * 1%), rgba(230,204,143,.12) 0);
+  -webkit-mask:radial-gradient(circle, transparent 61%, #000 62%);
+  mask:radial-gradient(circle, transparent 61%, #000 62%);}
+
+/* ---------- 上链表单 ---------- */
+.f-row2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.f-field{margin-bottom:12px; min-width:0}
+.f-field label,.f-label{
+  display:block; font:600 10px/1 var(--mono); letter-spacing:.2em;
+  color:var(--steel-d); margin-bottom:6px;
+}
+.f-field input{
+  width:100%; padding:9px 10px; font:13px/1.2 var(--sans); color:var(--ink);
+  background:#FBF8F1; border:1px solid #C6BCA5; border-radius:3px;
+  transition:border-color .2s var(--ease), box-shadow .2s var(--ease);
+  font-variant-numeric:tabular-nums;
+}
+.f-field input:focus{outline:none; border-color:var(--brass);
+  box-shadow:0 0 0 2px rgba(176,141,87,.28)}
+.f-field input.bad{border-color:var(--red); box-shadow:0 0 0 2px rgba(195,59,46,.18)}
+.f-err{font:11px/1.5 var(--sans); color:var(--red); margin-top:4px; min-height:0}
+.f-err:empty{display:none}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chips label{cursor:pointer}
+.chips input{position:absolute; opacity:0; pointer-events:none}
+.chips span{
+  display:inline-block; padding:7px 13px; font:12px/1 var(--sans); letter-spacing:.1em;
+  color:var(--steel-d); background:#FBF8F1; border:1px solid #C6BCA5; border-radius:3px;
+  transition:.18s var(--ease);
+}
+.chips input:checked + span{background:var(--brass); border-color:var(--brass-d); color:#FFFDF6}
+.chips input:focus-visible + span{outline:2px solid var(--brass-d); outline-offset:2px}
+.chips span::before{content:''; display:inline-block; width:7px; height:7px; border-radius:50%;
+  background:var(--cc); margin-right:6px; vertical-align:1px}
+.btn-brass{
+  display:inline-block; width:100%; padding:12px 18px; cursor:pointer;
+  font:600 13px/1 var(--sans); letter-spacing:.28em; text-indent:.28em; color:#3A2C14;
+  background:linear-gradient(180deg, var(--brass-hi), var(--brass) 60%, #96743F);
+  border:1px solid var(--brass-d); border-radius:4px;
+  box-shadow:0 3px 8px -2px rgba(138,106,51,.5), inset 0 1px 0 rgba(255,255,255,.55);
+  transition:filter .2s var(--ease), transform .1s var(--ease);
+}
+.btn-brass:hover{filter:brightness(1.06)}
+.btn-brass:active{transform:translateY(1px)}
+.btn-ghost{
+  display:inline-block; padding:11px 16px; cursor:pointer;
+  font:12px/1 var(--mono); letter-spacing:.16em; color:var(--steel-d);
+  background:transparent; border:1px solid #B9AF98; border-radius:4px;
+  transition:.2s var(--ease);
+}
+.btn-ghost:hover{border-color:var(--steel-d); color:var(--ink)}
+.f-hint{margin-top:10px; font:9.5px/1.6 var(--mono); letter-spacing:.12em; color:#9A917D; text-align:center}
+
+/* ---------- 事件链列表 ---------- */
+.ev-list{list-style:none; max-height:300px; overflow:auto; display:flex; flex-direction:column; gap:8px}
+.ev-list li{
+  display:flex; align-items:center; gap:10px; padding:9px 11px;
+  background:rgba(255,253,246,.7); border:1px solid #DCD3BE; border-radius:4px;
+}
+.ev-list .dot{width:8px; height:8px; border-radius:50%; background:var(--c); flex:none;
+  box-shadow:0 0 0 1px rgba(32,36,43,.12)}
+.ev-list .li-body{flex:1; min-width:0}
+.ev-list .li-t{font:600 13px/1.4 var(--sans); color:var(--ink);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ev-list .li-s{font:10px/1.5 var(--mono); letter-spacing:.06em; color:var(--steel-d)}
+.unlink{
+  flex:none; font:10px/1 var(--mono); letter-spacing:.1em; color:var(--steel-d);
+  background:transparent; border:1px solid #C6BCA5; border-radius:3px;
+  padding:6px 9px; cursor:pointer; transition:.18s var(--ease);
+}
+.unlink:hover{border-color:var(--brass-d); color:var(--brass-d)}
+.unlink.armed{border-color:var(--ink); color:#FFFDF6; background:var(--graphite)}
+.ev-list li.empty{justify-content:center; border-style:dashed; color:var(--steel-d);
+  font:12px/1.7 var(--sans); padding:16px}
+
+/* ---------- Toast ---------- */
+.toast{
+  position:fixed; left:50%; bottom:30px; transform:translate(-50%,16px);
+  background:var(--graphite); color:var(--ivory);
+  border-left:3px solid var(--brass); border-radius:4px;
+  padding:11px 20px; font:12px/1.5 var(--mono); letter-spacing:.1em;
+  box-shadow:0 10px 28px rgba(0,0,0,.4);
+  opacity:0; pointer-events:none; transition:.3s var(--ease); z-index:99; max-width:88vw;
+}
+.toast.show{opacity:1; transform:translate(-50%,0)}
+
+/* ---------- 详情镌刻窗 ---------- */
+.modal-back{
+  position:fixed; inset:0; z-index:80; display:flex; align-items:center; justify-content:center;
+  background:rgba(24,26,32,.55); backdrop-filter:blur(3px);
+  opacity:0; pointer-events:none; transition:opacity .25s var(--ease); padding:18px;
+}
+.modal-back.open{opacity:1; pointer-events:auto}
+.modal{
+  width:min(440px, 94vw); max-height:88vh; overflow:auto; position:relative;
+  background:linear-gradient(180deg,#F6F1E7,#EBE3D2);
+  border:1px solid #CFC5AE; border-radius:8px; padding:28px 26px 22px;
+  box-shadow:0 34px 70px -20px rgba(0,0,0,.55), inset 0 1px 0 #FFFDF6;
+  transform:translateY(16px) scale(.98); transition:transform .25s var(--ease);
+}
+.modal-back.open .modal{transform:none}
+.md-x{
+  position:absolute; top:10px; right:10px; width:30px; height:30px; border-radius:50%;
+  background:transparent; border:1px solid #C6BCA5; color:var(--steel-d);
+  font:16px/1 var(--sans); cursor:pointer; transition:.2s; z-index:2;
+}
+.md-x:hover{border-color:var(--brass-d); color:var(--brass-d); transform:rotate(90deg)}
+.md-kicker{font:9.5px/1 var(--mono); letter-spacing:.3em; color:var(--steel-d);
+  text-align:center; margin-bottom:14px}
+.md-title{font:400 30px/1.2 var(--serif); letter-spacing:.14em; text-align:center; color:var(--ink)}
+.md-title span{font-size:15px; letter-spacing:.3em; color:var(--brass-d); margin-left:10px}
+.md-iso{font:10.5px/1 var(--mono); letter-spacing:.2em; color:var(--steel-d);
+  text-align:center; margin-top:8px; padding-bottom:14px;
+  border-bottom:1px solid rgba(176,141,87,.45)}
+.md-badges{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; padding:13px 0 3px}
+.md-badge{font:11px/1 var(--sans); letter-spacing:.14em; padding:6px 11px; border-radius:3px}
+.md-badge.term{color:var(--steel-d); border:1px solid var(--steel)}
+.md-badge.fest{color:#FFFDF6; background:var(--brass); border:1px solid var(--brass-d)}
+.md-badge.off{color:var(--brass-d); border:1px dashed var(--brass-d)}
+.md-quote{
+  margin:15px 0; padding:13px 15px; border-left:2px solid var(--brass);
+  background:rgba(176,141,87,.07); border-radius:0 4px 4px 0;
+}
+.md-quote p{font:15px/1.9 var(--serif); letter-spacing:.1em; color:#4A4436}
+.md-quote span{display:block; margin-top:7px; font:9px/1 var(--mono);
+  letter-spacing:.26em; color:var(--steel-d); text-align:right}
+.md-ev-t{font:600 10px/1 var(--mono); letter-spacing:.24em; color:var(--steel-d); margin:14px 0 8px}
+.md-ev{list-style:none; display:flex; flex-direction:column; gap:6px}
+.md-ev li{display:flex; align-items:center; gap:9px; font:13px/1.5 var(--sans)}
+.md-ev li:empty{display:none}
+.md-ev .dot{width:7px;height:7px;border-radius:50%;background:var(--c);flex:none}
+.md-ev time{font:11px var(--mono); color:var(--steel-d); flex:none; min-width:40px}
+.md-actions{display:flex; gap:10px; margin-top:18px}
+.md-actions .btn-brass{flex:1.4; width:auto}
+.md-actions .btn-ghost{flex:1; text-align:center}
+
+/* ---------- 背透机芯 ---------- */
+.caseback{
+  position:relative; overflow:hidden; margin-top:10px;
+  background:
+    repeating-radial-gradient(circle at 16% 18%, rgba(230,204,143,.05) 0 1.5px, transparent 1.5px 13px),
+    repeating-radial-gradient(circle at 86% 86%, rgba(155,161,170,.045) 0 1px, transparent 1px 11px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.016) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg,#262A32,#1B1E24);
+  color:var(--ivory); padding:66px 4vw 72px;
+  border-top:1px solid rgba(176,141,87,.5);
+  border-bottom:1px solid rgba(176,141,87,.35);
+}
+.cb-inner{max-width:1180px; margin:0 auto}
+.cb-grid{display:grid; grid-template-columns:1.15fr .85fr; gap:48px; align-items:center; margin-top:38px}
+.gear-stage svg{width:100%; height:auto; display:block;
+  filter:drop-shadow(0 14px 24px rgba(0,0,0,.5))}
+.gear-cap{margin-top:14px; font:10px/1.8 var(--mono); letter-spacing:.18em; color:var(--steel); text-align:center}
+.gear-svg .idle{animation:gspin var(--dur,40s) linear infinite; transform-box:fill-box; transform-origin:center}
+.gear-svg .idle.rev{animation-direction:reverse}
+.gear-svg .kickable{transform-box:fill-box; transform-origin:center}
+.gear-svg .kickable.kicked{animation:gkick 1.8s cubic-bezier(.45,0,.2,1) 1}
+@keyframes gspin{to{transform:rotate(360deg)}}
+@keyframes gkick{to{transform:rotate(360deg)}}
+.gear-svg .balance{animation:bswing 3.4s ease-in-out infinite alternate;
+  transform-box:fill-box; transform-origin:center}
+@keyframes bswing{from{transform:rotate(-26deg)}to{transform:rotate(26deg)}}
+.cb-info{display:flex; flex-direction:column; gap:20px; min-width:0}
+.engrave{
+  border:1px solid rgba(176,141,87,.4); border-radius:6px; padding:18px 20px;
+  background:rgba(230,204,143,.05);
+}
+.engrave h3{font:600 19px/1.5 var(--serif); letter-spacing:.2em; color:var(--brass-hi)}
+.engrave p{font:11.5px/2 var(--mono); letter-spacing:.1em; color:var(--steel)}
+.lg-list{list-style:none; display:flex; flex-direction:column; gap:11px}
+.lg-list li{display:flex; align-items:center; gap:12px; font:12.5px/1.6 var(--sans); color:#C9CDD4}
+.lg-mark{flex:none; width:44px; display:flex; justify-content:center}
+.lg-tag{font:600 10px/1 var(--sans); padding:4px 6px; border-radius:2px}
+.lg-tag.off{background:var(--brass); color:#FFFDF6}
+.lg-tag.on{border:1px solid var(--steel); color:var(--steel)}
+.lg-term{font:600 12px/1 var(--sans); color:var(--steel)}
+.lg-fest{font:600 12px/1 var(--sans); color:var(--brass-hi)}
+.lg-today{position:relative; width:22px; height:22px; border:1.5px solid var(--red); border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font:600 11px var(--sans); color:var(--red)}
+.cb-quote{
+  border:1px solid rgba(176,141,87,.45); border-radius:6px; padding:20px 22px;
+  background:linear-gradient(160deg, rgba(230,204,143,.09), rgba(230,204,143,.03));
+}
+.cb-quote .q-k{font:9px/1 var(--mono); letter-spacing:.3em; color:var(--steel); margin-bottom:11px}
+.cb-quote p{font:16px/2 var(--serif); letter-spacing:.12em; color:var(--brass-hi)}
+.cb-note{font:10px/1.9 var(--mono); letter-spacing:.08em; color:#767D88}
+
+/* ---------- 页脚铭牌 ---------- */
+.site-foot{background:#171A20; padding:60px 4vw 44px}
+.plate{
+  max-width:880px; margin:0 auto; position:relative; text-align:center;
+  background:linear-gradient(160deg,#DCC28D,#B08D57 55%,#96743F);
+  border-radius:6px; padding:34px 36px 30px; color:#3A2C14;
+  box-shadow:0 18px 36px -14px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.5);
+}
+.plate::before{content:''; position:absolute; inset:8px; border:1px solid rgba(58,44,20,.5);
+  border-radius:4px; pointer-events:none}
+.plate .p-brand{font:400 26px/1.4 var(--serif); letter-spacing:.3em; text-indent:.3em;
+  text-shadow:0 1px 0 rgba(255,255,255,.35)}
+.plate .p-model{margin-top:10px; font:11px/1.9 var(--mono); letter-spacing:.24em;
+  text-shadow:0 1px 0 rgba(255,255,255,.3)}
+.plate .p-mat{margin-top:6px; font:12px/1.9 var(--sans); letter-spacing:.24em;
+  text-shadow:0 1px 0 rgba(255,255,255,.3)}
+.plate .p-note{margin-top:12px; font:9.5px/1.8 var(--mono); letter-spacing:.1em; color:rgba(58,44,20,.75)}
+.foot-note{max-width:880px; margin:20px auto 0; text-align:center;
+  font:10.5px/1.9 var(--mono); letter-spacing:.1em; color:#767D88}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1199px){
+  .workbench{grid-template-columns:1fr; max-width:800px; gap:34px}
+  .dial{--dial:min(600px, 86vw)}
+}
+@media (max-width:767px){
+  .site-head{gap:14px; padding:11px 4vw}
+  .site-head nav{display:none}
+  .hero{padding-top:36px}
+  .workbench{padding:26px 16px 60px}
+  /* —— 小屏：表盘重排为方形日历，保留表盘元素 —— */
+  .dial-wrap{width:100%}
+  .dial{
+    --dial:calc(100vw - 64px);
+    width:100%; height:auto; aspect-ratio:auto; border-radius:14px;
+    background:linear-gradient(180deg,#3A404B,#262B33);
+    box-shadow:0 14px 30px -10px rgba(27,30,36,.5), inset 0 1px 0 rgba(255,255,255,.15);
+    padding:14px; display:flex; flex-direction:column; gap:8px;
+  }
+  .dial::after,.ring-svg,.hands-layer,.hubcap,.guilloche,.dial-pusher{display:none}
+  .corner-screw{display:block}
+  .m-strip{display:flex}
+  .wk-head{display:grid}
+  .crown-cluster{position:static; transform:none; flex-direction:row; justify-content:center; gap:14px}
+  .crown{width:52px; height:40px;
+    background:repeating-linear-gradient(90deg, #C9AD76 0 3px, #93764A 3px 6px);
+    border-radius:8px}
+  .crown:active{transform:translateY(1px)}
+  .grid{
+    position:static; display:grid; grid-template-columns:repeat(7,1fr);
+    grid-template-rows:repeat(6,1fr); gap:3px; flex:1; min-height:300px;
+  }
+  .cell{
+    position:static; transform:none; width:auto; height:auto;
+    grid-column:var(--col); grid-row:var(--row); border-radius:6px; padding:2px;
+  }
+  .cell:hover{transform:translateY(-1px)}
+  .cell .d{font-size:15px}
+  .cell .sub{font-size:8.5px}
+  .cap-plaque{width:100%}
+  .cb-grid{grid-template-columns:1fr; gap:34px}
+  .sd-row{gap:10px}
+  .f-row2{grid-template-columns:1fr}
+  .modal{padding:24px 18px 18px}
+}
+@media (max-width:374px){
+  .cell .sub{display:none}
+  .sd-face{max-width:92px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important; transition:none !important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ================= 顶栏 ================= -->
+<header class="site-head">
+  <div class="brand">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <g fill="none" stroke="#B08D57" stroke-width="1.6">
+        <circle cx="12" cy="12" r="6.5"/>
+        <circle cx="12" cy="12" r="2.2"/>
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/>
+      </g>
+    </svg>
+    <div>
+      <div class="b-cn">黄铜辰历</div>
+      <div class="b-en">HOROLOGE · HL-2026</div>
+    </div>
+  </div>
+  <nav aria-label="站内导航">
+    <a href="#dial-sec">表盘</a>
+    <a href="#movement">机芯</a>
+    <a href="#wind-sec">上链</a>
+    <a href="#plate">铭牌</a>
+  </nav>
+  <div class="head-right">
+    <span id="headClock" aria-hidden="true">--:--:--</span>
+    <button class="pusher-btn" id="todayBtn" type="button">回今日</button>
+  </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <p class="spec-line">CAL. HL-2026 — 手动上链年历机芯 — 28,800 VPH — 17 JEWELS — 动力储存 45 小时</p>
+  <h1 class="serif">黄铜<b>辰历</b></h1>
+  <p class="hero-sub">每一天，都是盘面上的一枚刻度；<br>黄铜指针替你把它们一一记起。</p>
+  <div class="stats" aria-hidden="true">
+    <span><i></i>口径 40 MM</span>
+    <span><i></i>厚度 11.2 MM</span>
+    <span><i></i>象牙盘面</span>
+    <span><i></i>限量 365 枚</span>
+  </div>
+</section>
+
+<!-- ================= 工作台：表盘 + 侧栏 ================= -->
+<main class="workbench" id="dial-sec">
+  <div class="rulehead">
+    <i class="rivet"></i><span class="line"></span>
+    <h2>主表盘 · MAIN DIAL</h2>
+    <span class="line r"></span><i class="rivet"></i>
+  </div>
+
+  <!-- 表盘 -->
+  <div class="dial-wrap">
+    <div class="dial" id="dial">
+      <i class="screw corner-screw c1"></i>
+      <i class="screw corner-screw c2"></i>
+      <i class="screw corner-screw c3"></i>
+      <i class="screw corner-screw c4"></i>
+      <div class="guilloche" aria-hidden="true"></div>
+
+      <!-- 表冠（月份快拨） -->
+      <div class="crown-cluster" role="group" aria-label="月份快拨表冠">
+        <button class="crown" id="prevM" type="button" title="上一月" aria-label="上一月">‹</button>
+        <button class="crown" id="nextM" type="button" title="下一月" aria-label="下一月">›</button>
+      </div>
+      <button class="dial-pusher" id="dialPusher" type="button" title="回到今日" aria-label="回到今日">今</button>
+
+      <!-- 小屏条带与周头 -->
+      <div class="m-strip" aria-hidden="true">
+        <span class="mm serif" id="mStripM">九月</span>
+        <span class="mt mono" id="mStripMeta">SEPTEMBER · CAL.2026-09</span>
+      </div>
+      <div class="wk-head" aria-hidden="true">
+        <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span>
+        <span class="we">六</span><span class="we">日</span>
+      </div>
+
+      <!-- 刻度环 / 扇区 / 盘心弧形镌刻 -->
+      <svg class="ring-svg" id="ringSvg" viewBox="0 0 700 700" aria-hidden="true">
+        <defs>
+          <path id="arcTop" d="M 286,350 A 64,64 0 0 1 414,350" fill="none"></path>
+          <path id="arcBot" d="M 292,350 A 58,58 0 0 0 408,350" fill="none"></path>
+        </defs>
+        <path id="selSector" d=""></path>
+        <path id="hovSector" d=""></path>
+        <g id="ticksG"></g>
+        <text id="hubTopT"><textPath href="#arcTop" startOffset="50%" text-anchor="middle">九月 · SEPTEMBER</textPath></text>
+        <text id="hubBotT"><textPath href="#arcBot" startOffset="50%" text-anchor="middle">CAL.2026-09</textPath></text>
+      </svg>
+
+      <!-- 日历格（极坐标排布 / 小屏方形网格） -->
+      <div class="grid" id="grid" role="group" aria-label="当月日历"></div>
+
+      <!-- 指针 -->
+      <div class="hands-layer" aria-hidden="true">
+        <div class="rig today-rig" id="todayRig"><span class="main"></span><span class="tail"></span></div>
+        <div class="rig sel-rig" id="selRig"><span class="main"></span><span class="tail"></span></div>
+      </div>
+      <div class="hubcap" aria-hidden="true"></div>
+    </div>
+
+    <!-- 图注铭牌 -->
+    <div class="cap-plaque">
+      <i class="screw"></i>
+      <div class="cap-txt">
+        <p id="capMain">—</p>
+        <p id="capSub" class="mono">—</p>
+      </div>
+      <i class="screw"></i>
+    </div>
+  </div>
+
+  <!-- 侧栏 -->
+  <aside class="panel">
+    <div class="block" aria-label="子表盘">
+      <p class="blk-t">子表盘 · COMPLICATIONS</p>
+      <div class="sd-row">
+        <div class="sd">
+          <div class="sd-face" id="sdSec"><span class="sd-hand" id="secHand"></span><span class="sd-pin"></span></div>
+          <b class="sd-name">走秒</b>
+          <span class="sd-label">RUNNING SEC</span>
+        </div>
+        <div class="sd">
+          <div class="sd-face" id="sdMoon"><span class="moon-win" id="moonWin"></span><span class="sd-pin"></span></div>
+          <b class="sd-name" id="moonName">月相</b>
+          <span class="sd-label">MOONPHASE</span>
+        </div>
+        <div class="sd">
+          <div class="sd-face" id="sdCount">
+            <span class="sd-ring" id="cdRing"></span>
+            <span class="sd-num"><b id="cdNum">—</b><small id="cdLabel">—</small></span>
+            <span class="sd-pin"></span>
+          </div>
+          <b class="sd-name">倒计时</b>
+          <span class="sd-label">COUNTDOWN</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="block" id="wind-sec" aria-label="事件上链">
+      <p class="blk-t">事件上链 · WINDING</p>
+      <form id="windForm" novalidate>
+        <div class="f-row2">
+          <div class="f-field">
+            <label for="fDate">日期</label>
+            <input type="date" id="fDate" min="2026-01-01" max="2026-12-31" required>
+            <p class="f-err" id="eDate"></p>
+          </div>
+          <div class="f-field">
+            <label for="fTime">时刻（留空为全天）</label>
+            <input type="time" id="fTime">
+            <p class="f-err" id="eTime"></p>
+          </div>
+        </div>
+        <div class="f-field">
+          <label for="fTitle">事项标题</label>
+          <input type="text" id="fTitle" maxlength="20" placeholder="如：产品评审会（2–20 字）">
+          <p class="f-err" id="eTitle"></p>
+        </div>
+        <div class="f-field">
+          <label for="fLoc">地点（可选）</label>
+          <input type="text" id="fLoc" maxlength="12" placeholder="如：3F 会议室">
+        </div>
+        <div class="f-field">
+          <span class="f-label">分类</span>
+          <div class="chips" id="fCat">
+            <label><input type="radio" name="cat" value="work" checked><span style="--cc:#7E8894">工作</span></label>
+            <label><input type="radio" name="cat" value="life"><span style="--cc:#B08D57">生活</span></label>
+            <label><input type="radio" name="cat" value="memo"><span style="--cc:#8A5A2B">纪念</span></label>
+            <label><input type="radio" name="cat" value="study"><span style="--cc:#5F7A72">学习</span></label>
+          </div>
+        </div>
+        <button class="btn-brass" type="submit">上链 · 编入日历</button>
+        <p class="f-hint">WINDED TO MAINSPRING — 事项仅存于本机浏览器</p>
+      </form>
+    </div>
+
+    <div class="block" aria-label="本月事项">
+      <p class="blk-t" id="listTitle">本月事件链 · LINKED</p>
+      <ul class="ev-list" id="evList"></ul>
+    </div>
+  </aside>
+</main>
+
+<!-- ================= 背透机芯 ================= -->
+<section class="caseback" id="movement">
+  <div class="cb-inner">
+    <div class="rulehead dark">
+      <i class="rivet"></i><span class="line"></span>
+      <h2>背透机芯 · EXHIBITION CASEBACK</h2>
+      <span class="line r"></span><i class="rivet"></i>
+    </div>
+    <div class="cb-grid">
+      <div class="gear-stage">
+        <svg class="gear-svg" id="gearBox" viewBox="0 0 560 420" role="img" aria-label="背透机芯齿轮组装饰"></svg>
+        <p class="gear-cap">氛围装饰 — 齿轮以 40 秒/圈待机自转，翻月时联动缓转一圈</p>
+      </div>
+      <div class="cb-info">
+        <div class="engrave">
+          <h3>十七钻 · 手动上链</h3>
+          <p>CAL. HL-2026 — HAND-WOUND</p>
+          <p>28,800 VPH · POWER RESERVE 45H</p>
+          <p>年历显示 · 周末黄铜淡染 · 今日红针所指</p>
+        </div>
+        <div>
+          <p class="blk-t">盘面图例 · LEGEND</p>
+          <ul class="lg-list">
+            <li><span class="lg-mark"><span class="lg-tag off">休</span></span>法定节假日（角标于格右上）</li>
+            <li><span class="lg-mark"><span class="lg-tag on">班</span></span>调休补班（以国务院公告为准）</li>
+            <li><span class="lg-mark"><span class="lg-term">白露</span></span>二十四节气（钢银标注）</li>
+            <li><span class="lg-mark"><span class="lg-fest">中秋</span></span>农历节日（黄铜标注，初一显月名）</li>
+            <li><span class="lg-mark"><span class="lg-today">8</span></span>今日 — 红针所指、红圈套数</li>
+          </ul>
+        </div>
+        <div class="cb-quote">
+          <p class="q-k">今日镌刻 · ENGRAVED TODAY</p>
+          <p class="serif" id="cbQuote">—</p>
+        </div>
+        <p class="cb-note">农历、节气与节假日数据内置于 2026 年历；节气日期 ±1 日。事件仅保存于您的浏览器本地。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 页脚铭牌 ================= -->
+<footer class="site-foot" id="plate">
+  <div class="plate">
+    <i class="screw tl"></i><i class="screw tr"></i><i class="screw bl"></i><i class="screw br"></i>
+    <p class="p-brand">HOROLOGE · 黄铜辰历</p>
+    <p class="p-model">MODEL HL-2026 — CAL. HL-2026 — 17 JEWELS — HAND-WOUND</p>
+    <p class="p-mat">黄铜表壳 · 拉丝钢表圈 · 象牙盘面 · 2026 年制 · 限量 365 枚</p>
+    <p class="p-note">节假日与调休安排以国务院当年公告为准 · 农历与节气为内置数据 ±1 日</p>
+  </div>
+  <p class="foot-note">© 2026 HOROLOGE 辰钟历 — 把时间戴在墙上 · 本页全部计算均在本地完成</p>
+</footer>
+
+<!-- ================= 日期详情镌刻窗 ================= -->
+<div class="modal-back" id="modalBack">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mdTitle">
+    <i class="screw tl"></i><i class="screw tr"></i><i class="screw bl"></i><i class="screw br"></i>
+    <button class="md-x" id="mdClose" type="button" aria-label="关闭">×</button>
+    <p class="md-kicker">DATE DETAIL · 镌刻详情窗</p>
+    <h3 class="md-title" id="mdTitle">—<span>—</span></h3>
+    <p class="md-iso" id="mdIso">—</p>
+    <div class="md-badges" id="mdBadges"></div>
+    <div class="md-quote">
+      <p id="mdQuote">—</p>
+      <span>— HL-2026 盘面镌刻</span>
+    </div>
+    <p class="md-ev-t">当日事项 · ON THIS DAY</p>
+    <ul class="md-ev" id="mdEvents"></ul>
+    <div class="md-actions">
+      <button class="btn-brass" id="mdWind" type="button">为这一天上链</button>
+      <button class="btn-ghost" id="mdOk" type="button">合上表盖</button>
+    </div>
+  </div>
+</div>
+
+<noscript><p style="text-align:center;padding:20px;font-family:monospace">本表芯需要启用 JavaScript 方可走时。</p></noscript>
+
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   一、内置 2026 年历数据（节气 / 节假日 / 农历锚点 / 每日一句）
+   ============================================================ */
+var WEEK_CN = ['一','二','三','四','五','六','日'];
+var MONTH_CN = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+var MONTH_EN = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+var LUNAR_MONTH = ['正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','冬月','腊月'];
+var LUNAR_DAY = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十',
+  '十一','十二','十三','十四','十五','十六','十七','十八','十九','二十',
+  '廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+
+/* 2026 年二十四节气（公历，±1 日） */
+var SOLAR_TERMS = {
+  '1-5':'小寒','1-20':'大寒','2-4':'立春','2-19':'雨水','3-5':'惊蛰','3-20':'春分',
+  '4-5':'清明','4-20':'谷雨','5-5':'立夏','5-21':'小满','6-6':'芒种','6-21':'夏至',
+  '7-7':'小暑','7-23':'大暑','8-7':'立秋','8-23':'处暑','9-8':'白露','9-23':'秋分',
+  '10-8':'寒露','10-23':'霜降','11-7':'立冬','11-22':'小雪','12-7':'大雪','12-22':'冬至'
+};
+/* 2026 年节假日与农历节日（off:法定休；角标以国务院公告为准） */
+var FESTIVALS = {
+  '1-1':{n:'元旦',off:1},
+  '2-16':{n:'除夕',off:1},
+  '2-17':{n:'春节',off:1},
+  '3-3':{n:'元宵节'},
+  '3-8':{n:'妇女节'},
+  '4-5':{n:'清明节',off:1},
+  '5-1':{n:'劳动节',off:1},
+  '6-1':{n:'儿童节'},
+  '6-19':{n:'端午节'},
+  '8-19':{n:'七夕'},
+  '9-10':{n:'教师节'},
+  '9-25':{n:'中秋节'},
+  '10-1':{n:'国庆节',off:1},
+  '10-18':{n:'重阳节'},
+  '12-25':{n:'圣诞节'}
+};
+/* 农历锚点：[公历 y,m,d = 某农历月初一, 农历月序 1-12, 本月天数]（无闰月，2026 丙午年） */
+var LUNAR_ANCHORS = [
+  [2025,12,20, 11, 30],
+  [2026, 1,19, 12, 29],
+  [2026, 2,17,  1, 30],
+  [2026, 3,19,  2, 29],
+  [2026, 4,17,  3, 30],
+  [2026, 5,17,  4, 29],
+  [2026, 6,15,  5, 29],
+  [2026, 7,14,  6, 30],
+  [2026, 8,13,  7, 29],
+  [2026, 9,11,  8, 29],
+  [2026,10,10,  9, 30],
+  [2026,11, 9, 10, 30],
+  [2026,12, 9, 11, 30],
+  [2027, 1, 8, 12, 29]
+];
+var QUOTES = [
+  '把日子过成日历，一页一页，皆是收成。',
+  '时间不语，却回答了所有问题。',
+  '今日宜：把想做的事，做成今天的事。',
+  '撕去的是纸，留下的是经历。',
+  '节气不催人，人自赶路。',
+  '所有的明天，都会准时抵达。',
+  '认真记下的一天，才算真正来过。',
+  '翻过这一页，春天就近了一格。'
+];
+var CATS = {
+  work:{n:'工作', c:'#7E8894'},
+  life:{n:'生活', c:'#B08D57'},
+  memo:{n:'纪念', c:'#8A5A2B'},
+  study:{n:'学习', c:'#5F7A72'}
+};
+
+/* ============================================================
+   二、工具函数
+   ============================================================ */
+function $(s){ return document.querySelector(s); }
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(ch){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+  });
+}
+function dateOf(y,m,d){ return new Date(y, m-1, d); }
+function keyOf(y,m,d){ return y + '-' + m + '-' + d; }
+function parseKey(key){
+  var p = key.split('-');
+  return { y:+p[0], m:+p[1], d:+p[2] };
+}
+function isoOf(key){ var p = parseKey(key); return p.y + '-' + pad2(p.m) + '-' + pad2(p.d); }
+function todayKey(){ var t = new Date(); return keyOf(t.getFullYear(), t.getMonth()+1, t.getDate()); }
+function inYear2026(key){ return parseKey(key).y === 2026; }
+function dayOfYear(p){
+  var start = dateOf(p.y, 1, 1).getTime();
+  return Math.round((dateOf(p.y, p.m, p.d).getTime() - start) / 86400000);
+}
+function weekName(p){ return '星期' + WEEK_CN[(dateOf(p.y,p.m,p.d).getDay()+6)%7]; }
+
+/* 农历：查锚点表 */
+function lunarOf(y,m,d){
+  var t = dateOf(y,m,d).getTime();
+  for (var i = 0; i < LUNAR_ANCHORS.length - 1; i++){
+    var a = LUNAR_ANCHORS[i], b = LUNAR_ANCHORS[i+1];
+    var ta = dateOf(a[0],a[1],a[2]).getTime();
+    var tb = dateOf(b[0],b[1],b[2]).getTime();
+    if (t >= ta && t < tb){
+      return { m:a[3], day: Math.round((t-ta)/86400000) + 1 };
+    }
+  }
+  return null;
+}
+function lunarYearName(y,m,d){
+  return dateOf(y,m,d).getTime() < dateOf(2026,2,17).getTime() ? '乙巳' : '丙午';
+}
+/* 某日完整信息 */
+function infoOf(y,m,d){
+  var p = { y:y, m:m, d:d };
+  var lunar = lunarOf(y,m,d);
+  var fest = FESTIVALS[m + '-' + d] || null;
+  var term = SOLAR_TERMS[m + '-' + d] || null;
+  var sub;
+  if (fest) sub = { t:fest.n, cls:'f' };
+  else if (term) sub = { t:term, cls:'t' };
+  else if (lunar && lunar.day === 1) sub = { t:LUNAR_MONTH[lunar.m-1], cls:'m' };
+  else if (lunar) sub = { t:LUNAR_DAY[lunar.day-1], cls:'' };
+  else sub = { t:'', cls:'' };
+  return {
+    key: keyOf(y,m,d), p:p, col:(dateOf(y,m,d).getDay()+6)%7,
+    lunar:lunar, fest:fest, term:term, sub:sub,
+    quote: QUOTES[dayOfYear(p) % QUOTES.length]
+  };
+}
+
+/* ============================================================
+   三、状态与本地存储
+   ============================================================ */
+var now = new Date();
+var VIEW_START = inYear2026(todayKey())
+  ? dateOf(now.getFullYear(), now.getMonth()+1, 1)
+  : dateOf(2026, 9, 1);
+var month = VIEW_START.getMonth() + 1;              /* 当前展示月 1-12 */
+var selKey = inYear2026(todayKey()) ? todayKey() : '2026-9-8';
+var events = [];
+
+var STORE_KEY = 'hl2026.events';
+var SEED_KEY = 'hl2026.seeded';
+function loadEvents(){
+  try {
+    var raw = localStorage.getItem(STORE_KEY);
+    if (raw){ var arr = JSON.parse(raw); if (Array.isArray(arr)) return arr; }
+    if (!localStorage.getItem(SEED_KEY)){
+      var seed = [
+        { id:'s1', date:'2026-9-10', time:'09:30', title:'产品评审会', loc:'3F 会议室', cat:'work' },
+        { id:'s2', date:'2026-9-12', time:'',      title:'妈妈的生日 · 提前订花', loc:'', cat:'memo' },
+        { id:'s3', date:'2026-9-15', time:'19:30', title:'健身 · 硬拉日', loc:'健身房', cat:'life' }
+      ];
+      localStorage.setItem(SEED_KEY, '1');
+      localStorage.setItem(STORE_KEY, JSON.stringify(seed));
+      return seed;
+    }
+  } catch(e){}
+  return [];
+}
+function saveEvents(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(events)); }
+  catch(e){ toast('存储不可用：事项无法保存'); }
+}
+events = loadEvents();
+
+function eventsOn(key){
+  return events.filter(function(ev){ return ev.date === key; })
+    .sort(function(a,b){ return (a.time||'00:00') < (b.time||'00:00') ? -1 : 1; });
+}
+function catColor(ev){ return (CATS[ev.cat] || CATS.work).c; }
+
+/* ============================================================
+   四、盘面几何：60 刻度环 / 周日向扇区 / 极坐标日历格
+   ============================================================ */
+var DC = 350;                                       /* 表盘中心（700 视窗） */
+var RINGS = [94, 128.8, 163.6, 198.4, 233.2, 268];  /* 六周半径 */
+function pol(r, aDeg){
+  var a = aDeg * Math.PI / 180;
+  return [DC + r * Math.cos(a), DC + r * Math.sin(a)];
+}
+function colAngle(c){ return -90 + (c - 3) * (360 / 7); }
+function annularSector(r0, r1, a0, a1){
+  function pt(r, a){ var q = pol(r, a); return q[0].toFixed(1) + ',' + q[1].toFixed(1); }
+  return 'M' + pt(r1,a0) + ' A' + r1 + ',' + r1 + ' 0 0 1 ' + pt(r1,a1) +
+         ' L' + pt(r0,a1) + ' A' + r0 + ',' + r0 + ' 0 0 0 ' + pt(r0,a0) + ' Z';
+}
+function buildRing(){
+  var parts = [];
+  var i, a, p0, p1;
+  for (i = 0; i < 60; i++){
+    var maj = i % 5 === 0;
+    a = i * 6;
+    p0 = pol(maj ? 304 : 318, a);
+    p1 = pol(332, a);
+    parts.push('<line class="tick' + (maj ? ' maj' : '') + '" x1="' + p0[0].toFixed(1) +
+      '" y1="' + p0[1].toFixed(1) + '" x2="' + p1[0].toFixed(1) + '" y2="' + p1[1].toFixed(1) + '"/>');
+  }
+  parts.push('<circle class="sep" cx="350" cy="350" r="300"/>');
+  parts.push('<circle class="sep" cx="350" cy="350" r="84"/>');
+  for (i = 0; i < 7; i++){
+    a = colAngle(i);
+    var q0 = pol(304, a), q1 = pol(332, a);
+    parts.push('<line class="tick-hl" id="thl' + i + '" x1="' + q0[0].toFixed(1) +
+      '" y1="' + q0[1].toFixed(1) + '" x2="' + q1[0].toFixed(1) + '" y2="' + q1[1].toFixed(1) + '"/>');
+  }
+  for (i = 0; i < 7; i++){
+    var w = pol(291, colAngle(i));
+    parts.push('<text class="wl" id="wl' + i + '" x="' + w[0].toFixed(1) + '" y="' +
+      (w[1] + 6).toFixed(1) + '" text-anchor="middle">' + WEEK_CN[i] + '</text>');
+  }
+  $('#ticksG').innerHTML = parts.join('');
+}
+
+var gridEl = $('#grid');
+var today = todayKey();
+var TODAY_P = inYear2026(today) ? parseKey(today) : null;
+
+function renderMonth(){
+  var first = dateOf(2026, month, 1);
+  var startCol = (first.getDay() + 6) % 7;
+  var dim = dateOf(2026, month + 1, 0).getDate();
+  var prevDim = dateOf(2026, month, 0).getDate();
+  var html = '';
+  for (var i = 0; i < 42; i++){
+    var w = Math.floor(i / 7), c = i % 7;
+    var dayNum = i - startCol + 1, m = month, dimCls = '';
+    if (dayNum < 1){ m -= 1; dayNum += prevDim; dimCls = ' dim'; }
+    else if (dayNum > dim){ m += 1; dayNum -= dim; dimCls = ' dim'; }
+    var key = keyOf(2026, m, dayNum);
+    var info = infoOf(2026, m, dayNum);
+    var rad = colAngle(c) * Math.PI / 180;
+    var r = RINGS[w];
+    var px = (50 + r * Math.cos(rad) / 7).toFixed(3);
+    var py = (50 + r * Math.sin(rad) / 7).toFixed(3);
+    var cls = 'cell' + dimCls + (info.col >= 5 ? ' we' : '');
+    if (key === today) cls += ' today';
+    if (key === selKey) cls += ' sel';
+    var evs = dimCls ? [] : eventsOn(key);
+    var dots = '';
+    for (var e = 0; e < Math.min(evs.length, 2); e++){
+      dots += '<i style="--c:' + catColor(evs[e]) + '"></i>';
+    }
+    var tag = info.fest && info.fest.off ? '<span class="tag-off">休</span>' : '';
+    var aria = (m) + '月' + dayNum + '日 ' + weekName(info.p) +
+      (info.sub.t ? ' ' + info.sub.t : '') + (lunarTextOf(info) ? ' 农历' + lunarTextOf(info) : '');
+    html += '<button type="button" class="' + cls + '" data-key="' + key + '"' +
+      (dimCls ? ' disabled' : '') +
+      ' style="--px:' + px + '%;--py:' + py + '%;--col:' + (c+1) + ';--row:' + (w+1) + '"' +
+      ' aria-label="' + esc(aria) + '">' +
+      '<span class="d">' + dayNum + '</span>' +
+      (info.sub.t ? '<span class="sub ' + info.sub.cls + '">' + esc(info.sub.t) + '</span>' : '') +
+      tag + (dots ? '<span class="evdot">' + dots + '</span>' : '') +
+      '</button>';
+  }
+  gridEl.innerHTML = html;
+
+  /* 盘心弧形镌刻 + 小屏条带 */
+  var q = Math.ceil(month / 3);
+  $('#hubTopT').firstChild.textContent = MONTH_CN[month-1] + ' · ' + MONTH_EN[month-1];
+  $('#hubBotT').firstChild.textContent = 'CAL.2026-' + pad2(month) + ' — ' + dim + ' DAYS — QUARTER ' + q;
+  $('#mStripM').textContent = MONTH_CN[month-1];
+  $('#mStripMeta').textContent = MONTH_EN[month-1] + ' · CAL.2026-' + pad2(month);
+  $('#listTitle').textContent = MONTH_CN[month-1] + '事件链 · LINKED';
+
+  updateSelectionUI();
+  renderCaption(selKey);
+  renderList();
+}
+function lunarTextOf(info){
+  if (!info.lunar) return '';
+  return lunarYearName(info.p.y, info.p.m, info.p.d) + '年 ' +
+    LUNAR_MONTH[info.lunar.m-1] + LUNAR_DAY[info.lunar.day-1];
+}
+
+/* ---------- 指针（累计转角，最短路径缓动） ---------- */
+var selRig = $('#selRig'), todayRig = $('#todayRig');
+var selA = 0, todayA = 0;
+function shortestTo(cur, target){
+  var delta = ((target - cur) % 360 + 540) % 360 - 180;
+  return cur + delta;
+}
+function rotateRig(rig, state, target){
+  state.a = shortestTo(state.a, target);
+  rig.style.setProperty('--a', state.a.toFixed(2) + 'deg');
+}
+var selState = { a:0 }, todayState = { a:0 };
+function updateSelectionUI(){
+  var cells = gridEl.querySelectorAll('.cell');
+  for (var i = 0; i < cells.length; i++){
+    cells[i].classList.toggle('sel', cells[i].getAttribute('data-key') === selKey);
+  }
+  var sk = parseKey(selKey);
+  var inShown = sk.m === month;
+  var targetCol = inShown ? (dateOf(sk.y, sk.m, sk.d).getDay()+6)%7
+                          : (dateOf(2026, month, 1).getDay()+6)%7;
+  setSector($('#selSector'), targetCol, true);
+  setColLight(targetCol, true, true);
+  rotateRig(selRig, selState, colAngle(targetCol));
+
+  if (TODAY_P && TODAY_P.m === month){
+    todayRig.classList.remove('far');
+    var tc = (dateOf(TODAY_P.y, TODAY_P.m, TODAY_P.d).getDay()+6)%7;
+    rotateRig(todayRig, todayState, colAngle(tc));
+  } else {
+    todayRig.classList.add('far');
+  }
+}
+function setSector(path, col, on){
+  path.setAttribute('d', on ? annularSector(80, 300, colAngle(col)-24, colAngle(col)+24) : '');
+}
+function setColLight(col, on, sel){
+  var hl = $('#thl' + col), wl = $('#wl' + col);
+  if (hl) hl.classList.toggle('on', on);
+  if (wl) wl.classList.toggle('lit', on && sel);
+}
+
+/* ---------- 图注 ---------- */
+function capText(key){
+  var info = infoOf(parseKey(key).y, parseKey(key).m, parseKey(key).d);
+  var main = info.p.y + ' 年 ' + info.p.m + ' 月 ' + info.p.d + ' 日 · ' + weekName(info.p);
+  var bits = [];
+  if (lunarTextOf(info)) bits.push('农历 ' + lunarTextOf(info));
+  if (info.term) bits.push('节气 ' + info.term);
+  if (info.fest) bits.push(info.fest.n + (info.fest.off ? ' · 休' : ''));
+  var n = eventsOn(key).length;
+  if (n) bits.push('事项 ' + n + ' 项');
+  if (!bits.length) bits.push('平白一日，亦可上链');
+  return { main:main, sub:bits.join(' · ') };
+}
+function renderCaption(key){
+  var t = capText(key);
+  $('#capMain').textContent = t.main;
+  $('#capSub').textContent = t.sub;
+}
+
+/* ============================================================
+   五、交互：选日 / 悬停 / 表冠翻月
+   ============================================================ */
+function selectDate(key, openModal){
+  selKey = key;
+  updateSelectionUI();
+  renderCaption(key);
+  if (openModal) openModalAt(key);
+}
+var hoverCell = null;
+gridEl.addEventListener('click', function(e){
+  var cell = e.target.closest('.cell');
+  if (!cell || cell.classList.contains('dim')) return;
+  selectDate(cell.getAttribute('data-key'), true);
+});
+gridEl.addEventListener('mouseover', function(e){
+  var cell = e.target.closest('.cell');
+  if (!cell || cell === hoverCell || cell.classList.contains('dim')) return;
+  clearHover();
+  hoverCell = cell;
+  var key = cell.getAttribute('data-key');
+  var p = parseKey(key);
+  var col = infoOf(p.y, p.m, p.d).col;
+  setSector($('#hovSector'), col, true);
+  setColLight(col, true, false);
+  renderCaption(key);
+});
+gridEl.addEventListener('mouseout', function(e){
+  var cell = e.target.closest('.cell');
+  if (!cell) return;
+  var to = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest('.cell') : null;
+  if (to === cell) return;
+  clearHover();
+});
+gridEl.addEventListener('focusin', function(e){
+  var cell = e.target.closest('.cell');
+  if (!cell || cell.classList.contains('dim')) return;
+  var key = cell.getAttribute('data-key');
+  var p = parseKey(key);
+  var col = infoOf(p.y, p.m, p.d).col;
+  setSector($('#hovSector'), col, true);
+  setColLight(col, true, false);
+  renderCaption(key);
+});
+gridEl.addEventListener('focusout', clearHover);
+function clearHover(){
+  if (hoverCell){ hoverCell = null; }
+  $('#hovSector').setAttribute('d', '');
+  for (var i = 0; i < 7; i++){
+    var hl = $('#thl' + i);
+    if (hl) hl.classList.remove('on');
+    var wl = $('#wl' + i);
+    if (wl) wl.classList.remove('lit');
+  }
+  /* 恢复选中列常亮 */
+  var sk = parseKey(selKey);
+  var col = sk.m === month ? infoOf(sk.y, sk.m, sk.d).col
+    : infoOf(2026, month, 1).col;
+  setColLight(col, true, true);
+  renderCaption(selKey);
+}
+
+/* ---------- 表冠翻月 ---------- */
+var prevBtn = $('#prevM'), nextBtn = $('#nextM');
+function setMonth(m){
+  if (m === month || m < 1 || m > 12) return;
+  month = m;
+  prevBtn.disabled = (m === 1);
+  nextBtn.disabled = (m === 12);
+  gridEl.classList.add('leaving');
+  kickGears();
+  setTimeout(function(){
+    renderMonth();
+    gridEl.classList.remove('leaving');
+    gridEl.classList.add('entering');
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ gridEl.classList.remove('entering'); });
+    });
+  }, 240);
+}
+function crownTurn(btn){
+  btn.classList.remove('turn');
+  void btn.offsetWidth;
+  btn.classList.add('turn');
+  kickGears();
+}
+prevBtn.addEventListener('click', function(){
+  if (month <= 1){ toast('已到 2026 年历端点 · 一月'); return; }
+  crownTurn(prevBtn); setMonth(month - 1);
+});
+nextBtn.addEventListener('click', function(){
+  if (month >= 12){ toast('已到 2026 年历端点 · 十二月'); return; }
+  crownTurn(nextBtn); setMonth(month + 1);
+});
+function goToday(){
+  if (!TODAY_P){ toast('本机芯镌刻 2026 年历，今日不在盘面'); return; }
+  if (month !== TODAY_P.m){
+    month = TODAY_P.m;
+    prevBtn.disabled = (month === 1);
+    nextBtn.disabled = (month === 12);
+    renderMonth();
+  }
+  selectDate(today, true);
+  toast('指针已归今日');
+}
+$('#todayBtn').addEventListener('click', goToday);
+$('#dialPusher').addEventListener('click', goToday);
+document.addEventListener('keydown', function(e){
+  var tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+  if (e.key === 'Escape'){ closeModal(); return; }
+  if ($('#modalBack').classList.contains('open')) return;
+  if (e.key === 'ArrowLeft') prevBtn.click();
+  if (e.key === 'ArrowRight') nextBtn.click();
+});
+
+/* ============================================================
+   六、事件上链（表单校验 + localStorage）
+   ============================================================ */
+var fDate = $('#fDate'), fTime = $('#fTime'), fTitle = $('#fTitle'), fLoc = $('#fLoc');
+function setErr(input, errEl, msg){
+  errEl.textContent = msg || '';
+  if (input) input.classList.toggle('bad', !!msg);
+}
+$('#windForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var ok = true;
+  var dv = fDate.value;
+  var dp = dv ? dv.split('-').map(Number) : null;
+  if (!dv || !dp || dp[0] !== 2026 || dp[1] < 1 || dp[1] > 12){
+    setErr(fDate, $('#eDate'), '请选择 2026 年内的日期'); ok = false;
+  } else {
+    var dim = dateOf(dp[0], dp[1] + 1, 0).getDate();
+    if (dp[2] < 1 || dp[2] > dim){ setErr(fDate, $('#eDate'), '该月无此日期'); ok = false; }
+    else setErr(fDate, $('#eDate'), '');
+  }
+  var title = fTitle.value.trim();
+  if (title.length < 2 || title.length > 20){
+    setErr(fTitle, $('#eTitle'), '标题需 2–20 字'); ok = false;
+  } else setErr(fTitle, $('#eTitle'), '');
+  if (!ok){ toast('上链失败：请检查红字标注'); return; }
+  var cat = document.querySelector('input[name="cat"]:checked').value;
+  events.push({
+    id: 'e' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36),
+    date: dp[0] + '-' + dp[1] + '-' + dp[2],
+    time: fTime.value || '',
+    title: title,
+    loc: fLoc.value.trim(),
+    cat: cat
+  });
+  saveEvents();
+  renderMonth();
+  renderCountdown();
+  if (parseKey(selKey).m === month) { /* dots already re-rendered */ }
+  fTitle.value = ''; fLoc.value = ''; fTime.value = '';
+  toast('已上链 · 发条 +1，事项编入 ' + dp[1] + ' 月 ' + dp[2] + ' 日');
+});
+
+function renderList(){
+  var list = $('#evList');
+  var rows = events.filter(function(ev){
+    var p = parseKey(ev.date); return p.y === 2026 && p.m === month;
+  }).sort(function(a, b){
+    var pa = parseKey(a.date), pb = parseKey(b.date);
+    if (pa.d !== pb.d) return pa.d - pb.d;
+    return (a.time || '00:00') < (b.time || '00:00') ? -1 : 1;
+  });
+  if (!rows.length){
+    list.innerHTML = '<li class="empty">本月链上暂无事项 —— 点击盘面日期，或在此上一链。</li>';
+    return;
+  }
+  var html = '';
+  rows.forEach(function(ev){
+    var p = parseKey(ev.date);
+    var info = infoOf(p.y, p.m, p.d);
+    var c = catColor(ev);
+    html += '<li data-id="' + esc(ev.id) + '">' +
+      '<span class="dot" style="--c:' + c + '"></span>' +
+      '<span class="li-body">' +
+      '<span class="li-t">' + (ev.time ? esc(ev.time) + ' · ' : '全天 · ') + esc(ev.title) + '</span>' +
+      '<span class="li-s">' + (p.m) + '月' + p.d + '日 ' + WEEK_CN[info.col] +
+      (ev.loc ? ' · ' + esc(ev.loc) : '') + '</span>' +
+      '</span>' +
+      '<button type="button" class="unlink" data-id="' + esc(ev.id) + '">卸链</button>' +
+      '</li>';
+  });
+  list.innerHTML = html;
+}
+$('#evList').addEventListener('click', function(e){
+  var btn = e.target.closest('.unlink');
+  if (!btn) return;
+  if (!btn.classList.contains('armed')){
+    btn.classList.add('armed');
+    btn.textContent = '确认卸链？';
+    setTimeout(function(){
+      if (btn.isConnected){ btn.classList.remove('armed'); btn.textContent = '卸链'; }
+    }, 2600);
+    return;
+  }
+  var id = btn.getAttribute('data-id');
+  events = events.filter(function(ev){ return ev.id !== id; });
+  saveEvents();
+  renderMonth();
+  renderCountdown();
+  toast('已卸链 · 事项已自链条取下');
+});
+
+/* ============================================================
+   七、子表盘：走秒 / 月相 / 倒计时
+   ============================================================ */
+(function buildSecDial(){
+  var face = $('#sdSec');
+  for (var i = 0; i < 12; i++){
+    var t = document.createElement('i');
+    t.className = 'sd-tick' + (i % 3 === 0 ? ' mj' : '');
+    t.style.setProperty('--ta', (i * 30) + 'deg');
+    face.appendChild(t);
+  }
+})();
+var secHand = $('#secHand');
+function secLoop(){
+  if (!document.hidden){
+    var d = new Date();
+    var s = d.getSeconds() + d.getMilliseconds() / 1000;
+    secHand.style.transform = 'rotate(' + (s * 6).toFixed(2) + 'deg)';
+  }
+  requestAnimationFrame(secLoop);
+}
+requestAnimationFrame(secLoop);
+
+/* 月相：双圆弧法，k=cos(2πp) 决定明暗界线 */
+function moonPhase(d){
+  var synodic = 29.530588853;
+  var ref = Date.UTC(2000, 0, 6, 18, 14);
+  var days = (d.getTime() - ref) / 86400000;
+  var p = ((days % synodic) + synodic) % synodic / synodic;
+  return p;
+}
+function moonPhaseName(p){
+  if (p < .03 || p >= .97) return '新月';
+  if (p < .22) return '娥眉月';
+  if (p < .28) return '上弦月';
+  if (p < .47) return '盈凸月';
+  if (p < .53) return '满月';
+  if (p < .72) return '亏凸月';
+  if (p < .78) return '下弦月';
+  return '残月';
+}
+function renderMoon(){
+  var d = new Date();
+  var p = moonPhase(d);
+  var k = Math.cos(2 * Math.PI * p);
+  var r = 30, rx = (Math.abs(k) * r).toFixed(1);
+  /* 盈月右明：明暗界线弧随 k 正负切换绕向（k>0 娥眉/残月为弯月，k<0 为凸月） */
+  var sweepRet = k > 0 ? 0 : 1;
+  var lit = 'M50,20 A' + r + ',' + r + ' 0 0 1 50,80 A' + rx + ',' + r + ' 0 0 ' + sweepRet + ' 50,20 Z';
+  var flip = p >= .5;
+  $('#moonWin').innerHTML =
+    '<svg viewBox="0 0 100 100" aria-hidden="true">' +
+    '<circle cx="50" cy="50" r="30" fill="#262B36"/>' +
+    '<g' + (flip ? ' transform="translate(100,0) scale(-1,1)"' : '') + '>' +
+    '<path d="' + lit + '" fill="#EFEAE0"/>' +
+    '<circle cx="58" cy="42" r="4.5" fill="#D8D0BE" opacity=".8"/>' +
+    '<circle cx="47" cy="58" r="3" fill="#D8D0BE" opacity=".6"/>' +
+    '</g></svg>';
+  var name = moonPhaseName(p) + (p < .5 ? ' · 盈' : (Math.abs(p - .5) < .03 ? '' : ' · 亏'));
+  if (moonPhaseName(p) === '新月' || moonPhaseName(p) === '满月') name = moonPhaseName(p);
+  $('#moonName').textContent = name;
+}
+
+/* 倒计时：优先最近事项，否则下一个节气，否则元旦 */
+function renderCountdown(){
+  var t0 = new Date(); t0.setHours(0,0,0,0);
+  var target = null, label = '';
+  var future = events.filter(function(ev){
+    var p = parseKey(ev.date);
+    return dateOf(p.y, p.m, p.d).getTime() >= t0.getTime();
+  }).sort(function(a, b){
+    var pa = parseKey(a.date), pb = parseKey(b.date);
+    return dateOf(pa.y,pa.m,pa.d) - dateOf(pb.y,pb.m,pb.d);
+  });
+  if (future.length){
+    var p = parseKey(future[0].date);
+    target = dateOf(p.y, p.m, p.d);
+    label = future[0].title;
+  } else {
+    var keys = Object.keys(SOLAR_TERMS).sort(function(a, b){
+      var pa = a.split('-').map(Number), pb = b.split('-').map(Number);
+      return dateOf(2026,pa[0],pa[1]) - dateOf(2026,pb[0],pb[1]);
+    });
+    for (var i = 0; i < keys.length; i++){
+      var kp = keys[i].split('-').map(Number);
+      var dt = dateOf(2026, kp[0], kp[1]);
+      if (dt.getTime() >= t0.getTime()){ target = dt; label = SOLAR_TERMS[keys[i]] + ' · 节气'; break; }
+    }
+    if (!target){ target = dateOf(2027, 1, 1); label = '元旦'; }
+  }
+  var days = Math.round((target.getTime() - t0.getTime()) / 86400000);
+  if (days < 0) days = 0;
+  var numEl = $('#cdNum'), labEl = $('#cdLabel');
+  if (days === 0){ numEl.textContent = '今'; }
+  else { numEl.textContent = days; }
+  labEl.textContent = '距 ' + (label.length > 9 ? label.slice(0, 9) + '…' : label);
+  var prog = Math.max(2, Math.min(100, (1 - Math.min(days / 45, 1)) * 100));
+  $('#cdRing').style.setProperty('--p', prog.toFixed(1));
+}
+
+/* ============================================================
+   八、日期详情镌刻窗
+   ============================================================ */
+var modalBack = $('#modalBack');
+var lastFocus = null;
+function openModalAt(key){
+  var p = parseKey(key);
+  var info = infoOf(p.y, p.m, p.d);
+  $('#mdTitle').innerHTML = esc(p.m + '月' + p.d + '日') + '<span>' + weekName(info.p) + '</span>';
+  $('#mdIso').textContent = isoOf(key) + ' · 农历 ' + (lunarTextOf(info) || '—');
+  var badges = '';
+  if (info.term) badges += '<span class="md-badge term">节气 · ' + esc(info.term) + '</span>';
+  if (info.fest) badges += '<span class="md-badge fest">' + esc(info.fest.n) + '</span>';
+  if (info.fest && info.fest.off) badges += '<span class="md-badge off">法定休</span>';
+  $('#mdBadges').innerHTML = badges;
+  $('#mdQuote').textContent = '「' + info.quote + '」';
+  var evs = eventsOn(key);
+  var html = '';
+  evs.forEach(function(ev){
+    var c = catColor(ev);
+    html += '<li><span class="dot" style="--c:' + c + '"></span>' +
+      '<time>' + (ev.time || '全天') + '</time><span>' + esc(ev.title) +
+      (ev.loc ? ' · ' + esc(ev.loc) : '') + '</span></li>';
+  });
+  $('#mdEvents').innerHTML = html || '<li style="color:var(--steel-d);font-size:12px">这一日尚无事项，指针静候上链。</li>';
+  lastFocus = document.activeElement;
+  modalBack.classList.add('open');
+  $('#mdClose').focus();
+}
+function closeModal(){
+  if (!modalBack.classList.contains('open')) return;
+  modalBack.classList.remove('open');
+  if (lastFocus && lastFocus.isConnected) lastFocus.focus();
+}
+$('#mdClose').addEventListener('click', closeModal);
+$('#mdOk').addEventListener('click', closeModal);
+modalBack.addEventListener('click', function(e){ if (e.target === modalBack) closeModal(); });
+$('#mdWind').addEventListener('click', function(){
+  var key = selKey;
+  closeModal();
+  fDate.value = isoOf(key);
+  document.getElementById('wind-sec').scrollIntoView({ behavior:'smooth', block:'center' });
+  setTimeout(function(){ fTitle.focus(); }, 350);
+  toast('已选定 ' + parseKey(key).m + ' 月 ' + parseKey(key).d + ' 日 —— 请写下事项');
+});
+
+/* ============================================================
+   九、背透机芯：齿轮组（SVG 程序化生成，40s/圈待机）
+   ============================================================ */
+function gearPathD(r, teeth, th){
+  var d = '', N = teeth;
+  function pt(rr, aDeg){
+    var a = aDeg * Math.PI / 180;
+    return (rr * Math.cos(a)).toFixed(1) + ',' + (rr * Math.sin(a)).toFixed(1);
+  }
+  for (var i = 0; i < N; i++){
+    var s = 360 / N, a = i * s;
+    d += (i === 0 ? 'M' : 'L') + pt(r, a) +
+      ' L' + pt(r, a + s * .3) +
+      ' L' + pt(r + th, a + s * .38) +
+      ' L' + pt(r + th, a + s * .62) +
+      ' L' + pt(r, a + s * .7) + ' ';
+  }
+  return d + 'Z';
+}
+function gearGroup(cx, cy, r, teeth, th, dur, rev){
+  var holes = '';
+  for (var i = 0; i < 4; i++){
+    var a = (i * 90 + 45) * Math.PI / 180;
+    holes += '<circle cx="' + (r * .55 * Math.cos(a)).toFixed(1) + '" cy="' +
+      (r * .55 * Math.sin(a)).toFixed(1) + '" r="' + (r * .13).toFixed(1) +
+      '" fill="#1B1E24" stroke="#6F5626" stroke-width="1"/>';
+  }
+  return '<g transform="translate(' + cx + ',' + cy + ')">' +
+    '<g class="idle' + (rev ? ' rev' : '') + '" style="--dur:' + dur + 's">' +
+    '<g class="kickable">' +
+    '<path d="' + gearPathD(r, teeth, th) + '" fill="url(#gBrass)" stroke="#6F5626" stroke-width="1"/>' +
+    '<circle r="' + (r * .3).toFixed(1) + '" fill="#1B1E24" stroke="#6F5626" stroke-width="1"/>' +
+    holes +
+    '<circle r="' + (r * .1).toFixed(1) + '" fill="url(#gBrass)" stroke="#6F5626" stroke-width="1"/>' +
+    '</g></g></g>';
+}
+function buildGears(){
+  var svg = $('#gearBox');
+  var html =
+    '<defs>' +
+    '<linearGradient id="gBrass" x1="0" y1="0" x2="1" y2="1">' +
+    '<stop offset="0" stop-color="#E6CC8F"/><stop offset=".55" stop-color="#B08D57"/>' +
+    '<stop offset="1" stop-color="#8A6A33"/></linearGradient>' +
+    '<radialGradient id="gPlate" cx=".4" cy=".3" r="1">' +
+    '<stop offset="0" stop-color="#333943"/><stop offset="1" stop-color="#22252C"/></radialGradient>' +
+    '</defs>' +
+    '<rect x="8" y="8" width="544" height="404" rx="20" fill="url(#gPlate)" stroke="#5E5340" stroke-width="1.5"/>' +
+    '<rect x="20" y="20" width="520" height="380" rx="14" fill="none" stroke="rgba(176,141,87,.35)" stroke-width="1"/>' +
+    gearGroup(150, 228, 88, 40, 9, 60, false) +
+    gearGroup(312, 256, 62, 28, 8, 40, true) +
+    gearGroup(408, 172, 40, 20, 7, 24, false) +
+    gearGroup(412, 306, 25, 15, 6, 14, true) +
+    '<g transform="translate(468,72)"><g class="balance">' +
+    '<circle r="42" fill="none" stroke="url(#gBrass)" stroke-width="6"/>' +
+    '<path d="M-40,0 H40 M0,-40 V40" stroke="url(#gBrass)" stroke-width="4"/>' +
+    '<circle r="6" fill="#E6CC8F" stroke="#6F5626"/></g></g>' +
+    '<circle cx="60" cy="60" r="5" fill="url(#gBrass)" stroke="#6F5626"/>' +
+    '<circle cx="500" cy="360" r="5" fill="url(#gBrass)" stroke="#6F5626"/>' +
+    '<circle cx="60" cy="360" r="5" fill="url(#gBrass)" stroke="#6F5626"/>' +
+    '<text x="280" y="398" text-anchor="middle" fill="#767D88" font-size="11" ' +
+    'font-family="IBM Plex Mono,Consolas,monospace" letter-spacing="3">CAL. HL-2026 — SEVENTEEN (17) JEWELS</text>';
+  svg.innerHTML = html;
+}
+function kickGears(){
+  var kicks = document.querySelectorAll('.kickable');
+  for (var i = 0; i < kicks.length; i++){
+    var g = kicks[i];
+    g.classList.remove('kicked');
+    void g.getBoundingClientRect();
+    g.classList.add('kicked');
+  }
+}
+
+/* ============================================================
+   十、Toast 与顶栏时钟
+   ============================================================ */
+var toastEl = $('#toast'), toastTimer = null;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 2600);
+}
+function tickClock(){
+  var d = new Date();
+  $('#headClock').textContent = pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+}
+setInterval(tickClock, 1000);
+
+/* ============================================================
+   十一、初始化
+   ============================================================ */
+buildRing();
+buildGears();
+renderMoon();
+prevBtn.disabled = (month === 1);
+nextBtn.disabled = (month === 12);
+renderMonth();
+renderCountdown();
+$('#cbQuote').textContent = '「' + QUOTES[dayOfYear(parseKey(today)) % QUOTES.length] + '」';
+fDate.value = isoOf(selKey);
+tickClock();
+/* 指针首帧不动画，避免从 0 点位甩出 */
+selRig.classList.add('no-anim');
+todayRig.classList.add('no-anim');
+requestAnimationFrame(function(){
+  requestAnimationFrame(function(){
+    selRig.classList.remove('no-anim');
+    todayRig.classList.remove('no-anim');
+  });
+});
+})();
+</script>
+</body>
+</html>

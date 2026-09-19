@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="慢速缓存 · 沈知远的个人博客，复古报纸排印风。第 42 期：凌晨四点的杭州菜市场。">
+<title>慢速缓存 · The Slow Cache — 第 42 期</title>
+<style>
+/* ==========================================================
+   慢速缓存 · 复古报纸排印 Broadsheet
+   纸 #F7F2E7 · 墨 #1C1710 · 深棕 #5A4A38 · 报头红 #8C2B1B · 灰墨 #6E6459
+   ========================================================== */
+:root{
+  --paper:#F7F2E7;
+  --paper-2:#FBF6EB;
+  --ink:#1C1710;
+  --brown:#5A4A38;
+  --red:#8C2B1B;
+  --gray:#6E6459;
+  --serif:"Source Serif 4","Source Han Serif SC","Noto Serif SC","Songti SC",Georgia,"SimSun",serif;
+  --display:"Playfair Display","Noto Serif SC","Source Han Serif SC","Songti SC",Georgia,serif;
+  --sans:"Oswald","PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+  --name:"Xingkai SC","STXingkai","华文行楷","KaiTi","STKaiti","Noto Serif SC",serif;
+  --rule:1px solid var(--ink);
+  --rule-soft:1px solid rgba(28,23,16,.28);
+  --rule-faint:1px solid rgba(28,23,16,.14);
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:17px;
+  line-height:1.7;
+  background:
+    radial-gradient(circle at 10% 6%, rgba(140,43,27,.045), transparent 32%),
+    radial-gradient(circle at 90% 94%, rgba(90,74,56,.055), transparent 36%),
+    var(--paper);
+}
+/* 纸纹噪点（透明度 <4%，纯装饰） */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:5;
+  pointer-events:none;
+  opacity:.035;
+  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+}
+::selection{background:#E9DFC6;color:var(--ink)}
+img,svg{max-width:100%}
+a{color:var(--ink);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{color:var(--red)}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+button{font-family:inherit;color:inherit;cursor:pointer}
+p{margin:0 0 .5em}
+.skip-link{
+  position:absolute;left:-9999px;top:0;z-index:60;
+  background:var(--ink);color:var(--paper);padding:10px 18px;font-family:var(--sans);font-size:14px;
+}
+.skip-link:focus{left:8px;top:8px}
+
+/* ---------- 版心（两侧细线如报页边缘） ---------- */
+.page{
+  max-width:1200px;
+  margin:0 auto;
+  padding:0 34px;
+  border-left:var(--rule-faint);
+  border-right:var(--rule-faint);
+  position:relative;
+  background:transparent;
+}
+
+/* ---------- 小字排印件 ---------- */
+.kicker{
+  font-family:var(--sans);
+  font-size:12px;
+  font-weight:500;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:var(--red);
+  margin:0;
+}
+.small-caps{font-variant-caps:all-small-caps;letter-spacing:.12em}
+
+/* ==========================================================
+   报头 masthead
+   ========================================================== */
+.masthead{padding-top:14px}
+/* 报眼：日期 · 天气预报小方框 */
+.eye-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:stretch;
+  gap:16px;
+  border-bottom:var(--rule);
+  padding-bottom:10px;
+  font-family:var(--sans);
+  font-size:12.5px;
+  letter-spacing:.08em;
+  color:var(--brown);
+}
+.eye-left{display:flex;flex-direction:column;justify-content:center;gap:2px}
+.eye-left strong{color:var(--ink);font-weight:600}
+.eye-right{display:flex;align-items:center}
+.weather-box{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  border:var(--rule);
+  background:var(--paper-2);
+  padding:8px 14px;
+}
+.weather-box .wx-title{
+  font-family:var(--sans);
+  font-size:11px;
+  letter-spacing:.3em;
+  color:var(--red);
+  border-right:var(--rule-soft);
+  padding-right:12px;
+}
+.weather-box .wx-detail{display:flex;flex-direction:column;line-height:1.45}
+.weather-box .wx-detail b{font-weight:600;color:var(--ink)}
+.weather-box svg{flex:none}
+
+/* 主报头：竖排箴言（两侧竖线夹） + 行楷报名 */
+.nameplate{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:40px;
+  padding:26px 0 20px;
+}
+.motto-strip{
+  writing-mode:vertical-rl;
+  font-family:var(--serif);
+  font-size:15px;
+  letter-spacing:.42em;
+  color:var(--brown);
+  border-left:3px double var(--ink);
+  border-right:3px double var(--ink);
+  padding:12px 9px;
+  min-height:170px;
+  text-align:center;
+}
+.nameplate-center{text-align:center}
+.above-name{
+  font-family:var(--sans);
+  font-size:12px;
+  letter-spacing:.34em;
+  color:var(--brown);
+  margin:0 0 6px;
+}
+.paper-name{
+  font-family:var(--name);
+  font-weight:700;
+  font-size:clamp(3.2rem,7.5vw,5.4rem);
+  line-height:1.08;
+  letter-spacing:.06em;
+  margin:0;
+  color:var(--ink);
+}
+.latin-name{
+  font-family:var(--sans);
+  font-size:12px;
+  letter-spacing:.52em;
+  text-indent:.52em;
+  text-transform:uppercase;
+  color:var(--gray);
+  margin:8px 0 0;
+  border-top:var(--rule-soft);
+  display:inline-block;
+  padding-top:7px;
+}
+/* 版次行：双细线之下 */
+.edition-row{
+  border-top:3px double var(--ink);
+  border-bottom:var(--rule);
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:6px 22px;
+  padding:9px 0;
+  font-family:var(--sans);
+  font-size:12.5px;
+  letter-spacing:.14em;
+  color:var(--ink);
+}
+.edition-row .dot{color:var(--red)}
+.edition-row em{font-style:normal;color:var(--red)}
+/* 栏目导航（版面导航） */
+.section-nav{
+  position:sticky;
+  top:0;
+  z-index:30;
+  background:var(--paper);
+  border-bottom:3px double var(--ink);
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:2px 8px;
+  padding:6px 0;
+}
+.section-nav a,.section-nav button{
+  font-family:var(--sans);
+  font-size:13.5px;
+  letter-spacing:.18em;
+  text-decoration:none;
+  background:none;
+  border:0;
+  padding:9px 13px;
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  color:var(--ink);
+}
+.section-nav a:hover,.section-nav button:hover{color:var(--red)}
+.section-nav .active{color:var(--red);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px}
+.section-nav .nav-sep{color:rgba(28,23,16,.35);align-self:center;font-size:11px}
+
+/* ==========================================================
+   头版头条
+   ========================================================== */
+.headline{padding:34px 0 30px}
+.headline-kicker{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  justify-content:center;
+  margin-bottom:14px;
+}
+.headline-kicker::before,
+.headline-kicker::after{
+  content:"";
+  flex:1;
+  max-width:220px;
+  border-top:var(--rule-soft);
+}
+.headline-title{
+  font-family:var(--display);
+  font-weight:900;
+  font-size:clamp(2.1rem,5vw,3.5rem);
+  line-height:1.18;
+  letter-spacing:.02em;
+  text-align:center;
+  margin:0 auto;
+  max-width:22em;
+}
+.headline-deck{
+  font-size:1.08rem;
+  color:var(--brown);
+  text-align:center;
+  max-width:36em;
+  margin:14px auto 0;
+  line-height:1.85;
+}
+.headline-byline{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:6px 20px;
+  border-top:var(--rule-soft);
+  border-bottom:var(--rule-soft);
+  padding:8px 0;
+  margin:18px auto 26px;
+  max-width:760px;
+  font-family:var(--sans);
+  font-size:12px;
+  letter-spacing:.16em;
+  color:var(--gray);
+}
+.headline-byline b{color:var(--ink);font-weight:600}
+.headline-body{
+  columns:2;
+  column-gap:44px;
+  column-rule:1px solid var(--ink);
+  text-align:justify;
+}
+.headline-body p{
+  margin:0 0 .55em;
+  text-indent:2em;
+}
+.headline-body p.no-indent{text-indent:0}
+/* 首字下沉 */
+.dropcap{
+  float:left;
+  font-family:var(--display);
+  font-weight:900;
+  font-size:64px;
+  line-height:.9;
+  padding:5px 9px 0 0;
+  color:var(--ink);
+}
+/* 引文大字块 */
+.pullquote{
+  break-inside:avoid;
+  border-top:3px double var(--ink);
+  border-bottom:3px double var(--ink);
+  margin:14px 0;
+  padding:14px 6px;
+  font-family:var(--display);
+  font-weight:700;
+  font-size:1.22rem;
+  line-height:1.7;
+  text-align:center;
+  color:var(--brown);
+}
+.pullquote::before{content:"❝ ";color:var(--red)}
+.pullquote::after{content:" ❞";color:var(--red)}
+/* 木刻题图 */
+.woodcut{
+  break-inside:avoid;
+  margin:12px 0 14px;
+  border:1px solid var(--ink);
+  outline:1px solid var(--ink);
+  outline-offset:3px;
+  padding:9px;
+  background:var(--paper-2);
+}
+.woodcut svg{display:block;width:100%;height:auto}
+.woodcut figcaption{
+  margin-top:8px;
+  font-style:italic;
+  font-size:12.5px;
+  color:var(--gray);
+  text-align:center;
+  letter-spacing:.06em;
+  text-indent:0;
+}
+.headline-foot{
+  margin-top:20px;
+  padding-top:12px;
+  border-top:var(--rule-soft);
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:space-between;
+  gap:8px;
+  font-family:var(--sans);
+  font-size:12px;
+  letter-spacing:.14em;
+  color:var(--gray);
+}
+
+/* ---------- 分隔双细线 ---------- */
+.rule-double{
+  border:0;
+  border-top:3px double var(--ink);
+  margin:0;
+}
+.rule-soft-hr{
+  border:0;
+  border-top:var(--rule-soft);
+  margin:26px 0;
+}
+
+/* ==========================================================
+   各版要目 + 侧栏
+   ========================================================== */
+.layout-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 308px;
+  gap:0 38px;
+  padding:30px 0 8px;
+  align-items:start;
+}
+.sheets-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  border-bottom:var(--rule);
+  padding-bottom:8px;
+  margin-bottom:14px;
+  flex-wrap:wrap;
+}
+.sheets-head h2{
+  font-family:var(--display);
+  font-weight:900;
+  font-size:1.7rem;
+  letter-spacing:.08em;
+  margin:0;
+}
+.sheets-head h2 span{color:var(--red)}
+.sheets-count{
+  font-family:var(--sans);
+  font-size:12px;
+  letter-spacing:.16em;
+  color:var(--gray);
+}
+/* 版面筛选 */
+.filter-tabs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px 6px;
+  border-bottom:var(--rule-soft);
+  margin-bottom:20px;
+  padding-bottom:0;
+}
+.filter-tab{
+  background:none;
+  border:0;
+  border-bottom:2px solid transparent;
+  font-family:var(--sans);
+  font-size:13.5px;
+  letter-spacing:.18em;
+  padding:9px 13px 7px;
+  min-height:44px;
+  color:var(--ink);
+  margin-bottom:-1px;
+}
+.filter-tab:hover{color:var(--red)}
+.filter-tab.active{
+  color:var(--red);
+  border-bottom-color:var(--red);
+  font-weight:600;
+}
+/* 文章卡网格：报栏式 */
+.sheet-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0 34px;
+}
+.sheet-card{
+  border-top:1px solid rgba(28,23,16,.5);
+  padding:14px 0 18px;
+  animation:fadeIn .4s ease both;
+}
+.sheet-card.lead{grid-column:1 / -1}
+.sheet-kicker{
+  font-family:var(--sans);
+  font-size:11.5px;
+  letter-spacing:.22em;
+  color:var(--red);
+  margin:0 0 6px;
+  text-transform:uppercase;
+}
+.sheet-title{margin:0}
+.title-btn{
+  background:none;
+  border:0;
+  padding:0;
+  text-align:left;
+  font-family:var(--display);
+  font-weight:900;
+  font-size:1.28rem;
+  line-height:1.45;
+  color:var(--ink);
+  text-decoration:underline;
+  text-decoration-thickness:1px;
+  text-underline-offset:4px;
+  text-decoration-color:rgba(28,23,16,.4);
+}
+.sheet-card.lead .title-btn{font-size:1.6rem}
+.title-btn:hover{
+  color:var(--red);
+  text-decoration-thickness:3px;
+  text-decoration-color:var(--red);
+}
+.sheet-meta{
+  font-family:var(--sans);
+  font-size:11.5px;
+  letter-spacing:.14em;
+  color:var(--gray);
+  margin:6px 0 8px;
+}
+.sheet-summary{color:var(--brown);margin:0}
+.sheet-body{
+  margin-top:10px;
+  padding-top:10px;
+  border-top:var(--rule-faint);
+  animation:fadeUp .35s ease both;
+}
+.sheet-body p{
+  font-size:15.5px;
+  line-height:1.85;
+  text-align:justify;
+  text-indent:2em;
+  color:var(--ink);
+}
+.endmark{color:var(--red);font-size:.85em;padding-left:4px}
+.readmore{
+  margin-top:10px;
+  background:none;
+  border:0;
+  padding:6px 0;
+  min-height:44px;
+  font-family:var(--sans);
+  font-size:13px;
+  letter-spacing:.18em;
+  color:var(--red);
+  text-align:left;
+}
+.readmore:hover{text-decoration:underline;text-underline-offset:4px}
+.empty-state{
+  border:var(--rule-soft);
+  padding:26px;
+  text-align:center;
+  color:var(--gray);
+  font-style:italic;
+  margin:18px 0;
+}
+
+/* ==========================================================
+   广告位式装饰框（侧栏）
+   ========================================================== */
+.col-sidebar{padding-top:2px}
+.ad-box{
+  position:relative;
+  border:2px solid var(--ink);
+  outline:1px solid var(--ink);
+  outline-offset:4px;
+  background:var(--paper-2);
+  padding:20px 18px 18px;
+  margin:0 4px 34px;
+}
+.ad-label{
+  position:absolute;
+  top:-11px;
+  left:14px;
+  background:var(--paper);
+  border:1px solid var(--ink);
+  padding:1px 10px;
+  font-family:var(--sans);
+  font-size:11px;
+  letter-spacing:.34em;
+  text-indent:.34em;
+  color:var(--red);
+}
+.ad-box h3{
+  font-family:var(--display);
+  font-weight:900;
+  font-size:1.22rem;
+  line-height:1.5;
+  margin:4px 0 8px;
+  text-align:center;
+}
+.ad-box .ad-note{
+  font-size:13.5px;
+  color:var(--brown);
+  line-height:1.8;
+}
+.ad-ornament{
+  text-align:center;
+  color:var(--red);
+  font-size:13px;
+  letter-spacing:.6em;
+  text-indent:.6em;
+  margin:10px 0 2px;
+}
+/* 关于本报：钤印 + 竖排点缀 */
+.about-row{display:flex;gap:14px;align-items:flex-start;margin-top:10px}
+.seal{
+  flex:none;
+  width:58px;
+  height:58px;
+  background:var(--red);
+  color:var(--paper);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:var(--name);
+  font-size:34px;
+  line-height:1;
+  transform:rotate(-3deg);
+  box-shadow:inset 0 0 0 2px rgba(247,242,231,.55);
+}
+.vertical-note{
+  flex:none;
+  writing-mode:vertical-rl;
+  font-size:12px;
+  letter-spacing:.34em;
+  color:var(--brown);
+  border-right:1px solid rgba(28,23,16,.35);
+  padding-right:9px;
+  max-height:190px;
+}
+.about-text{font-size:13.5px;color:var(--brown);line-height:1.85;margin:0}
+.about-text b{color:var(--ink)}
+/* 订阅表单 */
+.sub-form{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.sub-form label{
+  font-family:var(--sans);
+  font-size:11.5px;
+  letter-spacing:.2em;
+  color:var(--gray);
+}
+.sub-line{display:flex;gap:0}
+.sub-line input{
+  flex:1;
+  min-width:0;
+  border:var(--rule);
+  border-right:0;
+  background:var(--paper);
+  font-family:var(--serif);
+  font-size:15px;
+  padding:10px 12px;
+  color:var(--ink);
+}
+.sub-line input:focus{outline:2px solid var(--red);outline-offset:-2px}
+.btn-ink{
+  border:var(--rule);
+  background:var(--ink);
+  color:var(--paper);
+  font-family:var(--sans);
+  font-size:13.5px;
+  letter-spacing:.22em;
+  text-indent:.22em;
+  padding:10px 16px;
+  min-height:44px;
+}
+.btn-ink:hover{background:var(--red);border-color:var(--red)}
+.form-msg{font-size:13px;margin:4px 0 0}
+.form-msg.ok{color:var(--red);font-weight:600}
+.form-msg.err{color:#7A1F12}
+.rss-note{
+  margin-top:10px;
+  padding-top:8px;
+  border-top:var(--rule-faint);
+  font-size:12.5px;
+  color:var(--gray);
+  font-style:italic;
+}
+/* 中缝启事 */
+.gutter-list{
+  list-style:none;
+  margin:8px 0 0;
+  padding:0;
+  font-size:13px;
+  color:var(--brown);
+}
+.gutter-list li{
+  padding:7px 0;
+  border-bottom:var(--rule-faint);
+  line-height:1.7;
+}
+.gutter-list li:last-child{border-bottom:0}
+.gutter-list b{color:var(--red);font-weight:600}
+
+/* ==========================================================
+   往期归档
+   ========================================================== */
+.archive{
+  margin-top:14px;
+  border-top:3px double var(--ink);
+  padding:26px 0 10px;
+}
+.section-head{
+  display:flex;
+  align-items:baseline;
+  gap:16px;
+  flex-wrap:wrap;
+  border-bottom:var(--rule);
+  padding-bottom:8px;
+  margin-bottom:16px;
+}
+.section-head h2{
+  font-family:var(--display);
+  font-weight:900;
+  font-size:1.7rem;
+  letter-spacing:.08em;
+  margin:0;
+}
+.section-head .sub{font-family:var(--sans);font-size:12px;letter-spacing:.16em;color:var(--gray)}
+.issue-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.issue-tab{
+  border:var(--rule);
+  background:var(--paper-2);
+  font-family:var(--sans);
+  font-size:13px;
+  letter-spacing:.16em;
+  padding:9px 16px;
+  min-height:44px;
+}
+.issue-tab:hover{color:var(--red);border-color:var(--red)}
+.issue-tab.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.issue-panel{
+  border:var(--rule-soft);
+  background:var(--paper-2);
+  padding:18px 22px 20px;
+  animation:fadeIn .35s ease both;
+}
+.issue-panel-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  flex-wrap:wrap;
+  gap:6px;
+  border-bottom:3px double var(--ink);
+  padding-bottom:8px;
+  margin-bottom:12px;
+}
+.issue-panel-header h3{
+  font-family:var(--display);
+  font-weight:900;
+  font-size:1.25rem;
+  margin:0;
+}
+.issue-panel-header time{font-family:var(--sans);font-size:12px;letter-spacing:.16em;color:var(--gray)}
+.issue-theme{font-style:italic;color:var(--brown);font-size:14px;margin:0 0 10px}
+.issue-list{
+  list-style:none;
+  margin:0;
+  padding:0;
+}
+.issue-list li{
+  display:flex;
+  gap:12px;
+  align-items:baseline;
+  padding:8px 0;
+  border-bottom:var(--rule-faint);
+  font-size:15px;
+}
+.issue-list li:last-child{border-bottom:0}
+.issue-sec{
+  flex:none;
+  font-family:var(--sans);
+  font-size:11px;
+  letter-spacing:.18em;
+  color:var(--red);
+  border:1px solid rgba(140,43,27,.5);
+  padding:1px 7px;
+}
+.issue-page{
+  margin-left:auto;
+  flex:none;
+  font-family:var(--sans);
+  font-size:11.5px;
+  letter-spacing:.14em;
+  color:var(--gray);
+}
+
+/* ==========================================================
+   读者来信
+   ========================================================== */
+.letters{
+  border-top:3px double var(--ink);
+  margin-top:24px;
+  padding:26px 0 34px;
+}
+.letters-intro{
+  font-style:italic;
+  color:var(--brown);
+  margin:0 0 18px;
+  font-size:15.5px;
+}
+.letters-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);
+  gap:38px;
+  align-items:start;
+}
+.field{margin-bottom:14px}
+.field label{
+  display:block;
+  font-family:var(--sans);
+  font-size:12px;
+  letter-spacing:.22em;
+  color:var(--brown);
+  margin-bottom:5px;
+}
+.field label .req{color:var(--red)}
+.field input[type="text"],
+.field input[type="email"],
+.field select,
+.field textarea{
+  width:100%;
+  border:var(--rule);
+  border-radius:0;
+  background:var(--paper-2);
+  font-family:var(--serif);
+  font-size:15.5px;
+  color:var(--ink);
+  padding:10px 12px;
+}
+.field textarea{resize:vertical;min-height:130px;line-height:1.8}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--red);outline-offset:-2px}
+.field.invalid input,.field.invalid textarea,.field.invalid select{border-color:var(--red);background:#F5EAE2}
+.err{
+  margin:5px 0 0;
+  font-size:12.5px;
+  color:#7A1F12;
+  font-family:var(--sans);
+  letter-spacing:.06em;
+}
+.err::before{content:"✖ ";color:var(--red)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.counter{
+  font-family:var(--sans);
+  font-size:11.5px;
+  letter-spacing:.1em;
+  color:var(--gray);
+  text-align:right;
+  margin-top:4px;
+  font-variant-numeric:tabular-nums;
+}
+.agree-line{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  font-size:14px;
+  color:var(--brown);
+  margin:4px 0 14px;
+}
+.agree-line input{width:18px;height:18px;margin-top:3px;accent-color:var(--red)}
+.letters-side{
+  border:2px solid var(--ink);
+  outline:1px solid var(--ink);
+  outline-offset:4px;
+  background:var(--paper-2);
+  padding:22px 20px;
+}
+.letters-side h3{
+  font-family:var(--display);
+  font-weight:900;
+  font-size:1.15rem;
+  margin:0 0 8px;
+}
+.letters-side p{font-size:13.5px;color:var(--brown);line-height:1.85}
+.letters-side .ad-ornament{margin-top:14px}
+.letter-ok{
+  border:3px double var(--red);
+  background:var(--paper-2);
+  padding:20px 22px;
+  margin-top:6px;
+  animation:fadeUp .4s ease both;
+}
+.letter-ok h3{
+  margin:0 0 6px;
+  font-family:var(--display);
+  font-weight:900;
+  font-size:1.2rem;
+  color:var(--red);
+}
+.letter-ok p{font-size:14px;color:var(--brown);margin:0}
+.letter-ok .no{
+  font-family:var(--sans);
+  letter-spacing:.2em;
+  font-variant-numeric:tabular-nums;
+  color:var(--ink);
+  font-weight:600;
+}
+
+/* ==========================================================
+   页脚
+   ========================================================== */
+.colophon{
+  border-top:3px double var(--ink);
+  margin-top:8px;
+  padding:26px 0 34px;
+  position:relative;
+}
+.colophon-grid{
+  display:grid;
+  grid-template-columns:1.2fr 1fr 1fr auto;
+  gap:30px;
+}
+.colophon h4{
+  font-family:var(--sans);
+  font-size:12px;
+  letter-spacing:.3em;
+  color:var(--red);
+  margin:0 0 8px;
+  text-transform:uppercase;
+}
+.colophon p,.colophon li{font-size:13px;color:var(--brown);line-height:1.85}
+.colophon ul{list-style:none;margin:0;padding:0}
+.colophon li{padding:2px 0}
+.colophon-fin{
+  writing-mode:vertical-rl;
+  font-family:var(--name);
+  font-size:22px;
+  letter-spacing:.4em;
+  color:var(--brown);
+  border-right:3px double var(--ink);
+  padding-right:10px;
+  min-height:120px;
+}
+.copyright{
+  border-top:var(--rule-faint);
+  margin-top:20px;
+  padding-top:12px;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  font-family:var(--sans);
+  font-size:11.5px;
+  letter-spacing:.14em;
+  color:var(--gray);
+}
+/* 返回头版 */
+.to-top{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  z-index:40;
+  border:var(--rule);
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:12.5px;
+  letter-spacing:.16em;
+  padding:10px 14px;
+  min-height:44px;
+  opacity:0;
+  pointer-events:none;
+  transform:translateY(8px);
+  transition:opacity .25s ease,transform .25s ease,background .15s ease,color .15s ease;
+}
+.to-top.show{opacity:1;pointer-events:auto;transform:none}
+.to-top:hover{background:var(--ink);color:var(--paper)}
+
+/* ---------- 动画（克制：仅过渡与淡入） ---------- */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+
+/* ==========================================================
+   响应式：≥1200 桌面（默认） / ≤1199 中屏 / ≤767 小屏退单栏
+   ========================================================== */
+@media (max-width:1199px){
+  .layout-row{grid-template-columns:1fr}
+  .col-sidebar{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0 30px;
+    margin-top:10px;
+  }
+  .ad-box{margin-bottom:30px}
+  .letters-grid{grid-template-columns:1fr}
+  .letters-side{max-width:560px}
+}
+@media (max-width:767px){
+  .page{padding:0 16px}
+  body{font-size:16px}
+  .eye-row{flex-direction:column;align-items:stretch}
+  .weather-box{justify-content:space-between}
+  .nameplate{
+    grid-template-columns:1fr;
+    gap:14px;
+    padding:18px 0 14px;
+  }
+  .motto-strip{display:none}
+  .motto-inline{
+    display:block!important;
+    text-align:center;
+    font-size:13.5px;
+    letter-spacing:.3em;
+    color:var(--brown);
+    margin:2px 0 0;
+  }
+  .headline-body{columns:1;column-rule:none}
+  .dropcap{font-size:52px}
+  .sheet-grid{grid-template-columns:1fr}
+  .col-sidebar{grid-template-columns:1fr}
+  .field-row{grid-template-columns:1fr}
+  .colophon-grid{grid-template-columns:1fr;gap:18px}
+  .colophon-fin{display:none}
+  .issue-page{display:none}
+  .edition-row{gap:4px 14px;font-size:11.5px}
+  .section-nav{gap:0}
+  .section-nav a,.section-nav button{padding:9px 9px;font-size:12.5px;letter-spacing:.12em}
+  .headline-title{font-size:1.9rem}
+}
+.motto-inline{display:none}
+
+/* ---------- 打印样式 ---------- */
+@media print{
+  body{background:#fff}
+  body::before{display:none}
+  .section-nav,.to-top,.filter-tabs,.readmore,.sub-form,.letters form,.skip-link{display:none!important}
+  .sheet-body{display:block!important}
+  .page{border:0;max-width:100%}
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#headline">跳到头条正文</a>
+
+<div class="page">
+
+  <!-- ======================= 报头 ======================= -->
+  <header class="masthead">
+    <!-- 报眼：日期 + 天气预报小方框 -->
+    <div class="eye-row">
+      <div class="eye-left">
+        <span><strong>丙午年 · 二〇二六年九月八日 · 星期二</strong></span>
+        <span>杭州出版 · 全球发行 · 创刊于二〇一九年立春</span>
+      </div>
+      <div class="eye-right">
+        <div class="weather-box">
+          <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="5.5" fill="none" stroke="#1C1710" stroke-width="1.6"/>
+            <g stroke="#1C1710" stroke-width="1.3">
+              <line x1="12" y1="2.5" x2="12" y2="4.8"/><line x1="12" y1="19.2" x2="12" y2="21.5"/>
+              <line x1="2.5" y1="12" x2="4.8" y2="12"/><line x1="19.2" y1="12" x2="21.5" y2="12"/>
+              <line x1="5.4" y1="5.4" x2="7" y2="7"/><line x1="17" y1="17" x2="18.6" y2="18.6"/>
+              <line x1="18.6" y1="5.4" x2="17" y2="7"/><line x1="7" y1="17" x2="5.4" y2="18.6"/>
+            </g>
+            <path d="M14 24.5h9.5a3.2 3.2 0 0 0 0-6.4 4.6 4.6 0 0 0-8.8-1.2 3.8 3.8 0 0 0-.7 7.6z" fill="#F7F2E7" stroke="#1C1710" stroke-width="1.5"/>
+          </svg>
+          <span class="wx-title">天气预报</span>
+          <span class="wx-detail">
+            <span><b>小雨转阴 · 22℃—27℃</b></span>
+            <span>东南风二级 · 室内阅读指数 ★★★★★</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主报头：竖排箴言夹行楷报名 -->
+    <div class="nameplate">
+      <p class="motto-strip" aria-hidden="true">把值得想的事</p>
+      <div class="nameplate-center">
+        <p class="above-name">个人博客 · 半月刊 · 沈知远 主办</p>
+        <h1 class="paper-name">慢速缓存</h1>
+        <p class="latin-name">The Slow Cache · A Personal Broadsheet</p>
+      </div>
+      <p class="motto-strip" aria-hidden="true">写在会呼吸的页面上</p>
+    </div>
+    <p class="motto-inline">把值得想的事 · 写在会呼吸的页面上</p>
+
+    <!-- 版次行 -->
+    <div class="edition-row">
+      <span><em>第 42 期</em> · 总第 42 期</span><span class="dot">◆</span>
+      <span>主编 沈知远</span><span class="dot">◆</span>
+      <span>本期共 13 篇</span><span class="dot">◆</span>
+      <span>免费取阅</span><span class="dot">◆</span>
+      <span>零售价：一个「在看」</span>
+    </div>
+
+    <!-- 栏目导航（版面导航） -->
+    <nav class="section-nav" aria-label="版面导航">
+      <a href="#headline">头版头条</a><span class="nav-sep" aria-hidden="true">｜</span>
+      <a href="#sheets" data-filter="all">各版要目</a><span class="nav-sep" aria-hidden="true">｜</span>
+      <a href="#sheets" data-filter="评论版">评论版</a><span class="nav-sep" aria-hidden="true">｜</span>
+      <a href="#sheets" data-filter="生活版">生活版</a><span class="nav-sep" aria-hidden="true">｜</span>
+      <a href="#sheets" data-filter="科技版">科技版</a><span class="nav-sep" aria-hidden="true">｜</span>
+      <a href="#sheets" data-filter="玩物版">玩物版</a><span class="nav-sep" aria-hidden="true">｜</span>
+      <a href="#archive">往期归档</a><span class="nav-sep" aria-hidden="true">｜</span>
+      <a href="#letters">读者来信</a><span class="nav-sep" aria-hidden="true">｜</span>
+      <a href="#subscribe">订阅本报</a>
+    </nav>
+  </header>
+
+  <main id="main">
+
+    <!-- ======================= 头版头条 ======================= -->
+    <article class="headline" id="headline">
+      <p class="headline-kicker"><span class="kicker">特稿 · 城市漫步</span></p>
+      <h2 class="headline-title">凌晨四点的杭州菜市场</h2>
+      <p class="headline-deck">跟着一辆吱呀作响的送菜三轮车，走完一条正在醒来的街——关于开水泵的鱼摊、不过秤的香葱，以及一切「六点以前」的事。</p>
+      <div class="headline-byline">
+        <span>本报主笔 <b>沈知远</b></span>
+        <span>刊于二〇二六年九月一日</span>
+        <span>全文约两千字 · 阅读约 6 分钟</span>
+        <span>发自 杭州 凤起路</span>
+      </div>
+
+      <div class="headline-body">
+        <p class="no-indent"><span class="dropcap" aria-hidden="true">凌</span>晨四点十分，杭州还在睡，凤起路菜市场的灯已经亮了。我跟着老周的三轮车从巷口出发，车斗里码着三十斤青菜、两筐萝卜和一捆还带露水的香葱。车轮碾过石板路的声音，像一枚旧钟表的秒针，不紧不慢，却从不迟到。</p>
+        <p>老周在这条线上跑了十一年。他说菜场的规矩都写在时刻表里：四点半到货，五点开秤，六点以前要把自己摊位前的水迹拖干净。「早一分钟是勤快，晚一分钟是失职。」他把这句话说了十一年，语气像在念一份社论。</p>
+
+        <figure class="woodcut">
+          <svg viewBox="0 0 600 320" role="img" aria-labelledby="wc-title" preserveAspectRatio="xMidYMid meet">
+            <title id="wc-title">木刻版画：凌晨四点，送菜三轮车驶过市场屋檐</title>
+            <defs>
+              <pattern id="hatchD" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <line x1="0" y1="0" x2="0" y2="6" stroke="#1C1710" stroke-width="1.1"/>
+              </pattern>
+              <pattern id="hatchH" width="7" height="7" patternUnits="userSpaceOnUse">
+                <line x1="0" y1="3.5" x2="7" y2="3.5" stroke="#1C1710" stroke-width="0.8" opacity="0.4"/>
+              </pattern>
+              <pattern id="hatchX" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <line x1="0" y1="0" x2="0" y2="6" stroke="#1C1710" stroke-width="0.9"/>
+                <line x1="0" y1="3" x2="6" y2="3" stroke="#1C1710" stroke-width="0.9"/>
+              </pattern>
+              <pattern id="stripes" width="18" height="18" patternUnits="userSpaceOnUse">
+                <rect width="9" height="18" fill="#1C1710"/>
+                <rect x="9" width="9" height="18" fill="#F7F2E7"/>
+              </pattern>
+            </defs>
+            <!-- 天空（横排阴线）与启明星 -->
+            <rect x="0" y="0" width="600" height="252" fill="url(#hatchH)"/>
+            <circle cx="92" cy="72" r="30" fill="none" stroke="#1C1710" stroke-width="2.5"/>
+            <circle cx="92" cy="72" r="38" fill="none" stroke="#1C1710" stroke-width="1.2" stroke-dasharray="2 6"/>
+            <g stroke="#1C1710" stroke-width="1.5">
+              <line x1="92" y1="18" x2="92" y2="30"/><line x1="92" y1="114" x2="92" y2="126"/>
+              <line x1="38" y1="72" x2="50" y2="72"/><line x1="134" y1="72" x2="146" y2="72"/>
+              <line x1="54" y1="34" x2="63" y2="43"/><line x1="121" y1="101" x2="130" y2="110"/>
+              <line x1="130" y1="34" x2="121" y2="43"/><line x1="63" y1="101" x2="54" y2="110"/>
+            </g>
+            <!-- 远处屋檐与飞鸟 -->
+            <path d="M300 96 L360 70 L420 96 Z" fill="#1C1710"/>
+            <rect x="296" y="96" width="128" height="6" fill="#1C1710"/>
+            <path d="M470 46 q6 -7 12 0 q6 -7 12 0" fill="none" stroke="#1C1710" stroke-width="1.6"/>
+            <path d="M510 60 q5 -6 10 0 q5 -6 10 0" fill="none" stroke="#1C1710" stroke-width="1.4"/>
+            <!-- 雨棚（黑白条纹）与吊灯 -->
+            <rect x="238" y="52" width="272" height="26" fill="url(#stripes)" stroke="#1C1710" stroke-width="2.5"/>
+            <path d="M238 78 L238 88 L253 78 L268 88 L283 78 L298 88 L313 78 L328 88 L343 78 L358 88 L373 78 L388 88 L403 78 L418 88 L433 78 L448 88 L463 78 L478 88 L493 78 L510 88 L510 78 Z" fill="#1C1710"/>
+            <line x1="238" y1="52" x2="238" y2="150" stroke="#1C1710" stroke-width="4"/>
+            <line x1="510" y1="52" x2="510" y2="120" stroke="#1C1710" stroke-width="3"/>
+            <line x1="500" y1="78" x2="500" y2="96" stroke="#1C1710" stroke-width="1.5"/>
+            <circle cx="500" cy="104" r="9" fill="#1C1710"/>
+            <circle cx="500" cy="104" r="2.5" fill="#F7F2E7"/>
+            <g stroke="#1C1710" stroke-width="1.3">
+              <line x1="500" y1="88" x2="500" y2="92"/><line x1="488" y1="104" x2="484" y2="104"/>
+              <line x1="512" y1="104" x2="516" y2="104"/><line x1="491" y1="95" x2="488" y2="92"/>
+              <line x1="509" y1="95" x2="512" y2="92"/>
+            </g>
+            <!-- 地面（斜排阴线） -->
+            <rect x="0" y="252" width="600" height="68" fill="url(#hatchD)"/>
+            <line x1="0" y1="252" x2="600" y2="252" stroke="#1C1710" stroke-width="3"/>
+            <!-- 三轮车 -->
+            <circle cx="320" cy="240" r="26" fill="#F7F2E7" stroke="#1C1710" stroke-width="3.5"/>
+            <circle cx="320" cy="240" r="4" fill="#1C1710"/>
+            <g stroke="#1C1710" stroke-width="1.4">
+              <line x1="320" y1="216" x2="320" y2="264"/><line x1="296" y1="240" x2="344" y2="240"/>
+              <line x1="303" y1="223" x2="337" y2="257"/><line x1="337" y1="223" x2="303" y2="257"/>
+            </g>
+            <circle cx="388" cy="240" r="26" fill="#F7F2E7" stroke="#1C1710" stroke-width="3.5"/>
+            <circle cx="388" cy="240" r="4" fill="#1C1710"/>
+            <g stroke="#1C1710" stroke-width="1.4">
+              <line x1="388" y1="216" x2="388" y2="264"/><line x1="364" y1="240" x2="412" y2="240"/>
+              <line x1="371" y1="223" x2="405" y2="257"/><line x1="405" y1="223" x2="371" y2="257"/>
+            </g>
+            <circle cx="492" cy="248" r="20" fill="#F7F2E7" stroke="#1C1710" stroke-width="3"/>
+            <circle cx="492" cy="248" r="3.5" fill="#1C1710"/>
+            <g stroke="#1C1710" stroke-width="1.3">
+              <line x1="492" y1="230" x2="492" y2="266"/><line x1="474" y1="248" x2="510" y2="248"/>
+            </g>
+            <!-- 车斗（交叉阴线）与菜堆 -->
+            <path d="M262 196 L446 196 L436 232 L272 232 Z" fill="url(#hatchX)" stroke="#1C1710" stroke-width="3"/>
+            <circle cx="300" cy="188" r="16" fill="#1C1710"/>
+            <circle cx="332" cy="182" r="19" fill="#1C1710"/>
+            <circle cx="364" cy="188" r="16" fill="#1C1710"/>
+            <path d="M290 178 q8 -7 18 -3 M322 170 q9 -7 18 -2 M356 176 q8 -6 16 -2" fill="none" stroke="#F7F2E7" stroke-width="2"/>
+            <!-- 车架、座凳与车把 -->
+            <path d="M294 240 L414 240" stroke="#1C1710" stroke-width="4"/>
+            <path d="M446 214 L492 236" stroke="#1C1710" stroke-width="4" fill="none"/>
+            <path d="M492 248 L502 210" stroke="#1C1710" stroke-width="4" fill="none"/>
+            <rect x="486" y="196" width="24" height="12" fill="url(#hatchD)" stroke="#1C1710" stroke-width="2"/>
+            <path d="M502 210 L520 200 M520 200 L524 206" stroke="#1C1710" stroke-width="3.5" fill="none"/>
+            <circle cx="524" cy="206" r="3.5" fill="#1C1710"/>
+            <!-- 前景菜筐 -->
+            <circle cx="78" cy="262" r="17" fill="url(#hatchD)" stroke="#1C1710" stroke-width="2.5"/>
+            <circle cx="108" cy="266" r="12" fill="url(#hatchD)" stroke="#1C1710" stroke-width="2"/>
+            <path d="M70 246 q6 -12 16 -8 M84 244 q4 -10 12 -6" fill="none" stroke="#1C1710" stroke-width="1.6"/>
+            <path d="M60 248 l-6 -14 M76 244 l0 -16 M92 246 l6 -14" stroke="#1C1710" stroke-width="2"/>
+          </svg>
+          <figcaption>图一 · 凌晨四点十分，三轮车碾过湿漉漉的石板路（木刻 · 本报画刊）</figcaption>
+        </figure>
+
+        <p>市场里最先亮起来的是水产摊。增氧泵嗡嗡作响，白炽灯下，鱼鳞溅在围裙上，像撒了一把碎银。卖鱼的夫妇不怎么说话，一个捞鱼，一个过秤，配合得像同一台机器的两个部件。</p>
+        <p class="pullquote">早一分钟是勤快，晚一分钟是失职。</p>
+        <p>我问豆腐摊的陈阿姨，为什么几十年守着四点起床的日子。她想了想，说：「热闹是六点以后的事。我们这辈人，是给热闹打地基的。」说这话时她正把一板板豆腐码进水缸，动作轻得像在图书馆归架。</p>
+        <p>天光渐亮，第一拨早餐店老板骑着电动车赶到，竹篮在车把上晃。他们买葱不看秤：抓一把，扫码，道谢，全程不超过十秒——那是这条街最快的一笔交易，也是最老的一笔人情。</p>
+        <p>六点整，市场门口的卷帘门全部推起，日光灯换成天光。上班族、买菜的爷叔、举着手机拍视频的学生涌进来，凌晨的故事被踩在脚下，无人问津，也无须人问。</p>
+        <p>回来的路上我想，写博客大约也是这样：一门「六点以前」的手艺。读者看到的是六点以后的热闹，而写作者的价值，在无人观看的凌晨就已经决定了。慢一点，稳一点，像老周的三轮车——不快，但从来没有误过一场开市。<span class="endmark">■</span></p>
+      </div>
+
+      <div class="headline-foot">
+        <span>本报主笔 沈知远 采写</span>
+        <span>校对：仙人掌一盆 · 二〇二六年九月一日 付梓</span>
+        <span>（本文收录于「城市漫步」栏目）</span>
+      </div>
+    </article>
+
+    <hr class="rule-double">
+
+    <!-- ======================= 各版要目 + 侧栏 ======================= -->
+    <div class="layout-row">
+      <section class="sheets" id="sheets" aria-labelledby="sheets-title">
+        <div class="sheets-head">
+          <h2 id="sheets-title">各版要目 <span>·</span> 本期文章</h2>
+          <p class="sheets-count" id="sheets-count" role="status">全部版面 · 已刊 12 篇</p>
+        </div>
+
+        <!-- 版面筛选 -->
+        <div class="filter-tabs" role="group" aria-label="按版面筛选">
+          <button type="button" class="filter-tab active" data-filter="all" aria-pressed="true">全部版面</button>
+          <button type="button" class="filter-tab" data-filter="评论版" aria-pressed="false">评论版</button>
+          <button type="button" class="filter-tab" data-filter="生活版" aria-pressed="false">生活版</button>
+          <button type="button" class="filter-tab" data-filter="科技版" aria-pressed="false">科技版</button>
+          <button type="button" class="filter-tab" data-filter="玩物版" aria-pressed="false">玩物版</button>
+        </div>
+
+        <div class="sheet-grid" id="sheet-grid">
+
+          <!-- 01 评论版 · 头条（通栏） -->
+          <article class="sheet-card lead" data-section="评论版">
+            <p class="sheet-kicker">评论版 · 社论</p>
+            <h3 class="sheet-title"><button type="button" class="title-btn" aria-expanded="false">半月刊宣言：为什么我把更新频率降到一年二十四期</button></h3>
+            <p class="sheet-meta">九月八日刊 · 评论版头版 · 约 4 分钟</p>
+            <p class="sheet-summary">从「日更焦虑」到「半月刊」：一篇写给自己的社论。慢不是懒，是把每期都当作头版来做。</p>
+            <div class="sheet-body" hidden>
+              <p>创刊头两年，我迷信日更。后台的数字像一只手，每天清晨准时掐住脖子：昨天的访问掉了，今天的草稿还空着。直到某天我翻旧档案，发现被搜索最多的，是三篇写了一整周的稿子——读者要的从来不是更多，是更好。</p>
+              <p>于是有了这份「报纸」的章程：每月两期，逢初八、廿三出版；每期一篇头条特稿，配若干版面短文。更新慢了，但每一期都排版、校对、配图，像真的报纸一样付梓。慢速缓存，长期保鲜——这是社论，也是誓词。<span class="endmark">■</span></p>
+            </div>
+            <button type="button" class="readmore" aria-expanded="false">续读全文 ▾</button>
+          </article>
+
+          <!-- 02 评论版 -->
+          <article class="sheet-card" data-section="评论版">
+            <p class="sheet-kicker">评论版 · 观展记</p>
+            <h3 class="sheet-title"><button type="button" class="title-btn" aria-expanded="false">衬线体为什么在屏幕上「活」了回来</button></h3>
+            <p class="sheet-meta">九月六日刊 · 约 5 分钟</p>
+            <p class="sheet-summary">从铅字时代的字模讲到可变字体：屏幕分辨率追上纸的那天，印刷排印的美学就注定还魂。</p>
+            <div class="sheet-body" hidden>
+              <p>铅字时代，衬线是身体的器官：帮助铸字脱模、引导视线滑动。照排术把它简化为装饰，低分屏又把它打成锯齿，于是整整一代人以为屏幕只配无衬线。</p>
+              <p>如今视网膜屏普及、可变字体让一套字模长出无限字重，衬线体在屏幕上重新「活」了回来——不是复古，而是材料终于再次配得上审美。本期报纸的排印，就是一份还魂的证词。<span class="endmark">■</span></p>
+            </div>
+            <button type="button" class="readmore" aria-expanded="false">续读全文 ▾</button>
+          </article>
+
+          <!-- 03 评论版 -->
+          <article class="sheet-card" data-section="评论版">
+            <p class="sheet-kicker">评论版 · 观展记</p>
+            <h3 class="sheet-title"><button type="button" class="title-btn" aria-expanded="false">滚动即叙事：拆解三个获奖网站的动效节奏</button></h3>
+            <p class="sheet-meta">九月二日刊 · 约 7 分钟</p>
+            <p class="sheet-summary">逐帧分析三件获奖长文作品：pinned 章节如何像锣鼓点，留白如何像休止符。</p>
+            <div class="sheet-body" hidden>
+              <p>好的滚动叙事像评弹：有起调、有过门、有落腔。拆的三件作品里，最动人的都不是特效最重的，而是最知道「什么时候不动」的——pin 住画面两秒，比飞出二十个元素更有力量。</p>
+              <p>结论写在采访本第一页：动效是标点，不是正文。读者记住的永远是那句话，而不是句号怎么旋转入场。<span class="endmark">■</span></p>
+            </div>
+            <button type="button" class="readmore" aria-expanded="false">续读全文 ▾</button>
+          </article>
+
+          <!-- 04 生活版 -->
+          <article class="sheet-card" data-section="生活版">
+            <p class="sheet-kicker">生活版 · 城市漫步</p>
+            <h3 class="sheet-title"><button type="button" class="title-btn" aria-expanded="false">夜航西湖：一次不赶时间的环湖骑行</button></h3>
+            <p class="sheet-meta">九月四日刊 · 约 5 分钟</p>
+            <p class="sheet-summary">晚上十点从断桥出发，两小时十四公里，把白天的西湖还给游客，把夜晚的还给车轮。</p>
+            <div class="sheet-body" hidden>
+              <p>夜里的西湖没有景点，只有路段。苏堤是缓坡与水汽，北山街是梧桐与车灯，杨公堤什么都慢，连颠簸都是软的。骑到雷峰塔时塔灯恰好熄灭，黑暗反而把湖面让了出来。</p>
+              <p>到家写了一行日记：所谓漫步，就是把「到此一游」改成「到此，游了一会儿」。<span class="endmark">■</span></p>
+            </div>
+            <button type="button" class="readmore" aria-expanded="false">续读全文 ▾</button>
+          </article>
+
+          <!-- 05 生活版 -->
+          <article class="sheet-card" data-section="生活版">
+            <p class="sheet-kicker">生活版 · 街巷调查</p>
+            <h3 class="sheet-title"><button type="button" class="title-btn" aria-expanded="false">菜场经济学：三个摊位的账本</button></h3>
+            <p class="sheet-meta">八月三十日刊 · 约 6 分钟</p>
+            <p class="sheet-summary">豆腐摊、鱼摊、葱蒜摊：三本流水账里藏着最朴素的定价模型与现金流。</p>
+            <div class="sheet-body" hidden>
+              <p>陈阿姨的豆腐摊每天做八板，卖完即收，从不加班；她管这叫「不赊账给自己」。鱼摊夫妇的毛利薄，靠的是损耗率压在百分之三以内——那是二十年的手感，任何冷链算法都还在追。</p>
+              <p>葱蒜摊的老李一句话总结生意：「薄利靠勤，厚利靠鲜。」我把这句写进了产品评审纪要，比任何 OKR 都好使。<span class="endmark">■</span></p>
+            </div>
+            <button type="button" class="readmore" aria-expanded="false">续读全文 ▾</button>
+          </article>
+
+          <!-- 06 生活版 -->
+          <article class="sheet-card" data-section="生活版">
+            <p class="sheet-kicker">生活版 · 花木志</p>
+            <h3 class="sheet-title"><button type="button" class="title-btn" aria-expanded="false">阳台仙人掌十年记：一位最省心的室友</button></h3>
+            <p class="sheet-meta">八月二十八日刊 · 约 3 分钟</p>
+            <p class="sheet-summary">十年浇了不到两百次水，开了四次花。它教会我的事：存储能量，等待属于你的季节。</p>
+            <div class="sheet-body" hidden>
+              <p>二〇一六年同事搬家，把它连塑料盆一起塞给我，说「这玩意儿养不死」。十年过去，换过两次盆，搬过三次家，它在每个冬天都假装枯掉一点，又在每个春天原样还回来。</p>
+              <p>今年四月它开了花，粉的，只开了一天。我想这大概就是它的哲学：不追热点，长期保鲜。<span class="endmark">■</span></p>
+            </div>
+            <button type="button" class="readmore" aria-expanded="false">续读全文 ▾</button>
+          </article>
+
+          <!-- 07 科技版 -->
+          <article class="sheet-card" data-section="科技版">
+            <p class="sheet-kicker">科技版 · 造轮子</p>
+            <h3 class="sheet-title"><button type="button" class="title-btn" aria-expanded="false">把博客首屏压进 300ms：一次性能考古</button></h3>
+            <p class="sheet-meta">九月五日刊 · 约 8 分钟</p>
+            <p class="sheet-summary">Lighthouse 从 45 分到 98 分全过程：字体子集化、关键 CSS 内联，以及一次「过度优化」的教训。</p>
+            <div class="sheet-body" hidden>
+              <p>考古分三层：地层一，woff2 未子集化，一套宋体拖走 1.8MB；地层二，五张未压缩题图阻塞渲染；地层三，一段第三方统计脚本霸占主线程六百毫秒。逐层清理，首屏从 2.4 秒降到 0.31 秒。</p>
+              <p>唯一翻车的是把关键 CSS 内联后又内联了全部样式——浏览器解析变快了，维护者却哭了。性能的尽头是克制，这句话值一次回滚。<span class="endmark">■</span></p>
+            </div>
+            <button type="button" class="readmore" aria-expanded="false">续读全文 ▾</button>
+          </article>
+
+          <!-- 08 科技版 -->
+          <article class="sheet-card" data-section="科技版">
+            <p class="sheet-kicker">科技版 · 造轮子</p>
+            <h3 class="sheet-title"><button type="button" class="title-btn" aria-expanded="false">我用 90 天写了个零依赖的静态站点生成器</button></h3>
+            <p class="sheet-meta">八月三十一日刊 · 约 9 分钟</p>
+            <p class="sheet-summary">只用 Node 标准库，从 Markdown 到 HTML：附架构图与七条踩坑清单。</p>
+            <div class="sheet-body" hidden>
+              <p>动机很幼稚：想知道依赖清单清零之后世界还转不转。答案是转，而且转得很稳——fs 读文件、正则拆 frontmatter、模板字符串拼页面，九十天攒出八百行，构建本刊只要 0.4 秒。</p>
+              <p>坑清单第一条最疼：别自己写 Markdown 解析器，表格与嵌套引用会教你做人。后来我用一百行只解析需要的八种语法，反而踏实了。轮子的意义不在圆，在转。<span class="endmark">■</span></p>
+            </div>
+            <button type="button" class="readmore" aria-expanded="false">续读全文 ▾</button>
+          </article>
+
+          <!-- 09 科技版 -->
+          <article class="sheet-card" data-section="科技版">
+            <p class="sheet-kicker">科技版 · 造轮子</p>
+            <h3 class="sheet-title"><button type="button" class="title-btn" aria-expanded="false">CSS 滚动时间轴入门：不写一行 JS 的滚动动画</button></h3>
+            <p class="sheet-meta">八月二十六日刊 · 约 6 分钟</p>
+            <p class="sheet-summary">animation-timeline 实战笔记，附六个渐进增强案例与一份降级方案。</p>
+            <div class="sheet-body" hidden>
+              <p>scroll() 与 view() 两把钥匙：前者绑定页面滚动做进度条，后者绑定元素可见度做入场。过去需要监听器加四则运算的事，现在三行声明写完，主线程全程围观。</p>
+              <p>渐进增强的要诀只有一句：不支持就是普通网页，支持了才是会动的报纸。用 @supports 包好，旧浏览器毫发无伤。<span class="endmark">■</span></p>
+            </div>
+            <button type="button" class="readmore" aria-expanded="false">续读全文 ▾</button>
+          </article>
+
+          <!-- 10 科技版 -->
+          <article class="sheet-card" data-section="科技版">
+            <p class="sheet-kicker">科技版 · 半成品 🌲</p>
+            <h3 class="sheet-title"><button type="button" class="title-btn" aria-expanded="false">数字花园第一年：种下 214 条笔记之后</button></h3>
+            <p class="sheet-meta">八月二十二日刊 · 常青笔记 · 约 7 分钟</p>
+            <p class="sheet-summary">笔记成熟度统计（🌱61 🌿98 🌲55）、双链心得，以及放弃完美主义的三条收获。</p>
+            <div class="sheet-body" hidden>
+              <p>年初立的目标是「每条笔记都配图配引用」，年中就放弃了——花园的生命力在杂草里，不在展板里。214 条笔记中真正反复被链接的只有 37 条，其余是土壤，也值得存在。</p>
+              <p>最大的收获是心态：把「发布」改成「种植」，把「完成」改成「常青」。写作从交付变成了耕作，焦虑随之减半。<span class="endmark">■</span></p>
+            </div>
+            <button type="button" class="readmore" aria-expanded="false">续读全文 ▾</button>
+          </article>
+
+          <!-- 11 玩物版 -->
+          <article class="sheet-card" data-section="玩物版">
+            <p class="sheet-kicker">玩物版 · 折腾录</p>
+            <h3 class="sheet-title"><button type="button" class="title-btn" aria-expanded="false">给十年前的 Kindle 刷了个「慢读」系统</button></h3>
+            <p class="sheet-meta">九月三日刊 · 约 6 分钟</p>
+            <p class="sheet-summary">越狱、换字体、屏蔽书城：把一部 2015 年的墨水屏改成只读文章的「慢读终端」。</p>
+            <div class="sheet-body" hidden>
+              <p>步骤不复杂：越狱装 KOReader，换上宋体与楷体两套字体，再把无线网配置成只许访问本刊地址。十分钟，一部「信息戒断机」诞生了：没有推送，没有商城，只有排版干净的文字。</p>
+              <p>现在它躺在床头，每晚二十分钟。电一月一充，像一只不催稿的编辑部。<span class="endmark">■</span></p>
+            </div>
+            <button type="button" class="readmore" aria-expanded="false">续读全文 ▾</button>
+          </article>
+
+          <!-- 12 玩物版 -->
+          <article class="sheet-card" data-section="玩物版">
+            <p class="sheet-kicker">玩物版 · 折腾录</p>
+            <h3 class="sheet-title"><button type="button" class="title-btn" aria-expanded="false">救活一台 2009 年的 ThinkPad：一部维修日记</button></h3>
+            <p class="sheet-meta">八月十八日刊 · 约 5 分钟</p>
+            <p class="sheet-summary">换硅脂、焊排线、装轻量系统：十七岁的老机器跑完了一次完整的晨间写作流程。</p>
+            <div class="sheet-body" hidden>
+              <p>花 60 元买来当配件的 X200，实际只坏了屏线与风扇。清灰换硅脂，焊好排线，装上轻量发行版，开机 19 秒。键盘的手感像老周的三轮车铃：一按就响，绝不误事。</p>
+              <p>它现在的岗位是「晨间写作机」，无网、全屏编辑器。修机器最大的心得：先怀疑接触，再怀疑寿命，最后才怀疑人生。<span class="endmark">■</span></p>
+            </div>
+            <button type="button" class="readmore" aria-expanded="false">续读全文 ▾</button>
+          </article>
+
+        </div>
+        <p class="empty-state" id="empty-state" hidden>本报这一版暂无稿件，编辑正在伏案。</p>
+      </section>
+
+      <!-- ============ 侧栏：广告位装饰框 ============ -->
+      <aside class="col-sidebar" aria-label="公告与订阅">
+        <!-- 订阅公告框 -->
+        <section class="ad-box" id="subscribe" aria-labelledby="sub-title">
+          <p class="ad-label">征订启事</p>
+          <h3 id="sub-title">把本报缓存到你的收件箱</h3>
+          <p class="ad-note">每月两期，逢初八、廿三出版。不追热点，只寄存值得慢读的文字。</p>
+          <form class="sub-form" id="sub-form" novalidate>
+            <label for="sub-email">电子信箱（必填）</label>
+            <div class="sub-line">
+              <input type="email" id="sub-email" name="email" placeholder="you@example.com" autocomplete="email" required>
+              <button type="submit" class="btn-ink">缓存到收件箱</button>
+            </div>
+            <p class="form-msg err" id="sub-err" hidden>信箱格式似有笔误，请重填。</p>
+            <p class="form-msg ok" id="sub-ok" hidden>✓ 已收到！新一期将准时缓存到你的收件箱。</p>
+          </form>
+          <p class="rss-note">亦可走邮路：RSS 不用注册、不用登录，阅读器直达 —— slowcache.blog/rss.xml</p>
+          <p class="ad-ornament" aria-hidden="true">❦ ❦ ❦</p>
+        </section>
+
+        <!-- 关于本报 -->
+        <section class="ad-box" aria-labelledby="about-title">
+          <p class="ad-label">本报主笔</p>
+          <h3 id="about-title">关于本报</h3>
+          <div class="about-row">
+            <span class="vertical-note" aria-hidden="true">白天写组件 · 晚上写句子</span>
+            <p class="about-text"><b>沈知远</b>，一九九七年生，杭州人氏。某厂前端工程师，业余经营此报。关注 Web 性能、设计工程与独立开发。信条：<b>慢速缓存，长期保鲜</b>。桌上有 2015 年 Kindle 一部、仙人掌一盆。</p>
+          </div>
+          <div class="about-row" style="margin-top:12px">
+            <span class="seal" aria-hidden="true">沈</span>
+            <p class="about-text">本刊所有版面均以手工排印精神制作，欢迎来信勘误。<a href="#letters">投书读者来信版 →</a></p>
+          </div>
+          <p class="ad-ornament" aria-hidden="true">❦ ❦ ❦</p>
+        </section>
+
+        <!-- 中缝启事 -->
+        <section class="ad-box" aria-labelledby="gutter-title">
+          <p class="ad-label">中缝 · 启事</p>
+          <h3 id="gutter-title">中缝速览</h3>
+          <ul class="gutter-list">
+            <li><b>启一</b> 本刊不设评论插件，来信即评论。</li>
+            <li><b>启二</b> 转载请注明「慢速缓存」并附原刊链接。</li>
+            <li><b>启三</b> 第 41 期三版「保鲜」误植「保险」，谨此更正。</li>
+            <li><b>启四</b> 想法不同才有意思，欢迎反对意见。</li>
+          </ul>
+          <p class="ad-ornament" aria-hidden="true">❦ ❦ ❦</p>
+        </section>
+      </aside>
+    </div>
+
+    <!-- ======================= 往期归档 ======================= -->
+    <section class="archive" id="archive" aria-labelledby="archive-title">
+      <div class="section-head">
+        <h2 id="archive-title">往期归档</h2>
+        <p class="sub">按期号查阅 · 共 42 期 · 可试读近四期</p>
+      </div>
+      <div class="issue-tabs" role="group" aria-label="选择期号">
+        <button type="button" class="issue-tab active" data-issue="42" aria-pressed="true">第 42 期（本期）</button>
+        <button type="button" class="issue-tab" data-issue="41" aria-pressed="false">第 41 期</button>
+        <button type="button" class="issue-tab" data-issue="40" aria-pressed="false">第 40 期</button>
+        <button type="button" class="issue-tab" data-issue="39" aria-pressed="false">第 39 期</button>
+      </div>
+      <div class="issue-panel" id="issue-panel" aria-live="polite">
+        <div class="issue-panel-header">
+          <h3 id="issue-label">第 42 期（本期）</h3>
+          <time id="issue-date">二〇二六年九月八日 · 星期二</time>
+        </div>
+        <p class="issue-theme" id="issue-theme">本期主题：城市漫步特辑——凌晨四点的杭州菜市场</p>
+        <ol class="issue-list" id="issue-list"></ol>
+      </div>
+    </section>
+
+    <!-- ======================= 读者来信 ======================= -->
+    <section class="letters" id="letters" aria-labelledby="letters-title">
+      <div class="section-head">
+        <h2 id="letters-title">读者来信</h2>
+        <p class="sub">来函必复 · 择优刊登</p>
+      </div>
+      <p class="letters-intro">「想法不同才有意思，欢迎反对意见。」——本刊编辑部。来信请署尊称，长信请注明拟刊版面。</p>
+
+      <div class="letters-grid">
+        <div>
+          <form id="letter-form" novalidate>
+            <div class="field-row">
+              <div class="field" id="field-name">
+                <label for="l-name">尊姓大名 <span class="req">＊</span></label>
+                <input type="text" id="l-name" name="name" placeholder="如：本报忠实读者 王二" autocomplete="name" required>
+                <p class="err" id="l-name-err" hidden>请填写尊称（至少 2 字）。</p>
+              </div>
+              <div class="field" id="field-mail">
+                <label for="l-mail">电子信箱 <span class="req">＊</span></label>
+                <input type="email" id="l-mail" name="email" placeholder="you@example.com" autocomplete="email" required>
+                <p class="err" id="l-mail-err" hidden>信箱格式似有笔误，请重填。</p>
+              </div>
+            </div>
+            <div class="field">
+              <label for="l-sec">拟刊版面</label>
+              <select id="l-sec" name="section">
+                <option value="评论版">评论版 · 来论</option>
+                <option value="生活版">生活版 · 街巷</option>
+                <option value="科技版">科技版 · 造轮子</option>
+                <option value="玩物版">玩物版 · 折腾录</option>
+                <option value="编辑部" selected>编辑部 · 不拘版面</option>
+              </select>
+            </div>
+            <div class="field" id="field-body">
+              <label for="l-body">来信正文 <span class="req">＊</span></label>
+              <textarea id="l-body" name="body" maxlength="600" placeholder="正文至少 10 字。亦可指讹、供灶间小道消息、或仅问一声明安。" required></textarea>
+              <p class="counter" id="l-count">0 / 600</p>
+              <p class="err" id="l-body-err" hidden>来信正文至少 10 字。</p>
+            </div>
+            <div class="agree-line field" id="field-agree">
+              <input type="checkbox" id="l-agree" name="agree" required>
+              <label for="l-agree" style="letter-spacing:normal;text-transform:none;font-family:var(--serif);font-size:14px;color:var(--brown);margin:0">同意本报刊登来信全文或节选（笔名可指定）</label>
+            </div>
+            <p class="err" id="l-agree-err" hidden>需勾选同意刊登，来信方能付梓。</p>
+            <button type="submit" class="btn-ink" style="min-width:180px">付 邮</button>
+          </form>
+          <div class="letter-ok" id="letter-ok" hidden>
+            <h3>来信已收到</h3>
+            <p>编号 <span class="no" id="letter-no">LN-0000</span> · 编辑部将于三日内拆阅；若予刊登，将按来函信箱奉告期号。</p>
+          </div>
+        </div>
+
+        <aside class="letters-side">
+          <h3>来信须知</h3>
+          <p>一、来函视为授权本刊编辑删节，但 promise 不改动立场。</p>
+          <p>二、指讹类来信优先刊登——本刊排版全凭手工，错字如秋蚊，屡灭不绝。</p>
+          <p>三、本刊回信速度与更新频率同源：慢，但一定回。</p>
+          <p class="ad-ornament" aria-hidden="true">❦ ❦ ❦</p>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- ======================= 页脚 ======================= -->
+  <footer class="colophon">
+    <div class="colophon-grid">
+      <div>
+        <h4>本报</h4>
+        <p>《慢速缓存》是沈知远的个人博客，以复古报纸的排印规矩，刊载技术长文、城市随笔与折腾实录。逢初八、廿三出版。</p>
+      </div>
+      <div>
+        <h4>版面</h4>
+        <ul>
+          <li><a href="#headline">头版头条</a></li>
+          <li><a href="#sheets" data-filter="all">各版要目</a></li>
+          <li><a href="#archive">往期归档</a></li>
+          <li><a href="#letters">读者来信</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>订阅</h4>
+        <p>邮件订阅：<a href="#subscribe">缓存到收件箱</a><br>
+        RSS 邮路：不用注册，不用登录，阅读器直达。</p>
+      </div>
+      <p class="colophon-fin" aria-hidden="true">本报终版</p>
+    </div>
+    <div class="copyright">
+      <span>© 二〇一九—二〇二六 沈知远 · 慢速缓存 · 除注明外均为原创</span>
+      <span>第 42 期 · 终 <span style="color:var(--red)">■</span></span>
+    </div>
+  </footer>
+</div>
+
+<button type="button" class="to-top" id="to-top">▲ 回到头版</button>
+
+<script>
+(function(){
+  'use strict';
+  var motionOK = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  /* ---------- 版面筛选（导航 + 筛选条共用） ---------- */
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.sheet-card'));
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.filter-tab'));
+  var navFilterLinks = Array.prototype.slice.call(document.querySelectorAll('.section-nav a[data-filter], .colophon a[data-filter]'));
+  var countEl = document.getElementById('sheets-count');
+  var emptyEl = document.getElementById('empty-state');
+
+  function setExpand(card, open){
+    var body = card.querySelector('.sheet-body');
+    var rm = card.querySelector('.readmore');
+    if(body){ body.hidden = !open; }
+    Array.prototype.forEach.call(card.querySelectorAll('[aria-expanded]'), function(b){
+      b.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    if(rm){ rm.textContent = open ? '收起全文 ▴' : '续读全文 ▾'; }
+  }
+
+  function applyFilter(value){
+    var shown = 0;
+    cards.forEach(function(card){
+      var ok = (value === 'all') || (card.getAttribute('data-section') === value);
+      card.hidden = !ok;
+      if(!ok){ setExpand(card, false); }
+      if(ok){ shown++; }
+    });
+    if(countEl){
+      countEl.textContent = (value === 'all' ? '全部版面' : value) + ' · 已刊 ' + shown + ' 篇';
+    }
+    tabs.forEach(function(t){
+      var on = t.getAttribute('data-filter') === value;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    navFilterLinks.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('data-filter') === value);
+    });
+    if(emptyEl){ emptyEl.hidden = shown !== 0; }
+  }
+
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){ applyFilter(t.getAttribute('data-filter')); });
+  });
+  navFilterLinks.forEach(function(a){
+    a.addEventListener('click', function(){ applyFilter(a.getAttribute('data-filter')); });
+  });
+  applyFilter('all');
+
+  /* ---------- 文章展开 / 收起 ---------- */
+  cards.forEach(function(card){
+    var body = card.querySelector('.sheet-body');
+    if(!body){ return; }
+    Array.prototype.forEach.call(card.querySelectorAll('.title-btn, .readmore'), function(btn){
+      btn.addEventListener('click', function(){
+        setExpand(card, body.hidden);
+      });
+    });
+  });
+
+  /* ---------- 往期归档：期号切换 ---------- */
+  var ISSUES = {
+    '42': {
+      label: '第 42 期（本期）',
+      date: '二〇二六年九月八日 · 星期二',
+      theme: '本期主题：城市漫步特辑——凌晨四点的杭州菜市场',
+      items: [
+        ['头版', '凌晨四点的杭州菜市场（特稿）', '一版'],
+        ['评论版', '半月刊宣言：为什么我把更新频率降到一年二十四期', '二版'],
+        ['评论版', '衬线体为什么在屏幕上「活」了回来', '二版'],
+        ['科技版', '把博客首屏压进 300ms：一次性能考古', '三版'],
+        ['生活版', '夜航西湖：一次不赶时间的环湖骑行', '四版'],
+        ['玩物版', '给十年前的 Kindle 刷了个「慢读」系统', '五版']
+      ]
+    },
+    '41': {
+      label: '第 41 期',
+      date: '二〇二六年八月二十五日 · 星期二',
+      theme: '本期主题：老机器与新轮子',
+      items: [
+        ['玩物版', '救活一台 2009 年的 ThinkPad：一部维修日记', '头版'],
+        ['科技版', '我用 90 天写了个零依赖的静态站点生成器', '二版'],
+        ['生活版', '菜场经济学：三个摊位的账本', '三版'],
+        ['评论版', '滚动即叙事：拆解三个获奖网站的动效节奏', '四版'],
+        ['中缝', '更正启事与「慢读」订阅办法', '中缝']
+      ]
+    },
+    '40': {
+      label: '第 40 期',
+      date: '二〇二六年八月十一日 · 星期二',
+      theme: '本期主题：数字花园的仲夏',
+      items: [
+        ['科技版', '数字花园第一年：种下 214 条笔记之后', '头版'],
+        ['科技版', 'CSS 滚动时间轴入门：不写一行 JS 的滚动动画', '二版'],
+        ['生活版', '阳台仙人掌十年记：一位最省心的室友', '三版'],
+        ['评论版', '论「过载」：一次信息断食实验', '四版']
+      ]
+    },
+    '39': {
+      label: '第 39 期',
+      date: '二〇二六年七月二十八日 · 星期二',
+      theme: '本期主题：三伏天的慢生意',
+      items: [
+        ['生活版', '凉茶铺与它的四十年招牌', '头版'],
+        ['科技版', '给静态站加一个 4KB 的站内搜索', '二版'],
+        ['玩物版', '机械键盘换轴记：青轴改茶轴', '三版'],
+        ['评论版', '慢速缓存，长期保鲜：创刊七周年小记', '四版']
+      ]
+    }
+  };
+
+  var issueTabs = Array.prototype.slice.call(document.querySelectorAll('.issue-tab'));
+  var issueLabel = document.getElementById('issue-label');
+  var issueDate = document.getElementById('issue-date');
+  var issueTheme = document.getElementById('issue-theme');
+  var issueList = document.getElementById('issue-list');
+  var issuePanel = document.getElementById('issue-panel');
+
+  function renderIssue(n){
+    var data = ISSUES[n];
+    if(!data){ return; }
+    issueLabel.textContent = data.label;
+    issueDate.textContent = data.date;
+    issueTheme.textContent = data.theme;
+    issueList.innerHTML = '';
+    data.items.forEach(function(it){
+      var li = document.createElement('li');
+      var sec = document.createElement('span');
+      sec.className = 'issue-sec';
+      sec.textContent = it[0];
+      var title = document.createElement('span');
+      title.textContent = it[1];
+      var page = document.createElement('span');
+      page.className = 'issue-page';
+      page.textContent = it[2];
+      li.appendChild(sec);
+      li.appendChild(title);
+      li.appendChild(page);
+      issueList.appendChild(li);
+    });
+    issueTabs.forEach(function(t){
+      var on = t.getAttribute('data-issue') === n;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    if(motionOK && issuePanel){
+      issuePanel.style.animation = 'none';
+      void issuePanel.offsetWidth;
+      issuePanel.style.animation = '';
+    }
+  }
+
+  issueTabs.forEach(function(t){
+    t.addEventListener('click', function(){ renderIssue(t.getAttribute('data-issue')); });
+  });
+  renderIssue('42');
+
+  /* ---------- 订阅公告框 ---------- */
+  var subForm = document.getElementById('sub-form');
+  var subEmail = document.getElementById('sub-email');
+  var subErr = document.getElementById('sub-err');
+  var subOk = document.getElementById('sub-ok');
+  var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if(subForm){
+    subForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      var ok = emailRe.test(subEmail.value.trim());
+      subErr.hidden = ok;
+      subOk.hidden = !ok;
+      if(ok){
+        subEmail.value = '';
+      }else{
+        subEmail.focus();
+      }
+    });
+    subEmail.addEventListener('input', function(){
+      subErr.hidden = true;
+      subOk.hidden = true;
+    });
+  }
+
+  /* ---------- 读者来信：校验 + 提交反馈 ---------- */
+  var letterForm = document.getElementById('letter-form');
+  var lName = document.getElementById('l-name');
+  var lMail = document.getElementById('l-mail');
+  var lBody = document.getElementById('l-body');
+  var lAgree = document.getElementById('l-agree');
+  var lCount = document.getElementById('l-count');
+  var letterOk = document.getElementById('letter-ok');
+  var letterNo = document.getElementById('letter-no');
+
+  function setFieldError(fieldId, errId, bad){
+    var field = document.getElementById(fieldId);
+    var err = document.getElementById(errId);
+    if(err){ err.hidden = !bad; }
+    if(field){ field.classList.toggle('invalid', bad); }
+  }
+
+  function validateLetter(){
+    var badName = lName.value.trim().length < 2;
+    var badMail = !emailRe.test(lMail.value.trim());
+    var badBody = lBody.value.trim().length < 10;
+    var badAgree = !lAgree.checked;
+    setFieldError('field-name', 'l-name-err', badName);
+    setFieldError('field-mail', 'l-mail-err', badMail);
+    setFieldError('field-body', 'l-body-err', badBody);
+    setFieldError('field-agree', 'l-agree-err', badAgree);
+    if(badName){ lName.focus(); return false; }
+    if(badMail){ lMail.focus(); return false; }
+    if(badBody){ lBody.focus(); return false; }
+    if(badAgree){ lAgree.focus(); return false; }
+    return true;
+  }
+
+  if(letterForm){
+    lBody.addEventListener('input', function(){
+      lCount.textContent = lBody.value.length + ' / 600';
+    });
+    [lName, lMail, lBody].forEach(function(input){
+      input.addEventListener('input', function(){
+        input.closest('.field').classList.remove('invalid');
+        var err = input.closest('.field').querySelector('.err');
+        if(err){ err.hidden = true; }
+      });
+    });
+    lAgree.addEventListener('change', function(){
+      if(lAgree.checked){
+        setFieldError('field-agree', 'l-agree-err', false);
+      }
+    });
+    letterForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      if(!validateLetter()){ return; }
+      letterNo.textContent = 'LN-' + (1000 + Math.floor(Math.random() * 9000));
+      letterOk.hidden = false;
+      letterForm.reset();
+      lCount.textContent = '0 / 600';
+      letterOk.scrollIntoView({ block: 'nearest', behavior: motionOK ? 'smooth' : 'auto' });
+    });
+  }
+
+  /* ---------- 返回头版 ---------- */
+  var toTop = document.getElementById('to-top');
+  if(toTop){
+    window.addEventListener('scroll', function(){
+      toTop.classList.toggle('show', window.scrollY > 480);
+    }, { passive: true });
+    toTop.addEventListener('click', function(){
+      window.scrollTo({ top: 0, behavior: motionOK ? 'smooth' : 'auto' });
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>慢速缓存 · Slow Cache｜沈知远的个人博客</title>
+<meta name="description" content="慢速缓存 Slow Cache——沈知远的公开笔记本。造轮子的过程、看过的展、走过的街、拆过的机器，用透明水彩写在冷压纸上。">
+<script>document.documentElement.classList.add('js');</script>
+<style>
+/* ==========================================================
+   慢速缓存 · Watercolor 水彩晕染
+   透明叠色 multiply / 湿画水痕 turbulence / 泼溅 / 冷压纸纹
+   ========================================================== */
+:root{
+  --paper:#FBF8F1;          /* 冷压纸底 */
+  --indigo:#5B7FA6;         /* 靛蓝 */
+  --rose:#E8A0A8;           /* 玫瑰粉 */
+  --sage:#9CB894;           /* 鼠尾草绿 */
+  --ochre:#E9C46A;          /* 赭黄 */
+  --ink:#3A4A63;            /* 深群青 · 正文 */
+  --ink-soft:#55647E;       /* 弱化文字 */
+  --indigo-deep:#46618A;    /* 链接蓝 */
+  --rose-deep:#A9555F;
+  --sage-deep:#5C7753;
+  --ochre-deep:#8A6420;
+  --coral-deep:#A05A4A;     /* 半成品（粉×黄叠出） */
+  --hair:#E3DCCB;           /* 发丝线 */
+  --f-display:"EB Garamond","Cormorant Garamond",Georgia,"Times New Roman","Noto Serif SC","Songti SC","SimSun",serif;
+  --f-body:"LXGW WenKai","LXGW WenKai GB","Kaiti SC","STKaiti","KaiTi","楷体","Noto Sans SC","Microsoft YaHei",sans-serif;
+  --f-meta:"Karla","Avenir Next","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --f-mono:"IBM Plex Mono","Cascadia Code",Consolas,"Courier New",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--f-body);
+  font-size:16.5px;
+  line-height:1.9;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+::selection{background:rgba(232,160,168,.42);color:var(--ink)}
+a{color:var(--indigo-deep)}
+img,svg{display:block}
+button{font-family:inherit}
+:focus-visible{outline:2px dashed rgba(70,97,138,.75);outline-offset:3px;border-radius:2px}
+.skip{position:absolute;left:-999px;top:10px;z-index:300;background:var(--paper);border:1px solid var(--indigo);padding:8px 16px;font-family:var(--f-meta);font-size:13px;letter-spacing:.1em;text-decoration:none}
+.skip:focus{left:10px}
+
+/* ---------- 冷压纸纹（细颗粒 + 大块水渍斑） ---------- */
+.grain{position:fixed;inset:0;z-index:60;pointer-events:none;mix-blend-mode:multiply;opacity:.055}
+.grain svg{position:absolute;inset:0;width:100%;height:100%}
+.grain svg + svg{opacity:.5}
+
+/* ---------- 阅读进度：一笔靛蓝水线 ---------- */
+.progress{position:fixed;top:0;left:0;right:0;height:3px;z-index:120;pointer-events:none;opacity:0;transition:opacity .3s}
+body.reading .progress{opacity:1}
+#progress-bar{display:block;height:100%;background:linear-gradient(90deg,rgba(91,127,166,.95),rgba(91,127,166,.3));transform:scaleX(0);transform-origin:left center;
+  -webkit-mask-image:linear-gradient(90deg,#000 86%,transparent 100%);mask-image:linear-gradient(90deg,#000 86%,transparent 100%)}
+
+/* ---------- 水彩通用件 ---------- */
+.wash{position:absolute;border-radius:50%;mix-blend-mode:multiply;filter:url(#wc-soft)}
+.brush-divider{height:8px;max-width:230px;margin-top:16px;
+  background:linear-gradient(90deg,transparent,rgba(var(--wc,91,127,166),.55) 10%,rgba(var(--wc,91,127,166),.2) 36%,rgba(var(--wc,91,127,166),.46) 56%,rgba(var(--wc,91,127,166),.14) 80%,transparent);
+  filter:url(#wc-line);mix-blend-mode:multiply;border-radius:50%}
+.splatter{fill:currentColor}
+
+/* 分类色变量（色块即色标） */
+[data-filter="build"],.chip-build,.cw-build{--wc:91,127,166;--ct:#46618A}
+[data-filter="art"],.chip-art,.cw-art{--wc:232,160,168;--ct:#A9555F}
+[data-filter="walk"],.chip-walk,.cw-walk{--wc:156,184,148;--ct:#5C7753}
+[data-filter="tinker"],.chip-tinker,.cw-tinker{--wc:233,196,106;--ct:#8A6420}
+[data-filter="garden"],.chip-garden,.cw-garden{--wc:212,130,90;--ct:#A05A4A}
+
+.chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--f-meta);font-size:12.5px;letter-spacing:.14em;color:var(--ct)}
+.chip i,.chip-blob{width:15px;height:11px;flex:none;background:radial-gradient(closest-side,rgba(var(--wc),.78),rgba(var(--wc),.18));
+  border-radius:62% 38% 55% 45%/48% 62% 38% 52%;mix-blend-mode:multiply}
+.dot-sep{margin:0 .55em;color:rgba(85,100,126,.55)}
+
+/* 分类色晕染标（按年归档用） */
+.a-dot{display:inline-block;width:13px;height:10px;flex:none;border-radius:60% 40% 55% 45%/50% 60% 40% 52%;mix-blend-mode:multiply}
+.a-dot.dot-build{background:radial-gradient(closest-side,rgba(91,127,166,.8),rgba(91,127,166,.2))}
+.a-dot.dot-art{background:radial-gradient(closest-side,rgba(232,160,168,.85),rgba(232,160,168,.2))}
+.a-dot.dot-walk{background:radial-gradient(closest-side,rgba(156,184,148,.85),rgba(156,184,148,.2))}
+.a-dot.dot-tinker{background:radial-gradient(closest-side,rgba(233,196,106,.9),rgba(233,196,106,.25))}
+.a-dot.dot-garden{background:radial-gradient(closest-side,rgba(212,130,90,.8),rgba(212,130,90,.2))}
+
+/* ---------- 标题洇染高亮 ---------- */
+.hl{position:relative;font-style:normal;white-space:nowrap;z-index:0}
+.hl::before{content:"";position:absolute;z-index:-1;left:-.2em;right:-.2em;top:.1em;bottom:-.04em;
+  background:radial-gradient(58% 78% at 40% 56%,rgba(233,196,106,.55),rgba(233,196,106,.26) 56%,transparent 80%);
+  border-radius:58% 42% 55% 45%/55% 60% 40% 50%;
+  filter:blur(6px);mix-blend-mode:multiply;
+  -webkit-mask-image:radial-gradient(72% 88% at 50% 50%,#000 52%,transparent 100%);
+  mask-image:radial-gradient(72% 88% at 50% 50%,#000 52%,transparent 100%)}
+
+/* ---------- 刊头 ---------- */
+.wrap{max-width:1160px;margin:0 auto;padding:0 28px}
+.masthead{padding:46px 0 0;text-align:center}
+.mast-eyebrow{font-family:var(--f-meta);font-size:11px;letter-spacing:.36em;color:var(--ink-soft)}
+.site-title{font-family:var(--f-display);font-size:clamp(38px,6vw,56px);font-weight:600;letter-spacing:.06em;line-height:1.25;margin:12px 0 4px}
+.site-title a{color:var(--ink);text-decoration:none}
+.site-title .en{display:block;font-size:.3em;letter-spacing:.46em;color:var(--indigo-deep);font-style:italic;font-weight:400;margin-top:8px}
+.mast-sub{color:var(--ink-soft);font-size:15px;letter-spacing:.1em}
+.site-nav{display:flex;justify-content:center;flex-wrap:wrap;gap:6px 30px;margin:24px 0 20px}
+.site-nav a{font-family:var(--f-meta);font-size:13.5px;letter-spacing:.24em;color:var(--ink);text-decoration:none;position:relative;padding:4px 2px}
+.site-nav a::after{content:"";position:absolute;left:0;bottom:-3px;height:6px;width:0;
+  background:linear-gradient(90deg,rgba(91,127,166,.45),rgba(91,127,166,.08));
+  border-radius:60% 40% 55% 45%/60% 50% 50% 40%;
+  transition:width .35s ease}
+.site-nav a:hover::after,.site-nav a:focus-visible::after{width:100%}
+.mast-band{height:16px;max-width:880px;margin:0 auto;
+  background:linear-gradient(90deg,transparent,rgba(91,127,166,.5) 10%,rgba(232,160,168,.42) 34%,rgba(156,184,148,.42) 58%,rgba(233,196,106,.4) 82%,transparent);
+  filter:url(#wc-line);mix-blend-mode:multiply}
+
+/* ---------- 分区骨架 ---------- */
+.sec{padding:68px 0;position:relative}
+.sec-head .eyebrow{font-family:var(--f-meta);font-size:11.5px;letter-spacing:.34em;color:var(--ink-soft)}
+.sec-head h2{font-family:var(--f-display);font-size:clamp(26px,3.4vw,34px);font-weight:600;letter-spacing:.04em;margin-top:8px}
+
+/* ---------- 载入：晕染从中心洇开 + 轻微呼吸 ---------- */
+@keyframes bloomIn{from{opacity:0;filter:blur(14px)}to{opacity:1;filter:blur(0)}}
+.bloom{animation:bloomIn 1s ease-out both}
+.bloom.b2{animation-delay:.18s}
+.bloom.b3{animation-delay:.36s}
+@keyframes breathe{from{transform:scale(1)}to{transform:scale(1.035)}}
+.bloom .wash{animation:breathe 9s ease-in-out infinite alternate}
+.bloom.b2 .wash{animation-delay:-3s}
+.bloom.b3 .wash{animation-delay:-6s}
+
+/* ---------- Hero ---------- */
+.hero{position:relative;padding:70px 0 46px}
+.hero-washes{position:absolute;inset:0;pointer-events:none}
+.w-indigo{width:56vmin;height:46vmin;left:1%;top:2%;background:radial-gradient(closest-side,rgba(91,127,166,.19),rgba(91,127,166,.09) 58%,transparent 74%)}
+.w-ochre{width:42vmin;height:38vmin;left:33%;top:-8%;background:radial-gradient(closest-side,rgba(233,196,106,.27),rgba(233,196,106,.11) 58%,transparent 75%)}
+.w-rose{width:36vmin;height:31vmin;right:3%;top:44%;background:radial-gradient(closest-side,rgba(232,160,168,.25),rgba(232,160,168,.1) 58%,transparent 75%)}
+.hero-inner{position:relative;display:flex;justify-content:space-between;align-items:flex-start;gap:40px}
+.hero-copy{max-width:620px}
+.eyebrow{font-family:var(--f-meta);font-size:11.5px;letter-spacing:.34em;color:var(--ink-soft)}
+.tagline{font-family:var(--f-display);font-size:clamp(29px,4.4vw,44px);line-height:1.55;font-weight:600;margin:14px 0 20px}
+.hero-note{color:var(--ink-soft);font-size:15.5px;line-height:2.05;max-width:34em}
+.palette{position:relative;flex:none;width:262px;height:236px;margin-top:10px}
+.pdot{position:absolute;border-radius:50%;filter:url(#wc-soft);mix-blend-mode:multiply}
+.pd-indigo{width:126px;height:108px;left:0;top:14px;background:radial-gradient(closest-side,rgba(91,127,166,.52),rgba(91,127,166,.2) 60%,transparent 76%)}
+.pd-ochre{width:116px;height:100px;left:82px;top:0;background:radial-gradient(closest-side,rgba(233,196,106,.58),rgba(233,196,106,.22) 60%,transparent 77%)}
+.pd-rose{width:100px;height:88px;left:56px;top:96px;background:radial-gradient(closest-side,rgba(232,160,168,.55),rgba(232,160,168,.2) 60%,transparent 77%)}
+.pd-caption{position:absolute;left:2px;bottom:0;font-family:var(--f-meta);font-size:11.5px;letter-spacing:.12em;color:var(--ink-soft);line-height:1.9}
+.spl-hero{position:absolute;right:4%;bottom:2%;width:132px;height:56px;color:var(--indigo)}
+
+/* ---------- 文章区 ---------- */
+.posts-wrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:52px;align-items:start}
+.filters{display:flex;flex-wrap:wrap;gap:4px 22px;margin:20px 0 34px}
+.ftab{position:relative;background:none;border:0;padding:9px 2px;cursor:pointer;
+  font-family:var(--f-meta);font-size:13.5px;letter-spacing:.16em;color:var(--ink-soft);transition:color .3s}
+.ftab small{font-size:11px;color:rgba(85,100,126,.65);margin-left:4px;font-variant-numeric:tabular-nums}
+.ftab .chip-blob{width:13px;height:10px;margin-right:6px;display:inline-block;vertical-align:-1px}
+.ftab::after{content:"";position:absolute;left:0;bottom:2px;height:7px;width:0;
+  background:linear-gradient(90deg,rgba(var(--wc,91,127,166),.45),rgba(var(--wc,91,127,166),.08));
+  border-radius:60% 40% 55% 45%/60% 50% 50% 40%;
+  transition:width .35s ease}
+.ftab:hover{color:var(--ink)}
+.ftab.is-active{color:var(--ct,var(--ink))}
+.ftab.is-active::after{width:100%}
+.post-count-line{font-family:var(--f-meta);font-size:12px;letter-spacing:.18em;color:var(--ink-soft);margin:-22px 0 26px}
+
+.post-grid{display:grid;grid-template-columns:1fr 1fr;gap:34px 42px;align-items:start}
+.post-card{position:relative;padding:30px 30px 26px}
+.card-wash{position:absolute;inset:-12% -6%;z-index:0;mix-blend-mode:multiply;filter:url(#wc-soft);
+  background-image:
+    radial-gradient(46% 58% at 24% 30%,rgba(var(--wc),.17),transparent 72%),
+    radial-gradient(38% 46% at 80% 22%,rgba(var(--wc),.13),transparent 74%),
+    radial-gradient(50% 46% at 56% 86%,rgba(var(--wc),.12),transparent 76%);
+  background-size:130% 130%;background-position:center;background-repeat:no-repeat;
+  transition:background-size .45s ease}
+.post-card:hover .card-wash,.post-card:focus-within .card-wash{background-size:168% 168%}
+.card-body{position:relative;z-index:1}
+.card-title{font-family:var(--f-display);font-size:20px;font-weight:600;line-height:1.6;letter-spacing:.02em;margin:10px 0 8px}
+.excerpt{font-size:15px;line-height:1.95;color:#42516B}
+.card-actions{margin-top:14px}
+.meta{font-family:var(--f-meta);font-size:12.5px;letter-spacing:.14em;color:var(--ink-soft)}
+.ripe{margin-left:.6em;padding:1px 8px;border:1px solid rgba(160,90,74,.5);border-radius:60% 40% 55% 45%/55% 50% 50% 45%;color:var(--coral-deep);font-size:11px;letter-spacing:.18em}
+.t-link{background:none;border:0;padding:2px 0;cursor:pointer;font-family:var(--f-display);font-size:15px;letter-spacing:.06em;color:var(--indigo-deep);position:relative}
+.t-link::after{content:"";position:absolute;left:0;bottom:-2px;height:6px;width:0;
+  background:linear-gradient(90deg,rgba(91,127,166,.5),rgba(91,127,166,.08));
+  border-radius:60% 40% 55% 45%/60% 50% 50% 40%;transition:width .35s ease}
+.t-link:hover::after,.t-link:focus-visible::after{width:100%}
+@keyframes cardin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.post-card.pop{animation:cardin .45s ease-out both}
+
+/* 精选卡 */
+.post-card.featured{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.22fr) minmax(0,.78fr);gap:36px;padding:38px 40px 34px}
+.f-title{font-size:clamp(22px,2.6vw,28px)}
+.featured .excerpt{max-width:34em}
+.f-art{position:relative;min-height:220px}
+.f-wash{position:absolute;inset:-14% -10%;filter:url(#wc-soft);mix-blend-mode:multiply;
+  background:
+    radial-gradient(50% 60% at 30% 34%,rgba(91,127,166,.16),transparent 72%),
+    radial-gradient(44% 52% at 72% 24%,rgba(233,196,106,.2),transparent 74%),
+    radial-gradient(46% 52% at 60% 84%,rgba(232,160,168,.16),transparent 76%)}
+.f-palette{position:absolute;right:6px;top:14px;width:220px;height:170px}
+.f-palette .pd-indigo{width:104px;height:90px;top:12px}
+.f-palette .pd-ochre{width:96px;height:84px;left:70px;top:0}
+.f-palette .pd-rose{width:84px;height:74px;left:44px;top:78px}
+.f-spl{position:absolute;right:0;bottom:16px;width:120px;height:52px;color:var(--ochre-deep);transition:transform .45s ease}
+.featured:hover .f-spl{transform:translate(4px,-3px) rotate(3deg)}
+.f-cap{position:absolute;left:0;bottom:0;font-family:var(--f-meta);font-size:11px;letter-spacing:.14em;color:var(--ink-soft)}
+.seal{position:absolute;top:22px;right:26px;z-index:2;display:flex;align-items:center;justify-content:center;
+  width:62px;height:62px;transform:rotate(-7deg);mix-blend-mode:multiply;
+  border:1.5px solid rgba(169,85,95,.7);color:var(--rose-deep);
+  border-radius:47% 53% 55% 45%/52% 46% 54% 48%;
+  background:radial-gradient(closest-side,rgba(232,160,168,.32),rgba(232,160,168,.1) 72%,transparent);
+  font-family:var(--f-display);font-size:15px;letter-spacing:.3em;text-indent:.3em}
+
+/* ---------- 侧栏 ---------- */
+.sidebar{position:relative}
+.widget{position:relative;padding:26px 26px 24px;margin-bottom:34px}
+.widget::before{content:"";position:absolute;inset:-8px;z-index:-1;filter:url(#wc-soft);mix-blend-mode:multiply;
+  background:
+    radial-gradient(60% 52% at 28% 18%,rgba(91,127,166,.11),transparent 74%),
+    radial-gradient(52% 46% at 82% 86%,rgba(233,196,106,.13),transparent 76%)}
+.w-title{font-family:var(--f-meta);font-size:12px;letter-spacing:.3em;color:var(--ink-soft);margin-bottom:14px}
+.w-about p{font-size:14.5px;line-height:2;color:#42516B}
+.w-about .w-name{font-family:var(--f-display);font-size:19px;font-weight:600;color:var(--ink)}
+.w-link{display:inline-block;margin-top:12px;font-family:var(--f-meta);font-size:12.5px;letter-spacing:.16em;color:var(--indigo-deep);text-decoration:none;position:relative}
+.w-link::after{content:"";position:absolute;left:0;bottom:-2px;height:5px;width:0;background:linear-gradient(90deg,rgba(91,127,166,.5),rgba(91,127,166,.08));border-radius:60% 40% 55% 45%/60% 50% 50% 40%;transition:width .35s}
+.w-link:hover::after{width:100%}
+.legend-item{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;padding:8px 4px;cursor:pointer;
+  font-family:var(--f-meta);font-size:13.5px;letter-spacing:.14em;color:var(--ink-soft);transition:color .3s;text-align:left}
+.legend-item small{margin-left:auto;font-size:11.5px;color:rgba(85,100,126,.6);font-variant-numeric:tabular-nums}
+.legend-item:hover,.legend-item.is-active{color:var(--ct,var(--ink))}
+.sub-form{display:flex;gap:10px;margin-top:12px}
+.sub-form input{flex:1;min-width:0}
+.sub-note{display:block;margin-top:10px;font-family:var(--f-meta);font-size:12px;letter-spacing:.06em;line-height:1.8;min-height:1.6em}
+.sub-note.is-ok{color:var(--sage-deep)}
+.sub-note.is-bad{color:var(--rose-deep)}
+.w-rss{margin-top:14px;font-family:var(--f-meta);font-size:11.5px;letter-spacing:.08em;line-height:2;color:var(--ink-soft);word-break:break-all}
+
+/* ---------- 表单 ---------- */
+input[type="text"],input[type="email"],textarea{
+  width:100%;padding:10px 13px;font-family:var(--f-body);font-size:15.5px;color:var(--ink);
+  background:rgba(255,253,247,.85);border:1px solid #DCD5C3;border-radius:3px;transition:border-color .3s,box-shadow .3s}
+input:focus,textarea:focus{outline:none;border-color:rgba(91,127,166,.65);
+  box-shadow:0 1px 0 rgba(91,127,166,.55),0 8px 16px -10px rgba(91,127,166,.4)}
+input.is-invalid,textarea.is-invalid{border-color:rgba(169,85,95,.75)}
+.field{margin-bottom:16px}
+.field label{display:block;font-family:var(--f-meta);font-size:12.5px;letter-spacing:.18em;color:var(--ink-soft);margin-bottom:8px}
+.field-err{display:block;min-height:1.4em;margin-top:6px;font-family:var(--f-meta);font-size:12px;letter-spacing:.05em;color:var(--rose-deep)}
+.btn{display:inline-block;padding:11px 28px;border:0;border-radius:3px;cursor:pointer;
+  color:#FBF8F1;font-family:var(--f-meta);font-size:14px;letter-spacing:.2em;text-indent:.1em;
+  background:radial-gradient(130% 170% at 30% 12%,#4A5F7D,#3A4A63 72%);
+  background-size:100% 100%;transition:background-size .4s ease,filter .3s}
+.btn:hover{background-size:155% 155%;filter:brightness(1.07)}
+.btn-ghost{display:inline-block;padding:9px 20px;border:1px solid rgba(70,97,138,.5);border-radius:3px;cursor:pointer;
+  background:transparent;color:var(--indigo-deep);font-family:var(--f-meta);font-size:13px;letter-spacing:.14em;
+  transition:background .3s}
+.btn-ghost:hover{background:radial-gradient(120% 170% at 20% 10%,rgba(91,127,166,.15),transparent 72%)}
+
+/* ---------- 归档 ---------- */
+#archive{--wc:156,184,148}
+.year{margin-bottom:26px;position:relative}
+.year::before{content:"";position:absolute;inset:-4% -2% 0;z-index:-1;filter:url(#wc-soft);mix-blend-mode:multiply;
+  background:radial-gradient(56% 70% at 16% 30%,rgba(156,184,148,.12),transparent 72%),
+             radial-gradient(48% 60% at 88% 70%,rgba(91,127,166,.08),transparent 74%)}
+.year-head{display:flex;align-items:center;gap:18px;width:100%;background:none;border:0;padding:10px 4px;cursor:pointer}
+.yr-blob{display:inline-flex;justify-content:center;min-width:82px;padding:5px 16px;
+  font-family:var(--f-display);font-size:21px;font-weight:600;color:var(--indigo-deep);
+  background:radial-gradient(closest-side,rgba(91,127,166,.28),rgba(91,127,166,.08) 76%,transparent);
+  border-radius:48% 52% 55% 45%/55% 45% 52% 48%;mix-blend-mode:multiply}
+.yr-count{font-family:var(--f-meta);font-size:12.5px;letter-spacing:.18em;color:var(--ink-soft)}
+.yr-toggle{margin-left:auto;font-family:var(--f-meta);font-size:17px;color:var(--sage-deep);transition:transform .3s}
+.year-head[aria-expanded="true"] .yr-toggle{transform:rotate(45deg)}
+.year-list{list-style:none;padding:4px 4px 10px}
+.year-list li{display:flex;align-items:baseline;gap:14px;padding:9px 2px;border-bottom:1px solid rgba(227,220,203,.7)}
+.a-date{font-family:var(--f-meta);font-size:12.5px;letter-spacing:.12em;color:var(--ink-soft);font-variant-numeric:tabular-nums;flex:none}
+.a-title{font-size:15.5px;color:var(--ink)}
+.a-cat{margin-left:auto;flex:none;font-family:var(--f-meta);font-size:11.5px;letter-spacing:.16em;color:var(--ink-soft)}
+
+/* ---------- 关于 ---------- */
+#about{--wc:232,160,168}
+.about-grid{display:grid;grid-template-columns:280px minmax(0,1fr);gap:56px;align-items:start}
+.portrait{position:relative;padding:16px}
+.portrait svg{width:100%;height:auto}
+.portrait-cap{margin-top:10px;text-align:center;font-family:var(--f-meta);font-size:11px;letter-spacing:.2em;color:var(--ink-soft)}
+.about-copy p{margin-bottom:1.1em;font-size:16px;line-height:2.05;max-width:36em}
+.about-copy .about-lead{font-family:var(--f-display);font-size:21px;line-height:1.9;color:var(--ink)}
+.now-list{list-style:none;margin:18px 0 8px;border-top:1px solid var(--hair)}
+.now-list li{display:flex;gap:18px;padding:11px 2px;border-bottom:1px solid rgba(227,220,203,.7);font-size:15px}
+.now-list .now-k{flex:none;font-family:var(--f-meta);font-size:12px;letter-spacing:.24em;color:var(--rose-deep);padding-top:3px}
+.rss-note{margin-top:16px;font-family:var(--f-meta);font-size:12px;letter-spacing:.08em;line-height:2.1;color:var(--ink-soft)}
+
+/* ---------- 留言本 ---------- */
+#guestbook{--wc:233,196,106}
+.gb-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:56px;align-items:start}
+.gb-intro{font-size:15.5px;color:#42516B;max-width:30em}
+.gb-entry{position:relative;padding:18px 22px;margin:0 0 18px}
+.gb-entry::before{content:"";position:absolute;inset:-8px -10px;z-index:-1;filter:url(#wc-soft);mix-blend-mode:multiply;
+  background:radial-gradient(58% 72% at 22% 16%,rgba(156,184,148,.18),transparent 72%),
+             radial-gradient(52% 64% at 86% 88%,rgba(91,127,166,.1),transparent 74%)}
+.gb-entry:nth-child(2n)::before{background:radial-gradient(58% 72% at 22% 16%,rgba(232,160,168,.18),transparent 72%),
+             radial-gradient(52% 64% at 86% 88%,rgba(233,196,106,.14),transparent 74%)}
+.gb-name{font-family:var(--f-meta);font-size:12.5px;letter-spacing:.16em;color:var(--ink-soft)}
+.gb-text{margin-top:6px;font-size:15px;line-height:2}
+.gb-form{position:relative;padding:30px 32px}
+.gb-form::before{content:"";position:absolute;inset:-10px -12px;z-index:-1;filter:url(#wc-soft);mix-blend-mode:multiply;
+  background:radial-gradient(52% 60% at 80% 12%,rgba(233,196,106,.18),transparent 74%),
+             radial-gradient(56% 62% at 14% 88%,rgba(91,127,166,.11),transparent 76%)}
+.gb-done{position:relative;text-align:center;padding:56px 24px}
+.gb-done::before{content:"";position:absolute;inset:-12px -14px;z-index:-1;filter:url(#wc-soft);mix-blend-mode:multiply;
+  background:radial-gradient(56% 72% at 26% 22%,rgba(156,184,148,.2),transparent 72%),
+             radial-gradient(52% 66% at 84% 84%,rgba(233,196,106,.16),transparent 74%)}
+.gb-stamp{display:inline-flex;align-items:center;justify-content:center;width:70px;height:70px;margin-bottom:18px;
+  transform:rotate(-6deg);mix-blend-mode:multiply;
+  border:1.5px solid rgba(92,119,83,.7);color:var(--sage-deep);
+  border-radius:47% 53% 55% 45%/52% 46% 54% 48%;
+  background:radial-gradient(closest-side,rgba(156,184,148,.32),rgba(156,184,148,.1) 72%,transparent);
+  font-family:var(--f-display);font-size:16px;letter-spacing:.24em;text-indent:.24em}
+.gb-done h3{font-family:var(--f-display);font-size:22px;margin-bottom:10px}
+.gb-done p{color:var(--ink-soft);font-size:15px;margin-bottom:22px}
+.gb-spl{width:120px;height:52px;margin:0 auto 6px;color:var(--ochre-deep)}
+[hidden]{display:none !important}
+
+/* ---------- 页脚 ---------- */
+.site-foot{padding:30px 0 48px}
+.foot-divider{height:8px;max-width:100%;margin-bottom:44px;
+  background:linear-gradient(90deg,transparent,rgba(91,127,166,.4) 14%,rgba(232,160,168,.32) 40%,rgba(156,184,148,.32) 66%,rgba(233,196,106,.3) 86%,transparent);
+  filter:url(#wc-line);mix-blend-mode:multiply}
+.foot-grid{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:36px}
+.foot-title{font-family:var(--f-meta);font-size:11.5px;letter-spacing:.3em;color:var(--ink-soft);margin-bottom:12px}
+.foot-grid p,.foot-grid a{font-size:13.5px;line-height:2.1;color:var(--ink-soft);text-decoration:none}
+.foot-grid a{position:relative}
+.foot-grid a:hover{color:var(--indigo-deep)}
+.copyright{margin-top:40px;text-align:center;font-family:var(--f-meta);font-size:11.5px;letter-spacing:.18em;color:rgba(85,100,126,.75)}
+
+/* ---------- 阅读视图 ---------- */
+#reader{min-height:100vh}
+.reader-top{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:16px;
+  padding:14px clamp(16px,4vw,32px);background:rgba(251,248,241,.92);backdrop-filter:blur(6px)}
+.reader-brand{font-family:var(--f-display);font-size:16px;letter-spacing:.14em;color:var(--ink-soft)}
+.reader-article{--wc:91,127,166;max-width:720px;margin:0 auto;padding:44px 24px 90px}
+#p-manifesto{--wc:212,130,90}
+.reader-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 0;font-family:var(--f-meta);font-size:12.5px;letter-spacing:.14em;color:var(--ink-soft);margin-bottom:14px}
+.reader-title{font-family:var(--f-display);font-size:clamp(26px,4.4vw,38px);font-weight:600;line-height:1.5;letter-spacing:.02em}
+.reader-band{height:10px;margin:22px 0 6px;
+  background:linear-gradient(90deg,transparent,rgba(var(--wc),.55) 12%,rgba(var(--wc),.24) 42%,rgba(var(--wc),.5) 72%,rgba(var(--wc),.12) 90%,transparent);
+  filter:url(#wc-line);mix-blend-mode:multiply;border-radius:50%}
+.reader-article p{margin:0 0 1.4em;font-size:16.5px;line-height:2.1}
+.reader-article .lead{font-size:17.5px}
+.reader-article h3{position:relative;padding-left:20px;margin:2.4em 0 1em;
+  font-family:var(--f-display);font-size:22px;font-weight:600;letter-spacing:.03em}
+.reader-article h3::before{content:"";position:absolute;left:0;top:.3em;bottom:.16em;width:9px;
+  background:linear-gradient(180deg,rgba(var(--wc),.62),rgba(var(--wc),.16) 68%,transparent);
+  border-radius:60% 40% 50% 50%/40% 60% 45% 55%;mix-blend-mode:multiply}
+.reader-article blockquote{position:relative;margin:2.4em 0;padding:1.5em 1.8em;
+  font-family:var(--f-display);font-size:19px;line-height:1.95;color:#415070}
+.reader-article blockquote::before{content:"";position:absolute;inset:-12px -16px;z-index:-1;filter:url(#wc-soft);mix-blend-mode:multiply;
+  background:radial-gradient(56% 72% at 16% 10%,rgba(232,160,168,.2),transparent 70%),
+             radial-gradient(60% 76% at 90% 94%,rgba(var(--wc),.16),transparent 72%)}
+.data-list{margin:1.8em 0;border-top:1px solid var(--hair)}
+.data-list>div{display:flex;justify-content:space-between;align-items:baseline;gap:24px;padding:11px 2px;border-bottom:1px solid rgba(227,220,203,.7);
+  font-family:var(--f-meta);font-size:13.5px;letter-spacing:.06em}
+.data-list dt{color:var(--ink-soft)}
+.data-list dd{font-variant-numeric:tabular-nums;color:var(--ink)}
+.data-list dd strong{color:var(--ochre-deep);font-weight:600}
+.codeblock{margin:1.8em 0}
+.codeblock figcaption{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.16em;color:var(--ink-soft);margin-bottom:8px}
+.codeblock pre{background:rgba(91,127,166,.07);border:1px solid #DCD5C3;border-radius:4px;padding:16px 20px;overflow:auto}
+.codeblock code{font-family:var(--f-mono);font-size:13px;line-height:1.9;color:#3D4D68}
+.reader-article ol{margin:0 0 1.6em;padding-left:0;list-style:none;counter-reset:rule}
+.reader-article ol li{position:relative;counter-increment:rule;padding:10px 0 10px 46px;font-size:16px;line-height:2;border-bottom:1px solid rgba(227,220,203,.6)}
+.reader-article ol li::before{content:counter(rule);position:absolute;left:6px;top:14px;width:24px;height:19px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--f-meta);font-size:12px;color:var(--ct,var(--coral-deep));
+  background:radial-gradient(closest-side,rgba(var(--wc),.4),rgba(var(--wc),.08));
+  border-radius:60% 40% 55% 45%/50% 60% 40% 52%;mix-blend-mode:multiply}
+.reader-foot{margin-top:3.5em;border-top:1px solid var(--hair);padding-top:26px}
+.pn{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.back-line{font-family:var(--f-meta);font-size:12.5px;letter-spacing:.16em}
+
+/* ---------- 滚动进入：水汽散去 ---------- */
+.js .reveal{opacity:0;transform:translateY(12px);filter:blur(6px);
+  transition:opacity .6s ease,transform .6s ease,filter .6s ease}
+.js .reveal.is-in{opacity:1;transform:none;filter:none}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1200px){
+  .wrap{padding:0 24px}
+  .posts-wrap{gap:40px}
+  .sidebar{width:270px}
+  .posts-wrap{grid-template-columns:minmax(0,1fr) 270px}
+}
+@media (max-width:1024px){
+  .posts-wrap{grid-template-columns:1fr}
+  .sidebar{width:auto;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .widget{margin-bottom:0}
+  .hero-inner{flex-direction:column}
+  .palette{margin-top:0}
+  .spl-hero{display:none}
+}
+@media (max-width:768px){
+  /* 移动端撤掉实时滤镜（性能），保留柔和水彩渐变 */
+  .wash,.card-wash,.mast-band,.brush-divider,.pdot,.f-wash,.foot-divider,.reader-band,
+  .widget::before,.year::before,.gb-entry::before,.gb-form::before,.gb-done::before,
+  .reader-article blockquote::before{filter:none}
+  .hero{padding-top:48px}
+  .post-grid{grid-template-columns:1fr;gap:26px}
+  .post-card.featured{grid-template-columns:1fr;padding:28px 24px}
+  .f-art{min-height:200px}
+  .sec{padding:50px 0}
+  .about-grid{grid-template-columns:1fr;gap:28px}
+  .portrait{max-width:280px;margin:0 auto}
+  .gb-grid{grid-template-columns:1fr;gap:32px}
+  .foot-grid{grid-template-columns:1fr;gap:26px}
+  .sidebar{grid-template-columns:1fr}
+  .reader-article{padding:32px 20px 70px}
+  .a-cat{display:none}
+  .filters{gap:2px 16px}
+}
+@media (max-width:480px){
+  body{font-size:16px}
+  .wrap{padding:0 18px}
+  .post-card{padding:24px 20px 22px}
+  .palette{width:230px;height:212px}
+  .pd-indigo{width:108px;height:94px}
+  .pd-ochre{width:100px;height:88px;left:72px}
+  .pd-rose{width:88px;height:78px;left:48px;top:88px}
+  .year-list li{flex-wrap:wrap;gap:8px 12px}
+  .now-list li{flex-wrap:wrap;gap:6px 14px}
+  .gb-form{padding:24px 20px}
+  .seal{width:54px;height:54px;font-size:13px;top:14px;right:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .bloom,.bloom .wash,.post-card.pop{animation:none}
+  .js .reveal{opacity:1;transform:none;filter:none;transition:none}
+  .card-wash,.site-nav a::after,.ftab::after,.t-link::after,.w-link::after{transition:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#posts">跳到文章列表</a>
+
+<!-- SVG 滤镜与泼溅符号定义 -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <filter id="wc-soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.014 0.026" numOctaves="3" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="24" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="wc-line" x="-20%" y="-300%" width="140%" height="700%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02 0.14" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="10" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="wc-svg" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" seed="8" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <symbol id="splatter" viewBox="0 0 140 60">
+      <circle cx="16" cy="34" r="5" opacity=".55"/>
+      <circle cx="34" cy="22" r="2.6" opacity=".45"/>
+      <circle cx="50" cy="40" r="3.4" opacity=".5"/>
+      <circle cx="66" cy="16" r="1.7" opacity=".4"/>
+      <ellipse cx="102" cy="30" rx="11" ry="1.9" transform="rotate(-16 102 30)" opacity=".45"/>
+      <circle cx="122" cy="42" r="1.3" opacity=".35"/>
+      <circle cx="88" cy="46" r="1.1" opacity=".4"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- 冷压纸纹：细颗粒 + 大块水渍斑 -->
+<div class="grain" aria-hidden="true">
+  <svg>
+    <filter id="grain-fine">
+      <feTurbulence type="fractalNoise" baseFrequency="0.82" numOctaves="2" seed="7" stitchTiles="stitch"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.36  0 0 0 0 0.33  0 0 0 0 0.28  0 0 0 0.6 0"/>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#grain-fine)"/>
+  </svg>
+  <svg>
+    <filter id="grain-mottle">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="3" seed="21" stitchTiles="stitch"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.42  0 0 0 0 0.55  0 0 0 0.5 0"/>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#grain-mottle)"/>
+  </svg>
+</div>
+
+<!-- 阅读进度：一笔靛蓝水线 -->
+<div class="progress" aria-hidden="true"><i id="progress-bar"></i></div>
+
+<div id="site">
+  <!-- ============ 刊头 ============ -->
+  <header class="masthead" id="top">
+    <div class="wrap">
+      <p class="mast-eyebrow">SHEN ZHIYUAN · A PERSONAL BLOG · EST. 2024</p>
+      <h1 class="site-title"><a href="#home">慢速<span class="hl">缓存</span><span class="en">SLOW CACHE</span></a></h1>
+      <p class="mast-sub">把值得想的事，写在会呼吸的页面上。</p>
+      <nav class="site-nav" aria-label="站内导航">
+        <a href="#home">首页</a>
+        <a href="#posts">文章</a>
+        <a href="#archive">归档</a>
+        <a href="#about">关于</a>
+        <a href="#guestbook">留言</a>
+      </nav>
+    </div>
+    <div class="mast-band" aria-hidden="true"></div>
+  </header>
+
+  <main>
+    <!-- ============ Hero ============ -->
+    <section class="hero" id="home">
+      <div class="hero-washes" aria-hidden="true">
+        <div class="bloom"><div class="wash w-indigo"></div></div>
+        <div class="bloom b2"><div class="wash w-ochre"></div></div>
+        <div class="bloom b3"><div class="wash w-rose"></div></div>
+      </div>
+      <div class="wrap hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow">沈知远的公开笔记本 · 第 3 年</p>
+          <p class="tagline">把值得想的事，<br>写在<em class="hl">会呼吸</em>的页面上。</p>
+          <p class="hero-note">这里的颜色都是透明的：两笔叠在一起，会洇出第三种颜色。造轮子的过程、看过的展、走过的街、拆坏的机器，都写在这里，慢慢洇开。</p>
+        </div>
+        <div class="palette" aria-hidden="true">
+          <span class="pdot pd-indigo"></span>
+          <span class="pdot pd-ochre"></span>
+          <span class="pdot pd-rose"></span>
+          <span class="pd-caption">透明叠色试验：靛蓝 × 赭黄 = 苔绿；<br>再叠一层玫瑰，就是晚霞。</span>
+        </div>
+      </div>
+      <svg class="splatter spl-hero" viewBox="0 0 140 60" aria-hidden="true"><use href="#splatter"/></svg>
+    </section>
+
+    <!-- ============ 文章 ============ -->
+    <section class="sec" id="posts">
+      <div class="wrap">
+        <header class="sec-head reveal">
+          <p class="eyebrow">POSTS · 文章</p>
+          <h2>最近的<span class="hl">颜料</span>都涂在这里</h2>
+          <div class="brush-divider" aria-hidden="true"></div>
+        </header>
+
+        <div class="posts-wrap">
+          <div>
+            <div class="filters" role="group" aria-label="按分类筛选文章">
+              <button class="ftab is-active" data-filter="all" aria-pressed="true">全部<small>12</small></button>
+              <button class="ftab" data-filter="build" aria-pressed="false"><i class="chip-blob" aria-hidden="true"></i>造轮子<small>3</small></button>
+              <button class="ftab" data-filter="art" aria-pressed="false"><i class="chip-blob" aria-hidden="true"></i>观展记<small>3</small></button>
+              <button class="ftab" data-filter="walk" aria-pressed="false"><i class="chip-blob" aria-hidden="true"></i>城市漫步<small>2</small></button>
+              <button class="ftab" data-filter="tinker" aria-pressed="false"><i class="chip-blob" aria-hidden="true"></i>折腾录<small>2</small></button>
+              <button class="ftab" data-filter="garden" aria-pressed="false"><i class="chip-blob" aria-hidden="true"></i>半成品<small>2</small></button>
+            </div>
+            <p class="post-count-line" aria-live="polite">当前洇开 <span id="post-count">12</span> 篇</p>
+
+            <div class="post-grid reveal" id="post-grid">
+              <!-- 精选 -->
+              <article class="post-card featured cw-build" data-cat="build">
+                <div class="card-wash" aria-hidden="true"></div>
+                <span class="seal" aria-hidden="true">精选</span>
+                <div class="card-body">
+                  <p class="meta"><span class="chip chip-build"><i aria-hidden="true"></i>造轮子</span><span class="dot-sep">·</span>2025-11-30<span class="dot-sep">·</span>约 6 分钟</p>
+                  <h3 class="card-title f-title">把博客首屏压进 300ms：一次性能考古</h3>
+                  <p class="excerpt">Lighthouse 45 分到 98 分的全过程：字体子集化、关键 CSS 内联，和一次对「快」的重新定义。这是本站被读得最多的一篇，也是慢速缓存原则的第一次实践。</p>
+                  <p class="card-actions"><button class="btn" data-open="p-perf">展开阅读全文</button></p>
+                </div>
+                <div class="f-art" aria-hidden="true">
+                  <div class="f-wash"></div>
+                  <div class="f-palette">
+                    <span class="pdot pd-indigo"></span>
+                    <span class="pdot pd-ochre"></span>
+                    <span class="pdot pd-rose"></span>
+                  </div>
+                  <svg class="splatter f-spl" viewBox="0 0 140 60"><use href="#splatter"/></svg>
+                  <p class="f-cap">叠色试验 No.7 —— 靛蓝 × 赭黄 × 玫瑰</p>
+                </div>
+              </article>
+
+              <article class="post-card cw-build" data-cat="build">
+                <div class="card-wash" aria-hidden="true"></div>
+                <div class="card-body">
+                  <p class="meta"><span class="chip chip-build"><i aria-hidden="true"></i>造轮子</span><span class="dot-sep">·</span>2026-08-17<span class="dot-sep">·</span>约 4 分钟</p>
+                  <h3 class="card-title">CSS 滚动时间轴入门：不写一行 JS 的滚动动画</h3>
+                  <p class="excerpt">animation-timeline 实战笔记：六个渐进增强案例，和它真正能在生产环境落地的那两个。</p>
+                </div>
+              </article>
+
+              <article class="post-card cw-walk" data-cat="walk">
+                <div class="card-wash" aria-hidden="true"></div>
+                <div class="card-body">
+                  <p class="meta"><span class="chip chip-walk"><i aria-hidden="true"></i>城市漫步</span><span class="dot-sep">·</span>2026-06-14<span class="dot-sep">·</span>约 3 分钟</p>
+                  <h3 class="card-title">凌晨四点的杭州菜市场</h3>
+                  <p class="excerpt">跟着送货三轮车走完一条街：鱼腥味、黄灯、以及这座城市醒得最早的那批人。</p>
+                </div>
+              </article>
+
+              <article class="post-card cw-garden" data-cat="garden">
+                <div class="card-wash" aria-hidden="true"></div>
+                <div class="card-body">
+                  <p class="meta"><span class="chip chip-garden"><i aria-hidden="true"></i>半成品</span><span class="ripe">常青</span><span class="dot-sep">·</span>2026-05-02<span class="dot-sep">·</span>约 5 分钟</p>
+                  <h3 class="card-title">数字花园第一年：种下 214 条笔记之后</h3>
+                  <p class="excerpt">214 条笔记、37 条双链之后，我终于承认：花园里的野草也是庄稼。</p>
+                </div>
+              </article>
+
+              <article class="post-card cw-art" data-cat="art">
+                <div class="card-wash" aria-hidden="true"></div>
+                <div class="card-body">
+                  <p class="meta"><span class="chip chip-art"><i aria-hidden="true"></i>观展记</span><span class="dot-sep">·</span>2026-03-21<span class="dot-sep">·</span>约 4 分钟</p>
+                  <h3 class="card-title">衬线体为什么在屏幕上「活」了回来</h3>
+                  <p class="excerpt">从铅字到可变字体，衬线体在屏幕上「活」回来的三个技术原因，和一个审美原因。</p>
+                </div>
+              </article>
+
+              <article class="post-card cw-art" data-cat="art">
+                <div class="card-wash" aria-hidden="true"></div>
+                <div class="card-body">
+                  <p class="meta"><span class="chip chip-art"><i aria-hidden="true"></i>观展记</span><span class="dot-sep">·</span>2026-02-08<span class="dot-sep">·</span>约 3 分钟</p>
+                  <h3 class="card-title">水彩与屏幕：透明色的三次叠色实验</h3>
+                  <p class="excerpt">把水彩的三条老规矩翻译成 CSS：透明、水痕，和永远差一点的边。</p>
+                </div>
+              </article>
+
+              <article class="post-card cw-tinker" data-cat="tinker">
+                <div class="card-wash" aria-hidden="true"></div>
+                <div class="card-body">
+                  <p class="meta"><span class="chip chip-tinker"><i aria-hidden="true"></i>折腾录</span><span class="dot-sep">·</span>2025-09-13<span class="dot-sep">·</span>约 5 分钟</p>
+                  <h3 class="card-title">给十年前的 Kindle 刷了个「慢读」系统</h3>
+                  <p class="excerpt">越狱、换字体、砍掉一切通知——把 2015 年的 Kindle 改成一台只读文章的墨水屏终端。</p>
+                </div>
+              </article>
+
+              <article class="post-card cw-build" data-cat="build">
+                <div class="card-wash" aria-hidden="true"></div>
+                <div class="card-body">
+                  <p class="meta"><span class="chip chip-build"><i aria-hidden="true"></i>造轮子</span><span class="dot-sep">·</span>2025-06-28<span class="dot-sep">·</span>约 7 分钟</p>
+                  <h3 class="card-title">我用 90 天写了个零依赖的静态站点生成器</h3>
+                  <p class="excerpt">90 天、零依赖、只用 Node 标准库：一个静态站点生成器的架构图与踩坑清单。</p>
+                </div>
+              </article>
+
+              <article class="post-card cw-art" data-cat="art">
+                <div class="card-wash" aria-hidden="true"></div>
+                <div class="card-body">
+                  <p class="meta"><span class="chip chip-art"><i aria-hidden="true"></i>观展记</span><span class="dot-sep">·</span>2025-04-19<span class="dot-sep">·</span>约 5 分钟</p>
+                  <h3 class="card-title">滚动即叙事：拆解 3 个获奖网站的动效节奏</h3>
+                  <p class="excerpt">逐帧拆解三个获奖长文网站：pinned 章节怎么钉、节拍怎么留、留白怎么呼吸。</p>
+                </div>
+              </article>
+
+              <article class="post-card cw-walk" data-cat="walk">
+                <div class="card-wash" aria-hidden="true"></div>
+                <div class="card-body">
+                  <p class="meta"><span class="chip chip-walk"><i aria-hidden="true"></i>城市漫步</span><span class="dot-sep">·</span>2025-03-02<span class="dot-sep">·</span>约 2 分钟</p>
+                  <h3 class="card-title">西湖以东：一辆自行车与三座桥</h3>
+                  <p class="excerpt">骑车过三座桥：运河把城市切开，桥又把它缝起来。</p>
+                </div>
+              </article>
+
+              <article class="post-card cw-garden" data-cat="garden">
+                <div class="card-wash" aria-hidden="true"></div>
+                <div class="card-body">
+                  <p class="meta"><span class="chip chip-garden"><i aria-hidden="true"></i>半成品</span><span class="ripe">半成</span><span class="dot-sep">·</span>2024-12-08<span class="dot-sep">·</span>约 4 分钟</p>
+                  <h3 class="card-title">慢速缓存宣言：为什么我决定写得慢一点</h3>
+                  <p class="excerpt">快是默认值，慢要自己争取。这是本站的底层协议，所以它永远是半成品。</p>
+                  <p class="card-actions"><button class="t-link" data-open="p-manifesto">展开阅读全文 →</button></p>
+                </div>
+              </article>
+
+              <article class="post-card cw-tinker" data-cat="tinker">
+                <div class="card-wash" aria-hidden="true"></div>
+                <div class="card-body">
+                  <p class="meta"><span class="chip chip-tinker"><i aria-hidden="true"></i>折腾录</span><span class="dot-sep">·</span>2024-08-25<span class="dot-sep">·</span>约 3 分钟</p>
+                  <h3 class="card-title">把退役笔记本改成厨房食谱终端</h3>
+                  <p class="excerpt">退役笔记本 + 全屏食谱 + 语音翻页：厨房里最不怕油烟的设备诞生了。</p>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <!-- 侧栏 -->
+          <aside class="sidebar">
+            <div class="widget w-about reveal">
+              <p class="w-title">ABOUT · 关于</p>
+              <p class="w-name">沈知远</p>
+              <p>白天写组件，晚上写句子。前端工程师，业余写作者，住在杭州。</p>
+              <a class="w-link" href="#about">更多 →</a>
+            </div>
+            <div class="widget w-cats reveal">
+              <p class="w-title">CATEGORIES · 五格颜料盒</p>
+              <button class="legend-item" data-filter="build"><i class="chip-blob" aria-hidden="true"></i><span>造轮子</span><small>3</small></button>
+              <button class="legend-item" data-filter="art"><i class="chip-blob" aria-hidden="true"></i><span>观展记</span><small>3</small></button>
+              <button class="legend-item" data-filter="walk"><i class="chip-blob" aria-hidden="true"></i><span>城市漫步</span><small>2</small></button>
+              <button class="legend-item" data-filter="tinker"><i class="chip-blob" aria-hidden="true"></i><span>折腾录</span><small>2</small></button>
+              <button class="legend-item" data-filter="garden"><i class="chip-blob" aria-hidden="true"></i><span>半成品</span><small>2</small></button>
+            </div>
+            <div class="widget w-sub reveal">
+              <p class="w-title">SUBSCRIBE · 订阅</p>
+              <p style="font-size:14px;line-height:2;color:#42516B">新文章晾干时会通知你。不用注册，不用登录。</p>
+              <form class="sub-form" id="sub-form" novalidate>
+                <label for="sub-mail" style="position:absolute;left:-999px">邮箱地址</label>
+                <input type="email" id="sub-mail" placeholder="你的邮箱" autocomplete="email">
+                <button class="btn" type="submit">缓存到收件箱</button>
+              </form>
+              <span class="sub-note" id="sub-note" aria-live="polite"></span>
+              <p class="w-rss">RSS：slowcache.blog/feed.xml<br>阅读器直达，自持分发。</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 归档 ============ -->
+    <section class="sec" id="archive">
+      <div class="wrap">
+        <header class="sec-head reveal">
+          <p class="eyebrow">ARCHIVE · 归档</p>
+          <h2>按年装订的<span class="hl">画册</span></h2>
+          <div class="brush-divider" aria-hidden="true"></div>
+        </header>
+        <div class="years">
+          <div class="year reveal">
+            <button class="year-head" aria-expanded="true" aria-controls="yr-2026">
+              <span class="yr-blob">2026</span><span class="yr-count">5 篇</span><span class="yr-toggle" aria-hidden="true">＋</span>
+            </button>
+            <ul class="year-list" id="yr-2026">
+              <li><span class="a-date">08-17</span><span class="a-dot dot-build" aria-hidden="true"></span><span class="a-title">CSS 滚动时间轴入门：不写一行 JS 的滚动动画</span><span class="a-cat">造轮子</span></li>
+              <li><span class="a-date">06-14</span><span class="a-dot dot-walk" aria-hidden="true"></span><span class="a-title">凌晨四点的杭州菜市场</span><span class="a-cat">城市漫步</span></li>
+              <li><span class="a-date">05-02</span><span class="a-dot dot-garden" aria-hidden="true"></span><span class="a-title">数字花园第一年：种下 214 条笔记之后</span><span class="a-cat">半成品</span></li>
+              <li><span class="a-date">03-21</span><span class="a-dot dot-art" aria-hidden="true"></span><span class="a-title">衬线体为什么在屏幕上「活」了回来</span><span class="a-cat">观展记</span></li>
+              <li><span class="a-date">02-08</span><span class="a-dot dot-art" aria-hidden="true"></span><span class="a-title">水彩与屏幕：透明色的三次叠色实验</span><span class="a-cat">观展记</span></li>
+            </ul>
+          </div>
+          <div class="year reveal">
+            <button class="year-head" aria-expanded="false" aria-controls="yr-2025">
+              <span class="yr-blob">2025</span><span class="yr-count">5 篇</span><span class="yr-toggle" aria-hidden="true">＋</span>
+            </button>
+            <ul class="year-list" id="yr-2025" hidden>
+              <li><span class="a-date">11-30</span><span class="a-dot dot-build" aria-hidden="true"></span><span class="a-title">把博客首屏压进 300ms：一次性能考古</span><span class="a-cat">造轮子</span></li>
+              <li><span class="a-date">09-13</span><span class="a-dot dot-tinker" aria-hidden="true"></span><span class="a-title">给十年前的 Kindle 刷了个「慢读」系统</span><span class="a-cat">折腾录</span></li>
+              <li><span class="a-date">06-28</span><span class="a-dot dot-build" aria-hidden="true"></span><span class="a-title">我用 90 天写了个零依赖的静态站点生成器</span><span class="a-cat">造轮子</span></li>
+              <li><span class="a-date">04-19</span><span class="a-dot dot-art" aria-hidden="true"></span><span class="a-title">滚动即叙事：拆解 3 个获奖网站的动效节奏</span><span class="a-cat">观展记</span></li>
+              <li><span class="a-date">03-02</span><span class="a-dot dot-walk" aria-hidden="true"></span><span class="a-title">西湖以东：一辆自行车与三座桥</span><span class="a-cat">城市漫步</span></li>
+            </ul>
+          </div>
+          <div class="year reveal">
+            <button class="year-head" aria-expanded="false" aria-controls="yr-2024">
+              <span class="yr-blob">2024</span><span class="yr-count">2 篇</span><span class="yr-toggle" aria-hidden="true">＋</span>
+            </button>
+            <ul class="year-list" id="yr-2024" hidden>
+              <li><span class="a-date">12-08</span><span class="a-dot dot-garden" aria-hidden="true"></span><span class="a-title">慢速缓存宣言：为什么我决定写得慢一点</span><span class="a-cat">半成品</span></li>
+              <li><span class="a-date">08-25</span><span class="a-dot dot-tinker" aria-hidden="true"></span><span class="a-title">把退役笔记本改成厨房食谱终端</span><span class="a-cat">折腾录</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 关于 ============ -->
+    <section class="sec" id="about">
+      <div class="wrap">
+        <header class="sec-head reveal">
+          <p class="eyebrow">ABOUT · 关于</p>
+          <h2>画这幅画的<span class="hl">人</span></h2>
+          <div class="brush-divider" aria-hidden="true"></div>
+        </header>
+        <div class="about-grid">
+          <div class="portrait reveal">
+            <!-- 水彩自画像式装饰：单线勾勒 × 三笔透明晕染 -->
+            <svg viewBox="0 0 220 260" role="img" aria-label="水彩自画像：单线勾勒的侧脸与三笔晕染">
+              <ellipse cx="118" cy="62" rx="52" ry="46" fill="#5B7FA6" opacity=".28" filter="url(#wc-svg)" style="mix-blend-mode:multiply"/>
+              <ellipse cx="120" cy="236" rx="68" ry="20" fill="#9CB894" opacity=".3" filter="url(#wc-svg)" style="mix-blend-mode:multiply"/>
+              <ellipse cx="84" cy="132" rx="12" ry="8" fill="#E8A0A8" opacity=".42" style="mix-blend-mode:multiply"/>
+              <g fill="none" stroke="#3A4A63" stroke-width="2" stroke-linecap="round" opacity=".88">
+                <path d="M96 36 C70 44 60 70 64 96 C66 108 58 112 61 120 C63 126 68 126 68 131 C68 136 61 137 63 143 C65 149 72 148 71 155 C70 163 60 166 65 176 C70 188 86 192 100 188"/>
+                <path d="M112 118 C122 112 126 122 118 130 C114 134 110 132 108 128"/>
+                <path d="M78 92 C84 87 92 87 97 90"/>
+                <path d="M84 104 C88 101 93 101 96 103"/>
+                <path d="M96 36 C110 24 138 26 150 40 C162 54 160 78 152 92"/>
+                <path d="M92 40 C100 30 120 24 134 30"/>
+                <path d="M100 188 C102 200 98 208 92 214"/>
+                <path d="M128 186 C130 198 136 206 146 212"/>
+                <path d="M60 240 C90 220 150 220 184 242"/>
+                <path d="M92 214 C104 226 124 226 138 214"/>
+              </g>
+              <circle cx="176" cy="58" r="2.4" fill="#E9C46A" opacity=".7"/>
+              <circle cx="40" cy="92" r="1.7" fill="#5B7FA6" opacity=".55"/>
+              <circle cx="188" cy="150" r="1.3" fill="#E8A0A8" opacity=".6"/>
+            </svg>
+            <p class="portrait-cap">自画像 · 像刚画完，还没干透</p>
+          </div>
+          <div class="about-copy reveal">
+            <p class="about-lead">白天写组件，晚上写句子。<br>这里是沈知远的公开笔记本。</p>
+            <p>沈知远，29 岁，住在杭州。前端工程师，业余写作者。关注 Web 性能、设计工程与独立开发，信条只有八个字：慢速缓存，长期保鲜。</p>
+            <p>写博客的动机很简单：把折腾的过程写成「可供检索的思考」。字写得慢，但每一页都编号。</p>
+            <ul class="now-list">
+              <li><span class="now-k">在写</span><span>《水彩与屏幕》的续篇——第四种叠色还没调出来</span></li>
+              <li><span class="now-k">在读</span><span>《设计中的设计》，原研哉，第二遍</span></li>
+              <li><span class="now-k">在用</span><span>一台 2015 年的 Kindle、一盆三个月没浇水的仙人掌、一个零依赖的站点生成器</span></li>
+            </ul>
+            <p class="rss-note">订阅：slowcache.blog/feed.xml —— 不用注册，不用登录，阅读器直达。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 留言本 ============ -->
+    <section class="sec" id="guestbook">
+      <div class="wrap">
+        <header class="sec-head reveal">
+          <p class="eyebrow">GUESTBOOK · 留言本</p>
+          <h2>在纸边<span class="hl">落一笔</span></h2>
+          <div class="brush-divider" aria-hidden="true"></div>
+        </header>
+        <div class="gb-grid">
+          <div class="reveal">
+            <p class="gb-intro">想法不同才有意思，欢迎反对意见。留言会直接写进下面的本子里——这是演示环境，刷新之后颜料就晾干散掉了。</p>
+            <div class="gb-entry" style="margin-top:22px">
+              <p class="gb-name">阿茅 · 2026-07-02</p>
+              <p class="gb-text">300ms 那篇看完，把公司官网的字体也子集化了。谢谢沈师傅，Lighthouse 群里都传疯了。</p>
+            </div>
+            <div class="gb-entry">
+              <p class="gb-name">山鬼 · 2026-05-19</p>
+              <p class="gb-text">菜市场那篇看得我早上五点爬起来去了趟近江，鱼贩子真的会给你留最好的那一条。</p>
+            </div>
+          </div>
+          <div class="reveal">
+            <form class="gb-form" id="gb-form" novalidate>
+              <div class="field">
+                <label for="gb-name">怎么称呼你</label>
+                <input type="text" id="gb-name" autocomplete="nickname" placeholder="至少 2 个字">
+                <span class="field-err" id="gb-name-err" aria-live="polite"></span>
+              </div>
+              <div class="field">
+                <label for="gb-mail">邮箱（选填，回复用）</label>
+                <input type="email" id="gb-mail" autocomplete="email" placeholder="留空也可以">
+                <span class="field-err" id="gb-mail-err" aria-live="polite"></span>
+              </div>
+              <div class="field">
+                <label for="gb-text">想说的话</label>
+                <textarea id="gb-text" rows="5" placeholder="至少 10 个字，让它站得住"></textarea>
+                <span class="field-err" id="gb-text-err" aria-live="polite"></span>
+              </div>
+              <button class="btn" type="submit">写进留言本</button>
+            </form>
+            <div class="gb-done" id="gb-done" hidden>
+              <svg class="splatter gb-spl" viewBox="0 0 140 60" aria-hidden="true"><use href="#splatter"/></svg>
+              <span class="gb-stamp" aria-hidden="true">收讫</span>
+              <h3>已写进留言本</h3>
+              <p><span id="gb-ok-name">朋友</span>，谢谢你的话。这一页还没干透，我晾一会儿就来回复。</p>
+              <button class="btn-ghost" id="gb-again" type="button">再写一条</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ 页脚 ============ -->
+  <footer class="site-foot">
+    <div class="wrap">
+      <div class="foot-divider" aria-hidden="true"></div>
+      <div class="foot-grid">
+        <div>
+          <p class="foot-title">导航</p>
+          <p><a href="#home">首页</a><br><a href="#posts">文章</a><br><a href="#archive">归档</a><br><a href="#about">关于</a><br><a href="#guestbook">留言</a></p>
+        </div>
+        <div>
+          <p class="foot-title">订阅</p>
+          <p>RSS：slowcache.blog/feed.xml<br>不用注册，不用登录，阅读器直达。<br>这是独立博客的自持分发权。</p>
+        </div>
+        <div>
+          <p class="foot-title"> colophon · 版记</p>
+          <p>本站所有颜色均为透明水彩，以 multiply 方式叠色而成，没有一笔是不透明的。由手写 HTML 装订，无构建、无依赖。</p>
+        </div>
+      </div>
+      <p class="copyright">© 2024–2026 沈知远 · 慢速缓存 SLOW CACHE · 用透明色写在冷压纸上</p>
+    </div>
+  </footer>
+</div><!-- /#site -->
+
+<!-- ============ 阅读视图（完整正文） ============ -->
+<section id="reader" hidden aria-label="文章阅读">
+  <div class="reader-top">
+    <button class="btn-ghost" type="button" data-close-reader>← 回到文章列表</button>
+    <span class="reader-brand">慢速缓存 · SLOW CACHE</span>
+  </div>
+
+  <!-- 完整正文一：性能考古 -->
+  <article class="reader-article" id="p-perf" hidden>
+    <header>
+      <p class="reader-meta"><span class="chip chip-build"><i aria-hidden="true"></i>造轮子</span><span class="dot-sep">·</span>2025-11-30<span class="dot-sep">·</span>约 6 分钟<span class="dot-sep">·</span>沈知远</p>
+      <h2 class="reader-title">把博客首屏压进 300ms：一次性能考古</h2>
+      <div class="reader-band" aria-hidden="true"></div>
+    </header>
+    <p class="lead">今年三月，这个博客的 Lighthouse 性能分是 45。六周之后，它变成了 98，首屏渲染压进 300 毫秒。这不是一篇教程，更像一次考古——把地一层层挖开，把挖出来的东西按出土顺序摆好；至于结论，你自己拿。</p>
+    <blockquote>「性能优化做到最后，优化的不是分数，是对访客时间的基本礼貌。」</blockquote>
+    <h3>一、案发现场：45 分</h3>
+    <p>出土的第一层是耻辱：一个以文字为主的博客，首屏要下载两套共 1.4MB 的字体、一份图标字体，外加三段没有 defer 的脚本，LCP 4.2 秒。也就是说，访客在看到标题之前，够泡半杯茶。</p>
+    <dl class="data-list">
+      <div><dt>Lighthouse 性能分</dt><dd>45 → <strong>98</strong></dd></div>
+      <div><dt>LCP 最大内容绘制</dt><dd>4.2s → <strong>1.1s</strong></dd></div>
+      <div><dt>首屏渲染</dt><dd>1.9s → <strong>0.31s</strong></dd></div>
+      <div><dt>字体总体积</dt><dd>1.4MB → <strong>84KB</strong></dd></div>
+    </dl>
+    <p>分数只是症状。真正的病灶都写在上面的表里：字体、脚本，和「反正用户有 5G」的傲慢。</p>
+    <h3>二、字体是最大的嫌疑人</h3>
+    <p>统计之后发现，全站正文只用到了 1214 个汉字，而全套 Noto Serif SC 有两万多个字形——为了千分之一的使用率，付了百分之百的运费。</p>
+    <figure class="codeblock">
+      <figcaption>bash · 字体子集化</figcaption>
+      <pre><code>pyftsubset NotoSerifSC-Regular.otf \
+  --text-file=used-chars.txt \
+  --flavor=woff2 \
+  --output-file=serif-subset.woff2
+# 1.4MB → 84KB，正文用到的字一个不少</code></pre>
+    </figure>
+    <p>子集化之后，再配上行内 @font-face 和 font-display: swap，文字再也没有白屏过。有位读者留言说「你这站像换了台服务器」——其实只是把不该运的货卸了。</p>
+    <h3>三、关键 CSS 内联</h3>
+    <p>第二刀砍向渲染阻塞。把首屏要用的约 200 行 CSS 直接写进 head，其余样式在 load 之后异步注入。首屏渲染从 1.9 秒降到 0.31 秒——浏览器拿到 HTML 的那一刻，页面就已经是可读的了。</p>
+    <p>顺带清了三段第三方脚本里的两段：统计换成自托管的 3KB 版本；「友链预览」砍掉之后，没有任何人发现它不在了。</p>
+    <h3>四、剩下的 2%</h3>
+    <p>从 98 到 100 需要的力气，比从 45 到 98 还大，而且大部分和真实体验无关。我把力气留给了另一些事：图片全部懒加载、字体预加载，以及把正文行高调到 2——快，是为了让人读得慢。</p>
+    <p>考古结束。铲子留在这儿，下一座土堆见。</p>
+    <footer class="reader-foot">
+      <div class="pn">
+        <button class="btn-ghost" type="button" data-open="p-manifesto">← 上一篇 · 慢速缓存宣言</button>
+        <span></span>
+      </div>
+      <p class="back-line"><button class="t-link" type="button" data-close-reader>← 回到文章列表</button></p>
+    </footer>
+  </article>
+
+  <!-- 完整正文二：慢速缓存宣言 -->
+  <article class="reader-article" id="p-manifesto" hidden>
+    <header>
+      <p class="reader-meta"><span class="chip chip-garden"><i aria-hidden="true"></i>半成品</span><span class="ripe">半成</span><span class="dot-sep">·</span>2024-12-08<span class="dot-sep">·</span>约 4 分钟<span class="dot-sep">·</span>沈知远</p>
+      <h2 class="reader-title">慢速缓存宣言：为什么我决定写得慢一点</h2>
+      <div class="reader-band" aria-hidden="true"></div>
+    </header>
+    <p class="lead">这篇放在「半成品」栏目里，成熟度标记是「半成」——宣言嘛，就该永远是半成品；写完的那天，它就死了。</p>
+    <blockquote>「慢速缓存，长期保鲜：把值得想的事，写在会呼吸的页面上。」</blockquote>
+    <h3>一、快是默认值，慢要自己争取</h3>
+    <p>信息流替我们决定看什么，热点替我们决定想什么，日更的博主替我们决定大家应该多勤奋。快是这片互联网的默认值，而且没人征得我们同意。既然是默认值，那就意味着：想慢下来，得自己动手改配置。</p>
+    <h3>二、三条原则</h3>
+    <p>本站的底层协议只有三条，从 2024 年冬天开始执行——</p>
+    <ol>
+      <li>一篇文章至少睡两晚。睡过之后还想发的，才值得发；</li>
+      <li>只写半年后自己还愿意搜到的题目。追热点的文字，保质期比酸奶还短；</li>
+      <li>读者可以等，评论可以晚回。桌上的仙人掌三个月没浇水都活得好好的，一个好博客不会因为周更而枯死。</li>
+    </ol>
+    <h3>三、把折腾写成可供检索的思考</h3>
+    <p>白天写组件，晚上写句子。折腾是输入，写作是缓存：把一次性的折腾，变成可检索、可复用、三年后还能被搜索引擎捞出来的思考。这个站就是我的公开笔记本——字写得慢，但每一页都编号。</p>
+    <blockquote>「缓存的意义从来不是快，是下次还找得到。」</blockquote>
+    <p>这篇会一直挂着「半成」的标记。等哪天我觉得它把话说尽了，再把它改成「过时」。</p>
+    <footer class="reader-foot">
+      <div class="pn">
+        <span></span>
+        <button class="btn-ghost" type="button" data-open="p-perf">下一篇 · 把博客首屏压进 300ms →</button>
+      </div>
+      <p class="back-line"><button class="t-link" type="button" data-close-reader>← 回到文章列表</button></p>
+    </footer>
+  </article>
+</section>
+
+<script>
+(function(){
+  'use strict';
+  function $(s,c){return (c||document).querySelector(s);}
+  function $$(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s));}
+
+  /* ---------- 滚动进入：淡显 + 水汽散去 ---------- */
+  var reveals = $$('.reveal');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); }
+      });
+    }, {threshold:.12, rootMargin:'0px 0px -6% 0px'});
+    reveals.forEach(function(el){ io.observe(el); });
+  } else {
+    reveals.forEach(function(el){ el.classList.add('is-in'); });
+  }
+
+  /* ---------- 分类筛选 ---------- */
+  var tabs = $$('.ftab');
+  var legends = $$('.legend-item');
+  var cards = $$('.post-card');
+  var countEl = $('#post-count');
+
+  function applyFilter(key){
+    var n = 0;
+    cards.forEach(function(c){
+      var show = (key === 'all') || (c.getAttribute('data-cat') === key);
+      c.hidden = !show;
+      if (show) {
+        n++;
+        c.classList.remove('pop');
+        void c.offsetWidth; /* 重新触发洇开动画 */
+        c.classList.add('pop');
+      }
+    });
+    if (countEl) { countEl.textContent = String(n); }
+    tabs.forEach(function(t){
+      var on = t.getAttribute('data-filter') === key;
+      t.classList.toggle('is-active', on);
+      t.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    legends.forEach(function(l){
+      l.classList.toggle('is-active', l.getAttribute('data-filter') === key);
+    });
+  }
+
+  tabs.concat(legends).forEach(function(btn){
+    btn.addEventListener('click', function(){
+      applyFilter(btn.getAttribute('data-filter'));
+      if (btn.classList.contains('legend-item')) {
+        var grid = $('#post-grid');
+        if (grid) { grid.scrollIntoView({behavior:'smooth', block:'start'}); }
+      }
+    });
+  });
+
+  /* ---------- 阅读视图切换 + 顶部水线进度 ---------- */
+  var reader = $('#reader');
+  var posts = $$('.reader-article');
+  var bar = $('#progress-bar');
+  var body = document.body;
+
+  function updateProgress(){
+    if (!bar) { return; }
+    var h = document.documentElement;
+    var max = h.scrollHeight - h.clientHeight;
+    var r = max > 0 ? (h.scrollTop || document.body.scrollTop) / max : 0;
+    bar.style.transform = 'scaleX(' + Math.min(1, Math.max(0, r)) + ')';
+  }
+  function openReader(id){
+    var target = document.getElementById(id);
+    if (!reader || !target) { return; }
+    posts.forEach(function(p){ p.hidden = (p !== target); });
+    reader.hidden = false;
+    body.classList.add('reading');
+    window.scrollTo(0, 0);
+    updateProgress();
+  }
+  function closeReader(){
+    if (!reader) { return; }
+    reader.hidden = true;
+    body.classList.remove('reading');
+    var anchor = $('#posts');
+    if (anchor) { anchor.scrollIntoView({behavior:'auto', block:'start'}); }
+  }
+  $$('[data-open]').forEach(function(b){
+    b.addEventListener('click', function(){ openReader(b.getAttribute('data-open')); });
+  });
+  $$('[data-close-reader]').forEach(function(b){
+    b.addEventListener('click', closeReader);
+  });
+  window.addEventListener('scroll', function(){
+    if (body.classList.contains('reading')) { updateProgress(); }
+  }, {passive:true});
+
+  /* ---------- 归档：按年切换 ---------- */
+  $$('.year-head').forEach(function(head){
+    head.addEventListener('click', function(){
+      var panel = document.getElementById(head.getAttribute('aria-controls'));
+      var open = head.getAttribute('aria-expanded') === 'true';
+      head.setAttribute('aria-expanded', open ? 'false' : 'true');
+      if (panel) { panel.hidden = open; }
+    });
+  });
+
+  /* ---------- 留言表单：校验 + 提交反馈 ---------- */
+  var form = $('#gb-form');
+  if (form) {
+    var okPanel = $('#gb-done');
+    function setErr(id, msg){
+      var field = $('#' + id);
+      var err = $('#' + id + '-err');
+      if (err) { err.textContent = msg || ''; }
+      if (field) {
+        field.classList.toggle('is-invalid', !!msg);
+        field.setAttribute('aria-invalid', msg ? 'true' : 'false');
+      }
+      return !msg;
+    }
+    form.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      var name = $('#gb-name').value.trim();
+      var mail = $('#gb-mail').value.trim();
+      var text = $('#gb-text').value.trim();
+      var ok = true;
+      ok = setErr('gb-name', name.length < 2 ? '称呼至少要 2 个字。' : '') && ok;
+      var mailBad = (mail !== '') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail);
+      ok = setErr('gb-mail', mailBad ? '邮箱格式好像不对，留空也可以。' : '') && ok;
+      ok = setErr('gb-text', text.length < 10 ? '想说的话至少 10 个字，让它站得住。' : '') && ok;
+      if (!ok) {
+        var firstBad = $('.is-invalid', form);
+        if (firstBad) { firstBad.focus(); }
+        return;
+      }
+      form.hidden = true;
+      if (okPanel) {
+        var who = $('#gb-ok-name');
+        if (who) { who.textContent = name; }
+        okPanel.hidden = false;
+      }
+    });
+    var again = $('#gb-again');
+    if (again) {
+      again.addEventListener('click', function(){
+        form.reset();
+        ['gb-name','gb-mail','gb-text'].forEach(function(id){ setErr(id, ''); });
+        form.hidden = false;
+        if (okPanel) { okPanel.hidden = true; }
+        var nameInput = $('#gb-name');
+        if (nameInput) { nameInput.focus(); }
+      });
+    }
+  }
+
+  /* ---------- 侧栏订阅（演示） ---------- */
+  var sub = $('#sub-form');
+  if (sub) {
+    sub.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      var input = $('#sub-mail');
+      var note = $('#sub-note');
+      if (!input || !note) { return; }
+      var v = input.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+        note.textContent = '邮箱格式好像不对，再看看？';
+        note.className = 'sub-note is-bad';
+        return;
+      }
+      note.textContent = '已缓存到你的收件箱（演示，不会真的发信）。';
+      note.className = 'sub-note is-ok';
+      sub.reset();
+    });
+  }
+})();
+</script>
+</body>
+</html>

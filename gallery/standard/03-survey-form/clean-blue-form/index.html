@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="2026 城市青年阅读习惯调查 · 由岛上书店发起的城市共读计划，预计用时 3 分钟，匿名填写。">
+<title>2026 城市青年阅读习惯调查 · 岛上书店</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%232563EB' d='M6 2h12a1 1 0 0 1 1 1v19l-7-4.4L5 22V3a1 1 0 0 1 1-1z'/%3E%3C/svg%3E">
+<style>
+/* ==========================================================================
+   净蓝制式 Form Blue · 方向A 标准风格
+   配色：主色 #2563EB / 文字 #1E293B / 次级 #64748B / 卡片白+页面 #EEF2F7 / 错误 #DC2626
+   ========================================================================== */
+:root{
+  --blue:#2563EB;
+  --blue-dark:#1D4ED8;
+  --blue-50:#EFF6FF;
+  --blue-100:#DBEAFE;
+  --blue-200:#BFDBFE;
+  --blue-ring:#93C5FD;
+  --ink:#1E293B;
+  --ink-2:#64748B;
+  --ink-3:#94A3B8;
+  --line:#E2E8F0;
+  --line-soft:#EDF1F7;
+  --panel:#F8FAFC;
+  --page:#EEF2F7;
+  --red:#DC2626;
+  --red-50:#FEF2F2;
+  --radius:12px;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 10px 30px rgba(15,23,42,.06);
+  --font:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none !important}
+html{scroll-behavior:smooth;scroll-padding-top:84px;-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--font);
+  font-size:15px;line-height:1.6;
+  color:var(--ink);
+  background:var(--page);
+}
+img{max-width:100%;display:block}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;color:inherit}
+fieldset{border:0;min-width:0}
+a{color:var(--blue)}
+
+/* ---------- 顶部固定条：问卷标题 + 4px 细进度条（书签标记） ---------- */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:60;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+}
+.topbar-inner{
+  max-width:1080px;margin:0 auto;
+  height:54px;padding:0 20px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+}
+.topbar-brand{display:flex;align-items:center;gap:10px;min-width:0}
+.topbar-mark{
+  width:26px;height:26px;flex:none;border-radius:7px;
+  background:var(--blue);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+}
+.topbar-mark svg{width:14px;height:14px}
+.topbar-title{
+  font-size:14px;font-weight:600;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.topbar-title small{font-weight:400;color:var(--ink-2);margin-left:8px}
+.topbar-progress{display:flex;align-items:center;gap:8px;flex:none}
+.topbar-progress .label{font-size:12px;color:var(--ink-2)}
+.topbar-progress .num{font-size:13px;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums;min-width:38px;text-align:right}
+.progress-track{
+  position:absolute;left:0;right:0;bottom:-1px;height:4px;
+  background:var(--line-soft);
+}
+.progress-fill{
+  position:relative;height:100%;width:0;
+  background:var(--blue);
+  transition:width .35s ease;
+}
+/* 标志性细节：一枚「书签」骑行在进度条前端 */
+.progress-fill::after{
+  content:"";position:absolute;right:0;top:-4px;
+  width:10px;height:15px;background:var(--blue);
+  clip-path:polygon(0 0,100% 0,100% 100%,50% 68%,0 100%);
+}
+.progress-fill.is-empty::after{display:none}
+
+/* ---------- 桌面端左侧分节导航（≥1200px 出现） ---------- */
+.rail{
+  display:none;
+  position:fixed;left:calc(50% - 560px);top:104px;width:172px;z-index:30;
+}
+.rail-label{
+  font-size:12px;color:var(--ink-3);letter-spacing:.14em;
+  margin:0 0 10px 4px;font-weight:600;
+}
+.rail-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;margin-bottom:4px;
+  border-radius:10px;text-decoration:none;
+  color:var(--ink-2);font-size:13px;
+  border:1px solid transparent;
+  transition:background .15s ease,color .15s ease,border-color .15s ease;
+}
+.rail-item:hover{background:#fff;color:var(--ink)}
+.rail-item .rail-idx{
+  width:24px;height:24px;border-radius:6px;flex:none;
+  background:#fff;border:1px solid var(--line);
+  font-size:11px;font-weight:700;color:var(--ink-2);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s ease;
+}
+.rail-item .rail-check{width:14px;height:14px;margin-left:auto;opacity:0;transform:scale(.6);transition:all .2s ease;flex:none}
+.rail-item .rail-check path{stroke:var(--blue)}
+.rail-item.done .rail-check{opacity:1;transform:scale(1)}
+.rail-item.done .rail-idx{background:var(--blue);border-color:var(--blue);color:#fff}
+.rail-item.active{background:#fff;border-color:var(--line);color:var(--ink);font-weight:600;box-shadow:0 4px 14px rgba(15,23,42,.06)}
+.rail-item.active .rail-idx{background:var(--blue-50);border-color:var(--blue-200);color:var(--blue)}
+
+/* ---------- 主体版式：720px 单列居中 ---------- */
+.page{
+  max-width:720px;margin:0 auto;
+  padding:86px 20px 72px;
+}
+.noscript-tip{
+  background:var(--red-50);color:var(--red);
+  border:1px solid #FECACA;border-radius:10px;
+  padding:12px 16px;font-size:13px;margin-bottom:20px;
+}
+.card{
+  background:#fff;border:1px solid #E8EDF4;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
+.card + .card{margin-top:24px}
+
+/* ---------- 封面卡 ---------- */
+.cover{overflow:hidden}
+.cover-hero{
+  position:relative;
+  background:linear-gradient(135deg,var(--blue-50) 0%,var(--blue-100) 100%);
+  padding:30px 36px 26px;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+}
+.cover-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:#fff;color:var(--blue);
+  font-size:12px;font-weight:600;
+  padding:4px 12px;border-radius:999px;
+  border:1px solid var(--blue-200);
+  margin-bottom:14px;
+}
+.cover-badge svg{width:12px;height:12px}
+.cover-kicker{font-size:13px;color:var(--blue-dark);letter-spacing:.06em;font-weight:600}
+.cover-hero svg.cover-illus{width:132px;height:104px;flex:none}
+.cover-body{padding:30px 36px 34px}
+.cover h1{font-size:28px;line-height:1.35;font-weight:700;letter-spacing:.01em}
+.cover .lede{margin-top:14px;color:var(--ink-2);font-size:15px}
+.cover-meta{
+  display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;
+}
+.meta-chip{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--panel);border:1px solid var(--line-soft);
+  color:var(--ink-2);font-size:13px;
+  padding:7px 14px;border-radius:999px;
+}
+.meta-chip svg{width:14px;height:14px;color:var(--blue)}
+.meta-chip b{color:var(--ink);font-weight:600}
+.cover-note{
+  margin-top:22px;padding:14px 16px;
+  background:var(--panel);border-radius:10px;
+  border-left:3px solid var(--blue);
+}
+.cover-note h3{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.cover-note p{font-size:13px;color:var(--ink-2)}
+.cover-cta{margin-top:26px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.cover-cta .hint{font-size:13px;color:var(--ink-3)}
+
+/* ---------- 按钮 ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  height:48px;padding:0 26px;
+  border-radius:10px;border:1px solid transparent;
+  font-size:15px;font-weight:600;letter-spacing:.02em;
+  transition:background .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease,transform .06s ease;
+  text-decoration:none;
+}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:3px solid var(--blue-ring);outline-offset:2px}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 6px 16px rgba(37,99,235,.28)}
+.btn-primary:hover{background:var(--blue-dark)}
+.btn-outline{background:#fff;color:var(--ink-2);border-color:var(--line)}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-50)}
+.btn-block{width:100%}
+.btn.is-loading{opacity:.85;pointer-events:none}
+.btn.is-loading::before{
+  content:"";width:15px;height:15px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.4);border-top-color:#fff;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.link-btn{
+  background:none;border:0;color:var(--blue);
+  font-size:13px;font-weight:600;padding:4px 6px;border-radius:6px;
+}
+.link-btn:hover{background:var(--blue-50)}
+.link-btn:focus-visible{outline:2px solid var(--blue-ring)}
+
+/* ---------- 分节白卡 ---------- */
+.section-card{padding:30px 36px 28px}
+.section-head{
+  display:flex;align-items:flex-start;gap:16px;
+  padding-bottom:20px;border-bottom:1px solid var(--line-soft);
+}
+.section-head .sec-text{flex:1;min-width:0}
+.sec-title{
+  display:flex;align-items:center;gap:10px;
+  font-size:19px;font-weight:700;
+}
+/* 规范要求：节标题带蓝色竖条 */
+.sec-title::before{
+  content:"";width:4px;height:20px;border-radius:2px;
+  background:var(--blue);flex:none;
+}
+.sec-desc{font-size:13px;color:var(--ink-2);margin-top:6px}
+.sec-index{
+  font-size:44px;line-height:1;font-weight:800;
+  color:var(--line);letter-spacing:-.02em;flex:none;
+  font-variant-numeric:tabular-nums;user-select:none;
+}
+
+/* ---------- 题目块 ---------- */
+.q{padding-top:26px;position:relative}
+.q + .q{border-top:1px solid var(--line-soft);margin-top:26px}
+.q[hidden]{display:none !important}
+.q legend{padding:0;width:100%}
+.q-head{display:flex;align-items:flex-start;gap:12px}
+.q-no{
+  width:26px;height:26px;flex:none;border-radius:7px;margin-top:1px;
+  background:var(--blue-50);color:var(--blue);
+  font-size:13px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s ease,color .15s ease;
+}
+.q.has-error .q-no{background:var(--red);color:#fff}
+.q.has-error::before{
+  content:"";position:absolute;left:-16px;top:30px;bottom:8px;
+  width:3px;border-radius:2px;background:var(--red);
+}
+.q-tt-wrap{flex:1;min-width:0}
+.q-title{font-size:16px;font-weight:600;line-height:1.55}
+.req{color:var(--red);font-style:normal;margin-right:5px;font-family:serif}
+.q-desc{font-size:13px;color:var(--ink-2);margin-top:3px}
+.q-tag{
+  flex:none;margin-left:auto;
+  font-size:12px;font-weight:600;color:var(--blue);
+  background:var(--blue-50);border:1px solid var(--blue-100);
+  padding:2px 10px;border-radius:999px;white-space:nowrap;
+}
+.q-tag.optional{color:var(--ink-2);background:var(--panel);border-color:var(--line)}
+.q-body{margin-top:14px;padding-left:38px}
+
+/* ---------- 选项（原生 radio/checkbox + 定制外观） ---------- */
+.opt-list{display:flex;flex-direction:column;gap:10px}
+.opt{
+  display:flex;align-items:center;gap:11px;
+  min-height:46px;padding:8px 14px;
+  background:#fff;border:1px solid var(--line);border-radius:10px;
+  cursor:pointer;font-size:15px;color:var(--ink);
+  transition:border-color .15s ease,background .15s ease,box-shadow .15s ease;
+}
+.opt:hover{border-color:var(--blue);background:var(--blue-50)}
+.opt input{flex:none;accent-color:var(--blue)}
+.opt input:focus-visible{outline:3px solid var(--blue-ring);outline-offset:2px}
+.opt .opt-key{
+  width:20px;flex:none;text-align:center;
+  font-size:12px;font-weight:700;color:var(--ink-3);
+  transition:color .15s ease;
+}
+.opt.is-checked{border-color:var(--blue);background:var(--blue-50);box-shadow:inset 0 0 0 1px var(--blue)}
+.opt.is-checked .opt-key{color:var(--blue)}
+input[type="radio"]{
+  appearance:none;-webkit-appearance:none;
+  width:20px;height:20px;border-radius:50%;
+  border:2px solid #CBD5E1;background:#fff;
+  transition:border-color .15s ease,background .15s ease;
+  cursor:pointer;
+}
+input[type="radio"]:checked{
+  border-color:var(--blue);
+  background:radial-gradient(circle,var(--blue) 0 42%,#fff 48%);
+}
+input[type="checkbox"]{
+  appearance:none;-webkit-appearance:none;
+  width:20px;height:20px;border-radius:5px;
+  border:2px solid #CBD5E1;background:#fff;
+  transition:border-color .15s ease,background .15s ease;
+  cursor:pointer;flex:none;
+}
+input[type="checkbox"]:checked{
+  border-color:var(--blue);background:var(--blue);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
+  background-size:13px 13px;background-position:center;background-repeat:no-repeat;
+}
+.other-wrap{margin-top:10px;padding-left:31px}
+.other-input{
+  width:100%;max-width:440px;height:44px;
+  padding:0 14px;border:1px solid var(--line);border-radius:10px;
+  font-size:14px;background:var(--panel);
+  transition:border-color .15s ease,background .15s ease;
+}
+.other-input:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px var(--blue-100)}
+.other-input::placeholder{color:var(--ink-3)}
+
+/* ---------- 评分题（1-5 星） ---------- */
+.star-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.star{
+  width:44px;height:44px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;border:1px solid transparent;
+  transition:background .15s ease,border-color .15s ease,transform .1s ease;
+}
+.star:hover{background:var(--blue-50);border-color:var(--blue-100)}
+.star:active{transform:scale(.92)}
+.star svg{width:28px;height:28px}
+.star svg path{fill:#CBD5E1;transition:fill .12s ease}
+.star.on svg path,.star.pre svg path{fill:var(--blue)}
+.star input{position:absolute;opacity:0;width:1px;height:1px}
+.star:focus-within{outline:3px solid var(--blue-ring)}
+.star-feedback{
+  margin-left:10px;font-size:13px;color:var(--ink-2);
+  background:var(--panel);border-radius:999px;padding:4px 12px;
+  border:1px solid var(--line-soft);
+}
+
+/* ---------- 下拉题 ---------- */
+.select-wrap{position:relative;max-width:420px}
+.select-wrap select{
+  appearance:none;-webkit-appearance:none;
+  width:100%;height:48px;padding:0 42px 0 14px;
+  border:1px solid var(--line);border-radius:10px;
+  font-size:15px;background:#fff;cursor:pointer;
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+.select-wrap select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100)}
+.select-wrap select:invalid{color:var(--ink-3)}
+.select-wrap::after{
+  content:"";position:absolute;right:16px;top:50%;
+  width:16px;height:16px;transform:translateY(-50%);
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") center/contain no-repeat;
+  pointer-events:none;
+}
+
+/* ---------- 矩阵题 ---------- */
+.matrix{border:1px solid var(--line-soft);border-radius:10px;overflow:hidden}
+.matrix-head,.matrix-row{
+  display:grid;
+  grid-template-columns:1.35fr repeat(4,1fr);
+  align-items:center;
+}
+.matrix-head{
+  background:var(--panel);
+  font-size:13px;font-weight:600;color:var(--ink-2);
+  padding:10px 14px;border-bottom:1px solid var(--line-soft);
+}
+.matrix-head span{text-align:center}
+.matrix-head .m-rowlabel{text-align:left}
+.matrix-row{padding:6px 14px;border-bottom:1px solid var(--line-soft);transition:background .15s ease}
+.matrix-row:last-child{border-bottom:0}
+.matrix-row:hover{background:var(--panel)}
+.m-title{font-size:14px;font-weight:600;color:var(--ink);text-align:left}
+.m-cell{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  min-height:44px;cursor:pointer;border-radius:8px;
+  font-size:12px;color:var(--ink-2);
+  transition:background .15s ease,color .15s ease;
+}
+.m-cell:hover{background:var(--blue-50);color:var(--blue)}
+.m-cell span{display:none}
+.m-cell.is-checked{color:var(--blue);font-weight:600}
+
+/* ---------- 填空 / 日期 ---------- */
+.text-input,.date-input{
+  width:100%;max-width:480px;height:46px;
+  padding:0 14px;border:1px solid var(--line);border-radius:10px;
+  font-size:15px;background:#fff;
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+.text-input:focus,.date-input:focus,textarea:focus{
+  outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-100);
+}
+.text-input::placeholder,textarea::placeholder{color:var(--ink-3)}
+.date-input{max-width:280px;cursor:pointer;color:var(--ink)}
+.field-note{font-size:13px;color:var(--ink-3);margin-top:8px}
+
+/* ---------- 上传题（选填） ---------- */
+.upload-zone{
+  border:1.5px dashed #CBD5E1;border-radius:10px;
+  background:var(--panel);
+  padding:26px 18px;text-align:center;cursor:pointer;
+  transition:border-color .15s ease,background .15s ease;
+}
+.upload-zone:hover,.upload-zone.dragging{border-color:var(--blue);background:var(--blue-50)}
+.upload-zone svg{width:34px;height:34px;margin:0 auto 8px;color:var(--blue)}
+.upload-zone .up-main{font-size:14px;color:var(--ink)}
+.upload-zone .up-main b{color:var(--blue)}
+.upload-zone .up-sub{font-size:12px;color:var(--ink-3);margin-top:4px}
+.upload-preview{
+  display:flex;align-items:center;gap:14px;
+  border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;background:#fff;
+}
+.upload-preview img{
+  width:72px;height:72px;object-fit:cover;
+  border-radius:8px;border:1px solid var(--line-soft);flex:none;
+}
+.upload-meta p{font-size:13px;color:var(--ink);font-weight:600;word-break:break-all}
+.upload-meta .up-size{font-weight:400;color:var(--ink-3);margin-top:2px;font-size:12px}
+.upload-msg{
+  margin-top:10px;font-size:13px;color:var(--red);
+  display:flex;align-items:center;gap:6px;
+}
+
+/* ---------- Q12 双小题 ---------- */
+.sub-q{padding-top:22px}
+.sub-q + .sub-q{border-top:1px solid var(--line-soft);margin-top:22px}
+.sub-title{font-size:15px;font-weight:600;display:flex;align-items:flex-start;gap:4px;padding:0}
+.sub-title .sub-key{
+  flex:none;width:22px;height:22px;border-radius:6px;margin-right:8px;
+  background:var(--panel);border:1px solid var(--line);
+  font-size:11px;font-weight:700;color:var(--ink-2);
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.sub-q.has-error .sub-key{background:var(--red);border-color:var(--red);color:#fff}
+.sub-q.has-error::before{
+  content:"";position:absolute;left:-16px;top:26px;bottom:8px;
+  width:3px;border-radius:2px;background:var(--red);
+}
+.sub-q{position:relative}
+.q.has-error .sub-q::before,.sub-q.has-error::before{display:block}
+.textarea-wrap{position:relative;margin-top:12px}
+textarea{
+  width:100%;min-height:104px;resize:vertical;
+  padding:12px 14px 34px;border:1px solid var(--line);border-radius:10px;
+  font-size:14px;line-height:1.7;background:#fff;
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+.char-count{
+  position:absolute;right:12px;bottom:10px;
+  font-size:12px;color:var(--ink-3);
+  background:rgba(255,255,255,.9);padding:1px 6px;border-radius:6px;
+}
+.char-count b{color:var(--ink-2);font-weight:600}
+
+/* ---------- NPS 0-10 ---------- */
+.nps-scale{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+.nps{
+  min-width:38px;height:44px;padding:0 6px;
+  display:flex;align-items:center;justify-content:center;
+  background:#fff;border:1px solid var(--line);border-radius:9px;
+  font-size:14px;font-weight:600;color:var(--ink-2);cursor:pointer;
+  transition:all .15s ease;
+}
+.nps input{position:absolute;opacity:0;width:1px;height:1px}
+.nps:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-50)}
+.nps.is-checked{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.3)}
+.nps:focus-within{outline:3px solid var(--blue-ring);outline-offset:1px}
+.nps-ends{
+  display:flex;justify-content:space-between;
+  font-size:12px;color:var(--ink-3);margin-top:8px;
+}
+.nps-feedback{
+  margin-top:10px;font-size:13px;color:var(--blue);
+  background:var(--blue-50);border-radius:8px;
+  display:inline-block;padding:4px 12px;
+}
+
+/* ---------- 提示与错误 ---------- */
+.q-note{
+  margin-top:12px;font-size:13px;color:var(--blue-dark);
+  background:var(--blue-50);border:1px solid var(--blue-100);
+  border-radius:8px;padding:8px 12px;
+  display:flex;align-items:flex-start;gap:7px;
+}
+.q-error{
+  margin-top:12px;font-size:13px;font-weight:500;color:var(--red);
+  display:flex;align-items:flex-start;gap:7px;
+  padding:8px 12px;background:var(--red-50);
+  border:1px solid #FECACA;border-radius:8px;
+}
+.q-error .ico,.q-note .ico{flex:none;width:15px;height:15px;margin-top:3px;background:center/contain no-repeat}
+.q-error .ico{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23DC2626'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 5h2v7h-2V7zm0 9h2v2h-2v-2z'/%3E%3C/svg%3E")}
+.q-note .ico{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232563EB'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 5h2v7h-2V7zm0 9h2v2h-2v-2z'/%3E%3C/svg%3E")}
+
+/* ---------- 节尾操作条 ---------- */
+.section-actions{
+  margin-top:30px;padding-top:22px;border-top:1px solid var(--line-soft);
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+}
+.section-actions .next-hint{font-size:13px;color:var(--ink-3)}
+.submit-note{font-size:12px;color:var(--ink-3);margin-top:14px;text-align:right}
+
+/* ---------- 提交成功页（页内切换，自右滑入） ---------- */
+.success-card{
+  padding:52px 36px 44px;text-align:center;
+  opacity:0;transform:translateX(48px);
+  transition:opacity .4s ease,transform .4s ease;
+}
+.success-card.show{opacity:1;transform:none}
+.success-check{
+  width:88px;height:88px;margin:0 auto 22px;border-radius:50%;
+  background:var(--blue);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 14px 34px rgba(37,99,235,.35);
+}
+.success-check svg{width:44px;height:44px}
+.success-card h2{font-size:26px;font-weight:700}
+.success-copy{margin:12px auto 0;max-width:420px;font-size:14px;color:var(--ink-2)}
+.receipt{
+  margin:24px auto 0;max-width:360px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  background:var(--panel);border:1px dashed #CBD5E1;border-radius:10px;
+  padding:12px 16px;
+}
+.receipt .receipt-label{font-size:13px;color:var(--ink-2)}
+.receipt code{font-size:15px;font-weight:700;color:var(--blue);letter-spacing:.04em}
+.success-stats{
+  list-style:none;margin:26px auto 0;max-width:460px;
+  display:flex;justify-content:center;gap:0;
+}
+.success-stats li{
+  flex:1;padding:0 12px;
+}
+.success-stats li + li{border-left:1px solid var(--line-soft)}
+.success-stats b{display:block;font-size:22px;font-weight:700;color:var(--ink)}
+.success-stats span{font-size:12px;color:var(--ink-3)}
+.success-actions{
+  margin-top:30px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;
+}
+.success-tip{margin-top:18px;font-size:12px;color:var(--ink-3)}
+
+/* ---------- 页脚 ---------- */
+.page-footer{
+  margin-top:36px;text-align:center;
+  font-size:12px;color:var(--ink-3);line-height:1.9;
+}
+.page-footer .divider{width:36px;height:3px;border-radius:2px;background:var(--blue-200);margin:0 auto 14px}
+
+/* ==========================================================================
+   响应式：≥1200px 出现侧栏 · 768px 中屏 · 375px 手机
+   ========================================================================== */
+@media (min-width:1200px){
+  .rail{display:block}
+  .page{padding-left:20px;padding-right:20px}
+}
+@media (max-width:1024px){
+  .section-card{padding:26px 24px 24px}
+  .cover-body{padding:26px 24px 30px}
+  .cover-hero{padding:24px 24px 20px}
+}
+@media (max-width:768px){
+  .page{padding:80px 16px 60px}
+  .card + .card{margin-top:18px}
+  .cover h1{font-size:24px}
+  .cover-hero svg.cover-illus{width:104px;height:84px}
+  .q-body{padding-left:0}
+  .q-error::before,.q.has-error::before{left:-8px}
+  .section-actions .btn{flex:1;min-width:140px}
+  .submit-note{text-align:left}
+}
+@media (max-width:480px){
+  .page{padding:76px 12px 52px}
+  .topbar-inner{padding:0 12px}
+  .topbar-title small{display:none}
+  .topbar-progress .label{display:none}
+  .section-card{padding:22px 16px 22px;border-radius:10px}
+  .cover-body{padding:22px 16px 26px}
+  .cover-hero{padding:20px 16px 16px}
+  .cover h1{font-size:22px}
+  .sec-index{font-size:34px}
+  .sec-title{font-size:17px}
+  .q-tag{display:none}
+  .q-head{gap:10px}
+  .btn{width:100%}
+  .section-actions{flex-direction:column-reverse}
+  .section-actions .btn{width:100%}
+  .cover-cta .btn{width:100%}
+  .success-actions{flex-direction:column-reverse}
+  .success-actions .btn{width:100%}
+  .success-card{padding:42px 20px 36px}
+  .success-stats{max-width:none}
+  .success-stats b{font-size:18px}
+  /* 矩阵题：表头隐藏，行标题独占一行，四个选项压成 4 列小单元 */
+  .matrix-head{display:none}
+  .matrix-row{grid-template-columns:repeat(4,1fr);padding:10px 10px;row-gap:4px}
+  .m-title{grid-column:1/-1;padding-bottom:2px}
+  .m-cell{flex-direction:column;gap:4px;font-size:11px;min-height:56px;line-height:1.2}
+  .m-cell span{display:block}
+  .nps{min-width:34px;height:44px}
+  .receipt{flex-wrap:wrap}
+}
+/* 减动效偏好：全部过渡趋近于零 */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+
+<!-- ======================= 顶部固定条 ======================= -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-brand">
+      <span class="topbar-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h12a1 1 0 0 1 1 1v19l-7-4.4L5 22V3a1 1 0 0 1 1-1z"/></svg>
+      </span>
+      <span class="topbar-title">2026 城市青年阅读习惯调查<small>岛上书店 · 城市共读计划</small></span>
+    </div>
+    <div class="topbar-progress">
+      <span class="label">完成度</span>
+      <span class="num" id="progressText">0%</span>
+    </div>
+  </div>
+  <div class="progress-track" role="progressbar" aria-label="问卷完成进度"
+       aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack">
+    <div class="progress-fill is-empty" id="progressFill"></div>
+  </div>
+</header>
+
+<!-- ======================= 桌面端左侧分节导航 ======================= -->
+<nav class="rail" id="rail" aria-label="问卷分节导航">
+  <p class="rail-label">问卷分节</p>
+  <a class="rail-item" href="#section-1" data-rail>
+    <span class="rail-idx">01</span><span>基本信息</span>
+    <svg class="rail-check" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+  </a>
+  <a class="rail-item" href="#section-2" data-rail>
+    <span class="rail-idx">02</span><span>阅读行为</span>
+    <svg class="rail-check" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+  </a>
+  <a class="rail-item" href="#section-3" data-rail>
+    <span class="rail-idx">03</span><span>态度与推荐</span>
+    <svg class="rail-check" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+  </a>
+</nav>
+
+<main class="page">
+  <noscript><p class="noscript-tip">本问卷的填写与提交需要启用 JavaScript，请在浏览器设置中开启后刷新页面。</p></noscript>
+
+  <div id="formArea">
+    <!-- ======================= 封面卡 ======================= -->
+    <section class="card cover" id="cover" aria-labelledby="coverTitle">
+      <div class="cover-hero">
+        <div>
+          <span class="cover-badge">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 2h12a1 1 0 0 1 1 1v19l-7-4.4L5 22V3a1 1 0 0 1 1-1z"/></svg>
+            岛上书店 · 城市共读计划
+          </span>
+          <p class="cover-kicker">READING SURVEY 2026</p>
+        </div>
+        <!-- 程序化内联 SVG：书堆与书签插画 -->
+        <svg class="cover-illus" viewBox="0 0 160 120" role="img" aria-label="书堆插画" aria-hidden="true">
+          <circle cx="128" cy="26" r="12" fill="#BFDBFE"/>
+          <circle cx="128" cy="26" r="12" fill="none" stroke="#93C5FD" stroke-width="2" stroke-dasharray="3 5"/>
+          <rect x="18" y="84" width="124" height="14" rx="4" fill="#1D4ED8"/>
+          <rect x="26" y="68" width="108" height="14" rx="4" fill="#3B82F6"/>
+          <rect x="34" y="52" width="92" height="14" rx="4" fill="#60A5FA"/>
+          <rect x="42" y="52" width="10" height="14" rx="2" fill="#DBEAFE"/>
+          <rect x="56" y="68" width="10" height="14" rx="2" fill="#EFF6FF"/>
+          <rect x="88" y="84" width="10" height="14" rx="2" fill="#BFDBFE"/>
+          <path d="M120 12v34l7-5 7 5V12a3 3 0 0 0-3-3h-8a3 3 0 0 0-3 3z" fill="#2563EB"/>
+          <path d="M14 104h132" stroke="#93C5FD" stroke-width="3" stroke-linecap="round" stroke-dasharray="1 9"/>
+        </svg>
+      </div>
+      <div class="cover-body">
+        <h1 id="coverTitle">2026 城市青年阅读习惯调查</h1>
+        <p class="lede">
+          这是一份由虚构独立书店「岛上书店」发起的城市共读问卷。我们想认真了解：在这座城市里，
+          年轻人与书相处的真实方式——你在哪里读书、读多久、被什么阻挡、又想推荐什么。
+          你的每一条回答，都会成为年底《2026 城市青年阅读报告》的一部分。
+        </p>
+        <div class="cover-meta">
+          <span class="meta-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            预计用时 <b>3 分钟</b>
+          </span>
+          <span class="meta-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1" fill="currentColor"/><circle cx="3.5" cy="12" r="1" fill="currentColor"/><circle cx="3.5" cy="18" r="1" fill="currentColor"/></svg>
+            共 <b>12</b> 道题 · 3 个部分
+          </span>
+          <span class="meta-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+            全程<b>匿名</b>填写
+          </span>
+        </div>
+        <div class="cover-note">
+          <h3>数据说明</h3>
+          <p>全部数据仅用于生成《2026 城市青年阅读报告》，不收集姓名、手机号等个人身份信息，也不会与任何第三方共享；你可以在任意时刻停止填写。</p>
+        </div>
+        <div class="cover-cta">
+          <button type="button" class="btn btn-primary" id="startBtn">
+            开始填写
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+          <span class="hint">带 <span style="color:var(--red);font-family:serif">*</span> 为必答题，其余可跳过</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= 问卷主体 ======================= -->
+    <form id="surveyForm" novalidate>
+
+      <!-- ============ 第一部分 · 基本信息 ============ -->
+      <section class="card section-card" id="section-1" aria-labelledby="sec1Title">
+        <div class="section-head">
+          <div class="sec-text">
+            <h2 class="sec-title" id="sec1Title">基本信息</h2>
+            <p class="sec-desc">第 1-2 题 · 两个小问题，帮助我们把报告划分到不同人群，让结论更有代表性。</p>
+          </div>
+          <span class="sec-index" aria-hidden="true">01</span>
+        </div>
+
+        <!-- Q1 单选 -->
+        <fieldset class="q" id="q-q1" data-type="radio" data-required="1">
+          <legend>
+            <div class="q-head">
+              <span class="q-no" aria-hidden="true">1</span>
+              <div class="q-tt-wrap">
+                <p class="q-title"><i class="req" aria-hidden="true">*</i>你的年龄段是？</p>
+                <p class="q-desc">单选题 · 我们只记录区间，不记录具体年龄。</p>
+              </div>
+              <span class="q-tag">单选</span>
+            </div>
+          </legend>
+          <div class="q-body">
+            <div class="opt-list">
+              <label class="opt"><input type="radio" name="q1" value="18-24"><span class="opt-key">A</span><span>18-24 岁</span></label>
+              <label class="opt"><input type="radio" name="q1" value="25-30"><span class="opt-key">B</span><span>25-30 岁</span></label>
+              <label class="opt"><input type="radio" name="q1" value="31-35"><span class="opt-key">C</span><span>31-35 岁</span></label>
+              <label class="opt"><input type="radio" name="q1" value="36+"><span class="opt-key">D</span><span>36 岁及以上</span></label>
+            </div>
+            <p class="q-error" hidden><span class="ico" aria-hidden="true"></span><span class="q-error-text"></span></p>
+          </div>
+        </fieldset>
+
+        <!-- Q2 单选 + 其他 -->
+        <fieldset class="q" id="q-q2" data-type="radio" data-required="1">
+          <legend>
+            <div class="q-head">
+              <span class="q-no" aria-hidden="true">2</span>
+              <div class="q-tt-wrap">
+                <p class="q-title"><i class="req" aria-hidden="true">*</i>你目前的身份是？</p>
+                <p class="q-desc">单选题 · 选择最贴近现状的一项；选「其他」可补充说明。</p>
+              </div>
+              <span class="q-tag">单选</span>
+            </div>
+          </legend>
+          <div class="q-body">
+            <div class="opt-list">
+              <label class="opt"><input type="radio" name="q2" value="student"><span class="opt-key">A</span><span>在校学生</span></label>
+              <label class="opt"><input type="radio" name="q2" value="junior"><span class="opt-key">B</span><span>职场新人（0-3 年）</span></label>
+              <label class="opt"><input type="radio" name="q2" value="senior"><span class="opt-key">C</span><span>资深职场人</span></label>
+              <label class="opt"><input type="radio" name="q2" value="freelance"><span class="opt-key">D</span><span>自由职业</span></label>
+              <label class="opt"><input type="radio" name="q2" value="other"><span class="opt-key">E</span><span>其他</span></label>
+            </div>
+            <div class="other-wrap" id="q2OtherWrap" hidden>
+              <input type="text" class="other-input" id="q2Other" maxlength="30" placeholder="请补充你的身份（如：全职带娃、备考中……）" aria-label="补充身份说明">
+            </div>
+            <p class="q-error" hidden><span class="ico" aria-hidden="true"></span><span class="q-error-text"></span></p>
+          </div>
+        </fieldset>
+
+        <div class="section-actions">
+          <span class="next-hint">下一节：阅读行为 · 共 5 题</span>
+          <button type="button" class="btn btn-primary" id="nextTo1">
+            下一节
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- ============ 第二部分 · 阅读行为 ============ -->
+      <section class="card section-card" id="section-2" aria-labelledby="sec2Title">
+        <div class="section-head">
+          <div class="sec-text">
+            <h2 class="sec-title" id="sec2Title">阅读行为</h2>
+            <p class="sec-desc">第 3-7 题 · 回顾过去一年，你和书打交道的真实日常。</p>
+          </div>
+          <span class="sec-index" aria-hidden="true">02</span>
+        </div>
+
+        <!-- Q3 多选（最多 4 项）+ 其他 -->
+        <fieldset class="q" id="q-q3" data-type="check" data-required="1">
+          <legend>
+            <div class="q-head">
+              <span class="q-no" aria-hidden="true">3</span>
+              <div class="q-tt-wrap">
+                <p class="q-title"><i class="req" aria-hidden="true">*</i>过去一年，你主要通过哪些方式阅读？</p>
+                <p class="q-desc">多选题 · 最多选 4 项，按你的真实习惯勾选。</p>
+              </div>
+              <span class="q-tag">多选 · ≤4 项</span>
+            </div>
+          </legend>
+          <div class="q-body">
+            <div class="opt-list">
+              <label class="opt"><input type="checkbox" name="q3" value="paper"><span class="opt-key">A</span><span>纸质书</span></label>
+              <label class="opt"><input type="checkbox" name="q3" value="app"><span class="opt-key">B</span><span>微信读书等电子书 App</span></label>
+              <label class="opt"><input type="checkbox" name="q3" value="kindle"><span class="opt-key">C</span><span>Kindle / 电纸书</span></label>
+              <label class="opt"><input type="checkbox" name="q3" value="audio"><span class="opt-key">D</span><span>听书 / 播客</span></label>
+              <label class="opt"><input type="checkbox" name="q3" value="article"><span class="opt-key">E</span><span>公众号长文</span></label>
+              <label class="opt"><input type="checkbox" name="q3" value="library"><span class="opt-key">F</span><span>图书馆借阅</span></label>
+              <label class="opt"><input type="checkbox" name="q3" value="other"><span class="opt-key">G</span><span>其他</span></label>
+            </div>
+            <div class="other-wrap" id="q3OtherWrap" hidden>
+              <input type="text" class="other-input" id="q3Other" maxlength="30" placeholder="请补充你的阅读方式（如：网页小说、漫画……）" aria-label="补充阅读方式">
+            </div>
+            <p class="q-note" id="q3Note" hidden><span class="ico" aria-hidden="true"></span><span id="q3NoteText"></span></p>
+            <p class="q-error" hidden><span class="ico" aria-hidden="true"></span><span class="q-error-text"></span></p>
+          </div>
+        </fieldset>
+
+        <!-- Q4 单选（逻辑显示：仅当 Q3 勾选了电子书方式） -->
+        <fieldset class="q" id="q-q4" data-type="radio" data-required="1" hidden>
+          <legend>
+            <div class="q-head">
+              <span class="q-no" aria-hidden="true">4</span>
+              <div class="q-tt-wrap">
+                <p class="q-title"><i class="req" aria-hidden="true">*</i>你使用电子书阅读的频率是？</p>
+                <p class="q-desc">因为你在上一题选择了电子书阅读方式，请回答本题。</p>
+              </div>
+              <span class="q-tag">按需显示</span>
+            </div>
+          </legend>
+          <div class="q-body">
+            <div class="opt-list">
+              <label class="opt"><input type="radio" name="q4" value="daily"><span class="opt-key">A</span><span>几乎每天</span></label>
+              <label class="opt"><input type="radio" name="q4" value="weekly"><span class="opt-key">B</span><span>每周几次</span></label>
+              <label class="opt"><input type="radio" name="q4" value="seldom"><span class="opt-key">C</span><span>偶尔</span></label>
+              <label class="opt"><input type="radio" name="q4" value="rarely"><span class="opt-key">D</span><span>很少</span></label>
+            </div>
+            <p class="q-error" hidden><span class="ico" aria-hidden="true"></span><span class="q-error-text"></span></p>
+          </div>
+        </fieldset>
+
+        <!-- Q5 评分 1-5 星 -->
+        <fieldset class="q" id="q-q5" data-type="star" data-required="1">
+          <legend>
+            <div class="q-head">
+              <span class="q-no" aria-hidden="true">5</span>
+              <div class="q-tt-wrap">
+                <p class="q-title"><i class="req" aria-hidden="true">*</i>你对自己过去一年的阅读量满意吗？</p>
+                <p class="q-desc">评分题 · 点击星星打分，1 星很不满意，5 星非常满意。</p>
+              </div>
+              <span class="q-tag">评分</span>
+            </div>
+          </legend>
+          <div class="q-body">
+            <div class="star-row" id="starRow" role="radiogroup" aria-label="阅读量满意度评分，1 到 5 星">
+              <label class="star" data-val="1" title="1 星 · 很不满意"><input type="radio" name="q5" value="1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 5.98 6.6.96-4.78 4.66 1.13 6.58L12 17.58l-5.9 3.1 1.13-6.58L2.45 9.44l6.6-.96L12 2.5z"/></svg></label>
+              <label class="star" data-val="2" title="2 星 · 不太满意"><input type="radio" name="q5" value="2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 5.98 6.6.96-4.78 4.66 1.13 6.58L12 17.58l-5.9 3.1 1.13-6.58L2.45 9.44l6.6-.96L12 2.5z"/></svg></label>
+              <label class="star" data-val="3" title="3 星 · 一般"><input type="radio" name="q5" value="3"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 5.98 6.6.96-4.78 4.66 1.13 6.58L12 17.58l-5.9 3.1 1.13-6.58L2.45 9.44l6.6-.96L12 2.5z"/></svg></label>
+              <label class="star" data-val="4" title="4 星 · 比较满意"><input type="radio" name="q5" value="4"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 5.98 6.6.96-4.78 4.66 1.13 6.58L12 17.58l-5.9 3.1 1.13-6.58L2.45 9.44l6.6-.96L12 2.5z"/></svg></label>
+              <label class="star" data-val="5" title="5 星 · 非常满意"><input type="radio" name="q5" value="5"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.95 5.98 6.6.96-4.78 4.66 1.13 6.58L12 17.58l-5.9 3.1 1.13-6.58L2.45 9.44l6.6-.96L12 2.5z"/></svg></label>
+              <span class="star-feedback" id="q5Feedback">点击星星，告诉我们你的感受</span>
+            </div>
+            <p class="q-error" hidden><span class="ico" aria-hidden="true"></span><span class="q-error-text"></span></p>
+          </div>
+        </fieldset>
+
+        <!-- Q6 下拉 -->
+        <fieldset class="q" id="q-q6" data-type="select" data-required="1">
+          <legend>
+            <div class="q-head">
+              <span class="q-no" aria-hidden="true">6</span>
+              <div class="q-tt-wrap">
+                <p class="q-title"><i class="req" aria-hidden="true">*</i>你平均每周的阅读时长大约是？</p>
+                <p class="q-desc">含纸质书、电子书与听书的总时长，估个大概即可。</p>
+              </div>
+              <span class="q-tag">下拉</span>
+            </div>
+          </legend>
+          <div class="q-body">
+            <div class="select-wrap">
+              <select id="q6" name="q6" required>
+                <option value="" disabled selected>请选择：每周阅读时长区间</option>
+                <option value="lt1">少于 1 小时</option>
+                <option value="1to3">1-3 小时</option>
+                <option value="3to7">3-7 小时</option>
+                <option value="7to14">7-14 小时</option>
+                <option value="14plus">14 小时以上</option>
+              </select>
+            </div>
+            <p class="q-error" hidden><span class="ico" aria-hidden="true"></span><span class="q-error-text"></span></p>
+          </div>
+        </fieldset>
+
+        <!-- Q7 矩阵 -->
+        <fieldset class="q" id="q-q7" data-type="matrix" data-required="1" data-rows="q7a,q7b,q7c,q7d">
+          <legend>
+            <div class="q-head">
+              <span class="q-no" aria-hidden="true">7</span>
+              <div class="q-tt-wrap">
+                <p class="q-title"><i class="req" aria-hidden="true">*</i>过去三个月，你在以下场景的阅读频率？</p>
+                <p class="q-desc">矩阵单选 · 每一行选择一个频率，四个场景都要作答。</p>
+              </div>
+              <span class="q-tag">矩阵</span>
+            </div>
+          </legend>
+          <div class="q-body">
+            <div class="matrix">
+              <div class="matrix-head" aria-hidden="true">
+                <span class="m-rowlabel">场景</span>
+                <span>几乎每天</span><span>经常</span><span>偶尔</span><span>从不</span>
+              </div>
+              <div class="matrix-row">
+                <span class="m-title">通勤路上</span>
+                <label class="m-cell"><input type="radio" name="q7a" value="几乎每天"><span>几乎每天</span></label>
+                <label class="m-cell"><input type="radio" name="q7a" value="经常"><span>经常</span></label>
+                <label class="m-cell"><input type="radio" name="q7a" value="偶尔"><span>偶尔</span></label>
+                <label class="m-cell"><input type="radio" name="q7a" value="从不"><span>从不</span></label>
+              </div>
+              <div class="matrix-row">
+                <span class="m-title">睡前</span>
+                <label class="m-cell"><input type="radio" name="q7b" value="几乎每天"><span>几乎每天</span></label>
+                <label class="m-cell"><input type="radio" name="q7b" value="经常"><span>经常</span></label>
+                <label class="m-cell"><input type="radio" name="q7b" value="偶尔"><span>偶尔</span></label>
+                <label class="m-cell"><input type="radio" name="q7b" value="从不"><span>从不</span></label>
+              </div>
+              <div class="matrix-row">
+                <span class="m-title">周末午后</span>
+                <label class="m-cell"><input type="radio" name="q7c" value="几乎每天"><span>几乎每天</span></label>
+                <label class="m-cell"><input type="radio" name="q7c" value="经常"><span>经常</span></label>
+                <label class="m-cell"><input type="radio" name="q7c" value="偶尔"><span>偶尔</span></label>
+                <label class="m-cell"><input type="radio" name="q7c" value="从不"><span>从不</span></label>
+              </div>
+              <div class="matrix-row">
+                <span class="m-title">工作午休</span>
+                <label class="m-cell"><input type="radio" name="q7d" value="几乎每天"><span>几乎每天</span></label>
+                <label class="m-cell"><input type="radio" name="q7d" value="经常"><span>经常</span></label>
+                <label class="m-cell"><input type="radio" name="q7d" value="偶尔"><span>偶尔</span></label>
+                <label class="m-cell"><input type="radio" name="q7d" value="从不"><span>从不</span></label>
+              </div>
+            </div>
+            <p class="q-error" hidden><span class="ico" aria-hidden="true"></span><span class="q-error-text"></span></p>
+          </div>
+        </fieldset>
+
+        <div class="section-actions">
+          <button type="button" class="btn btn-outline" id="prevTo1">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+            上一节
+          </button>
+          <span class="next-hint">还剩最后一节 · 态度与推荐</span>
+          <button type="button" class="btn btn-primary" id="nextTo2">
+            下一节
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- ============ 第三部分 · 态度与推荐 ============ -->
+      <section class="card section-card" id="section-3" aria-labelledby="sec3Title">
+        <div class="section-head">
+          <div class="sec-text">
+            <h2 class="sec-title" id="sec3Title">态度与推荐</h2>
+            <p class="sec-desc">第 8-12 题 · 最后一节，想听听你的真心话。</p>
+          </div>
+          <span class="sec-index" aria-hidden="true">03</span>
+        </div>
+
+        <!-- Q8 填空单行 -->
+        <fieldset class="q" id="q-q8" data-type="text" data-required="1">
+          <legend>
+            <div class="q-head">
+              <span class="q-no" aria-hidden="true">8</span>
+              <div class="q-tt-wrap">
+                <p class="q-title"><i class="req" aria-hidden="true">*</i>2026 年你读完的最后一本书，书名是？</p>
+                <p class="q-desc">填空题 · 记不清全名没关系，写下你能想起的部分。</p>
+              </div>
+              <span class="q-tag">填空</span>
+            </div>
+          </legend>
+          <div class="q-body">
+            <input type="text" class="text-input" id="q8" name="q8" maxlength="50" placeholder="例如：《长安的荔枝》" aria-label="最后一本读完的书名">
+            <p class="q-error" hidden><span class="ico" aria-hidden="true"></span><span class="q-error-text"></span></p>
+          </div>
+        </fieldset>
+
+        <!-- Q9 多选 -->
+        <fieldset class="q" id="q-q9" data-type="check" data-required="1">
+          <legend>
+            <div class="q-head">
+              <span class="q-no" aria-hidden="true">9</span>
+              <div class="q-tt-wrap">
+                <p class="q-title"><i class="req" aria-hidden="true">*</i>阻碍你读更多书的主要原因是？</p>
+                <p class="q-desc">多选题 · 选出最困扰你的 1-3 个原因。</p>
+              </div>
+              <span class="q-tag">多选</span>
+            </div>
+          </legend>
+          <div class="q-body">
+            <div class="opt-list">
+              <label class="opt"><input type="checkbox" name="q9" value="time"><span class="opt-key">A</span><span>没时间</span></label>
+              <label class="opt"><input type="checkbox" name="q9" value="choice"><span class="opt-key">B</span><span>不知道选什么书</span></label>
+              <label class="opt"><input type="checkbox" name="q9" value="focus"><span class="opt-key">C</span><span>静不下心</span></label>
+              <label class="opt"><input type="checkbox" name="q9" value="digital"><span class="opt-key">D</span><span>电子干扰太多</span></label>
+              <label class="opt"><input type="checkbox" name="q9" value="price"><span class="opt-key">E</span><span>书价高</span></label>
+              <label class="opt"><input type="checkbox" name="q9" value="partner"><span class="opt-key">F</span><span>找不到共读伙伴</span></label>
+            </div>
+            <p class="q-error" hidden><span class="ico" aria-hidden="true"></span><span class="q-error-text"></span></p>
+          </div>
+        </fieldset>
+
+        <!-- Q10 日期 -->
+        <fieldset class="q" id="q-q10" data-type="date" data-required="1">
+          <legend>
+            <div class="q-head">
+              <span class="q-no" aria-hidden="true">10</span>
+              <div class="q-tt-wrap">
+                <p class="q-title"><i class="req" aria-hidden="true">*</i>你上一次走进实体书店或图书馆是哪一天？</p>
+                <p class="q-desc">日期题 · 用于统计实体阅读空间的到访情况，不能晚于今天。</p>
+              </div>
+              <span class="q-tag">日期</span>
+            </div>
+          </legend>
+          <div class="q-body">
+            <input type="date" class="date-input" id="q10" name="q10" aria-label="上次到访实体书店或图书馆的日期">
+            <p class="field-note">如果已经很久没去过，也可以如实选择——这正是我们想知道的。</p>
+            <p class="q-error" hidden><span class="ico" aria-hidden="true"></span><span class="q-error-text"></span></p>
+          </div>
+        </fieldset>
+
+        <!-- Q11 上传（选填） -->
+        <fieldset class="q" id="q-q11" data-type="upload">
+          <legend>
+            <div class="q-head">
+              <span class="q-no" aria-hidden="true">11</span>
+              <div class="q-tt-wrap">
+                <p class="q-title">晒出你的书架、正在读的书或最想推荐的一本书的照片</p>
+                <p class="q-desc">上传题 · 选填，仅作展示，不会公开。</p>
+              </div>
+              <span class="q-tag optional">选填</span>
+            </div>
+          </legend>
+          <div class="q-body">
+            <div class="upload-zone" id="uploadZone" tabindex="0" role="button" aria-label="点击或拖拽图片到此处上传，支持 jpg、png，不超过 5MB">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-4.5-4.5L7 20"/></svg>
+              <p class="up-main"><b>点击上传</b>，或将图片拖拽到此处</p>
+              <p class="up-sub">jpg / png 格式 · 单张不超过 5MB</p>
+            </div>
+            <input type="file" id="q11Input" accept="image/jpeg,image/png" hidden>
+            <div class="upload-preview" id="uploadPreview" hidden>
+              <img id="uploadImg" alt="已上传图片预览">
+              <div class="upload-meta">
+                <p id="uploadName"></p>
+                <p class="up-size" id="uploadSize"></p>
+                <button type="button" class="link-btn" id="uploadRemove">删除图片</button>
+              </div>
+            </div>
+            <p class="upload-msg" id="uploadMsg" hidden></p>
+          </div>
+        </fieldset>
+
+        <!-- Q12 填空多行 + NPS -->
+        <fieldset class="q" id="q-q12" data-type="group">
+          <legend>
+            <div class="q-head">
+              <span class="q-no" aria-hidden="true">12</span>
+              <div class="q-tt-wrap">
+                <p class="q-title"><i class="req" aria-hidden="true">*</i>最后，把书推荐给同城的陌生书友吧</p>
+                <p class="q-desc">两小题 · 一句荐书语，以及你对「城市共读计划」的参与意愿。</p>
+              </div>
+              <span class="q-tag">填空 + 量表</span>
+            </div>
+          </legend>
+          <div class="q-body">
+            <!-- 12-A 荐书语 -->
+            <fieldset class="sub-q" id="q-q12a" data-type="textarea" data-required="1">
+              <legend class="sub-title"><span class="sub-key" aria-hidden="true">A</span><span><i class="req" aria-hidden="true">*</i>写一句「荐书语」，推荐给同城的陌生书友（60 字以内）</span></legend>
+              <div class="textarea-wrap">
+                <textarea id="q12a" name="q12a" maxlength="60" rows="3" aria-label="荐书语，60 字以内" placeholder="例如：一本适合在地铁上读完的小书，读完你会想给很久没联系的朋友打个电话。"></textarea>
+                <span class="char-count"><b id="q12aCount">0</b> / 60 字</span>
+              </div>
+              <p class="q-error" hidden><span class="ico" aria-hidden="true"></span><span class="q-error-text"></span></p>
+            </fieldset>
+            <!-- 12-B NPS 量表 -->
+            <fieldset class="sub-q" id="q-q12b" data-type="nps" data-required="1">
+              <legend class="sub-title"><span class="sub-key" aria-hidden="true">B</span><span><i class="req" aria-hidden="true">*</i>你有多大意愿参加「城市共读计划」？（0-10 分）</span></legend>
+              <div class="nps-scale" role="radiogroup" aria-label="参与意愿 0 到 10 分">
+                <label class="nps"><input type="radio" name="q12b" value="0"><span>0</span></label>
+                <label class="nps"><input type="radio" name="q12b" value="1"><span>1</span></label>
+                <label class="nps"><input type="radio" name="q12b" value="2"><span>2</span></label>
+                <label class="nps"><input type="radio" name="q12b" value="3"><span>3</span></label>
+                <label class="nps"><input type="radio" name="q12b" value="4"><span>4</span></label>
+                <label class="nps"><input type="radio" name="q12b" value="5"><span>5</span></label>
+                <label class="nps"><input type="radio" name="q12b" value="6"><span>6</span></label>
+                <label class="nps"><input type="radio" name="q12b" value="7"><span>7</span></label>
+                <label class="nps"><input type="radio" name="q12b" value="8"><span>8</span></label>
+                <label class="nps"><input type="radio" name="q12b" value="9"><span>9</span></label>
+                <label class="nps"><input type="radio" name="q12b" value="10"><span>10</span></label>
+              </div>
+              <div class="nps-ends"><span>0 · 绝不可能</span><span>10 · 非常愿意</span></div>
+              <p class="nps-feedback" id="q12bFeedback" hidden></p>
+              <p class="q-error" hidden><span class="ico" aria-hidden="true"></span><span class="q-error-text"></span></p>
+            </fieldset>
+          </div>
+        </fieldset>
+
+        <div class="section-actions">
+          <button type="button" class="btn btn-outline" id="prevTo2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+            上一节
+          </button>
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            <span class="btn-label">提交问卷</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          </button>
+        </div>
+        <p class="submit-note">提交即表示同意回答仅用于本次调研 · 全程匿名，可随时关闭页面放弃填写</p>
+      </section>
+    </form>
+  </div>
+
+  <!-- ======================= 提交成功页（页内切换） ======================= -->
+  <section class="card success-card" id="successCard" hidden aria-live="polite" aria-labelledby="successTitle">
+    <div class="success-check" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+    </div>
+    <h2 id="successTitle">提交成功！</h2>
+    <p class="success-copy">你的阅读画像已加入《2026 城市共读报告》。年底报告发布时，愿你能在其中看到自己的影子——以及那本你想推荐给陌生书友的书。</p>
+    <div class="receipt">
+      <span class="receipt-label">回执编号</span>
+      <code id="receiptNo">#RD2026-0000</code>
+      <button type="button" class="link-btn" id="copyReceipt">复制</button>
+    </div>
+    <ul class="success-stats">
+      <li><b id="statCount">0 / 0</b><span>已答必做题</span></li>
+      <li><b id="statTime">0:00</b><span>填写用时</span></li>
+      <li><b>100%</b><span>完成度</span></li>
+    </ul>
+    <div class="success-actions">
+      <button type="button" class="btn btn-outline" id="refillBtn">再填一份</button>
+      <button type="button" class="btn btn-primary" id="viewReportBtn">了解城市共读计划</button>
+    </div>
+    <p class="success-tip">统计结果预计在 48 小时后于「岛上书店」线下门店与专栏同步公布。</p>
+  </section>
+
+  <footer class="page-footer">
+    <div class="divider" aria-hidden="true"></div>
+    <p>岛上书店 · 城市共读计划组委会 © 2026<br>本页面为设计演示问卷，不会真实收集或上传任何数据</p>
+  </footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+
+/* ======================= 工具函数 ======================= */
+function byId(id){ return document.getElementById(id); }
+function $all(sel, root){
+  return Array.prototype.slice.call((root || document).querySelectorAll(sel));
+}
+function todayStr(){
+  var d = new Date();
+  var m = d.getMonth() + 1, day = d.getDate();
+  return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
+}
+
+/* ======================= 元素引用 ======================= */
+var form          = byId('surveyForm');
+var formArea      = byId('formArea');
+var successCard   = byId('successCard');
+var progressFill  = byId('progressFill');
+var progressTrack = byId('progressTrack');
+var progressText  = byId('progressText');
+var rail          = byId('rail');
+var submitBtn     = byId('submitBtn');
+var startTime     = Date.now();
+var q4Visible     = false;
+var lastDone      = 0;
+var lastTotal     = 0;
+var noteTimer     = null;
+
+/* ======================= 题目注册表（分节 + 必答） ======================= */
+var REQUIRED = [
+  { id:'q-q1',  sec:'section-1' },
+  { id:'q-q2',  sec:'section-1' },
+  { id:'q-q3',  sec:'section-2' },
+  { id:'q-q4',  sec:'section-2', conditional:true },
+  { id:'q-q5',  sec:'section-2' },
+  { id:'q-q6',  sec:'section-2' },
+  { id:'q-q7',  sec:'section-2' },
+  { id:'q-q8',  sec:'section-3' },
+  { id:'q-q9',  sec:'section-3' },
+  { id:'q-q10', sec:'section-3' },
+  { id:'q-q12a',sec:'section-3' },
+  { id:'q-q12b',sec:'section-3' }
+];
+var ROW_LABELS = { q7a:'通勤路上', q7b:'睡前', q7c:'周末午后', q7d:'工作午休' };
+var STAR_WORDS = { 1:'很不满意', 2:'不太满意', 3:'一般', 4:'比较满意', 5:'非常满意' };
+var STAR_DEFAULT = '点击星星，告诉我们你的感受';
+function npsWord(v){
+  if (v <= 1) return '完全不想参加';
+  if (v <= 3) return '有点犹豫';
+  if (v <= 5) return '略有兴趣';
+  if (v <= 7) return '比较感兴趣';
+  if (v <= 9) return '大概率会参加';
+  return '一定参加';
+}
+
+/* ======================= 错误提示 ======================= */
+function setError(qEl, msg){
+  var box = qEl.querySelector(':scope > .q-body > .q-error, :scope > .q-error');
+  if (!box) {
+    /* sub-q 的错误框直接位于自身下 */
+    var all = $all('.q-error', qEl);
+    box = all[all.length - 1];
+  }
+  if (!box) return;
+  qEl.classList.add('has-error');
+  box.hidden = false;
+  var t = box.querySelector('.q-error-text');
+  if (t) t.textContent = msg;
+  var c = qEl.querySelector('input, select, textarea');
+  if (c) c.setAttribute('aria-invalid', 'true');
+}
+function clearError(qEl){
+  var box = qEl.querySelector(':scope > .q-body > .q-error, :scope > .q-error');
+  if (!box) {
+    var all = $all('.q-error', qEl);
+    box = all[all.length - 1];
+  }
+  if (box) box.hidden = true;
+  qEl.classList.remove('has-error');
+  var c = qEl.querySelector('input, select, textarea');
+  if (c) c.removeAttribute('aria-invalid');
+}
+function showQ3Note(msg){
+  var note = byId('q3Note');
+  var text = byId('q3NoteText');
+  if (!note || !text) return;
+  text.textContent = msg;
+  note.hidden = false;
+  if (noteTimer) clearTimeout(noteTimer);
+  noteTimer = setTimeout(function(){ note.hidden = true; }, 3200);
+}
+
+/* ======================= 校验器（返回错误文案，空串为通过） ======================= */
+function validateQuestion(qEl){
+  var type = qEl.getAttribute('data-type');
+  if (type === 'radio') {
+    var c = qEl.querySelector('input[type="radio"]:checked');
+    if (!c) return '这是一道必答题，请先选择一个选项再继续。';
+    if (c.value === 'other') {
+      var oi = qEl.querySelector('.other-input');
+      if (!oi || !oi.value.trim()) return '你选择了「其他」，请在输入框里补充具体内容。';
+    }
+    return '';
+  }
+  if (type === 'check') {
+    var any = qEl.querySelector('input[type="checkbox"]:checked');
+    if (!any) return '请至少选择 1 项，本题为多选题。';
+    var oc = qEl.querySelector('input[value="other"]');
+    if (oc && oc.checked) {
+      var oi2 = qEl.querySelector('.other-input');
+      if (!oi2 || !oi2.value.trim()) return '你选择了「其他」，请在输入框里补充具体内容。';
+    }
+    return '';
+  }
+  if (type === 'star') {
+    return qEl.querySelector('input:checked') ? '' : '请点击星星评分（1-5 星），最左侧为 1 星。';
+  }
+  if (type === 'select') {
+    var s = qEl.querySelector('select');
+    return (s && s.value) ? '' : '请展开下拉列表，选择最接近的一项。';
+  }
+  if (type === 'matrix') {
+    var rows = (qEl.getAttribute('data-rows') || '').split(',');
+    var missing = [];
+    rows.forEach(function(rn){
+      if (!qEl.querySelector('input[name="' + rn + '"]:checked')) {
+        missing.push(ROW_LABELS[rn] || rn);
+      }
+    });
+    if (missing.length) return '「' + missing.join('」「') + '」还未选择，请为每个场景选一个频率。';
+    return '';
+  }
+  if (type === 'text') {
+    var i = qEl.querySelector('input[type="text"]');
+    return (i && i.value.trim()) ? '' : '请填写书名，例如《平凡的世界》。';
+  }
+  if (type === 'date') {
+    var d = qEl.querySelector('input[type="date"]');
+    if (!d || !d.value) return '请选择一个日期。';
+    if (d.value > todayStr()) return '日期不能晚于今天（' + todayStr() + '），请重新选择。';
+    return '';
+  }
+  if (type === 'textarea') {
+    var ta = qEl.querySelector('textarea');
+    var len = ta ? ta.value.trim().length : 0;
+    if (!len) return '荐书语不能为空，写一句真心推荐吧。';
+    if (len < 5) return '再多写几个字吧，至少 5 个字（当前 ' + len + ' 字）。';
+    return '';
+  }
+  if (type === 'nps') {
+    return qEl.querySelector('input:checked') ? '' : '请点击一个分值（0-10）：0 表示绝不可能，10 表示非常愿意。';
+  }
+  return '';
+}
+
+/* ======================= 选中态刷新 ======================= */
+function refreshCheckedClasses(){
+  $all('.opt, .m-cell, .nps').forEach(function(label){
+    var input = label.querySelector('input');
+    if (input) label.classList.toggle('is-checked', input.checked);
+  });
+}
+
+/* ======================= Q3 逻辑：最多 4 项 + 「其他」+ 联动 Q4 ======================= */
+function syncOtherWrap(name, wrapId, inputId){
+  var other = form.querySelector('input[name="' + name + '"][value="other"]');
+  var wrap = byId(wrapId);
+  var inp = byId(inputId);
+  if (!other || !wrap) return;
+  if (other.checked) {
+    wrap.hidden = false;
+  } else {
+    wrap.hidden = true;
+    if (inp) inp.value = '';
+  }
+}
+function refreshQ4(){
+  var picked = $all('input[name="q3"]:checked').map(function(b){ return b.value; });
+  q4Visible = picked.indexOf('app') > -1 || picked.indexOf('kindle') > -1;
+  var q4 = byId('q-q4');
+  if (!q4) return;
+  q4.hidden = !q4Visible;
+  if (!q4Visible) {
+    $all('input[name="q4"]').forEach(function(r){ r.checked = false; });
+    clearError(q4);
+  }
+}
+function enforceQ3Max(target){
+  var checked = $all('input[name="q3"]:checked');
+  if (checked.length > 4) {
+    target.checked = false;
+    target.closest('.opt').classList.remove('is-checked');
+    showQ3Note('最多只能选择 4 项，已自动为你取消「' + optionTextOf(target) + '」。');
+  }
+}
+function optionTextOf(input){
+  var label = input.closest('.opt');
+  var span = label ? label.querySelector('.opt-main, span:last-of-type') : null;
+  return span ? span.textContent : '该选项';
+}
+
+/* ======================= 评分星 ======================= */
+function applyStars(val){
+  $all('#starRow .star').forEach(function(l){
+    l.classList.toggle('on', Number(l.getAttribute('data-val')) <= val);
+  });
+  var fb = byId('q5Feedback');
+  if (fb) fb.textContent = val ? (val + ' 星 · ' + STAR_WORDS[val]) : STAR_DEFAULT;
+}
+/* 悬停预览（不超过已选值也允许预览，移开即还原） */
+var starRow = byId('starRow');
+if (starRow) {
+  starRow.addEventListener('mouseover', function(e){
+    var star = e.target.closest('.star');
+    if (!star) return;
+    var v = Number(star.getAttribute('data-val'));
+    $all('#starRow .star').forEach(function(l){
+      l.classList.toggle('pre', Number(l.getAttribute('data-val')) <= v);
+    });
+  });
+  starRow.addEventListener('mouseleave', function(){
+    $all('#starRow .star').forEach(function(l){ l.classList.remove('pre'); });
+  });
+}
+
+/* ======================= NPS 反馈 ======================= */
+function applyNps(val){
+  var fb = byId('q12bFeedback');
+  if (!fb) return;
+  var has = form.querySelector('input[name="q12b"]:checked');
+  if (has) {
+    fb.hidden = false;
+    fb.textContent = val + ' 分 · ' + npsWord(val);
+  } else {
+    fb.hidden = true;
+  }
+}
+
+/* ======================= 进度条 ======================= */
+function isAnswered(item){
+  var el = byId(item.id);
+  if (!el) return false;
+  return validateQuestion(el) === '';
+}
+function updateProgress(){
+  var total = 0, done = 0;
+  REQUIRED.forEach(function(item){
+    if (item.conditional && !q4Visible) return;
+    total++;
+    if (isAnswered(item)) done++;
+  });
+  lastDone = done;
+  lastTotal = total;
+  var pct = total ? Math.round(done / total * 100) : 0;
+  progressFill.style.width = pct + '%';
+  progressFill.classList.toggle('is-empty', pct === 0);
+  progressText.textContent = pct + '%';
+  progressTrack.setAttribute('aria-valuenow', String(pct));
+  updateRail();
+}
+function updateRail(){
+  $all('[data-rail]').forEach(function(item){
+    var secId = item.getAttribute('href').slice(1);
+    var complete = REQUIRED.filter(function(r){ return r.sec === secId; })
+      .every(function(r){
+        if (r.conditional && !q4Visible) return true;
+        return isAnswered(r);
+      });
+    item.classList.toggle('done', complete);
+  });
+}
+
+/* ======================= 分节校验与跳转 ======================= */
+function validateSection(secId){
+  var firstBad = null;
+  REQUIRED.forEach(function(item){
+    if (item.sec !== secId) return;
+    if (item.conditional && !q4Visible) return;
+    var el = byId(item.id);
+    if (!el) return;
+    var msg = validateQuestion(el);
+    if (msg) {
+      setError(el, msg);
+      if (!firstBad) firstBad = el;
+    } else {
+      clearError(el);
+    }
+  });
+  return firstBad;
+}
+function goSection(secId){
+  var sec = byId(secId);
+  if (sec) sec.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+function focusQuestion(qEl){
+  qEl.scrollIntoView({ behavior:'smooth', block:'center' });
+  setTimeout(function(){
+    var f = qEl.querySelector('input, select, textarea');
+    if (f) f.focus({ preventScroll:true });
+  }, 380);
+}
+
+/* ======================= 表单事件（事件委托） ======================= */
+form.addEventListener('change', function(e){
+  var t = e.target;
+  if (!t.name && !t.id) return;
+  refreshCheckedClasses();
+
+  if (t.name === 'q3') {
+    enforceQ3Max(t);
+    syncOtherWrap('q3', 'q3OtherWrap', 'q3Other');
+    refreshQ4();
+    if (t.value === 'other' && t.checked) {
+      var i3 = byId('q3Other');
+      if (i3) i3.focus();
+    }
+  }
+  if (t.name === 'q2') {
+    syncOtherWrap('q2', 'q2OtherWrap', 'q2Other');
+    if (t.value === 'other' && t.checked) {
+      var i2 = byId('q2Other');
+      if (i2) i2.focus();
+    }
+  }
+  if (t.name === 'q5') applyStars(Number(t.value));
+  if (t.name === 'q12b') applyNps(Number(t.value));
+
+  /* 已报错的题目作答后即时消错 */
+  var q = t.closest('.q, .sub-q');
+  if (q && q.classList.contains('has-error')) {
+    var msg = validateQuestion(q);
+    if (!msg) clearError(q); else setError(q, msg);
+  }
+  updateProgress();
+});
+
+form.addEventListener('input', function(e){
+  var t = e.target;
+  if (t.id === 'q12a') {
+    byId('q12aCount').textContent = String(t.value.length);
+  }
+  var q = t.closest('.q, .sub-q');
+  if (q && q.classList.contains('has-error')) {
+    var msg = validateQuestion(q);
+    if (!msg) clearError(q);
+  }
+});
+
+/* 必填项失焦即时校验（文本 / 下拉 / 日期 / 多行） */
+form.addEventListener('focusout', function(e){
+  var t = e.target;
+  if (!t.matches || !t.matches('input[type="text"], input[type="date"], select, textarea')) return;
+  var q = t.closest('.q, .sub-q');
+  if (!q || q.getAttribute('data-required') !== '1') return;
+  var msg = validateQuestion(q);
+  if (msg) setError(q, msg);
+  else if (q.classList.contains('has-error')) clearError(q);
+});
+
+/* ======================= 节间跳转按钮 ======================= */
+byId('nextTo1').addEventListener('click', function(){
+  var bad = validateSection('section-1');
+  if (bad) { focusQuestion(bad); return; }
+  goSection('section-2');
+});
+byId('prevTo1').addEventListener('click', function(){ goSection('section-1'); });
+byId('nextTo2').addEventListener('click', function(){
+  var bad = validateSection('section-2');
+  if (bad) { focusQuestion(bad); return; }
+  goSection('section-3');
+});
+byId('prevTo2').addEventListener('click', function(){ goSection('section-2'); });
+
+/* ======================= 封面开始按钮 ======================= */
+byId('startBtn').addEventListener('click', function(){
+  startTime = Date.now();
+  goSection('section-1');
+  setTimeout(function(){
+    var first = byId('q-q1').querySelector('input');
+    if (first) first.focus({ preventScroll:true });
+  }, 450);
+});
+
+/* ======================= 上传题（选填） ======================= */
+var zone = byId('uploadZone');
+var fileInput = byId('q11Input');
+function handleFile(f){
+  var msg = byId('uploadMsg');
+  if (f.type !== 'image/jpeg' && f.type !== 'image/png') {
+    msg.textContent = '仅支持 jpg / png 格式，请更换图片后再上传。';
+    msg.hidden = false;
+    return;
+  }
+  if (f.size > 5 * 1024 * 1024) {
+    msg.textContent = '图片超过 5MB（当前约 ' + (Math.round(f.size / 1024 / 1024 * 10) / 10) + 'MB），请压缩后再上传。';
+    msg.hidden = false;
+    return;
+  }
+  msg.hidden = true;
+  var reader = new FileReader();
+  reader.onload = function(){
+    byId('uploadImg').src = reader.result;
+  };
+  reader.readAsDataURL(f);
+  byId('uploadName').textContent = f.name;
+  byId('uploadSize').textContent = f.size < 1024 * 1024
+    ? Math.round(f.size / 1024) + ' KB'
+    : (Math.round(f.size / 1024 / 1024 * 10) / 10) + ' MB';
+  zone.hidden = true;
+  byId('uploadPreview').hidden = false;
+}
+zone.addEventListener('click', function(){ fileInput.click(); });
+zone.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+});
+['dragenter', 'dragover'].forEach(function(ev){
+  zone.addEventListener(ev, function(e){
+    e.preventDefault(); e.stopPropagation();
+    zone.classList.add('dragging');
+  });
+});
+['dragleave', 'drop'].forEach(function(ev){
+  zone.addEventListener(ev, function(e){
+    e.preventDefault(); e.stopPropagation();
+    zone.classList.remove('dragging');
+  });
+});
+zone.addEventListener('drop', function(e){
+  var fs = e.dataTransfer && e.dataTransfer.files;
+  if (fs && fs.length) handleFile(fs[0]);
+});
+fileInput.addEventListener('change', function(){
+  if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
+});
+byId('uploadRemove').addEventListener('click', function(){
+  fileInput.value = '';
+  byId('uploadPreview').hidden = true;
+  zone.hidden = false;
+  byId('uploadMsg').hidden = true;
+});
+/* 防止误拖到页面其他位置触发浏览器打开文件 */
+window.addEventListener('dragover', function(e){ e.preventDefault(); });
+window.addEventListener('drop', function(e){ e.preventDefault(); });
+
+/* ======================= 提交 ======================= */
+function formatElapsed(){
+  var sec = Math.max(1, Math.round((Date.now() - startTime) / 1000));
+  var m = Math.floor(sec / 60), s = sec % 60;
+  return m + ':' + (s < 10 ? '0' : '') + s;
+}
+form.addEventListener('submit', function(e){
+  e.preventDefault();
+  var firstBad = null;
+  REQUIRED.forEach(function(item){
+    if (item.conditional && !q4Visible) return;
+    var el = byId(item.id);
+    if (!el) return;
+    var msg = validateQuestion(el);
+    if (msg) {
+      setError(el, msg);
+      if (!firstBad) firstBad = el;
+    } else {
+      clearError(el);
+    }
+  });
+  if (firstBad) {
+    focusQuestion(firstBad);
+    return;
+  }
+  /* 防重复提交：loading 态禁用按钮 */
+  submitBtn.disabled = true;
+  submitBtn.classList.add('is-loading');
+  submitBtn.querySelector('.btn-label').textContent = '提交中…';
+  setTimeout(showSuccess, 900);
+});
+
+function showSuccess(){
+  byId('statCount').textContent = lastDone + ' / ' + lastTotal;
+  byId('statTime').textContent = formatElapsed();
+  var chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  var code = '';
+  for (var i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  byId('receiptNo').textContent = '#RD2026-' + code;
+  formArea.hidden = true;
+  if (rail) rail.style.display = 'none';
+  successCard.hidden = false;
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){ successCard.classList.add('show'); });
+  });
+  progressFill.style.width = '100%';
+  progressFill.classList.remove('is-empty');
+  progressText.textContent = '100%';
+  progressTrack.setAttribute('aria-valuenow', '100');
+  window.scrollTo({ top:0, behavior:'auto' });
+}
+
+/* ======================= 再填一份 ======================= */
+byId('refillBtn').addEventListener('click', function(){
+  form.reset();
+  refreshCheckedClasses();
+  applyStars(0);
+  $all('#starRow .star').forEach(function(l){ l.classList.remove('pre'); });
+  var npsFb = byId('q12bFeedback');
+  if (npsFb) npsFb.hidden = true;
+  syncOtherWrap('q2', 'q2OtherWrap', 'q2Other');
+  syncOtherWrap('q3', 'q3OtherWrap', 'q3Other');
+  refreshQ4();
+  $all('.q, .sub-q').forEach(clearError);
+  byId('q3Note').hidden = true;
+  byId('q12aCount').textContent = '0';
+  fileInput.value = '';
+  byId('uploadPreview').hidden = true;
+  byId('uploadMsg').hidden = true;
+  zone.hidden = false;
+  submitBtn.disabled = false;
+  submitBtn.classList.remove('is-loading');
+  submitBtn.querySelector('.btn-label').textContent = '提交问卷';
+  successCard.classList.remove('show');
+  successCard.hidden = true;
+  formArea.hidden = false;
+  if (rail) rail.style.display = '';
+  startTime = Date.now();
+  updateProgress();
+  window.scrollTo({ top:0, behavior:'auto' });
+});
+
+/* 了解计划按钮：演示环境仅回到底部说明 */
+byId('viewReportBtn').addEventListener('click', function(){
+  window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' });
+});
+
+/* ======================= 回执编号复制 ======================= */
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch (err) {}
+  document.body.removeChild(ta);
+}
+byId('copyReceipt').addEventListener('click', function(){
+  var text = byId('receiptNo').textContent;
+  var btn = byId('copyReceipt');
+  function done(){
+    btn.textContent = '已复制';
+    setTimeout(function(){ btn.textContent = '复制'; }, 1600);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(function(){ fallbackCopy(text); done(); });
+  } else {
+    fallbackCopy(text);
+    done();
+  }
+});
+
+/* ======================= 侧栏导航：平滑滚动 + 当前节高亮 ======================= */
+$all('[data-rail]').forEach(function(item){
+  item.addEventListener('click', function(e){
+    e.preventDefault();
+    var sec = byId(item.getAttribute('href').slice(1));
+    if (sec) sec.scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+});
+if ('IntersectionObserver' in window) {
+  var railItems = $all('[data-rail]');
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting) {
+        railItems.forEach(function(it){
+          it.classList.toggle('active', it.getAttribute('href') === '#' + en.target.id);
+        });
+      }
+    });
+  }, { rootMargin:'-35% 0px -55% 0px' });
+  ['section-1', 'section-2', 'section-3'].forEach(function(id){
+    var s = byId(id);
+    if (s) io.observe(s);
+  });
+}
+
+/* ======================= 初始化 ======================= */
+(function init(){
+  var q10 = byId('q10');
+  if (q10) {
+    q10.max = todayStr();
+    q10.min = '2016-01-01';
+  }
+  refreshCheckedClasses();
+  refreshQ4();
+  applyStars(0);
+  updateProgress();
+})();
+
+})();
+</script>
+</body>
+</html>

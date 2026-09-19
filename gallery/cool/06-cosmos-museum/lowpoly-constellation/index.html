@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="穹象天文博物馆 ASTRAEUM —— 低多边形天体展厅。十四件低模天体档案、六座常设展厅、一条可供滚动的星轨。">
+<title>穹象天文博物馆 ASTRAEUM · 低多边形天体漫游</title>
+<style>
+/* ============================================================
+   穹象天文博物馆 ASTRAEUM · Low Poly 3D
+   六色锁板：暮紫 #8B7BD8 / 熔橙 #F27059 / 冰青 #7FD8D8
+             深空 #171331 / 线框白 20% / 象牙 #F3EFE6
+   ============================================================ */
+:root{
+  --space:#171331;
+  --space-90:rgba(23,19,49,.9);
+  --space-72:rgba(23,19,49,.72);
+  --space-55:rgba(23,19,49,.55);
+  --purple:#8B7BD8;
+  --orange:#F27059;
+  --ice:#7FD8D8;
+  --ivory:#F3EFE6;
+  --weak:rgba(243,239,230,.66);
+  --faint:rgba(243,239,230,.42);
+  --line:rgba(255,255,255,.14);
+  --wire:rgba(255,255,255,.2);
+  --mono:"Consolas","JetBrains Mono","SF Mono","Courier New",monospace;
+  --sans:"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --ease:cubic-bezier(.22,.68,.32,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans);
+  color:var(--ivory);
+  background:
+    radial-gradient(1200px 600px at 78% -8%, rgba(139,123,216,.22), transparent 62%),
+    radial-gradient(900px 520px at 8% 108%, rgba(127,216,216,.10), transparent 60%),
+    linear-gradient(180deg,#201A42 0%,#171331 46%,#121022 100%);
+  overflow-x:hidden;
+  line-height:1.7;
+}
+::selection{background:var(--purple);color:var(--space)}
+::-webkit-scrollbar{width:10px}
+::-webkit-scrollbar-track{background:#120F26}
+::-webkit-scrollbar-thumb{background:#3A3160;border:2px solid #120F26;border-radius:6px}
+a{color:var(--ice);text-decoration:none}
+a:hover{color:var(--ivory)}
+img,svg{display:block}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
+
+/* ---------- 3D 画布 / 降级舞台 ---------- */
+#gl{position:fixed;inset:0;width:100%;height:100%;z-index:0;opacity:0;transition:opacity 1.4s ease}
+#gl.on{opacity:1}
+.no3d #gl{display:none}
+#fb-stage{display:none;position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.no3d #fb-stage{display:block}
+#fb-stage .fb-planet{position:absolute;right:-6vw;top:50%;width:min(58vw,620px);transform:translateY(-56%);animation:floaty 9s ease-in-out infinite}
+#fb-stage .fb-orbit{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(150vw,1500px);opacity:.5;animation:spin 120s linear infinite}
+#fb-stage .fb-shard{position:absolute;opacity:.55;animation:floaty 7s ease-in-out infinite}
+@keyframes floaty{0%,100%{transform:translateY(-56%) rotate(-1deg)}50%{transform:translateY(-53%) rotate(1.2deg)}}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+/* ---------- 加载屏 ---------- */
+#loader{position:fixed;inset:0;z-index:100;background:var(--space);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;transition:opacity .7s ease,visibility .7s}
+#loader.done{opacity:0;visibility:hidden;pointer-events:none}
+#loader .mark{width:74px;height:74px;animation:ld-spin 5s linear infinite}
+@keyframes ld-spin{to{transform:rotate(360deg)}}
+#loader h1{font-size:15px;letter-spacing:.5em;text-indent:.5em;font-weight:600;color:var(--weak)}
+#ld-bar{width:264px;height:3px;background:rgba(255,255,255,.1);position:relative;overflow:hidden}
+#ld-bar i{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,var(--purple),var(--ice),var(--orange));background-size:200% 100%;animation:shimmer 2.2s linear infinite;transition:width .3s ease}
+@keyframes shimmer{to{background-position:-200% 0}}
+#ld-pct{font-family:var(--mono);font-size:12px;letter-spacing:.3em;color:var(--ice)}
+#ld-status{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--faint);min-height:1.5em}
+
+/* ---------- 导航 ---------- */
+.nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,3vw,40px);height:64px;background:rgba(23,19,49,.42);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid transparent;transition:.4s}
+.nav.scrolled{background:var(--space-90);border-bottom-color:var(--line)}
+.logo{display:flex;align-items:center;gap:10px;color:var(--ivory)}
+.logo svg{width:26px;height:26px}
+.logo b{font-size:16px;letter-spacing:.22em;font-weight:700}
+.logo span{font-family:var(--mono);font-size:10px;letter-spacing:.3em;color:var(--faint);display:block;margin-top:-2px}
+.nav-links{display:flex;align-items:center;gap:clamp(14px,2vw,30px)}
+.nav-links a{font-size:13px;letter-spacing:.14em;color:var(--weak);padding:6px 2px;border-bottom:1px solid transparent;transition:.25s}
+.nav-links a:hover{color:var(--ivory)}
+.nav-links a.on{color:var(--ice);border-bottom-color:var(--ice)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;font-weight:700;letter-spacing:.18em;font-size:13px;transition:.25s var(--ease)}
+.btn-cut{clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)}
+.btn-main{background:var(--orange);color:var(--space);padding:11px 22px}
+.btn-main:hover{background:#ff8a70;transform:translateY(-2px)}
+.btn-main:active{transform:translateY(1px)}
+.btn-ghost{background:transparent;color:var(--ice);padding:11px 22px;border:1px solid var(--ice)}
+.btn-ghost:hover{background:rgba(127,216,216,.12);transform:translateY(-2px)}
+#burger{display:none;width:42px;height:42px;background:none;border:1px solid var(--line);position:relative}
+#burger i,#burger i::before,#burger i::after{content:"";position:absolute;left:11px;width:18px;height:2px;background:var(--ivory);transition:.3s}
+#burger i{top:20px}
+#burger i::before{left:0;top:-6px}
+#burger i::after{left:0;top:6px}
+.nav.open #burger i{background:transparent}
+.nav.open #burger i::before{transform:translateY(6px) rotate(45deg)}
+.nav.open #burger i::after{transform:translateY(-6px) rotate(-45deg)}
+
+/* ---------- 布局公共 ---------- */
+main{position:relative;z-index:1}
+.wrap{max-width:1180px;margin:0 auto;padding:0 clamp(18px,4vw,40px)}
+section{position:relative;padding:clamp(90px,12vh,150px) 0}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.42em;color:var(--ice);margin-bottom:14px}
+.kicker::before{content:"";display:inline-block;width:26px;height:1px;background:var(--ice);vertical-align:middle;margin-right:12px;opacity:.7}
+h2{font-size:clamp(28px,4.4vw,50px);font-weight:800;letter-spacing:.04em;line-height:1.2}
+.sub{color:var(--weak);max-width:620px;margin-top:14px;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin:30px 0 26px}
+.chip{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--weak);background:var(--space-55);border:1px solid var(--line);padding:8px 16px;transition:.25s;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
+.chip:hover{color:var(--ivory);border-color:var(--purple)}
+.chip.on{color:var(--ice);border-color:var(--ice);background:rgba(127,216,216,.1)}
+.empty{display:none;text-align:center;color:var(--faint);font-family:var(--mono);letter-spacing:.2em;padding:50px 0;border:1px dashed var(--line)}
+.empty.show{display:block}
+.rv{opacity:0;transform:translateY(28px);transition:opacity .8s ease,transform .8s var(--ease)}
+.rv.in{opacity:1;transform:none}
+
+/* ---------- HERO ---------- */
+#hero{min-height:100vh;display:flex;align-items:center;padding:110px 0 60px}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,.72fr);gap:clamp(24px,4vw,60px);align-items:center;width:100%}
+.notice{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--purple);border:1px solid rgba(139,123,216,.45);background:rgba(139,123,216,.1);padding:7px 14px;margin-bottom:26px;clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px)}
+.notice i{width:6px;height:6px;background:var(--orange);border-radius:50%;animation:blink 1.6s ease infinite}
+@keyframes blink{50%{opacity:.15}}
+.hero-en{font-family:var(--mono);font-size:clamp(11px,1.2vw,13px);letter-spacing:.55em;color:var(--ice);margin-bottom:10px}
+#hero h1{font-size:clamp(38px,6.2vw,84px);font-weight:900;letter-spacing:.06em;line-height:1.12;background:linear-gradient(105deg,var(--ivory) 30%,var(--purple) 62%,var(--ice));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.slogan{margin-top:14px;font-size:clamp(16px,2vw,22px);letter-spacing:.34em;color:var(--ivory)}
+.slogan b{color:var(--orange);font-weight:700}
+.hero-desc{margin-top:18px;color:var(--weak);font-size:14.5px;max-width:520px}
+.hero-cta{display:flex;flex-wrap:wrap;gap:14px;margin-top:34px}
+.stats{display:flex;gap:clamp(22px,4vw,54px);margin-top:46px;flex-wrap:wrap}
+.stat b{font-family:var(--mono);font-size:clamp(26px,3vw,38px);font-weight:700;color:var(--ivory);font-variant-numeric:tabular-nums}
+.stat b em{font-style:normal;font-size:.5em;color:var(--orange);margin-left:4px}
+.stat span{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--faint);margin-top:2px}
+/* 今晚天象卡 */
+.sky-card{background:var(--space-72);border:1px solid var(--line);padding:22px 22px 18px;position:relative;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.sky-card::before{content:"";position:absolute;top:-1px;left:-1px;border-style:solid;border-width:12px 12px 0 0;border-color:var(--ice) transparent transparent transparent}
+.sky-card h3{font-family:var(--mono);font-size:11px;letter-spacing:.34em;color:var(--ice);font-weight:400;display:flex;justify-content:space-between;align-items:center}
+.sky-card h3 i{font-style:normal;color:var(--faint)}
+.sky-moon{display:flex;align-items:center;gap:16px;margin:18px 0;padding-bottom:16px;border-bottom:1px dashed var(--line)}
+.moon-svg{width:52px;height:52px;flex:none}
+.sky-moon b{font-size:17px;letter-spacing:.1em}
+.sky-moon span{display:block;font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.14em}
+.sky-rows{display:grid;gap:9px;font-size:13px}
+.sky-rows div{display:flex;justify-content:space-between;gap:12px}
+.sky-rows span{color:var(--faint);font-family:var(--mono);font-size:11px;letter-spacing:.18em;padding-top:2px}
+.sky-rows b{font-weight:500;text-align:right}
+.sky-rows .stars-idx{color:var(--orange);letter-spacing:.2em}
+.scroll-hint{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);font-family:var(--mono);font-size:11px;letter-spacing:.4em;color:var(--faint);display:flex;flex-direction:column;align-items:center;gap:8px;text-decoration:none}
+.scroll-hint:hover{color:var(--ice)}
+.scroll-hint i{width:1px;height:34px;background:linear-gradient(var(--ice),transparent);animation:drip 1.8s ease infinite}
+@keyframes drip{0%{transform:scaleY(0);transform-origin:top}55%{transform:scaleY(1);transform-origin:top}56%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* ---------- 馆藏图鉴 ---------- */
+.col-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(252px,1fr));gap:16px}
+.card{position:relative;background:var(--space-72);border:1px solid var(--line);padding:18px 18px 16px;cursor:pointer;transition:transform .35s var(--ease),border-color .35s,background .35s;overflow:hidden}
+.card::before{content:"";position:absolute;top:-1px;left:-1px;border-style:solid;border-width:11px 11px 0 0;border-color:var(--purple) transparent transparent transparent;transition:border-color .35s}
+.card:hover{transform:translateY(-5px);border-color:var(--purple);background:var(--space-90)}
+.card:hover::before{border-color:var(--orange) transparent transparent transparent}
+.card.active{border-color:var(--orange);background:var(--space-90)}
+.card.active::before{border-color:var(--orange) transparent transparent transparent}
+.card .no{font-family:var(--mono);font-size:11px;letter-spacing:.3em;color:var(--orange)}
+.card h3{font-size:19px;letter-spacing:.06em;margin:6px 0 1px;font-weight:700}
+.card .en{font-family:var(--mono);font-size:10px;letter-spacing:.3em;color:var(--faint)}
+.card .cat{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--ice);border:1px solid rgba(127,216,216,.4);padding:2px 8px;margin-top:10px}
+.card p{font-size:12.5px;color:var(--weak);margin-top:10px;line-height:1.65}
+.card .glyph{position:absolute;right:12px;top:14px;width:58px;height:58px;opacity:.9;transition:.4s var(--ease)}
+.card:hover .glyph{transform:rotate(14deg) scale(1.08)}
+.card.active .glyph{transform:rotate(14deg) scale(1.08)}
+.col-hint{margin-top:22px;font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--faint)}
+.col-hint b{color:var(--ice);font-weight:400}
+
+/* ---------- 展厅 ---------- */
+.hall-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.hall-card{position:relative;background:var(--space-72);border:1px solid var(--line);padding:24px 22px 20px;transition:.35s var(--ease);overflow:hidden}
+.hall-card::after{content:"";position:absolute;right:-1px;bottom:-1px;border-style:solid;border-width:0 0 14px 14px;border-color:transparent transparent var(--space) transparent}
+.hall-card:hover{transform:translateY(-5px);border-color:var(--purple)}
+.hall-card .h-no{font-family:var(--mono);font-size:11px;letter-spacing:.34em;color:var(--orange)}
+.hall-card h3{font-size:20px;letter-spacing:.05em;margin:8px 0 8px}
+.hall-card p{font-size:13px;color:var(--weak);min-height:66px}
+.hall-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.hall-meta span{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--faint);border:1px solid var(--line);padding:3px 9px}
+.hall-meta span b{color:var(--ice);font-weight:400}
+.hall-glyph{position:absolute;right:16px;top:18px;width:46px;height:46px;opacity:.75}
+
+/* ---------- 票务 ---------- */
+.tk-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:clamp(26px,4vw,52px);margin-top:40px;align-items:start}
+.panel{background:var(--space-72);border:1px solid var(--line);padding:clamp(20px,2.6vw,30px);position:relative;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.panel::before{content:"";position:absolute;top:-1px;left:-1px;border-style:solid;border-width:12px 12px 0 0;border-color:var(--orange) transparent transparent transparent}
+.panel h3{font-size:18px;letter-spacing:.14em;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.panel h3::after{content:"";flex:1;height:1px;background:var(--line)}
+.trow{display:flex;justify-content:space-between;gap:14px;padding:11px 2px;border-bottom:1px dashed var(--line);font-size:13.5px}
+.trow span{color:var(--faint);font-family:var(--mono);font-size:11px;letter-spacing:.16em;padding-top:3px;flex:none}
+.trow b{font-weight:500;text-align:right}
+.trow .price{font-family:var(--mono);color:var(--orange);font-variant-numeric:tabular-nums}
+.tk-note{margin-top:16px;font-size:12px;color:var(--faint);line-height:1.9}
+.tk-note b{color:var(--ice);font-weight:400}
+/* 表单 */
+.f-row{margin-bottom:18px}
+.f-row label.lab{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.3em;color:var(--weak);margin-bottom:8px}
+.f-row label.lab i{font-style:normal;color:var(--orange);margin-left:4px}
+.f-row input[type=text],.f-row input[type=tel],.f-row input[type=date],.f-row select{width:100%;background:rgba(255,255,255,.045);border:1px solid var(--line);color:var(--ivory);padding:12px 14px;font-size:14px;font-family:inherit;letter-spacing:.05em;transition:.25s;border-radius:0;-webkit-appearance:none;appearance:none}
+.f-row select{background-image:linear-gradient(45deg,transparent 50%,var(--ice) 50%),linear-gradient(135deg,var(--ice) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;background-repeat:no-repeat}
+.f-row input:focus,.f-row select:focus{border-color:var(--ice);outline:none;background-color:rgba(127,216,216,.05)}
+.f-row input::-webkit-calendar-picker-indicator{filter:invert(.85) sepia(.3)}
+.f-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.err{display:none;color:var(--orange);font-size:12px;margin-top:6px;letter-spacing:.05em}
+.err.show{display:block}
+.segs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.seg{position:relative}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:flex;flex-direction:column;gap:2px;border:1px solid var(--line);padding:10px 12px;cursor:pointer;transition:.25s;font-size:13px;letter-spacing:.04em}
+.seg span small{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.1em}
+.seg:hover span{border-color:var(--purple)}
+.seg input:checked+span{border-color:var(--orange);background:rgba(242,112,89,.13)}
+.seg input:checked+span small{color:var(--orange)}
+.seg input:focus-visible+span{outline:2px solid var(--ice);outline-offset:2px}
+.stepper{display:flex;border:1px solid var(--line)}
+.stepper button{width:46px;height:47px;background:rgba(255,255,255,.045);border:0;color:var(--ice);font-size:20px;transition:.2s}
+.stepper button:hover{background:rgba(127,216,216,.14)}
+.stepper output{flex:1;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:17px;border-left:1px solid var(--line);border-right:1px solid var(--line);font-variant-numeric:tabular-nums}
+.dome-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.dome-row .ck{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13.5px}
+.dome-row .ck input{width:16px;height:16px;accent-color:var(--orange)}
+.dome-row select{width:auto;min-width:130px;background-color:rgba(255,255,255,.045);border:1px solid var(--line);color:var(--ivory);padding:9px 12px;font-family:inherit}
+.f-total{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);margin-top:22px;padding-top:16px}
+.f-total span{font-family:var(--mono);font-size:11px;letter-spacing:.26em;color:var(--faint)}
+.f-total b{font-family:var(--mono);font-size:26px;color:var(--orange);font-variant-numeric:tabular-nums}
+.f-total b i{font-style:normal;font-size:14px;margin-right:2px}
+.f-submit{width:100%;margin-top:18px;padding:15px;font-size:15px;letter-spacing:.4em;text-indent:.4em}
+#formTip{margin-top:12px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--faint);text-align:center}
+/* 成功态 */
+#bookOk{display:none;text-align:center;padding:14px 6px}
+#bookOk.show{display:block}
+#bookOk .ok-mark{width:60px;height:60px;margin:0 auto 16px}
+#bookOk h4{font-size:22px;letter-spacing:.2em;margin-bottom:8px}
+#bookOk .ok-sub{font-size:13px;color:var(--weak)}
+.ok-code{font-family:var(--mono);font-size:clamp(19px,2.4vw,26px);letter-spacing:.22em;color:var(--ice);border:1px dashed rgba(127,216,216,.5);background:rgba(127,216,216,.07);padding:14px 10px;margin:20px 0}
+.ok-sum{text-align:left;margin:0 0 20px}
+#ok-again{background:transparent;border:1px solid var(--line);color:var(--weak);padding:11px 26px;font-size:12.5px;letter-spacing:.24em;transition:.25s}
+#ok-again:hover{border-color:var(--ice);color:var(--ice)}
+
+/* ---------- 信息面板（3D 聚焦档案） ---------- */
+#panel{position:fixed;top:88px;right:26px;bottom:26px;width:372px;max-width:calc(100vw - 40px);z-index:60;background:var(--space-90);border:1px solid var(--line);padding:24px 24px 20px;transform:translateX(calc(100% + 60px));transition:transform .55s var(--ease);overflow-y:auto;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#panel.open{transform:none}
+#panel::before{content:"";position:absolute;top:-1px;left:-1px;border-style:solid;border-width:13px 13px 0 0;border-color:var(--ice) transparent transparent transparent}
+#p-close{position:absolute;top:14px;right:14px;width:36px;height:36px;background:none;border:1px solid var(--line);color:var(--weak);font-size:15px;transition:.25s}
+#p-close:hover{border-color:var(--orange);color:var(--orange);transform:rotate(90deg)}
+#p-no{font-family:var(--mono);font-size:11px;letter-spacing:.34em;color:var(--orange)}
+#p-name{font-size:27px;font-weight:800;letter-spacing:.06em;margin-top:8px}
+#p-en{font-family:var(--mono);font-size:11px;letter-spacing:.34em;color:var(--faint);margin-top:2px}
+#p-tags{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+#p-tags span{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--ice);border:1px solid rgba(127,216,216,.4);padding:3px 9px}
+#p-coord{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--purple);margin-top:10px}
+#p-desc{font-size:13.5px;color:var(--weak);margin-top:14px;line-height:1.8}
+.p-dl{margin-top:18px;border-top:1px solid var(--line)}
+.p-dl div{display:flex;justify-content:space-between;gap:12px;padding:10px 2px;border-bottom:1px dashed var(--line);font-size:13px}
+.p-dl span{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;color:var(--faint);padding-top:3px;flex:none}
+.p-dl b{font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
+#p-goto{margin-top:20px;width:100%;background:transparent;border:1px solid var(--ice);color:var(--ice);padding:12px;font-size:12.5px;letter-spacing:.3em;transition:.25s}
+#p-goto:hover{background:rgba(127,216,216,.12)}
+.p-focus-tip{margin-top:14px;font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--faint);text-align:center}
+.p-focus-tip i{display:inline-block;width:6px;height:6px;background:var(--orange);border-radius:50%;margin-right:8px;animation:blink 1.4s infinite}
+
+/* ---------- HUD / 悬浮件 ---------- */
+#tip{position:fixed;z-index:70;pointer-events:none;font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--ivory);background:var(--space-90);border:1px solid var(--purple);padding:7px 12px;opacity:0;transform:translateY(6px);transition:opacity .2s,transform .2s;white-space:nowrap}
+#tip.on{opacity:1;transform:none}
+#tip.pick{pointer-events:auto;cursor:pointer}
+#tip b{color:var(--orange);font-weight:400;margin-right:8px}
+#belt-hud{position:fixed;left:50%;bottom:78px;transform:translate(-50%,14px);z-index:40;display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:11px;letter-spacing:.4em;text-indent:.1em;color:var(--ice);background:var(--space-72);border:1px solid rgba(127,216,216,.4);padding:10px 20px;opacity:0;transition:.5s;pointer-events:none;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+#belt-hud.on{opacity:1;transform:translate(-50%,0)}
+#belt-hud::before{content:"";width:8px;height:8px;background:var(--orange);clip-path:polygon(50% 0,100% 100%,0 100%);animation:blink 1s infinite}
+#toTop{position:fixed;right:22px;bottom:96px;z-index:45;width:46px;height:46px;background:var(--space-72);border:1px solid var(--line);color:var(--weak);font-size:15px;opacity:0;visibility:hidden;transition:.35s;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
+#toTop.on{opacity:1;visibility:visible}
+#toTop:hover{border-color:var(--ice);color:var(--ice);transform:translateY(-4px)}
+#mobile-bar{position:fixed;left:0;right:0;bottom:0;z-index:55;display:none;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:var(--space-90);border-top:1px solid var(--line);transform:translateY(110%);transition:transform .4s var(--ease)}
+#mobile-bar.show{transform:none}
+#mobile-bar .btn{width:100%;padding:13px}
+
+/* ---------- 页脚 ---------- */
+footer{position:relative;z-index:1;border-top:1px solid var(--line);background:rgba(18,15,34,.82);padding:60px 0 0;margin-top:40px}
+.ft-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:34px;padding-bottom:44px}
+.ft-brand .logo{margin-bottom:14px}
+.ft-brand p{font-size:12.5px;color:var(--faint);max-width:280px}
+.ft-col h4{font-family:var(--mono);font-size:11px;letter-spacing:.32em;color:var(--ice);font-weight:400;margin-bottom:14px}
+.ft-col li{list-style:none;font-size:12.5px;color:var(--weak);padding:4px 0}
+.ft-col li b{color:var(--faint);font-weight:400;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;margin-right:8px}
+.ft-bottom{border-top:1px solid var(--line);padding:16px 0;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--faint)}
+#ft-tris{color:var(--purple)}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1200px){
+  .hall-grid{grid-template-columns:repeat(2,1fr)}
+  .ft-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:768px){
+  .nav-links{position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;background:var(--space-90);border-bottom:1px solid var(--line);padding:12px 22px 18px;gap:4px;display:none}
+  .nav.open .nav-links{display:flex}
+  .nav-links a{padding:11px 4px;border-bottom:1px dashed var(--line);font-size:14px}
+  .nav>.btn{display:none}
+  #burger{display:block}
+  .hero-grid{grid-template-columns:1fr;gap:34px}
+  .sky-card{max-width:430px}
+  .hall-grid{grid-template-columns:repeat(2,1fr)}
+  .tk-grid{grid-template-columns:1fr}
+  #panel{top:auto;left:0;right:0;bottom:0;width:auto;max-width:none;max-height:62vh;border-left:0;border-right:0;transform:translateY(110%)}
+  #panel.open{transform:none}
+  #mobile-bar{display:block}
+  #toTop{bottom:86px;right:14px}
+  #belt-hud{bottom:110px;width:max-content;max-width:92vw}
+  #tip{display:none}
+  footer{padding-bottom:64px}
+}
+@media (max-width:375px){
+  .hall-grid{grid-template-columns:1fr}
+  .col-grid{grid-template-columns:1fr}
+  .segs{grid-template-columns:1fr}
+  .f-2col{grid-template-columns:1fr}
+  .stats{gap:20px}
+  #hero h1{font-size:34px}
+  .slogan{letter-spacing:.2em}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+  html{scroll-behavior:auto}
+  .rv{opacity:1;transform:none}
+  .scroll-hint i{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- 加载屏 -->
+<div id="loader" role="status" aria-label="加载中">
+  <svg class="mark" viewBox="0 0 74 74" aria-hidden="true">
+    <polygon points="37,6 66,54 8,54" fill="none" stroke="#8B7BD8" stroke-width="1.6"/>
+    <polygon points="37,20 55,52 19,52" fill="none" stroke="#7FD8D8" stroke-width="1.2"/>
+    <polygon points="37,34 46,50 28,50" fill="#F27059" opacity=".9"/>
+  </svg>
+  <h1>穹象天文博物馆</h1>
+  <div id="ld-bar"><i></i></div>
+  <div id="ld-pct">00%</div>
+  <div id="ld-status">正在校准轨道…</div>
+</div>
+
+<!-- 3D 画布（WebGL 不可用时隐藏，启用 SVG 降级舞台） -->
+<canvas id="gl" aria-hidden="true"></canvas>
+<div id="fb-stage" aria-hidden="true"></div>
+
+<!-- 导航 -->
+<header class="nav" id="nav" data-block>
+  <a class="logo" href="#hero" aria-label="回到顶部">
+    <svg viewBox="0 0 26 26" aria-hidden="true"><polygon points="13,2 24,22 2,22" fill="none" stroke="#8B7BD8" stroke-width="1.6"/><polygon points="13,9 19,20 7,20" fill="#F27059" opacity=".85"/><circle cx="20" cy="6" r="1.6" fill="#7FD8D8"/></svg>
+    <span><b>穹象天文博物馆</b><span>ASTRAEUM</span></span>
+  </a>
+  <nav class="nav-links" id="navLinks">
+    <a href="#hero" class="nl on">首页</a>
+    <a href="#collection" class="nl">馆藏图鉴</a>
+    <a href="#halls" class="nl">常设展厅</a>
+    <a href="#tickets" class="nl">参观票务</a>
+  </nav>
+  <a class="btn btn-main btn-cut" href="#tickets">购票预约</a>
+  <button id="burger" aria-label="展开菜单"><i></i></button>
+</header>
+
+<main>
+  <!-- ============ HERO ============ -->
+  <section id="hero">
+    <div class="wrap hero-grid" data-block>
+      <div>
+        <span class="notice"><i></i>当期特展 ·《碎裂的星空》低多边形宇宙特辑 · SALLE 04</span>
+        <p class="hero-en">ASTRAEUM · LOW-POLY COSMOS</p>
+        <h1>穹象天文博物馆</h1>
+        <p class="slogan">把<b>宇宙</b>装进一座馆</p>
+        <p class="hero-desc">十四件低模天体档案，六座常设展厅，一条可供滚动的星轨。从熔橙的太阳出发，穿越卡伊珀碎石带，最终降落在观测台的山脊上。</p>
+        <div class="hero-cta">
+          <a class="btn btn-main btn-cut" href="#collection">开始漫游 ↓</a>
+          <a class="btn btn-ghost btn-cut" href="#tickets">预约参观</a>
+        </div>
+        <div class="stats">
+          <div class="stat"><b><span data-count="14">0</span><em>件</em></b><span>馆藏档案</span></div>
+          <div class="stat"><b><span data-count="6">0</span><em>座</em></b><span>常设展厅</span></div>
+          <div class="stat"><b><span data-count="138">0</span><em>亿年</em></b><span>旅程起点</span></div>
+        </div>
+      </div>
+      <aside class="sky-card rv">
+        <h3>今晚天象<i>2026-09-08</i></h3>
+        <div class="sky-moon">
+          <svg class="moon-svg" viewBox="0 0 52 52" aria-hidden="true">
+            <circle cx="26" cy="26" r="20" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+            <circle cx="26" cy="26" r="16" fill="#3A3160"/>
+            <path d="M26 10 A16 16 0 0 1 26 42 A10 16 0 0 0 26 10Z" fill="#F3EFE6" opacity=".92"/>
+            <polygon points="18,20 22,17 21,22" fill="#F3EFE6" opacity=".5"/>
+          </svg>
+          <div><b>盈凸月</b><span>照亮 62% · 月龄 9.4 日</span></div>
+        </div>
+        <div class="sky-rows">
+          <div><span>日落 / 月出</span><b>18:42 / 21:07</b></div>
+          <div><span>可见行星</span><b>木星 · 土星 · 火星</b></div>
+          <div><span>流星雨</span><b>英仙座 ε · 微弱</b></div>
+          <div><span>观星指数</span><b class="stars-idx">★★★★☆ 适宜夜场</b></div>
+        </div>
+      </aside>
+    </div>
+    <a class="scroll-hint" href="#collection">滚动 · 穿越碎石带<i></i></a>
+  </section>
+
+  <!-- ============ 馆藏图鉴 ============ -->
+  <section id="collection">
+    <div class="wrap">
+      <p class="kicker rv">COLLECTION · 数字馆藏</p>
+      <h2 class="rv">十四件天体档案</h2>
+      <p class="sub rv">每件档案对应展厅内一座低多边形装置。点击档案卡，镜头将推近对应天体，线框会为它的切面点亮——也可以直接在星空里点击它们。</p>
+      <div class="chips" id="colChips" data-block role="tablist" aria-label="馆藏分类筛选"></div>
+      <div class="col-grid" id="colGrid" data-block></div>
+      <div class="empty" id="colEmpty">该分类下暂无档案</div>
+      <p class="col-hint rv">提示：分类筛选后档案仍在星空之中 · <b>点击场景天体同样可以聚焦</b></p>
+      <noscript><p class="sub">馆藏图鉴需要启用 JavaScript 才能加载交互档案，敬请谅解。</p></noscript>
+    </div>
+  </section>
+
+  <!-- ============ 常设展厅 ============ -->
+  <section id="halls">
+    <div class="wrap">
+      <p class="kicker rv">EXHIBITION · 常设展厅</p>
+      <h2 class="rv">六座展厅，一条宇宙时间线</h2>
+      <p class="sub rv">从大爆炸的奇点出发，沿黄道带漫游八大行星，在星云花园驻足，最后被引力剧场弯曲的时空轻轻接住。</p>
+      <div class="chips" id="hallChips" data-block></div>
+      <div class="hall-grid" id="hallGrid" data-block></div>
+      <div class="empty" id="hallEmpty">该楼层暂无展厅</div>
+    </div>
+  </section>
+
+  <!-- ============ 参观票务 ============ -->
+  <section id="tickets">
+    <div class="wrap">
+      <p class="kicker rv">PLAN YOUR VISIT · 参观与票务</p>
+      <h2 class="rv">预约一次宇宙着陆</h2>
+      <p class="sub rv">实名预约入馆，每时段限 2,000 人，可提前 7 天预约。周一闭馆（法定节假日除外）。</p>
+      <div class="tk-grid">
+        <div class="panel rv" data-block>
+          <h3>开放时间与票价</h3>
+          <div class="trow"><span>周二至周日</span><b>9:00 – 17:00（16:00 停止入馆）</b></div>
+          <div class="trow"><span>闭馆日</span><b>周一闭馆（法定节假日除外）</b></div>
+          <div class="trow"><span>夜场观星</span><b>周五、周六 19:00 – 21:30</b></div>
+          <div class="trow"><span>穹幕影院</span><b>10:30 / 13:30 / 15:30 · 每场 45 分钟</b></div>
+          <div class="trow"><span>成人票</span><b class="price">¥60 / 人</b></div>
+          <div class="trow"><span>学生 · 60 岁以上长者</span><b class="price">¥30 / 人</b></div>
+          <div class="trow"><span>1.2 米以下儿童</span><b>免票（需成人陪同）</b></div>
+          <div class="trow"><span>夜场观星</span><b class="price">¥88 / 人</b></div>
+          <div class="trow"><span>团体（20 人起）</span><b class="price">八折 · ¥48 / 人</b></div>
+          <p class="tk-note">
+            地址：<b>星港大道 88 号 穹象天文博物馆</b>（虚构）<br>
+            交通：地铁 9 号线「天文馆站」B 口步行 300 米<br>
+            服务：无障碍通道全馆覆盖 / 行李寄存 / 母婴室 / 讲解器租赁 ¥20<br>
+            穹幕加购：¥30 / 人 · 需与入馆时段同日
+          </p>
+        </div>
+        <div class="panel rv" data-block>
+          <form id="bookForm" novalidate>
+            <h3>门票预约</h3>
+            <div class="f-row">
+              <label class="lab" for="f-name">预订人姓名<i>*</i></label>
+              <input type="text" id="f-name" placeholder="请输入与身份证一致的姓名" autocomplete="name">
+              <p class="err" id="e-name">请填写至少 2 个字的姓名</p>
+            </div>
+            <div class="f-row">
+              <label class="lab" for="f-tel">手机号<i>*</i></label>
+              <input type="tel" id="f-tel" placeholder="11 位大陆手机号" maxlength="11" inputmode="numeric" autocomplete="tel">
+              <p class="err" id="e-tel">手机号格式不正确</p>
+            </div>
+            <div class="f-row f-2col">
+              <div>
+                <label class="lab" for="f-date">参观日期<i>*</i></label>
+                <input type="date" id="f-date">
+                <p class="err" id="e-date">请选择 7 天内、非周一的日期</p>
+              </div>
+              <div>
+                <label class="lab">人数<i>*</i></label>
+                <div class="stepper">
+                  <button type="button" id="p-dec" aria-label="减少人数">−</button>
+                  <output id="f-people">2</output>
+                  <button type="button" id="p-inc" aria-label="增加人数">＋</button>
+                </div>
+                <p class="err" id="e-people">团体票需 20 人起订</p>
+              </div>
+            </div>
+            <div class="f-row">
+              <span class="lab">入馆时段<i>*</i></span>
+              <div class="segs" id="slotSegs">
+                <label class="seg"><input type="radio" name="slot" value="am"><span>上午场<small>9:00 – 12:00</small></span></label>
+                <label class="seg"><input type="radio" name="slot" value="pm"><span>下午场<small>13:00 – 15:00</small></span></label>
+                <label class="seg"><input type="radio" name="slot" value="night"><span>夜场观星<small>周五·六 19:00 – 21:30</small></span></label>
+              </div>
+              <p class="err" id="e-slot">请选择一个入馆时段</p>
+            </div>
+            <div class="f-row">
+              <label class="lab" for="f-type">票种</label>
+              <select id="f-type">
+                <option value="adult">成人票 ¥60</option>
+                <option value="conc">学生 / 长者票 ¥30</option>
+                <option value="night">夜场观星票 ¥88</option>
+                <option value="group">团体票（20 人起）¥48</option>
+              </select>
+            </div>
+            <div class="f-row">
+              <span class="lab">加购 · 穹顶天象影院</span>
+              <div class="dome-row">
+                <label class="ck"><input type="checkbox" id="f-dome">加购穹幕场次（¥30 / 人）</label>
+                <select id="f-dome-time" disabled>
+                  <option>10:30</option><option>13:30</option><option>15:30</option>
+                </select>
+              </div>
+            </div>
+            <div class="f-total">
+              <span>当前合计</span>
+              <b><i>¥</i><span id="f-total">120</span></b>
+            </div>
+            <button type="submit" class="btn btn-main btn-cut f-submit">确认预约</button>
+            <p id="formTip">提交后生成预约码，凭码与身份证入馆</p>
+          </form>
+          <div id="bookOk">
+            <svg class="ok-mark" viewBox="0 0 60 60" aria-hidden="true">
+              <polygon points="30,4 56,50 4,50" fill="none" stroke="#7FD8D8" stroke-width="1.6"/>
+              <polygon points="30,40 26,32 32,30 36,36" fill="none" stroke="#F27059" stroke-width="2.4" stroke-linejoin="round"/>
+            </svg>
+            <h4>预约成功</h4>
+            <p class="ok-sub">请保存预约码，入馆时向闸机出示</p>
+            <div class="ok-code" id="ok-code">AST-00000000-0000</div>
+            <div class="ok-sum" id="ok-sum"></div>
+            <button id="ok-again" type="button">再预约一单</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 3D 聚焦信息面板 -->
+<aside id="panel" data-block aria-label="天体档案">
+  <button id="p-close" aria-label="关闭档案">✕</button>
+  <p id="p-no">NO.00</p>
+  <h3 id="p-name">—</h3>
+  <p id="p-en">—</p>
+  <div id="p-tags"></div>
+  <p id="p-coord">—</p>
+  <p id="p-desc">—</p>
+  <div class="p-dl">
+    <div><span>发现 / 认证</span><b id="p-year">—</b></div>
+    <div><span>距地距离</span><b id="p-dist">—</b></div>
+    <div><span>所在展厅</span><b id="p-hall">—</b></div>
+  </div>
+  <button id="p-goto">前往所在展厅 →</button>
+  <p class="p-focus-tip"><i></i>镜头已推近 · 线框已点亮切面</p>
+</aside>
+
+<!-- HUD -->
+<div id="tip" aria-hidden="true"></div>
+<div id="belt-hud">正在穿越 · 卡伊珀碎石带 KUIPER BELT</div>
+<button id="toTop" aria-label="返回顶部">↑</button>
+<div id="mobile-bar" data-block><a class="btn btn-main btn-cut" href="#tickets">购票预约 · 每时限 2000 人</a></div>
+
+<!-- 页脚 -->
+<footer data-block>
+  <div class="wrap">
+    <div class="ft-grid">
+      <div class="ft-brand">
+        <a class="logo" href="#hero">
+          <svg viewBox="0 0 26 26" aria-hidden="true"><polygon points="13,2 24,22 2,22" fill="none" stroke="#8B7BD8" stroke-width="1.6"/><polygon points="13,9 19,20 7,20" fill="#F27059" opacity=".85"/><circle cx="20" cy="6" r="1.6" fill="#7FD8D8"/></svg>
+          <span><b>穹象天文博物馆</b><span>ASTRAEUM</span></span>
+        </a>
+        <p>「把宇宙装进一座馆。」一座以低多边形重新丈量星空的天文博物馆，自 2031 年起向公众开放。</p>
+      </div>
+      <div class="ft-col">
+        <h4>参观</h4>
+        <ul>
+          <li><b>地址</b>星港大道 88 号</li>
+          <li><b>地铁</b>9 号线「天文馆站」B 口</li>
+          <li><b>开放</b>周二至周日 9:00–17:00</li>
+          <li><b>夜场</b>周五、周六 19:00–21:30</li>
+        </ul>
+      </div>
+      <div class="ft-col">
+        <h4>服务</h4>
+        <ul>
+          <li><b>设施</b>无障碍通道全馆覆盖</li>
+          <li><b>寄存</b>行李寄存 · 母婴室</li>
+          <li><b>讲解</b>讲解器租赁 ¥20</li>
+          <li><b>团体</b>20 人以上预约八折</li>
+        </ul>
+      </div>
+      <div class="ft-col">
+        <h4>联系</h4>
+        <ul>
+          <li><b>电话</b>400-000-0000</li>
+          <li><b>公众号</b>穹象天文博物馆</li>
+          <li><b>邮箱</b>hello@astraeum.museum</li>
+          <li><b>招募</b>志愿讲解员 · 常年开放</li>
+        </ul>
+      </div>
+    </div>
+    <div class="ft-bottom">
+      <span>© <span id="ft-year">2026</span> 穹象天文博物馆 ASTRAEUM · 星港大道 88 号 · 本页为设计演示，数据均为虚构</span>
+      <span id="ft-tris">RENDER · LOW-POLY</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+'use strict';
+/* ================= 工具 ================= */
+var qs=function(s){return document.querySelector(s)};
+var clamp=function(v,a,b){return v<a?a:(v>b?b:v)};
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+var REDUCED=false;
+try{REDUCED=window.matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
+var isTouch=false;
+try{isTouch=window.matchMedia('(pointer: coarse)').matches}catch(e){}
+var LOW=(function(){ // 低端机 / 移动端：面数减半、DPR 钳制更紧
+  try{if(navigator.deviceMemory&&navigator.deviceMemory<4)return true}catch(e){}
+  return window.innerWidth<769||isTouch;
+})();
+var DETAIL=LOW?1:2;
+var BELT_N=LOW?66:132;
+var STAR_N=LOW?200:420;
+
+/* ================= 调色板（六色锁板） ================= */
+var PAL={space:'#171331',purple:'#8B7BD8',orange:'#F27059',ice:'#7FD8D8',ivory:'#F3EFE6',dim:'#3A3160',dim2:'#2A2450'};
+
+/* ================= 馆藏数据（14 件） ================= */
+var BODIES=[
+{no:'01',name:'太阳',en:'SOL',cat:'恒星',kind:'sun',r:5.6,c:['orange','orange'],year:'远古已知',dist:'1 AU · 约 1.496 亿 km',hall:'SALLE 02 · 太阳系漫游厅',coord:'RA — / DEC —（我们的一切）',desc:'距离最近的一颗 G 型主序星，占太阳系总质量的 99.86%。馆内收藏 1:10 亿比例低模装置，切面按光谱测温着色，发光材质常亮。'},
+{no:'02',name:'水星',en:'MERCURY',cat:'行星',kind:'rock',r:1.7,c:['purple','space'],year:'公元前 14 世纪已有记录',dist:'7,790 万 km',hall:'SALLE 02 · 太阳系漫游厅',coord:'RA 03h 12m / DEC +16°40′',desc:'昼夜温差近 600℃ 的焦土信使。低模外壳以随机三角面与顶点微扰，模拟遍布陨击坑的崎岖表面。'},
+{no:'03',name:'金星',en:'VENUS',cat:'行星',kind:'rock',r:2.5,c:['orange','ivory'],year:'1610 年 · 伽利略记录相位',dist:'4,100 万 km',hall:'SALLE 02 · 太阳系漫游厅',coord:'RA 01h 47m / DEC −07°24′',desc:'被硫酸云包裹的失控温室，表面温度 465℃。切面自云顶的象牙亮色向熔橙过渡。'},
+{no:'04',name:'地球与月球',en:'EARTH & LUNA',cat:'行星',kind:'earth',r:2.6,c:['ice','purple'],year:'— 我们的坐标 —',dist:'0 km（你在这里）',hall:'SALLE 02 · 太阳系漫游厅',coord:'RA — / DEC —',desc:'已知唯一存在生命的双星系统。月球装置沿低模轨道环行一周约 27.3 天，请勿投喂。'},
+{no:'05',name:'火星 · 奥林帕斯山',en:'OLYMPUS MONS',cat:'行星',kind:'mars',r:2.1,c:['orange','space'],year:'1879 年 · 斯基亚帕雷利绘制',dist:'5,500 万 km',hall:'SALLE 02 · 太阳系漫游厅',coord:'RA 04h 28m / DEC −16°02′',desc:'太阳系最高火山，高约 22 千米，相当于两座半珠峰叠在一起。装置以凸起的三角锥群重现山体。'},
+{no:'06',name:'木星 · 大红斑',en:'GREAT RED SPOT',cat:'行星',kind:'jupiter',r:3.6,c:['orange','purple'],year:'1610 年 · 伽利略发现卫星',dist:'6.3 亿 km',hall:'SALLE 02 · 太阳系漫游厅',coord:'RA 08h 58m / DEC +21°30′',desc:'持续了三百多年的巨型风暴。条纹以熔橙与暮紫双色切面带交替排布，大红斑嵌于南回归线。'},
+{no:'07',name:'土星环',en:'RINGS OF SATURN',cat:'行星',kind:'saturn',r:2.6,c:['purple','ice'],year:'1610 年 · 伽利略首见',dist:'13 亿 km',hall:'SALLE 02 · 太阳系漫游厅',coord:'RA 21h 32m / DEC −14°35′',desc:'宽 28 万公里、厚仅数十米的冰之圆盘。低模环面由上百枚三角面拼成，倾角 26.7°。'},
+{no:'08',name:'天王星',en:'URANUS',cat:'行星',kind:'uranus',r:2.9,c:['ice','ivory'],year:'1781 年 · 赫歇尔发现',dist:'27 亿 km',hall:'SALLE 02 · 太阳系漫游厅',coord:'RA 02h 39m / DEC +61°30′',desc:'躺着自转的冰巨星，自转轴倾角 97.8°。本装置按实测倾角横置，请歪头观看。'},
+{no:'09',name:'海王星 · 大暗斑',en:'GREAT DARK SPOT',cat:'行星',kind:'neptune',r:2.8,c:['purple','space'],year:'1846 年 · 勒维耶笔尖推算',dist:'43 亿 km',hall:'SALLE 02 · 太阳系漫游厅',coord:'RA 22h 20m / DEC −11°22′',desc:'风速 2,100 km/h 的深蓝世界。切面之间嵌入暗色三角碎片，标记风暴的位置。'},
+{no:'10',name:'哈雷彗星',en:'1P/HALLEY',cat:'彗星',kind:'comet',r:1.1,c:['ice','ivory'],year:'公元前 240 年 · 《史记》记载',dist:'0.59 AU（1986 年回归时）',hall:'SALLE 02 · 太阳系漫游厅',coord:'轨道倾角 162° · 逆行',desc:'76 年一归的访客，下一次回归在 2061 年。彗尾以冰青三角碎片沿背阳方向铺开。'},
+{no:'11',name:'猎户座大星云',en:'M42',cat:'星云',kind:'nebula',r:3.4,c:['purple','orange'],year:'1610 年 · 法布里修斯记录',dist:'1,344 光年',hall:'SALLE 04 · 星云花园',coord:'RA 05h 35m / DEC −05°23′',desc:'距离地球 1,344 光年的恒星育婴房，也是肉眼可见的弥漫光斑。装置以双色切面云团缓慢呼吸。'},
+{no:'12',name:'蟹状星云',en:'M1',cat:'星云',kind:'m1',r:2.8,c:['orange','purple'],year:'1054 年 · 宋至和元年',dist:'6,500 光年',hall:'SALLE 03 · 恒星的一生',coord:'RA 05h 34m / DEC +22°01′',desc:'公元 1054 年超新星爆发的遗骸，《宋史》称「天关客星」。中心脉冲星装置每秒自转 30 圈的缩影。'},
+{no:'13',name:'创生之柱',en:'PILLARS OF CREATION',cat:'星云',kind:'pillars',r:3.6,c:['purple','ice'],year:'1995 年 · 哈勃拍摄',dist:'6,500 光年',hall:'SALLE 04 · 星云花园',coord:'RA 18h 18m / DEC −13°49′',desc:'鹰状星云中正在坍缩成恒星的柱状云气，最高一柱约 4 光年。装置以三根低模气柱复现。'},
+{no:'14',name:'人马座 A*',en:'SGR A*',cat:'深空',kind:'blackhole',r:2.2,c:['space','orange'],year:'1974 年发现 / 2022 年成像',dist:'26,000 光年',hall:'SALLE 05 · 引力与黑洞剧场',coord:'RA 17h 45m / DEC −29°00′',desc:'银河系中心 430 万倍太阳质量的超大质量黑洞。吸积盘以熔橙切面环高速旋转，请勿越过虚线。'}
+];
+
+/* ================= 展厅数据（6 座） ================= */
+var HALLS=[
+{no:'SALLE 01',name:'序厅 · 回到大爆炸',floor:'1F',age:'全年龄',count:'关联藏品 3 件',desc:'138 亿年从一粒奇点开始。穿过一面由低模三角拼成的「普朗克之墙」，时间与空间在这里同时启动。'},
+{no:'SALLE 02',name:'太阳系漫游厅',floor:'1F',age:'6 岁 +',count:'关联藏品 9 件',desc:'八大行星与它们的卫星们。1:10 亿比例的低模行星沿黄道带列队，脚下是可供漫步的轨道刻度。'},
+{no:'SALLE 03',name:'恒星的一生',floor:'2F',age:'8 岁 +',count:'关联藏品 4 件',desc:'从星尘到超新星。跟随一颗恒星的完整切面编年史：诞生、主序、膨胀、坍缩，以及蟹状星云那样的余烬。'},
+{no:'SALLE 04',name:'星云花园',floor:'2F',age:'全年龄',count:'关联藏品 3 件',desc:'宇宙中正在诞生的云。当期特展《碎裂的星空》正在此展出，创生之柱与初生恒星同台呼吸。'},
+{no:'SALLE 05',name:'引力与黑洞剧场',floor:'3F',age:'12 岁 +',count:'关联藏品 2 件',desc:'时空如何被弯曲。环形剧场每 20 分钟上演一次引力透镜秀，散场时请确认自己的质量没有丢失。'},
+{no:'SALLE 06',name:'穹顶天象影院 + 屋顶观星台',floor:'3F',age:'全年龄',count:'场次 10:30 / 13:30 / 15:30',desc:'白天看穹幕，夜里看真星。穹幕每场 45 分钟需单独预约；夜场观星于周五、周六 19:00–21:30 开放。'}
+];
+
+/* ================= DOM 构建 ================= */
+var colGrid=qs('#colGrid'),hallGrid=qs('#hallGrid');
+var cards=[];
+
+function triGlyph(seed,sz){ // 低三角插画（程序生成，非外链图片）
+  var rnd=mulberry32(seed),n=9,pts=[],s='';
+  for(var i=0;i<n;i++){var a=i/n*Math.PI*2,r=(sz===46?15:21)+rnd()*8;pts.push([sz/2+Math.cos(a)*r,sz/2+Math.sin(a)*r]);}
+  var cols=[PAL.purple,PAL.orange,PAL.ice,PAL.dim];
+  for(var j=0;j<n;j++){
+    var p=pts[j],q=pts[(j+1)%n];
+    s+='<polygon points="'+(sz/2)+','+(sz/2)+' '+p[0].toFixed(1)+','+p[1].toFixed(1)+' '+q[0].toFixed(1)+','+q[1].toFixed(1)+'" fill="'+cols[j%4]+'" stroke="rgba(255,255,255,.28)" stroke-width=".6" opacity="'+(.5+rnd()*.5).toFixed(2)+'"/>';
+  }
+  return '<svg class="glyph" style="width:'+sz+'px;height:'+sz+'px" viewBox="0 0 '+sz+' '+sz+'" aria-hidden="true">'+s+'</svg>';
+}
+
+function buildCollection(){
+  var cats=['全部','恒星','行星','星云','彗星','深空'];
+  var chipsEl=qs('#colChips');
+  cats.forEach(function(c,i){
+    var b=document.createElement('button');
+    b.className='chip'+(i===0?' on':'');b.type='button';b.textContent=c;b.dataset.cat=c;
+    b.addEventListener('click',function(){
+      chipsEl.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on');filterCards(c);
+    });
+    chipsEl.appendChild(b);
+  });
+  BODIES.forEach(function(d,i){
+    var el=document.createElement('article');
+    el.className='card rv';el.dataset.cat=d.cat;el.tabIndex=0;
+    el.setAttribute('role','button');el.setAttribute('aria-label','查看档案 '+d.name);
+    el.style.transitionDelay=(i%6)*60+'ms';
+    el.innerHTML='<span class="no">NO.'+d.no+' / 14</span>'+triGlyph(101+i*7,58)+
+      '<h3>'+d.name+'</h3><p class="en">'+d.en+'</p><span class="cat">'+d.cat+'</span><p>'+d.desc.slice(0,34)+'…</p>';
+    var go=function(){openBody(i,true)};
+    el.addEventListener('click',go);
+    el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+    colGrid.appendChild(el);cards.push(el);
+  });
+}
+function filterCards(cat){
+  var shown=0;
+  cards.forEach(function(el){
+    var ok=(cat==='全部'||el.dataset.cat===cat);
+    el.style.display=ok?'':'none';if(ok)shown++;
+  });
+  qs('#colEmpty').classList.toggle('show',shown===0);
+}
+
+function buildHalls(){
+  var chipsEl=qs('#hallChips');
+  ['全部','1F','2F','3F'].forEach(function(f,i){
+    var b=document.createElement('button');
+    b.className='chip'+(i===0?' on':'');b.type='button';b.textContent=(f==='全部'?'全部楼层':'第 '+f+' 层');b.dataset.floor=f;
+    b.addEventListener('click',function(){
+      chipsEl.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on');
+      var shown=0;
+      hallGrid.querySelectorAll('.hall-card').forEach(function(el){
+        var ok=(f==='全部'||el.dataset.floor===f);
+        el.style.display=ok?'':'none';if(ok)shown++;
+      });
+      qs('#hallEmpty').classList.toggle('show',shown===0);
+    });
+    chipsEl.appendChild(b);
+  });
+  HALLS.forEach(function(d,i){
+    var el=document.createElement('article');
+    el.className='hall-card rv';el.dataset.floor=d.floor;
+    el.style.transitionDelay=(i%3)*80+'ms';
+    el.innerHTML='<span class="h-no">'+d.no+'</span><svg class="hall-glyph" viewBox="0 0 46 46" aria-hidden="true"><polygon points="23,5 41,39 5,39" fill="none" stroke="'+PAL.ice+'" stroke-width="1.2"/><polygon points="23,17 33,36 13,36" fill="'+PAL.purple+'" opacity=".7"/><polygon points="23,26 28,36 18,36" fill="'+PAL.orange+'" opacity=".85"/></svg>'+
+      '<h3>'+d.name+'</h3><p>'+d.desc+'</p>'+
+      '<div class="hall-meta"><span>楼层 <b>'+d.floor+'</b></span><span>适龄 <b>'+d.age+'</b></span><span>'+d.count+'</span></div>';
+    hallGrid.appendChild(el);
+  });
+}
+
+/* ================= 滚动显现 / 数字滚动 / 导航 ================= */
+function setupReveal(){
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(en){if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target)}});
+  },{threshold:.12});
+  document.querySelectorAll('.rv').forEach(function(el){io.observe(el)});
+}
+function setupCount(){
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(en){
+      if(!en.isIntersecting)return;io.unobserve(en.target);
+      var el=en.target,end=parseInt(el.dataset.count,10),t0=performance.now();
+      if(REDUCED){el.textContent=end;return}
+      (function tick(now){
+        var k=clamp((now-t0)/1100,0,1),e=1-Math.pow(1-k,3);
+        el.textContent=Math.round(end*e);
+        if(k<1)requestAnimationFrame(tick);
+      })(t0);
+    });
+  },{threshold:.5});
+  document.querySelectorAll('[data-count]').forEach(function(el){io.observe(el)});
+}
+function setupNav(){
+  var nav=qs('#nav');
+  qs('#burger').addEventListener('click',function(){nav.classList.toggle('open')});
+  qs('#navLinks').addEventListener('click',function(e){if(e.target.tagName==='A')nav.classList.remove('open')});
+  var secs=['hero','collection','halls','tickets'].map(function(id){return qs('#'+id)});
+  var links=document.querySelectorAll('.nl');
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(en){
+      if(!en.isIntersecting)return;
+      var idx=secs.indexOf(en.target);
+      links.forEach(function(l,i){l.classList.toggle('on',i===idx)});
+    });
+  },{threshold:.35});
+  secs.forEach(function(s){io.observe(s)});
+  qs('#toTop').addEventListener('click',function(){window.scrollTo({top:0,behavior:REDUCED?'auto':'smooth'})});
+}
+
+/* ================= 票务表单 ================= */
+function setupForm(){
+  var form=qs('#bookForm'),people=2;
+  var UNIT={adult:60,conc:30,night:88,group:48};
+  var today=new Date();
+  function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+  var maxD=new Date(today);maxD.setDate(maxD.getDate()+7);
+  var dateEl=qs('#f-date');dateEl.min=fmt(today);dateEl.max=fmt(maxD);
+  qs('#ft-year').textContent=today.getFullYear();
+  function showErr(id,on){qs('#e-'+id).classList.toggle('show',on)}
+  function updateTotal(){
+    var t=qs('#f-type').value,dome=qs('#f-dome').checked;
+    var total=UNIT[t]*people+(dome?30*people:0);
+    qs('#f-total').textContent=total;
+    qs('#f-dome-time').disabled=!dome;
+  }
+  qs('#p-dec').addEventListener('click',function(){people=Math.max(1,people-1);qs('#f-people').textContent=people;updateTotal()});
+  qs('#p-inc').addEventListener('click',function(){people=Math.min(20,people+1);qs('#f-people').textContent=people;updateTotal()});
+  qs('#f-type').addEventListener('change',updateTotal);
+  qs('#f-dome').addEventListener('change',updateTotal);
+  // 夜场票与夜场时段联动
+  document.querySelectorAll('input[name=slot]').forEach(function(r){
+    r.addEventListener('change',function(){
+      if(r.checked&&r.value==='night'&&qs('#f-type').value!=='night'){qs('#f-type').value='night';updateTotal()}
+      showErr('slot',false);
+    });
+  });
+  qs('#f-type').addEventListener('change',function(){
+    if(qs('#f-type').value==='night'){var n=qs('#slotSegs input[value=night]');if(n)n.checked=true}
+  });
+  ['f-name','f-tel','f-date'].forEach(function(id){
+    qs('#'+id).addEventListener('input',function(){showErr(id.replace('f-',''),false)});
+  });
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    var ok=true,name=qs('#f-name').value.trim(),tel=qs('#f-tel').value.trim(),date=dateEl.value;
+    if(name.length<2){showErr('name',true);ok=false}
+    if(!/^1[3-9]\d{9}$/.test(tel)){showErr('tel',true);ok=false}
+    var dateOk=false,d=null;
+    if(date){
+      d=new Date(date+'T00:00:00');
+      dateOk=d>=new Date(fmt(today)+'T00:00:00')&&d<=new Date(fmt(maxD)+'T00:00:00');
+      if(dateOk&&d.getDay()===1){showErr('date',true);qs('#e-date').textContent='周一闭馆（法定节假日除外），请另选日期';ok=false}
+      else if(!dateOk){showErr('date',true);qs('#e-date').textContent='仅可预约今日起 7 天内的日期';ok=false}
+    }else{showErr('date',true);qs('#e-date').textContent='请选择参观日期';ok=false}
+    var slot=form.querySelector('input[name=slot]:checked');
+    if(!slot){showErr('slot',true);ok=false}
+    if(qs('#f-type').value==='group'&&people<20){showErr('people',true);ok=false}else{showErr('people',false)}
+    if(!ok){
+      var firstErr=form.querySelector('.err.show');
+      if(firstErr)firstErr.previousElementSibling&&firstErr.previousElementSibling.focus&&firstErr.scrollIntoView({block:'center',behavior:REDUCED?'auto':'smooth'});
+      return;
+    }
+    var typeName={adult:'成人票',conc:'学生 / 长者票',night:'夜场观星票',group:'团体票'}[qs('#f-type').value];
+    var slotName={am:'上午场 9:00–12:00',pm:'下午场 13:00–15:00',night:'夜场观星 19:00–21:30'}[slot.value];
+    var dome=qs('#f-dome').checked;
+    var total=UNIT[qs('#f-type').value]*people+(dome?30*people:0);
+    var code='AST-'+date.replace(/-/g,'')+'-'+String(Math.floor(1000+Math.random()*9000));
+    qs('#ok-code').textContent=code;
+    qs('#ok-sum').innerHTML=
+      '<div class="trow"><span>预订人</span><b>'+name.replace(/[<>&]/g,'')+'</b></div>'+
+      '<div class="trow"><span>日期 / 时段</span><b>'+date+' · '+slotName+'</b></div>'+
+      '<div class="trow"><span>票种</span><b>'+typeName+' × '+people+' 人</b></div>'+
+      (dome?'<div class="trow"><span>穹幕加购</span><b>'+qs('#f-dome-time').value+' 场次 × '+people+' 人</b></div>':'')+
+      '<div class="trow"><span>合计</span><b class="price">¥'+total+'</b></div>';
+    form.style.display='none';qs('#bookOk').classList.add('show');
+    qs('#bookOk').scrollIntoView({block:'center',behavior:REDUCED?'auto':'smooth'});
+  });
+  qs('#ok-again').addEventListener('click',function(){
+    form.reset();people=2;qs('#f-people').textContent=people;updateTotal();
+    qs('#bookOk').classList.remove('show');form.style.display='';
+  });
+  updateTotal();
+}
+
+/* ================= SVG 降级舞台（无 WebGL / CDN 全挂） ================= */
+function tri(x1,y1,x2,y2,x3,y3,fill,op){return '<polygon points="'+x1+','+y1+' '+x2+','+y2+' '+x3+','+y3+'" fill="'+fill+'" opacity="'+op+'" stroke="rgba(255,255,255,.22)" stroke-width=".7"/>'}
+function buildFallbackArt(){
+  var stage=qs('#fb-stage');if(!stage||stage.dataset.built)return;stage.dataset.built='1';
+  var rnd=mulberry32(7),s='';
+  var cx=280,cy=290,n1=10,n2=14,ring1=[],ring2=[],i,a,r;
+  for(i=0;i<n1;i++){a=i/n1*Math.PI*2;r=150+rnd()*26;ring1.push([cx+Math.cos(a)*r,cy+Math.sin(a)*r*.94])}
+  for(i=0;i<n2;i++){a=(i+.5)/n2*Math.PI*2;r=205+rnd()*20;ring2.push([cx+Math.cos(a)*r,cy+Math.sin(a)*r*.94])}
+  var cols=[PAL.purple,PAL.dim,PAL.orange,PAL.ice];
+  for(i=0;i<n1;i++){
+    var p=ring1[i],q=ring1[(i+1)%n1],p2=ring2[Math.floor(i*n2/n1)];
+    s+=tri(cx,cy,p[0],p[1],q[0],q[1],cols[i%4],.95);
+    s+=tri(p[0],p[1],q[0],q[1],p2[0],p2[1],i%2?PAL.dim2:cols[(i+2)%4],.8);
+  }
+  for(i=0;i<14;i++){ // 背景三角碎片
+    var x=rnd()*560,y=rnd()*560,w=8+rnd()*16;
+    s+=tri(x,y,x+w,y+rnd()*10,x+w*.4,y+w,rgbaWhite(.06+rnd()*.16),.9);
+  }
+  var stars='';
+  for(i=0;i<40;i++){stars+='<circle cx="'+(rnd()*560).toFixed(0)+'" cy="'+(rnd()*560).toFixed(0)+'" r="'+(rnd()*1.6+.4).toFixed(1)+'" fill="'+PAL.ivory+'" opacity="'+(.2+rnd()*.6).toFixed(2)+'"/>'}
+  stage.innerHTML=
+    '<svg class="fb-orbit" viewBox="0 0 900 900"><ellipse cx="450" cy="450" rx="430" ry="130" fill="none" stroke="rgba(255,255,255,.15)" stroke-dasharray="3 8"/><ellipse cx="450" cy="450" rx="330" ry="96" fill="none" stroke="rgba(139,123,216,.3)" stroke-dasharray="3 8"/><polygon points="880,450 892,468 872,464" fill="'+PAL.ice+'"/><polygon points="120,450 130,462 114,461" fill="'+PAL.orange+'"/></svg>'+
+    '<svg class="fb-planet" viewBox="0 0 560 560">'+s+stars+'<ellipse cx="280" cy="290" rx="252" ry="54" fill="none" stroke="rgba(255,255,255,.2)" stroke-dasharray="4 7" transform="rotate(-16 280 290)"/><polygon points="508,222 522,236 504,240" fill="'+PAL.ice+'"/></svg>';
+  var shards=[[6,18,26],[86,62,20],[12,72,30]];
+  shards.forEach(function(sd,i){
+    var el=document.createElement('div');el.className='fb-shard';
+    el.style.left=sd[0]+'%';el.style.top=sd[1]+'%';el.style.animationDelay=(i*1.4)+'s';
+    el.innerHTML='<svg width="'+sd[2]*2+'" height="'+sd[2]*2+'" viewBox="0 0 60 60"><polygon points="30,4 56,50 4,50" fill="none" stroke="'+(i%2?PAL.purple:PAL.ice)+'" stroke-width="1.4"/><polygon points="30,22 42,46 18,46" fill="'+(i%2?PAL.orange:PAL.dim)+'" opacity=".7"/></svg>';
+    stage.appendChild(el);
+  });
+}
+function rgbaWhite(a){return 'rgba(255,255,255,'+a+')'}
+
+/* ================= 信息面板 + 聚焦 ================= */
+var panel=qs('#panel'),panelOpen=false;
+var hoverIdx=-1,activeIdx=-1;
+function fillPanel(d){
+  qs('#p-no').textContent='NO.'+d.no+' / 14';
+  qs('#p-name').textContent=d.name;
+  qs('#p-en').textContent=d.en;
+  qs('#p-tags').innerHTML='<span>'+d.cat+'</span><span>低模装置 · '+d.kind.toUpperCase()+'</span>';
+  qs('#p-coord').textContent='坐标 · '+d.coord;
+  qs('#p-desc').textContent=d.desc;
+  qs('#p-year').textContent=d.year;
+  qs('#p-dist').textContent=d.dist;
+  qs('#p-hall').textContent=d.hall;
+}
+function openBody(i,fromCard){
+  var d=BODIES[i];
+  fillPanel(d);
+  panel.classList.add('open');panelOpen=true;activeIdx=i;
+  cards.forEach(function(c,k){c.classList.toggle('active',k===i)});
+  if(window.__astroFocus)window.__astroFocus(i);
+  if(fromCard&&!REDUCED)qs('#tip').classList.remove('on');
+}
+function closePanel(){
+  if(!panelOpen&&!panel.classList.contains('open'))return;
+  panel.classList.remove('open');panelOpen=false;
+  cards.forEach(function(c){c.classList.remove('active')});
+  if(window.__astroClose)window.__astroClose();
+}
+qs('#p-close').addEventListener('click',closePanel);
+qs('#p-goto').addEventListener('click',function(){
+  closePanel();
+  qs('#halls').scrollIntoView({behavior:REDUCED?'auto':'smooth'});
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closePanel()});
+
+/* ================= 加载屏控制 ================= */
+var loadP=4,loadShown=0;
+var ldBar=qs('#ld-bar i'),ldPct=qs('#ld-pct'),ldStatus=qs('#ld-status');
+var STATUSES=['正在校准轨道…','正在生成低模切面…','正在点亮线框…','正在装配天体…','正在展开星图…'];
+var stIdx=0;
+var stTimer=setInterval(function(){stIdx=(stIdx+1)%STATUSES.length;ldStatus.textContent=STATUSES[stIdx]},1300);
+var ldTimer=setInterval(function(){
+  loadShown+=(loadP-loadShown)*.12;if(loadP-loadShown<.5)loadShown=loadP;
+  ldBar.style.width=loadShown+'%';
+  ldPct.textContent=String(Math.round(loadShown)).padStart(2,'0')+'%';
+  if(loadShown>=100){
+    clearInterval(ldTimer);clearInterval(stTimer);
+    setTimeout(function(){qs('#loader').classList.add('done')},320);
+  }
+},40);
+function setP(v){loadP=Math.max(loadP,v)}
+
+/* ================= three.js 多级兜底加载 ================= */
+var CDNS=[
+  'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js',
+  'https://unpkg.com/three@0.158.0/build/three.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.158.0/three.min.js',
+  'https://cdn.bootcdn.net/ajax/libs/three.js/0.158.0/three.min.js'
+];
+(function tryLoad(i){
+  if(i>=CDNS.length){fallback('三个及以上 CDN 均不可达');return}
+  var s=document.createElement('script');s.src=CDNS[i];s.async=true;
+  var done=false;
+  var to=setTimeout(function(){if(!done){done=true;tryLoad(i+1)}},9000);
+  s.onload=function(){
+    if(done)return;done=true;clearTimeout(to);
+    if(window.THREE&&THREE.WebGLRenderer){
+      setP(55);
+      try{init3D()}catch(err){fallback('WebGL 初始化失败')}
+    }else tryLoad(i+1);
+  };
+  s.onerror=function(){if(done)return;done=true;clearTimeout(to);tryLoad(i+1)};
+  document.head.appendChild(s);
+})(0);
+
+function fallback(reason){
+  document.body.classList.add('no3d');
+  buildFallbackArt();
+  setP(100);
+  // 降级模式：点击主视觉低模太阳同样可打开 01 号太阳档案卡
+  try{
+    var fbSun=qs('#fb-stage .fb-planet');
+    if(fbSun){
+      fbSun.style.pointerEvents='auto';fbSun.style.cursor='pointer';
+      fbSun.addEventListener('click',function(){openBody(0,true)});
+    }
+  }catch(e){}
+  try{console.info('[ASTRAEUM] 3D 已降级为 SVG 低三角插画模式：'+reason)}catch(e){}
+}
+
+/* ================= 3D 主程序 ================= */
+function init3D(){
+  var W=window.innerWidth,H=window.innerHeight;
+  var canvas=qs('#gl');
+  var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:!LOW,powerPreference:'high-performance'});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,LOW?1.5:2));
+  renderer.setSize(W,H);
+  var scene=new THREE.Scene();
+  scene.fog=new THREE.Fog(0x171331,70,330);
+  /* 柔和渐变天空底（程序生成 CanvasTexture，非外链图片） */
+  (function(){
+    var c=document.createElement('canvas');c.width=2;c.height=512;
+    var g=c.getContext('2d').createLinearGradient(0,0,0,512);
+    g.addColorStop(0,'#302A56');g.addColorStop(.5,'#1E1940');g.addColorStop(1,'#171331');
+    var ctx=c.getContext('2d');ctx.fillStyle=g;ctx.fillRect(0,0,2,512);
+    var tex=new THREE.CanvasTexture(c);
+    if('colorSpace' in tex&&THREE.SRGBColorSpace)tex.colorSpace=THREE.SRGBColorSpace;
+    scene.background=tex;
+  })();
+  var camera=new THREE.PerspectiveCamera(58,W/H,.5,760);
+  camera.position.set(0,9.5,30);
+  /* 灯光极简：半球光 + 1 个方向光 + 太阳点光 */
+  scene.add(new THREE.HemisphereLight(0x8b7bd8,0x171331,.95));
+  var dir=new THREE.DirectionalLight(0xf3efe6,1.25);dir.position.set(18,30,20);scene.add(dir);
+  var SUNP=new THREE.Vector3(6.5,7,-58);
+  var sunLight=new THREE.PointLight(0xf27059,1.5,360,1);sunLight.position.copy(SUNP);scene.add(sunLight);
+
+  var IVORY=new THREE.Color(0xf3efe6),ICE=new THREE.Color(0x7fd8d8),WHITE=new THREE.Color(0xffffff);
+  function hex(name){return new THREE.Color(PAL[name])}
+  function mix(a,b,t){return hex(a).lerp(hex(b),t)}
+  function matOf(c1,c2,extra){
+    var m=new THREE.MeshStandardMaterial({
+      color:0xffffff,flatShading:true,roughness:.82,metalness:.05,
+      vertexColors:true,emissive:hex(c1),emissiveIntensity:.05
+    });
+    if(extra)Object.assign(m,extra);
+    return m;
+  }
+  /* 低模几何：icosahedron + 顶点微扰 + 逐面双色抖动 */
+  function facetGeo(radius,detail,seed,c1,c2,bumpy){
+    var geo=new THREE.IcosahedronGeometry(radius,detail);
+    if(bumpy!==false){
+      var pos=geo.attributes.position,rnd=mulberry32(seed);
+      for(var i=0;i<pos.count;i++){
+        var x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
+        var n=Math.sin(x*3.1+seed)*Math.cos(y*2.7-seed)*Math.sin(z*3.7+seed*1.3);
+        var s=1+n*.14+(rnd()-.5)*.06;
+        pos.setXYZ(i,x*s,y*s,z*s);
+      }
+    }
+    geo=geo.toNonIndexed();
+    geo.computeVertexNormals();
+    var cnt=geo.attributes.position.count,cols=new Float32Array(cnt*3),rnd2=mulberry32(seed+99);
+    var A=hex(c1),B=mix(c1,c2===c1?c1:c2,.5);
+    for(var f=0;f<cnt;f+=3){
+      var col=(rnd2()<.72)?A:B.clone().lerp(A,rnd2()*.6);
+      var l=.86+rnd2()*.3;
+      for(var k=0;k<3;k++){cols[(f+k)*3]=col.r*l;cols[(f+k)*3+1]=col.g*l;cols[(f+k)*3+2]=col.b*l}
+    }
+    geo.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));
+    return geo;
+  }
+  function addWire(mesh,geo,opacity){
+    var w=new THREE.LineSegments(new THREE.WireframeGeometry(geo),
+      new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:opacity||.18}));
+    mesh.add(w);return w;
+  }
+  function glowTex(color){
+    var c=document.createElement('canvas');c.width=c.height=128;
+    var ctx=c.getContext('2d');
+    var g=ctx.createRadialGradient(64,64,4,64,64,62);
+    g.addColorStop(0,color);g.addColorStop(.4,color.replace('1)','.35)'));g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g;ctx.fillRect(0,0,128,128);
+    return new THREE.CanvasTexture(c);
+  }
+  function makeSprite(color,scale){
+    var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(color),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+    sp.scale.setScalar(scale);return sp;
+  }
+  function proxyOf(r,idx){
+    var m=new THREE.Mesh(new THREE.SphereGeometry(r*1.25,8,6),new THREE.MeshBasicMaterial());
+    m.material.visible=false;m.userData.bi=idx;return m;
+  }
+
+  /* --- 展品注册 --- */
+  var exhibits=[]; // {group,wire,mesh,home,from,off,t0,dur,seed,wf,wp,hl,s:0,sun}
+  var proxies=[];
+  function register(group,cfg,home,order,sun){
+    var mesh=null,wire=null;
+    group.traverse(function(o){if(o.isLineSegments&&!wire)wire=o;if(o.isMesh&&!mesh&&o.userData.facet)mesh=o});
+    var homeV=home.clone();
+    var off=new THREE.Vector3(Math.sin(order*2.3),.6+Math.cos(order*1.7)*.5,Math.cos(order*2.1)).normalize().multiplyScalar(26);
+    exhibits.push({g:group,wire:wire,mesh:mesh,cfg:cfg,home:homeV,off:off,t0:0,dur:900+order*40,
+      wf:.6+mulberry32(order)()*1.6,wp:mulberry32(order+40)()*6.28,hl:0,s:0,sun:!!sun,hero:false});
+    scene.add(group);
+  }
+  function facetMesh(geo,c1,c2){
+    var m=new THREE.Mesh(geo,matOf(c1,c2));m.userData.facet=true;return m;
+  }
+
+  /* --- 太阳（展品 01，兼作 hero 发光主体） --- */
+  (function(){
+    var g=new THREE.Group();
+    var geo=facetGeo(5.6,LOW?1:2,11,'orange','orange',false);
+    var mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({
+      color:0xffffff,flatShading:true,roughness:.55,vertexColors:true,
+      emissive:hex('orange'),emissiveIntensity:1.45}));
+    mesh.userData.facet=true;g.add(mesh);
+    addWire(mesh,geo,.16);
+    g.add(makeSprite('rgba(242,112,89,1)',30));
+    g.add(makeSprite('rgba(255,214,170,1)',16));
+    g.position.copy(SUNP);
+    register(g,BODIES[0],SUNP,0,true);
+  })();
+
+  /* --- hero 行星（缓转 + 低模椭圆轨道公转，轨道用 Line 画出） --- */
+  var heroDefs=[
+    {R:20,ang:2.4,spd:.12,rot:.3,r:2.7,c1:'purple',c2:'ice',seed:21},
+    {R:29,ang:5.6,spd:.085,rot:.24,r:3.3,c1:'ice',c2:'purple',seed:33},
+    {R:40,ang:1.1,spd:.06,rot:.2,r:2.1,c1:'orange',c2:'purple',seed:45}
+  ];
+  var heroGroup=new THREE.Group();scene.add(heroGroup);
+  heroDefs.forEach(function(d,i){
+    var orbit=new THREE.EllipseCurve(0,0,d.R,d.R,0,Math.PI*2).getPoints(96);
+    var pts=orbit.map(function(p){return new THREE.Vector3(p.x,0,p.y)});
+    var line=new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({color:0x8b7bd8,transparent:true,opacity:.22}));
+    heroGroup.add(line);
+    heroGroup.position.copy(SUNP);
+    var g=new THREE.Group();
+    var geo=facetGeo(d.r,DETAIL,d.seed,d.c1,d.c2);
+    var mesh=facetMesh(geo,d.c1,d.c2);g.add(mesh);
+    var wire=addWire(mesh,geo,.18);
+    d.group=g;d.wire=wire;d.mesh=mesh;
+    heroGroup.add(g);
+    // 注册为可 hover / 点击的序厅装置
+    var px=new THREE.Mesh(new THREE.SphereGeometry(d.r*1.3,8,6),new THREE.MeshBasicMaterial());
+    px.material.visible=false;px.userData.hero=i;g.add(px);proxies.push(px);
+    var ex={g:g,wire:wire,mesh:mesh,cfg:null,home:null,off:new THREE.Vector3(Math.cos(i*2)*14,6+Math.sin(i)*4,10),
+      t0:0,dur:800+i*160,wf:.9+i*.4,wp:i*2.1,hl:0,s:0,hero:true,def:d,ang:d.ang};
+    exhibits.push(ex);
+  });
+
+  /* --- 展品工厂 --- */
+  function buildBody(cfg,seed){
+    var g=new THREE.Group(),c1=cfg.c[0],c2=cfg.c[1];
+    if(cfg.kind==='sun'){/* 已单独构建 */}
+    else if(cfg.kind==='rock'||cfg.kind==='neptune'){
+      var geo=facetGeo(cfg.r,DETAIL,seed,c1,c2);var m=facetMesh(geo,c1,c2);g.add(m);addWire(m,geo,.18);
+    }
+    else if(cfg.kind==='earth'){
+      var g1=facetGeo(cfg.r,DETAIL,seed,c1,c2),m1=facetMesh(g1,c1,c2);g.add(m1);addWire(m1,g1,.18);
+      var pivot=new THREE.Group();pivot.rotation.x=.35;
+      var mg=new THREE.BufferGeometry().setFromPoints(
+        new THREE.EllipseCurve(0,0,3.4,3.4,0,Math.PI*2).getPoints(64).map(function(p){return new THREE.Vector3(p.x,0,p.y)}));
+      pivot.add(new THREE.LineLoop(mg,new THREE.LineBasicMaterial({color:0xf3efe6,transparent:true,opacity:.22})));
+      var moonG=facetGeo(.62,1,seed+5,'ivory','space');
+      var moon=facetMesh(moonG,'ivory','space');moon.position.x=3.4;pivot.add(moon);
+      moon.userData.facet=true;g.add(pivot);g.userData.pivot=pivot;
+    }
+    else if(cfg.kind==='mars'){
+      var g2=facetGeo(cfg.r,DETAIL,seed,c1,c2),m2=facetMesh(g2,c1,c2);g.add(m2);addWire(m2,g2,.18);
+      for(var i=0;i<3;i++){ // 奥林帕斯山：三角锥群
+        var sp=new THREE.Mesh(new THREE.OctahedronGeometry(.34-i*.06),
+          new THREE.MeshStandardMaterial({color:hex(c2),flatShading:true,roughness:.9,emissive:hex(c2),emissiveIntensity:.05}));
+        sp.scale.y=1.9;var a=-.5+i*.5;
+        sp.position.set(Math.sin(a)*cfg.r*.32,Math.cos(a*.6)*cfg.r*.86,Math.cos(a)*cfg.r*.3);
+        sp.lookAt(0,0,0);g.add(sp);
+      }
+    }
+    else if(cfg.kind==='jupiter'){
+      var g3=facetGeo(cfg.r,DETAIL,seed,c1,c2,false);
+      var pos=g3.attributes.position,cols=g3.attributes.color,A=hex(c1),B=hex(c2);
+      for(var j=0;j<pos.count;j++){
+        var band=Math.floor((pos.getY(j)/cfg.r+1)*3)%2;
+        var cc=(band?A:B).clone(),l=.85+(j%7)*.028;
+        cols.setXYZ(j,cc.r*l,cc.g*l,cc.b*l);
+      }
+      cols.needsUpdate=true;
+      var m3=facetMesh(g3,c1,c2);g.add(m3);addWire(m3,g3,.15);
+      var spot=new THREE.Mesh(new THREE.OctahedronGeometry(.5),
+        new THREE.MeshStandardMaterial({color:hex('ivory'),flatShading:true,roughness:.8,emissive:hex('orange'),emissiveIntensity:.25}));
+      spot.scale.set(1.5,.8,1.5);spot.position.set(cfg.r*.62,-cfg.r*.34,0);g.add(spot);
+    }
+    else if(cfg.kind==='saturn'||cfg.kind==='uranus'){
+      var g4=facetGeo(cfg.r,DETAIL,seed,c1,c2),m4=facetMesh(g4,c1,c2);g.add(m4);addWire(m4,g4,.18);
+      var inner=cfg.kind==='saturn'?cfg.r*1.5:cfg.r*1.38,outer=cfg.kind==='saturn'?cfg.r*2.5:cfg.r*1.8;
+      var rg=new THREE.RingGeometry(inner,outer,cfg.kind==='saturn'?40:32,cfg.kind==='saturn'?2:1).toNonIndexed();
+      var rc=new Float32Array(rg.attributes.position.count*3),rnd=mulberry32(seed+8);
+      var CA=hex(c1),CB=hex(c2);
+      for(var f=0;f<rg.attributes.position.count;f+=3){
+        var cc2=(rnd()<.5?CA:CB).clone(),l2=.8+rnd()*.4;
+        for(var k=0;k<3;k++){rc[(f+k)*3]=cc2.r*l2;rc[(f+k)*3+1]=cc2.g*l2;rc[(f+k)*3+2]=cc2.b*l2}
+      }
+      rg.setAttribute('color',new THREE.Float32BufferAttribute(rc,3));
+      var ring=new THREE.Mesh(rg,new THREE.MeshStandardMaterial({color:0xffffff,flatShading:true,roughness:.85,vertexColors:true,side:THREE.DoubleSide,transparent:true,opacity:.92}));
+      ring.rotation.x=-Math.PI/2;g.add(ring);
+      var wireR=addWire(ring,rg,.1);wireR.material.side=THREE.DoubleSide;
+      if(cfg.kind==='saturn')g.rotation.z=.2;else g.rotation.z=1.35;
+    }
+    else if(cfg.kind==='comet'){
+      var g5=facetGeo(cfg.r,1,seed,c1,c2),m5=facetMesh(g5,c1,c2);g.add(m5);addWire(m5,g5,.2);
+      var tail=new THREE.BufferGeometry(),tv=[],rnd2=mulberry32(seed+3);
+      for(var s2=0;s2<9;s2++){
+        var L=2.4+s2*.85,w2=.28+s2*.3,o=(rnd2()-.5)*1.1;
+        tv.push(0,0,0, -L,o,w2, -L,o,-w2);
+      }
+      tail.setAttribute('position',new THREE.Float32BufferAttribute(tv,3));
+      tail.computeVertexNormals();
+      var tm=new THREE.Mesh(tail,new THREE.MeshBasicMaterial({color:0x7fd8d8,transparent:true,opacity:.4,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));
+      tm.userData.facet=false;g.add(tm);g.userData.tail=tm;
+      g.rotation.y=.7;g.rotation.z=-.15;
+    }
+    else if(cfg.kind==='nebula'||cfg.kind==='m1'){
+      var rnd3=mulberry32(seed),n=LOW?8:12;
+      for(var q=0;q<n;q++){
+        var sz=.5+rnd3()*1.15;
+        var nc=new THREE.Mesh(new THREE.OctahedronGeometry(sz),
+          new THREE.MeshStandardMaterial({flatShading:true,roughness:.9,transparent:true,opacity:.75+rnd3()*.25,
+            color:rnd3()<.5?hex(c1):hex(c2),
+            emissive:rnd3()<.5?hex(c1):hex(c2),emissiveIntensity:.12}));
+        nc.position.set((rnd3()-.5)*cfg.r*1.7,(rnd3()-.5)*cfg.r*1.3,(rnd3()-.5)*cfg.r*1.4);
+        nc.rotation.set(rnd3()*3,rnd3()*3,rnd3()*3);
+        nc.userData.facet=true;g.add(nc);
+      }
+      g.add(makeSprite('rgba('+ (cfg.kind==='m1'?'242,112,89':'139,123,216') +',1)',cfg.r*3.4));
+      if(cfg.kind==='m1'){
+        var pulsar=new THREE.Mesh(new THREE.OctahedronGeometry(.34),
+          new THREE.MeshBasicMaterial({color:0xf3efe6}));
+        pulsar.position.y=.2;g.add(pulsar);g.userData.pulsar=pulsar;
+      }
+    }
+    else if(cfg.kind==='pillars'){
+      var xs=[-2.3,0,2.2],hs=[3,4.3,3.3],rnd4=mulberry32(seed);
+      xs.forEach(function(x,pi){
+        var steps=4;
+        for(var si=0;si<steps;si++){
+          var sz=1.05-pi*.12-(si*.16);
+          var pc=new THREE.Mesh(new THREE.OctahedronGeometry(Math.max(.4,sz)),
+            new THREE.MeshStandardMaterial({flatShading:true,roughness:.92,
+              color:rnd4()<.6?hex(c1):hex(c2),emissive:hex(c1),emissiveIntensity:.08}));
+          pc.scale.y=1.7;
+          pc.position.set(x+(rnd4()-.5)*.5,-1.4+si*1.15+(rnd4()-.5)*.2,(rnd4()-.5)*.7);
+          pc.rotation.y=rnd4()*3;pc.userData.facet=true;g.add(pc);
+        }
+      });
+      g.add(makeSprite('rgba(139,123,216,1)',cfg.r*3));
+    }
+    else if(cfg.kind==='blackhole'){
+      var hole=new THREE.Mesh(new THREE.IcosahedronGeometry(cfg.r,1),
+        new THREE.MeshBasicMaterial({color:0x171331}));
+      hole.userData.facet=true;g.add(hole);addWire(hole,hole.geometry,.28);
+      var disk=new THREE.Mesh(new THREE.TorusGeometry(cfg.r*1.7,.24,8,40),
+        new THREE.MeshBasicMaterial({color:0xf27059}));
+      disk.rotation.x=1.25;g.add(disk);g.userData.disk=disk;
+      var disk2=new THREE.Mesh(new THREE.TorusGeometry(cfg.r*2.25,.07,6,40),
+        new THREE.MeshBasicMaterial({color:0x8b7bd8,transparent:true,opacity:.6}));
+      disk2.rotation.x=1.25;disk2.rotation.y=.2;g.add(disk2);
+      g.add(makeSprite('rgba(242,112,89,.9)',cfg.r*4.5));
+    }
+    return g;
+  }
+
+  /* --- 展品布展：沿星轨走廊排布（01 号即 hero 太阳） --- */
+  var xs=[-8.5,7.5,-6.5,8.5,-7.5,6.5,-8.5,7.5,-6.5,8.5,-7.5,6.5,-8.5];
+  for(var bi=1;bi<BODIES.length;bi++){
+    (function(i){
+      var cfg=BODIES[i],gi=i-1;
+      var home=new THREE.Vector3(xs[gi],2.2+Math.sin(gi*1.7)*1.8,-86-gi*16);
+      var g=buildBody(cfg,50+i*13);
+      g.position.copy(home);
+      register(g,cfg,home,i,false);
+      var pk=proxyOf(cfg.r,i);pk.position.copy(home);scene.add(pk);proxies.push(pk);
+    })(bi);
+  }
+  // 太阳的拾取代理
+  (function(){var p=proxyOf(5.6,0);p.position.copy(SUNP);scene.add(p);proxies.push(p)})();
+
+  /* --- 小行星带（随机三角面碎石，InstancedMesh 省预算） --- */
+  var beltGroup=new THREE.Group();scene.add(beltGroup);
+  (function(){
+    var rnd=mulberry32(777);
+    var geos=[new THREE.IcosahedronGeometry(1,0),new THREE.OctahedronGeometry(1,0)];
+    var mats=[mix('purple','space',.25),mix('space','purple',.55),mix('ice','space',.6)].map(function(c){
+      return new THREE.MeshStandardMaterial({color:c,flatShading:true,roughness:.95,emissive:c,emissiveIntensity:.03});
+    });
+    var per=Math.ceil(BELT_N/(geos.length*mats.length));
+    var m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),sc=new THREE.Vector3(),pv=new THREE.Vector3();
+    geos.forEach(function(geo,gi2){
+      mats.forEach(function(mat,mi){
+        var inst=new THREE.InstancedMesh(geo,mat,per);
+        for(var i=0;i<per;i++){
+          var x=(rnd()<.5?-1:1)*(4.5+rnd()*26),y=rnd()*13-.5,z=-146-rnd()*62;
+          e.set(rnd()*6.28,rnd()*6.28,rnd()*6.28);q.setFromEuler(e);
+          var s=.25+rnd()*1.15;sc.set(s,s*(.7+rnd()*.6),s);
+          pv.set(x,y,z);m4.compose(pv,q,sc);inst.setMatrixAt(i,m4);
+        }
+        inst.instanceMatrix.needsUpdate=true;beltGroup.add(inst);
+      });
+    });
+  })();
+
+  /* --- 低模山脉地形 + 观测台（终点展区） --- */
+  (function(){
+    var seg=LOW?[20,12]:[34,22];
+    var geo=new THREE.PlaneGeometry(170,110,seg[0],seg[1]);
+    geo.rotateX(-Math.PI/2);
+    var pos=geo.attributes.position,rnd=mulberry32(2024);
+    for(var i=0;i<pos.count;i++){
+      var x=pos.getX(i),z=pos.getZ(i);
+      var h=Math.sin(x*.055)*2.4+Math.cos(z*.07)*2+Math.sin(x*.13+z*.09)*1.4+rnd()*1.1;
+      if(Math.abs(x)<7&&z>-70)h*=.25; // 降落通道压平
+      pos.setY(i,h);
+    }
+    geo=geo.toNonIndexed();geo.computeVertexNormals();
+    var cnt=geo.attributes.position.count,cols=new Float32Array(cnt*3),rnd2=mulberry32(31);
+    var A=mix('space','purple',.35),B=mix('purple','space',.45),C=mix('ice','purple',.4);
+    for(var f=0;f<cnt;f+=3){
+      var y=(geo.attributes.position.getY(f)+14)/16;
+      var col=(y>.62?C:(f/3|0)%2?A:B).clone(),l=.8+rnd2()*.35;
+      for(var k=0;k<3;k++){cols[(f+k)*3]=col.r*l;cols[(f+k)*3+1]=col.g*l;cols[(f+k)*3+2]=col.b*l}
+    }
+    geo.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));
+    var terr=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0xffffff,flatShading:true,roughness:.95,vertexColors:true}));
+    terr.position.set(0,-16,-355);scene.add(terr);
+    // 屋顶观星台穹顶
+    var obs=new THREE.Group();
+    var base=new THREE.Mesh(new THREE.CylinderGeometry(2.1,2.5,1.6,8),
+      new THREE.MeshStandardMaterial({color:mix('ivory','space',.25),flatShading:true,roughness:.85}));
+    base.position.y=.8;obs.add(base);
+    var dome=new THREE.Mesh(new THREE.SphereGeometry(1.9,7,4,0,Math.PI*2,0,Math.PI/2),
+      new THREE.MeshStandardMaterial({color:mix('purple','space',.2),flatShading:true,roughness:.7,emissive:hex('purple'),emissiveIntensity:.12}));
+    dome.position.y=1.6;obs.add(dome);
+    var ant=new THREE.Mesh(new THREE.CylinderGeometry(.06,.1,2.4,5),
+      new THREE.MeshStandardMaterial({color:hex('ice'),flatShading:true,emissive:hex('ice'),emissiveIntensity:.4}));
+    ant.position.y=4.2;obs.add(ant);
+    var beacon=new THREE.Mesh(new THREE.OctahedronGeometry(.22),new THREE.MeshBasicMaterial({color:0xf27059}));
+    beacon.position.y=5.5;obs.add(beacon);
+    obs.position.set(11,-14.4,-347);scene.add(obs);
+  })();
+
+  /* --- 背景星星与三角碎片（极简三角碎片视差） --- */
+  (function(){
+    var rnd=mulberry32(5),arr=new Float32Array(STAR_N*3);
+    for(var i=0;i<STAR_N;i++){
+      arr[i*3]=(rnd()-.5)*560;arr[i*3+1]=rnd()*130-20;arr[i*3+2]=40-rnd()*480;
+    }
+    var g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(arr,3));
+    scene.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xf3efe6,size:1.5,sizeAttenuation:true,transparent:true,opacity:.75,fog:false,depthWrite:false})));
+    // 三片三角碎片群（各自漂移速率，形成视差）
+    window.__shards=[];
+    [[10,'purple',.25],[8,'ice',.45],[7,'orange',.35]].forEach(function(cfg2,si){
+      var tv=[],r2=mulberry32(900+si*17);
+      for(var i=0;i<cfg2[0];i++){
+        var x=(r2()-.5)*160,y=r2()*60-8,z=20-r2()*260,w=1+r2()*2.6;
+        tv.push(x,y,z, x+w,y+r2()*1.4,z, x+w*.4,y+w*.8,z);
+      }
+      var sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(tv,3));
+      var shards=new THREE.Mesh(sg,new THREE.MeshBasicMaterial({color:PAL[cfg2[1]],transparent:true,opacity:.4,side:THREE.DoubleSide,fog:false,depthWrite:false}));
+      shards.userData.rate=cfg2[2];window.__shards.push(shards);scene.add(shards);
+    });
+  })();
+
+  /* --- 三角面预算统计 --- */
+  var tris=0;
+  scene.traverse(function(o){
+    if(o.isMesh||o.isLine||o.isLineSegments){
+      var g=o.geometry;
+      if(g&&g.attributes&&g.attributes.position)tris+=(g.index?g.index.count:g.attributes.position.count)/3;
+    }
+  });
+  tris=Math.round(tris);
+  try{console.info('[ASTRAEUM] 三角面预算：'+tris+' · '+(LOW?'移动端精简档':'完整档')+' · DPR '+renderer.getPixelRatio())}catch(e){}
+  qs('#ft-tris').textContent='RENDER · LOW-POLY · △ '+tris.toLocaleString()+' TRIS · '+(LOW?'LITE':'FULL');
+  ldStatus.textContent='三角面预算 △ '+tris+' · 装配完成';
+
+  /* --- 相机路径（滚动 dolly） --- */
+  var KEYS=[
+    {p:0.00,pos:[0,9.5,30],look:[0,2.5,-25]},
+    {p:0.10,pos:[0,8,4],look:[0,3.5,-55]},
+    {p:0.18,pos:[0,6,-42],look:[0,3,-98]},
+    {p:0.40,pos:[0,5,-118],look:[0,3.5,-178]},
+    {p:0.62,pos:[0,5.5,-292],look:[0,1.5,-345]},
+    {p:0.74,pos:[0,9,-315],look:[0,-2,-365]},
+    {p:0.88,pos:[0,6,-326],look:[3,-7,-372]},
+    {p:1.00,pos:[0,3.5,-332],look:[-2,-9,-375]}
+  ];
+  var pathPos=new THREE.Vector3(),pathLook=new THREE.Vector3();
+  function pathAt(p){
+    p=clamp(p,0,1);var i=0;
+    while(i<KEYS.length-2&&p>KEYS[i+1].p)i++;
+    var a=KEYS[i],b=KEYS[i+1],t=clamp((p-a.p)/Math.max(1e-4,b.p-a.p),0,1);
+    t=t*t*(3-2*t);
+    pathPos.set(a.pos[0]+(b.pos[0]-a.pos[0])*t,a.pos[1]+(b.pos[1]-a.pos[1])*t,a.pos[2]+(b.pos[2]-a.pos[2])*t);
+    pathLook.set(a.look[0]+(b.look[0]-a.look[0])*t,a.look[1]+(b.look[1]-a.look[1])*t,a.look[2]+(b.look[2]-a.look[2])*t);
+  }
+
+  /* --- 交互状态 --- */
+  var scrollCur=0,prog=0,px2=0,py2=0,pxs=0,pys=0;
+  var ray=new THREE.Raycaster(),ndc=new THREE.Vector2(-2,-2),ptrMoved=false;
+  var finePtr=false;
+  try{finePtr=window.matchMedia('(pointer: fine)').matches}catch(e){}
+  var hoverBody=null;
+  var focus={active:-1,w:0,wT:0,ang:0,pos:new THREE.Vector3(),scrollRef:0};
+  var tipEl=qs('#tip'),beltHud=qs('#belt-hud');
+  var tipPick=-1;
+  /* 热点标签本身可点：与 3D 点击同一条 openBody 聚焦路径 */
+  tipEl.addEventListener('click',function(e){
+    if(tipPick>=0){
+      e.stopPropagation();
+      openBody(tipPick,false);
+      tipEl.classList.remove('on','pick');tipPick=-1;
+    }
+  });
+
+  window.__astroFocus=function(i){
+    focus.active=i;focus.wT=1;focus.ang=0;
+    focus.pos.copy(camera.position);focus.scrollRef=scrollCur;
+  };
+  window.__astroClose=function(){focus.wT=0};
+
+  var downX=0,downY=0;
+  window.addEventListener('pointerdown',function(e){downX=e.clientX;downY=e.clientY},{passive:true});
+  window.addEventListener('pointermove',function(e){
+    px2=(e.clientX/W-.5)*2;py2=(e.clientY/H-.5)*2;
+    if(finePtr&&e.pointerType!=='touch'){
+      ndc.x=(e.clientX/W)*2-1;ndc.y=-(e.clientY/H)*2+1;ptrMoved=true;
+      tipEl.style.left=(e.clientX+18)+'px';tipEl.style.top=(e.clientY+14)+'px';
+    }
+  },{passive:true});
+  window.addEventListener('click',function(e){
+    if(e.button!==undefined&&e.button!==0)return;
+    if(Math.abs(e.clientX-downX)>8||Math.abs(e.clientY-downY)>8)return;
+    if(!window.THREE)return;
+    // [data-block] 守卫用于保护表单/卡片/导航等 UI；但 hero 文本层(.hero-grid[data-block])
+    // 正好盖住太阳的屏幕投影，点在 hero 的非交互元素上时放行，交由射线判定是否命中天体。
+    var dbEl=e.target.closest?e.target.closest('[data-block]'):null;
+    if(dbEl&&!dbEl.closest('#hero'))return;
+    if(dbEl&&e.target.closest('a,button,input,select,textarea,label'))return;
+    ndc.x=(e.clientX/W)*2-1;ndc.y=-(e.clientY/H)*2+1;
+    ray.setFromCamera(ndc,camera);
+    var hits=ray.intersectObjects(proxies,false);
+    if(!hits.length)return;
+    var u=hits[0].object.userData;
+    if(u.bi!=null&&u.bi>=0){openBody(u.bi,false);tipEl.classList.remove('on','pick')}
+    else if(u.hero!=null){ // 序厅装置：脉冲 + 提示
+      var ex=exhibits.find(function(x){return x.hero&&x.def===heroDefs[u.hero]});
+      if(ex)ex.hl=Math.max(ex.hl,.9);
+      if(finePtr){tipEl.innerHTML='<b>序厅装置</b>滚至馆藏图鉴查看档案';tipEl.classList.add('on');
+        clearTimeout(tipEl.__t);tipEl.__t=setTimeout(function(){tipEl.classList.remove('on')},1600)}
+    }
+  });
+  window.addEventListener('scroll',function(){
+    scrollCur=window.scrollY||document.documentElement.scrollTop;
+    if(panelOpen&&Math.abs(scrollCur-focus.scrollRef)>46)closePanel();
+  },{passive:true});
+
+  function docH(){return document.documentElement.scrollHeight}
+  scrollCur=window.scrollY||0;
+
+  /* --- 入场装配 --- */
+  var entStart=0,entDone=false;
+  exhibits.forEach(function(ex,i){ex.t0=performance.now()+240+i*130});
+  canvas.classList.add('on');
+  setP(88);
+
+  /* --- 主循环 --- */
+  var running=false,rafId=0,last=0,clock=0;
+  var tmpV=new THREE.Vector3(),orbitV=new THREE.Vector3();
+  function loop(ts){
+    if(!running)return;
+    rafId=requestAnimationFrame(loop);
+    var dt=clamp((ts-last)/1000,0.001,.05);last=ts;clock+=dt;
+    var spin=REDUCED?0:1;
+
+    /* 入场：低模天体逐个装配浮入 */
+    if(!entDone){
+      var allK=1;
+      exhibits.forEach(function(ex){
+        var k=REDUCED?1:clamp((performance.now()-ex.t0)/ex.dur,0,1);
+        ex.s=1-Math.pow(1-k,3);allK=Math.min(allK,k);
+      });
+      if(allK>=1)entDone=true;
+    }else exhibits.forEach(function(ex){if(ex.s<1)ex.s=1});
+
+    /* 展品动画与高亮 */
+    var mx=Math.max(scrollCur/(Math.max(1,docH()-H)),0);
+    exhibits.forEach(function(ex){
+      if(ex.hero){ // hero 行星：自转 + 低模椭圆轨道公转
+        var d=ex.def;
+        d.group.rotation.y+=d.rot*dt*spin;
+        ex.ang+=d.spd*dt*spin;
+        orbitV.set(Math.cos(ex.ang)*d.R,Math.sin(ex.ang*2)*1.3,Math.sin(ex.ang)*d.R);
+        var k=REDUCED?1:clamp((performance.now()-ex.t0)/ex.dur,0,1),e=1-Math.pow(1-k,3);
+        ex.g.position.copy(orbitV).addScaledVector(ex.off,(1-e));
+        ex.g.scale.setScalar(Math.max(.001,ex.s*(1+ex.hl*.06)));
+        var tgt=hoverBody===ex?1:0;
+        ex.hl+=(tgt-ex.hl)*Math.min(1,dt*6);
+        ex.wire.material.opacity=Math.min(.95,.2+(REDUCED?0:Math.sin(clock*ex.wf+ex.wp)*.06)+ex.hl*.7);
+        return;
+      }
+      // 走廊展品
+      ex.g.rotation.y+=dt*.24*spin;
+      var g2=ex.g;
+      if(g2.userData.pivot){g2.userData.pivot.rotation.y+=dt*.42*spin}
+      if(g2.userData.disk)g2.userData.disk.rotation.z+=dt*1.6*spin;
+      if(g2.userData.pulsar)g2.userData.pulsar.rotation.y+=dt*9*spin;
+      if(g2.userData.tail)g2.userData.tail.rotation.y=Math.sin(clock*.7)*.2;
+      var isAct=(BODIES.indexOf(ex.cfg)===focus.active&&focus.active>=0);
+      var t2=(hoverBody===ex||(isAct&&focus.w>.02))?1:0;
+      ex.hl+=(t2-ex.hl)*Math.min(1,dt*7);
+      // 入场位姿
+      var k2=REDUCED?1:clamp((performance.now()-ex.t0)/ex.dur,0,1),e2=1-Math.pow(1-k2,3);
+      if(e2<1){tmpV.copy(ex.home).add(ex.off);ex.g.position.lerpVectors(tmpV,ex.home,e2)}
+      else ex.g.position.copy(ex.home);
+      ex.g.scale.setScalar(Math.max(.001,ex.s*(1+ex.hl*.06)));
+      if(ex.wire){
+        ex.wire.material.opacity=Math.min(.95,.17+(REDUCED?0:Math.sin(clock*ex.wf+ex.wp)*.05)+ex.hl*.72);
+        ex.wire.material.color.copy(WHITE).lerp(ICE,ex.hl);
+      }
+      if(ex.mesh&&ex.mesh.material.emissiveIntensity!==undefined&&!ex.sun){
+        ex.mesh.material.emissiveIntensity=.05+ex.hl*.38;
+      }
+      if(ex.sun){
+        ex.mesh.material.emissiveIntensity=(REDUCED?1.45:1.45+Math.sin(clock*2)*.12)+ex.hl*.3;
+      }
+    });
+    // 线框闪烁余项：hero 群组轨道透明度呼吸
+    heroGroup.children.forEach(function(o,i){
+      if(o.isLineLoop)o.material.opacity=.16+(REDUCED?0:Math.sin(clock*.8+i*1.4)*.07);
+    });
+    if(window.__shards)window.__shards.forEach(function(s){
+      s.rotation.y+=dt*.02*s.userData.rate*spin;
+      s.position.y=Math.sin(clock*.3*s.userData.rate)*1.4;
+    });
+
+    /* Raycaster hover（每帧最多一次） */
+    if(ptrMoved&&finePtr){
+      ptrMoved=false;
+      ray.setFromCamera(ndc,camera);
+      var hits=ray.intersectObjects(proxies,false);
+      var nb=null,tipTxt='',tipIdx=-1;
+      if(hits.length){
+        var u=hits[0].object.userData;
+        if(u.bi!=null&&u.bi>=0){
+          nb=exhibits.find(function(x){return !x.hero&&x.cfg&&BODIES.indexOf(x.cfg)===u.bi});
+          if(nb){tipTxt='<b>NO.'+nb.cfg.no+'</b>'+nb.cfg.name+' · 点击推近';tipIdx=u.bi}
+        }else if(u.hero!=null){tipTxt='<b>序厅装置</b>低模行星 · 缓慢公转中'}
+      }
+      if(nb!==hoverBody){
+        hoverBody=nb;
+        document.body.style.cursor=hoverBody?'pointer':'';
+        tipPick=tipIdx;
+        if(finePtr){
+          if(tipTxt){tipEl.innerHTML=tipTxt;tipEl.classList.add('on');tipEl.classList.toggle('pick',tipIdx>=0)}
+          else tipEl.classList.remove('on','pick');
+        }
+      }
+    }
+
+    /* 滚动 dolly 相机 */
+    prog=clamp(scrollCur/Math.max(1,docH()-H),0,1);
+    pathAt(prog);
+    pathPos.x+=Math.sin(prog*26)*(prog>.14&&prog<.66?1.15:0);
+    pathPos.y+=Math.sin(clock*.6)*.28;
+    pxs+=(px2-pxs)*Math.min(1,dt*3);pys+=(py2-pys)*Math.min(1,dt*3);
+    pathLook.x+=pxs*.9;pathLook.y+=-pys*.6;
+
+    /* 聚焦权重与位置阻尼 */
+    focus.w+=(focus.wT-focus.w)*Math.min(1,dt*(focus.wT>focus.w?2.8:3.6));
+    if(REDUCED)focus.w=focus.wT;
+    if(focus.wT===0&&focus.w<.02&&focus.active>=0){focus.active=-1}
+    if(focus.active>=0&&focus.w>.001){
+      var fb=exhibits.find(function(x){return !x.hero&&BODIES.indexOf(x.cfg)===focus.active});
+      if(fb){
+        focus.ang+=dt*.14*(REDUCED?0:1);
+        var r=fb.cfg.r;
+        tmpV.copy(pathPos).sub(fb.home);
+        if(tmpV.lengthSq()<.01)tmpV.set(0,0,1);
+        tmpV.normalize();
+        tmpV.y+=.16;tmpV.normalize().multiplyScalar(r*3.1+4.2);
+        var ca=Math.cos(focus.ang),sa=Math.sin(focus.ang);
+        var ox=tmpV.x*ca-tmpV.z*sa,oz=tmpV.x*sa+tmpV.z*ca;
+        orbitV.set(fb.home.x+ox,fb.home.y+tmpV.y,fb.home.z+oz);
+        focus.pos.lerp(orbitV,1-Math.exp(-4.2*dt));
+        pathLook.lerpVectors(pathLook,fb.home,focus.w);
+      }
+    }
+    var camX=pathPos.x+(focus.pos.x-pathPos.x)*focus.w,
+        camY=pathPos.y+(focus.pos.y-pathPos.y)*focus.w,
+        camZ=pathPos.z+(focus.pos.z-pathPos.z)*focus.w;
+    camera.position.set(camX,camY,camZ);
+    camera.lookAt(pathLook);
+
+    /* hero 视差淡出 */
+    var heroEl=qs('#hero .hero-grid');
+    if(heroEl)heroEl.style.opacity=prog<.12?String(clamp(1-prog*6,0,1)):'0';
+
+    /* 碎石带 HUD（标志性时刻提示） */
+    beltHud.classList.toggle('on',!REDUCED&&focus.w<.4&&camZ<-142&&camZ>-214);
+
+    renderer.render(scene,camera);
+    if(!loop._first){loop._first=true;setP(100)}
+  }
+  function startLoop(){if(running)return;running=true;last=performance.now();rafId=requestAnimationFrame(loop)}
+  function stopLoop(){running=false;cancelAnimationFrame(rafId)}
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden)stopLoop();
+    else if(window.THREE&&canvas.classList.contains('on'))startLoop();
+  });
+  window.addEventListener('resize',function(){
+    W=window.innerWidth;H=window.innerHeight;
+    camera.aspect=W/H;camera.updateProjectionMatrix();
+    renderer.setSize(W,H);
+  });
+  renderer.render(scene,camera);
+  setP(100);
+  startLoop();
+}
+
+/* ================= 滚动 UI（3D 与降级模式通用） ================= */
+function setupScrollUI(){
+  var onScr=function(){
+    var y=window.scrollY||document.documentElement.scrollTop||0;
+    var maxScroll=document.documentElement.scrollHeight-window.innerHeight;
+    qs('#nav').classList.toggle('scrolled',y>30);
+    qs('#toTop').classList.toggle('on',y>620);
+    qs('#mobile-bar').classList.toggle('show',y>420&&y<maxScroll-360);
+  };
+  window.addEventListener('scroll',onScr,{passive:true});
+  onScr();
+}
+
+/* ================= 启动 ================= */
+buildCollection();
+buildHalls();
+setupReveal();
+setupCount();
+setupNav();
+setupScrollUI();
+setupForm();
+qs('#ft-year').textContent=new Date().getFullYear();
+})();
+</script>
+</body>
+</html>

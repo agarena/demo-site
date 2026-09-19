@@ -1,0 +1,2423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="星澜科技——以数据为澜，驱动产业进化。企业数字化转型服务商：云计算与数据中台、智能制造解决方案、AI 应用开发。">
+<title>星澜科技 Xinglan Tech · 以数据为澜，驱动产业进化</title>
+<script>/* 尽早标记 JS 可用：无 JS 时内容不受「滚动显现」隐藏影响 */
+document.documentElement.classList.add('js');</script>
+<style>
+/* ==========================================================================
+   星澜科技 · 明亮 3D 产品化叙事 Bright Dimension
+   配色（调研文档方向D）：底白 #FAFAFC / 淡紫面板 #EEF0FF / 紫罗兰 #6C5CE7
+                          青绿 #00C2A8 / 暖黄 #FFB020 / 墨黑 #111827
+   ========================================================================== */
+:root{
+  --paper:#FAFAFC;
+  --panel:#EEF0FF;
+  --violet:#6C5CE7;
+  --violet-d:#5546d6;
+  --teal:#00C2A8;
+  --amber:#FFB020;
+  --ink:#111827;
+  --ink2:#4B5563;
+  --ink3:#7b8194;
+  --line:#E5E7F4;
+  --glass:rgba(255,255,255,.62);
+  --glass-bd:rgba(255,255,255,.75);
+  --shadow-s:0 10px 30px -18px rgba(76,70,180,.35);
+  --shadow-m:0 24px 60px -30px rgba(76,70,180,.38);
+  --shadow-l:0 40px 90px -40px rgba(60,58,160,.45);
+  --r-s:12px;
+  --r-m:18px;
+  --r-l:26px;
+  --f-head:"Sora","Manrope","PingFang SC","Microsoft YaHei",sans-serif;
+  --f-body:"Manrope","PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  --nav-h:72px;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--nav-h) + 14px);-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--f-body);
+  color:var(--ink);
+  background:var(--paper);
+  line-height:1.75;
+  font-size:16px;
+  overflow-x:hidden;
+}
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+ul,ol{list-style:none}
+button,input,textarea,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+::selection{background:rgba(108,92,231,.22)}
+:focus-visible{outline:2px solid var(--violet);outline-offset:3px;border-radius:6px}
+/* 细滚动条 */
+::-webkit-scrollbar{width:10px}
+::-webkit-scrollbar-track{background:#f1f2fa}
+::-webkit-scrollbar-thumb{background:#c9cdf0;border-radius:8px;border:2px solid #f1f2fa}
+::-webkit-scrollbar-thumb:hover{background:var(--violet)}
+
+/* ---------- 通用布局 ---------- */
+.wrap{width:min(1200px,92%);margin:0 auto;position:relative}
+.kicker{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--f-head);font-size:13px;font-weight:600;letter-spacing:.22em;
+  color:var(--violet);text-transform:uppercase;
+}
+.kicker::before{content:"";width:26px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--violet),var(--teal))}
+.sec-head{max-width:720px;margin-bottom:clamp(34px,5vw,60px)}
+.sec-head h2{
+  font-family:var(--f-head);font-weight:700;color:var(--ink);
+  font-size:clamp(28px,3.6vw,44px);line-height:1.25;letter-spacing:-.01em;
+  margin:14px 0 14px;
+}
+.sec-head p{color:var(--ink2);font-size:clamp(15px,1.4vw,17px)}
+.sec-head .em{color:var(--violet)}
+section{position:relative}
+.num{font-family:var(--f-head);font-variant-numeric:tabular-nums}
+
+/* ---------- 按钮 ---------- */
+.btn{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  font-family:var(--f-head);font-weight:600;font-size:15px;letter-spacing:.02em;
+  padding:15px 30px;border-radius:999px;border:1.5px solid transparent;
+  transition:transform .35s var(--ease),box-shadow .35s var(--ease),background .3s,color .3s,border-color .3s;
+  will-change:transform;white-space:nowrap;
+}
+.btn .ar{transition:transform .35s var(--ease)}
+.btn:hover .ar{transform:translateX(5px)}
+.btn-p{background:linear-gradient(135deg,var(--violet),#8b7cf0);color:#fff;box-shadow:0 16px 34px -14px rgba(108,92,231,.65)}
+.btn-p:hover{transform:translateY(-3px);box-shadow:0 22px 44px -16px rgba(108,92,231,.75)}
+.btn-o{border-color:#cfcef2;color:var(--ink);background:rgba(255,255,255,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.btn-o:hover{transform:translateY(-3px);border-color:var(--violet);color:var(--violet);box-shadow:var(--shadow-s)}
+.btn-sm{padding:10px 22px;font-size:14px}
+
+/* ---------- 磨砂玻璃 ---------- */
+.glass{
+  background:var(--glass);
+  backdrop-filter:blur(18px) saturate(1.35);
+  -webkit-backdrop-filter:blur(18px) saturate(1.35);
+  border:1px solid var(--glass-bd);
+  box-shadow:var(--shadow-m);
+}
+
+/* ---------- 顶部滚动进度条 ---------- */
+#sbar{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;pointer-events:none}
+#sbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--violet),var(--teal),var(--amber));
+  transform:scaleX(0);transform-origin:0 50%;transition:transform .12s linear}
+
+/* ---------- 加载入场序列 ---------- */
+#loader{
+  position:fixed;inset:0;z-index:3000;display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:22px;
+  background:
+    radial-gradient(560px 420px at 78% 18%,rgba(108,92,231,.14),transparent 70%),
+    radial-gradient(520px 400px at 16% 82%,rgba(0,194,168,.12),transparent 70%),
+    var(--paper);
+  transition:opacity .6s var(--ease),visibility .6s;
+}
+html.js #loader{display:flex}
+body.ready #loader{opacity:0;visibility:hidden;pointer-events:none}
+.ld-mark{width:76px;height:76px;animation:ldSpin 2.4s linear infinite}
+@keyframes ldSpin{to{transform:rotate(360deg)}}
+.ld-name{font-family:var(--f-head);font-weight:700;font-size:20px;letter-spacing:.35em;text-indent:.35em}
+.ld-bar{width:200px;height:3px;border-radius:3px;background:#e7e8f6;overflow:hidden}
+.ld-bar i{display:block;height:100%;width:0;border-radius:3px;
+  background:linear-gradient(90deg,var(--violet),var(--teal));
+  animation:ldBar 1.5s var(--ease) forwards}
+@keyframes ldBar{to{width:100%}}
+.ld-tip{font-size:12px;color:var(--ink3);letter-spacing:.18em}
+
+/* ---------- 自定义光标（仅精确指针） ---------- */
+#cursor{display:none}
+@media (pointer:fine){
+  html.js body.cur-on,html.js body.cur-on a,html.js body.cur-on button,
+  html.js body.cur-on [data-tilt]{cursor:none}
+  html.js body.cur-on input,html.js body.cur-on textarea{cursor:text}
+  html.js body.cur-on #cursor{display:block}
+}
+#cursor{position:fixed;inset:0;z-index:2600;pointer-events:none}
+.cur-dot{position:absolute;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;
+  background:var(--violet);transition:transform .25s var(--ease),background .25s}
+.cur-ring{position:absolute;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;
+  border:1.5px solid rgba(108,92,231,.65);
+  display:flex;align-items:center;justify-content:center;
+  transition:width .3s var(--ease),height .3s var(--ease),margin .3s var(--ease),
+             background .3s,border-color .3s;
+}
+.cur-ring span{font-size:11px;font-weight:600;color:#fff;opacity:0;transform:scale(.6);
+  transition:.25s var(--ease);letter-spacing:.08em;white-space:nowrap}
+#cursor.on .cur-ring{width:64px;height:64px;margin:-32px 0 0 -32px;background:rgba(108,92,231,.14)}
+#cursor.lbl .cur-ring{width:76px;height:76px;margin:-38px 0 0 -38px;background:rgba(108,92,231,.85);border-color:transparent}
+#cursor.lbl .cur-ring span{opacity:1;transform:scale(1)}
+#cursor.lbl .cur-dot{background:#fff}
+
+/* ---------- 全局 3D 画布 / 降级背景 ---------- */
+#gl{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block}
+body.mode-flat #gl{display:none}
+#bg-fallback{position:fixed;inset:0;z-index:0;pointer-events:none;display:none;overflow:hidden}
+body.mode-flat #bg-fallback{display:block}
+#bg-fallback svg{position:absolute;inset:0;width:100%;height:100%}
+.bf-b1{animation:bfFloat 9s ease-in-out infinite}
+.bf-b2{animation:bfFloat 12s ease-in-out infinite reverse}
+.bf-b3{animation:bfFloat 14s ease-in-out infinite}
+@keyframes bfFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-26px)}}
+
+/* ---------- 内容层位于画布之上 ---------- */
+main{position:relative;z-index:2}
+.solid{background:var(--paper)}
+.solid-tint{background:linear-gradient(180deg,#F4F5FE 0%,var(--paper) 60%)}
+
+/* ---------- 顶部导航 ---------- */
+#topbar{
+  position:fixed;top:0;left:0;right:0;z-index:1100;height:var(--nav-h);
+  transition:background .4s,box-shadow .4s,border-color .4s,backdrop-filter .4s;
+  border-bottom:1px solid transparent;
+}
+#topbar.scrolled{
+  background:rgba(250,250,252,.72);
+  backdrop-filter:blur(20px) saturate(1.4);
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border-bottom-color:var(--line);
+  box-shadow:0 12px 40px -30px rgba(70,66,160,.4);
+}
+.nav{height:var(--nav-h);display:flex;align-items:center;gap:28px}
+.brand{display:flex;align-items:center;gap:11px;font-family:var(--f-head);font-weight:700;font-size:19px;letter-spacing:.02em}
+.brand svg{width:34px;height:34px}
+.brand small{display:block;font-size:10px;font-weight:600;letter-spacing:.3em;color:var(--ink3);line-height:1.4}
+.nav-links{display:flex;gap:4px;margin-left:auto}
+.nav-links a{
+  position:relative;padding:9px 14px;border-radius:999px;font-size:14.5px;color:var(--ink2);
+  font-weight:500;transition:color .3s,background .3s;
+}
+.nav-links a::after{
+  content:"";position:absolute;left:50%;bottom:3px;width:0;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,var(--violet),var(--teal));
+  transform:translateX(-50%);transition:width .3s var(--ease);
+}
+.nav-links a:hover{color:var(--ink)}
+.nav-links a.on{color:var(--violet);font-weight:600}
+.nav-links a.on::after{width:18px}
+.nav-cta{margin-left:6px}
+#burger{display:none;width:44px;height:44px;border-radius:12px;position:relative;margin-left:auto}
+#burger span{position:absolute;left:11px;right:11px;height:2px;border-radius:2px;background:var(--ink);
+  transition:.35s var(--ease)}
+#burger span:nth-child(1){top:15px}
+#burger span:nth-child(2){top:21px}
+#burger span:nth-child(3){top:27px}
+#burger.open span:nth-child(1){top:21px;transform:rotate(45deg)}
+#burger.open span:nth-child(2){opacity:0;transform:translateX(-8px)}
+#burger.open span:nth-child(3){top:21px;transform:rotate(-45deg)}
+#drawer{
+  position:fixed;inset:0;z-index:1050;display:flex;flex-direction:column;justify-content:center;
+  padding:90px 8% 50px;gap:6px;
+  background:rgba(250,250,252,.86);
+  backdrop-filter:blur(26px) saturate(1.4);
+  -webkit-backdrop-filter:blur(26px) saturate(1.4);
+  opacity:0;visibility:hidden;transform:translateY(-14px);
+  transition:.45s var(--ease);
+}
+#drawer.open{opacity:1;visibility:visible;transform:none}
+#drawer a.dl{
+  font-family:var(--f-head);font-weight:600;font-size:26px;padding:11px 0;color:var(--ink);
+  border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;
+  transform:translateY(16px);opacity:0;transition:.5s var(--ease);
+}
+#drawer.open a.dl{transform:none;opacity:1}
+#drawer a.dl i{font-style:normal;font-size:12px;color:var(--ink3);letter-spacing:.2em}
+#drawer .d-foot{margin-top:26px;color:var(--ink2);font-size:14px;line-height:2}
+#drawer .d-foot b{color:var(--ink)}
+
+/* ---------- Hero ---------- */
+.hero{min-height:100svh;display:flex;align-items:center;padding:calc(var(--nav-h) + 46px) 0 90px;overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:40px;align-items:center;width:100%}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:9px;padding:8px 16px;border-radius:999px;
+  font-size:12.5px;font-weight:600;letter-spacing:.12em;color:var(--violet-d);
+}
+.hero-badge .pulse{width:8px;height:8px;border-radius:50%;background:var(--teal);position:relative}
+.hero-badge .pulse::after{content:"";position:absolute;inset:-4px;border-radius:50%;
+  border:1.5px solid var(--teal);animation:pw 1.8s ease-out infinite}
+@keyframes pw{0%{transform:scale(.4);opacity:1}100%{transform:scale(1.25);opacity:0}}
+.hero-h{
+  font-family:var(--f-head);font-weight:700;letter-spacing:-.015em;
+  font-size:clamp(40px,6.2vw,82px);line-height:1.14;margin:26px 0 24px;
+}
+.hero-h .hl{display:block;overflow:hidden}
+.hero-h .hl i{display:block;font-style:normal;transform:translateY(110%);opacity:0}
+body.ready .hero-h .hl:nth-child(1) i{animation:hlUp .9s var(--ease) .12s forwards}
+body.ready .hero-h .hl:nth-child(2) i{animation:hlUp .9s var(--ease) .24s forwards}
+@keyframes hlUp{to{transform:none;opacity:1}}
+.hero-h em{
+  font-style:normal;position:relative;white-space:nowrap;
+  background:linear-gradient(120deg,var(--violet) 20%,var(--teal) 90%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero-h em::after{
+  content:"";position:absolute;left:2%;right:2%;bottom:.04em;height:.14em;border-radius:6px;
+  background:linear-gradient(90deg,rgba(255,176,32,.55),rgba(108,92,231,.28));z-index:-1;
+}
+.hero-sub{max-width:520px;color:var(--ink2);font-size:clamp(15px,1.5vw,17.5px)}
+.hero-cta{display:flex;gap:16px;flex-wrap:wrap;margin:34px 0 38px}
+.hero-chips{display:flex;flex-wrap:wrap;gap:10px 22px}
+.hero-chips li{
+  display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink2);font-weight:500;
+}
+.hero-chips li::before{content:"";width:6px;height:6px;border-radius:50%;
+  background:linear-gradient(135deg,var(--violet),var(--teal))}
+/* 入场序列：徽章/副文案/按钮/胶囊 依次上浮 */
+.hin{opacity:0;transform:translateY(26px)}
+body.ready .hin{animation:hinUp .85s var(--ease) forwards}
+body.ready .hin.d1{animation-delay:.05s}
+body.ready .hin.d2{animation-delay:.4s}
+body.ready .hin.d3{animation-delay:.52s}
+body.ready .hin.d4{animation-delay:.66s}
+@keyframes hinUp{to{opacity:1;transform:none}}
+/* 悬浮玻璃小卡（与 3D 场景叠加） */
+.hero-side{position:relative;min-height:420px}
+.hf-card{
+  position:absolute;border-radius:var(--r-m);padding:16px 20px;max-width:250px;
+  font-size:13px;line-height:1.65;color:var(--ink2);
+  animation:hfFloat 7s ease-in-out infinite;
+}
+.hf-card b{display:flex;align-items:center;gap:8px;font-family:var(--f-head);font-size:15px;color:var(--ink);margin-bottom:4px}
+.hf-card b svg{width:18px;height:18px;flex:none}
+.hf1{top:8%;right:2%}
+.hf2{bottom:12%;right:20%;animation-delay:-3.2s}
+.hf-card .up{color:var(--teal);font-weight:700}
+@keyframes hfFloat{0%,100%{transform:translateY(0) rotate(-.4deg)}50%{transform:translateY(-16px) rotate(.6deg)}}
+.scroll-hint{
+  position:absolute;left:50%;bottom:26px;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  font-size:11.5px;letter-spacing:.32em;color:var(--ink3);white-space:nowrap;
+}
+.scroll-hint i{width:1.5px;height:44px;background:linear-gradient(180deg,var(--violet),transparent);
+  display:block;position:relative;overflow:hidden}
+.scroll-hint i::after{content:"";position:absolute;left:0;top:-40%;width:100%;height:40%;
+  background:var(--teal);animation:shDrop 1.6s ease-in-out infinite}
+@keyframes shDrop{to{top:110%}}
+
+/* ---------- 滚动叙事（pin 画布 / 三章） ---------- */
+#story{position:relative}
+body.mode-pin #story{height:100vh;height:100svh}
+.story-inner{position:relative;height:100%}
+body:not(.mode-pin) .story-inner{padding:clamp(60px,9vw,110px) 0}
+.story-mark{
+  position:absolute;top:26px;left:50%;transform:translateX(-50%);
+  font-size:11px;letter-spacing:.4em;color:var(--ink3);white-space:nowrap;z-index:5;
+}
+.story-hud{
+  position:absolute;left:50%;bottom:30px;transform:translateX(-50%);z-index:6;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+}
+.hud-line{width:150px;height:2px;border-radius:2px;background:rgba(17,24,39,.1);overflow:hidden}
+.hud-line i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--violet),var(--teal));
+  transform:scaleX(0);transform-origin:0 50%}
+.hud-dots{display:flex;gap:22px}
+.hud-dots button{
+  display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink3);font-weight:600;
+  letter-spacing:.1em;transition:color .3s;padding:6px 2px;
+}
+.hud-dots button i{width:9px;height:9px;border-radius:50%;border:1.5px solid #b9bce0;transition:.3s;font-style:normal}
+.hud-dots button.on{color:var(--violet-d)}
+.hud-dots button.on i{background:var(--violet);border-color:var(--violet);box-shadow:0 0 0 4px rgba(108,92,231,.16)}
+.story-chapter{position:relative;z-index:3}
+/* pin 模式：章节为覆盖层，随滚动进度切换 */
+body.mode-pin .story-chapter{
+  position:absolute;inset:0;display:flex;align-items:center;padding:0 6%;
+  opacity:0;visibility:hidden;transform:translateY(36px);
+  transition:opacity .55s var(--ease),transform .55s var(--ease),visibility .55s;
+  pointer-events:none;
+}
+body.mode-pin .story-chapter.active{opacity:1;visibility:visible;transform:none;pointer-events:auto}
+body.mode-pin .ch-copy{max-width:430px}
+body.mode-pin .story-chapter[data-ch="2"]{justify-content:center;align-items:flex-end;padding-bottom:15vh}
+body.mode-pin .story-chapter[data-ch="2"] .ch-copy{max-width:560px;text-align:center}
+body.mode-pin .story-chapter[data-ch="2"] .ch-kicker{justify-content:center}
+body.mode-pin .story-chapter[data-ch="2"] .ch-chips{justify-content:center}
+body.mode-pin .story-chapter[data-ch="3"]{justify-content:flex-end}
+body.mode-pin .ch-art,body.mode-pin .story-shot{display:none}
+/* 非 pin 模式（降级 / 移动端）：章节纵向堆叠，图文两栏 */
+body:not(.mode-pin) .story-chapter{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(26px,5vw,64px);
+  align-items:center;padding:clamp(34px,6vw,70px) 0;
+  opacity:0;transform:translateY(30px);
+}
+body:not(.mode-pin) .story-chapter.in{opacity:1;transform:none;transition:opacity .8s var(--ease),transform .8s var(--ease)}
+body:not(.mode-pin) .story-chapter:nth-child(even) .ch-copy{order:2}
+.ch-kicker{display:flex;align-items:center;gap:10px;font-family:var(--f-head);font-size:12.5px;
+  font-weight:700;letter-spacing:.26em;color:var(--violet);margin-bottom:16px}
+.ch-kicker::before{content:"";width:22px;height:2px;border-radius:2px;background:var(--violet)}
+.ch-idx{
+  font-family:var(--f-head);font-weight:700;font-size:clamp(56px,7vw,96px);line-height:1;
+  color:transparent;-webkit-text-stroke:1.5px rgba(108,92,231,.35);
+  margin-bottom:6px;
+}
+.story-chapter h3{
+  font-family:var(--f-head);font-weight:700;font-size:clamp(24px,3vw,38px);line-height:1.3;
+  margin-bottom:16px;letter-spacing:-.01em;
+}
+.story-chapter .ch-p{color:var(--ink2);font-size:15.5px;margin-bottom:22px}
+.ch-chips{display:flex;flex-wrap:wrap;gap:10px}
+.ch-chips span{
+  padding:8px 15px;border-radius:999px;font-size:12.5px;font-weight:600;
+  background:rgba(108,92,231,.09);color:var(--violet-d);border:1px solid rgba(108,92,231,.16);
+}
+.ch-chips span:nth-child(2){background:rgba(0,194,168,.1);color:#0a8d7c;border-color:rgba(0,194,168,.22)}
+.ch-chips span:nth-child(3){background:rgba(255,176,32,.14);color:#a86e00;border-color:rgba(255,176,32,.3)}
+.ch-art{position:relative;border-radius:var(--r-l);overflow:hidden}
+.ch-art svg{width:100%;height:auto}
+.story-shot{display:none;width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:var(--r-l)}
+body.mode-snap .story-shot{display:block}
+body.mode-snap .ch-art svg{display:none}
+body.mode-flat .ch-art svg{display:block}
+.ch-float{
+  position:absolute;top:14px;right:14px;padding:8px 14px;border-radius:999px;
+  font-size:12px;font-weight:700;color:#fff;background:rgba(108,92,231,.85);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+
+/* ---------- 数据信任带 ---------- */
+#stats{padding:clamp(60px,8vw,100px) 0}
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:18px}
+.stat{
+  border-radius:var(--r-l);padding:30px 24px 26px;text-align:left;position:relative;overflow:hidden;
+  transition:transform .4s var(--ease),box-shadow .4s var(--ease);
+}
+.stat:hover{transform:translateY(-6px);box-shadow:var(--shadow-l)}
+.stat::after{content:"";position:absolute;top:-46px;right:-46px;width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle,rgba(108,92,231,.12),transparent 70%)}
+.stat-n{display:flex;align-items:baseline;gap:2px;font-family:var(--f-head)}
+.stat-n b{font-size:clamp(34px,3.4vw,46px);font-weight:700;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;color:var(--ink)}
+.stat-n span{font-size:22px;font-weight:700;color:var(--violet)}
+.stat p{color:var(--ink2);font-size:13.5px;margin-top:6px}
+.stat-bar{height:4px;border-radius:4px;background:#e9eaf8;margin-top:16px;overflow:hidden}
+.stat-bar i{display:block;height:100%;width:100%;border-radius:4px;
+  background:linear-gradient(90deg,var(--violet),var(--teal));
+  transform:scaleX(0);transform-origin:0 50%;transition:transform 1.3s var(--ease) .25s}
+.stat.in .stat-bar i{transform:scaleX(var(--w,1))}
+.stat-ring{position:absolute;top:20px;right:18px;width:64px;height:64px}
+.stat-ring circle{fill:none;stroke-width:6;stroke-linecap:round}
+.stat-ring .bgc{stroke:#ecedf9}
+.stat-ring .fgc{stroke:url(#ringGrad);stroke-dasharray:163.4;stroke-dashoffset:163.4;
+  transition:stroke-dashoffset 1.6s var(--ease) .3s}
+.stat.in .stat-ring .fgc{stroke-dashoffset:6.3}
+
+/* ---------- 关于星澜 ---------- */
+#about{padding:clamp(70px,10vw,130px) 0}
+.about-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:clamp(34px,6vw,80px);align-items:center}
+.about-media{position:relative}
+.about-media .am-frame{
+  border-radius:var(--r-l);overflow:hidden;box-shadow:var(--shadow-l);
+  border:1px solid rgba(255,255,255,.8);
+}
+.about-media svg{width:100%;height:auto}
+.am-badge{
+  position:absolute;left:-20px;bottom:30px;border-radius:var(--r-m);padding:16px 22px;
+  display:flex;gap:14px;align-items:center;animation:hfFloat 8s ease-in-out infinite;
+}
+.am-badge b{font-family:var(--f-head);font-size:26px;font-weight:700;color:var(--violet);display:block;line-height:1.1}
+.am-badge span{font-size:12.5px;color:var(--ink2)}
+.am-chip{position:absolute;top:20px;right:-12px;padding:9px 16px;border-radius:999px;font-size:12.5px;
+  font-weight:700;color:#0a8d7c;animation:hfFloat 6.5s ease-in-out -2s infinite}
+.about-copy h2{font-family:var(--f-head);font-weight:700;font-size:clamp(27px,3.2vw,40px);
+  line-height:1.3;margin:14px 0 20px;letter-spacing:-.01em}
+.about-copy .lead{color:var(--ink2);font-size:16px;margin-bottom:14px}
+.checks{margin:26px 0 32px;display:grid;grid-template-columns:1fr 1fr;gap:13px 22px}
+.checks li{display:flex;gap:11px;align-items:flex-start;font-size:14.5px;color:var(--ink);font-weight:500}
+.checks li svg{flex:none;width:21px;height:21px;margin-top:2px}
+.tlink{display:inline-flex;align-items:center;gap:9px;font-family:var(--f-head);font-weight:700;
+  color:var(--violet);font-size:15px;border-bottom:2px solid rgba(108,92,231,.25);padding-bottom:4px;
+  transition:border-color .3s,gap .3s}
+.tlink:hover{border-color:var(--violet);gap:14px}
+
+/* ---------- 发展历程时间线 ---------- */
+#timeline{padding:0 0 clamp(70px,10vw,130px)}
+.tl{position:relative;max-width:960px;margin:0 auto}
+.tl::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;
+  background:linear-gradient(180deg,transparent,rgba(108,92,231,.35) 12%,rgba(0,194,168,.3) 70%,transparent)}
+.tl-item{position:relative;width:50%;padding:0 46px 54px 0}
+.tl-item:nth-child(even){margin-left:50%;padding:0 0 54px 46px}
+.tl-item::before{
+  content:"";position:absolute;top:8px;right:-8px;width:16px;height:16px;border-radius:50%;
+  background:#fff;border:3px solid var(--violet);box-shadow:0 0 0 6px rgba(108,92,231,.12);z-index:1;
+}
+.tl-item:nth-child(even)::before{right:auto;left:-8px}
+.tl-year{
+  display:inline-block;font-family:var(--f-head);font-weight:700;font-size:15px;color:#fff;
+  background:linear-gradient(135deg,var(--violet),#8b7cf0);padding:5px 16px;border-radius:999px;
+  margin-bottom:12px;font-variant-numeric:tabular-nums;
+}
+.tl-item:nth-child(3n) .tl-year{background:linear-gradient(135deg,var(--teal),#3ad6c2)}
+.tl-item:nth-child(4n) .tl-year{background:linear-gradient(135deg,var(--amber),#ffc95c)}
+.tl-card{border-radius:var(--r-m);padding:20px 22px}
+.tl-card h4{font-family:var(--f-head);font-size:17px;font-weight:700;margin-bottom:6px}
+.tl-card p{color:var(--ink2);font-size:14px}
+
+/* ---------- 核心业务 ---------- */
+#business{padding:clamp(70px,10vw,130px) 0}
+.biz-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.biz-card{
+  position:relative;border-radius:var(--r-l);padding:34px 30px 30px;overflow:hidden;
+  border:1px solid rgba(228,230,244,.9);background:rgba(255,255,255,.8);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  box-shadow:var(--shadow-s);
+  transition:box-shadow .4s var(--ease),border-color .4s;
+  will-change:transform;transform-style:preserve-3d;
+}
+.biz-card:hover{box-shadow:var(--shadow-l);border-color:rgba(108,92,231,.28)}
+.biz-card::before{
+  content:"";position:absolute;inset:0;opacity:0;transition:opacity .4s;
+  background:radial-gradient(340px circle at var(--gx,50%) var(--gy,0%),rgba(108,92,231,.1),transparent 65%);
+}
+.biz-card:hover::before{opacity:1}
+.biz-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px}
+.biz-ic{
+  width:60px;height:60px;border-radius:18px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,rgba(108,92,231,.13),rgba(0,194,168,.12));
+  transition:transform .5s var(--ease);
+}
+.biz-card:hover .biz-ic{transform:rotate(-8deg) scale(1.08)}
+.biz-ic svg{width:30px;height:30px}
+.biz-no{font-family:var(--f-head);font-weight:700;font-size:15px;color:#c6c9ea;font-variant-numeric:tabular-nums}
+.biz-card h3{font-family:var(--f-head);font-size:19.5px;font-weight:700;margin-bottom:10px}
+.biz-card p{color:var(--ink2);font-size:14px;margin-bottom:18px}
+.biz-tags{display:flex;flex-wrap:wrap;gap:8px}
+.biz-tags span{font-size:12px;font-weight:600;color:var(--violet-d);
+  background:rgba(108,92,231,.08);border:1px solid rgba(108,92,231,.14);
+  padding:5px 12px;border-radius:999px;transition:.3s}
+.biz-card:hover .biz-tags span{background:rgba(108,92,231,.13)}
+
+/* ---------- 客户案例 ---------- */
+#cases{padding:clamp(70px,10vw,130px) 0}
+.case-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
+.case-card{
+  position:relative;border-radius:var(--r-l);padding:34px 32px 30px;overflow:hidden;
+  border:1px solid rgba(228,230,244,.9);
+  background:linear-gradient(160deg,rgba(255,255,255,.92),rgba(238,240,255,.65));
+  box-shadow:var(--shadow-s);
+  transition:box-shadow .45s var(--ease),border-color .45s;
+  will-change:transform;transform-style:preserve-3d;
+}
+.case-card:hover{box-shadow:var(--shadow-l);border-color:rgba(0,194,168,.35)}
+.case-tag{
+  display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;
+  letter-spacing:.1em;color:#0a8d7c;background:rgba(0,194,168,.11);
+  border:1px solid rgba(0,194,168,.25);padding:6px 14px;border-radius:999px;margin-bottom:16px;
+}
+.case-card h3{font-family:var(--f-head);font-size:21px;font-weight:700;margin-bottom:12px}
+.case-card .c-line{color:var(--ink2);font-size:14px;margin-bottom:8px;display:flex;gap:9px}
+.case-card .c-line b{flex:none;color:var(--ink);font-weight:700}
+.case-metrics{display:flex;gap:14px;margin:20px 0 18px;flex-wrap:wrap}
+.cm{
+  flex:1;min-width:120px;border-radius:var(--r-m);padding:14px 18px;
+  background:rgba(108,92,231,.06);border:1px dashed rgba(108,92,231,.22);
+}
+.cm b{display:block;font-family:var(--f-head);font-weight:700;font-size:26px;color:var(--violet);
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cm:nth-child(2) b{color:var(--teal)}
+.cm span{font-size:12.5px;color:var(--ink2)}
+.case-client{font-size:12.5px;color:var(--ink3);border-top:1px solid var(--line);padding-top:14px}
+
+/* ---------- 新闻动态 ---------- */
+#news{padding:clamp(70px,10vw,130px) 0}
+.news-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.news-card{
+  border-radius:var(--r-l);overflow:hidden;background:#fff;border:1px solid var(--line);
+  box-shadow:var(--shadow-s);display:flex;flex-direction:column;
+  transition:transform .45s var(--ease),box-shadow .45s var(--ease);
+}
+.news-card:hover{transform:translateY(-8px);box-shadow:var(--shadow-l)}
+.news-cover{position:relative;height:170px;overflow:hidden}
+.news-cover svg{width:100%;height:100%;transition:transform .8s var(--ease)}
+.news-card:hover .news-cover svg{transform:scale(1.07)}
+.news-cat{position:absolute;top:14px;left:14px;font-size:11.5px;font-weight:700;color:#fff;
+  background:rgba(17,24,39,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  padding:5px 12px;border-radius:999px;letter-spacing:.08em}
+.news-body{padding:22px 24px 24px;display:flex;flex-direction:column;flex:1}
+.news-date{font-size:12.5px;color:var(--ink3);font-variant-numeric:tabular-nums;margin-bottom:9px}
+.news-body h3{font-family:var(--f-head);font-size:17px;font-weight:700;line-height:1.55;margin-bottom:10px;
+  transition:color .3s}
+.news-card:hover .news-body h3{color:var(--violet)}
+.news-body p{color:var(--ink2);font-size:13.5px;flex:1}
+.news-more{margin-top:16px;display:inline-flex;align-items:center;gap:7px;font-size:13.5px;
+  font-weight:700;color:var(--violet)}
+.news-more svg{transition:transform .3s var(--ease)}
+.news-card:hover .news-more svg{transform:translateX(4px)}
+
+/* ---------- 加入我们 ---------- */
+#join{padding:clamp(70px,10vw,130px) 0}
+.job-list{display:flex;flex-direction:column;gap:16px;margin-bottom:34px}
+.job-row{
+  display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr) auto;gap:22px;align-items:center;
+  border-radius:var(--r-l);padding:26px 30px;border:1px solid rgba(228,230,244,.9);
+  background:rgba(255,255,255,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  box-shadow:var(--shadow-s);
+  transition:transform .4s var(--ease),box-shadow .4s var(--ease),border-color .4s;
+}
+.job-row:hover{transform:translateX(8px);box-shadow:var(--shadow-m);border-color:rgba(108,92,231,.3)}
+.job-row h3{font-family:var(--f-head);font-size:19px;font-weight:700;margin-bottom:7px}
+.job-meta{display:flex;flex-wrap:wrap;gap:8px}
+.job-meta span{font-size:12px;font-weight:600;color:var(--ink2);background:#f0f1fb;
+  border:1px solid var(--line);padding:4px 12px;border-radius:999px}
+.job-row p{color:var(--ink2);font-size:14px}
+.job-btn{
+  flex:none;display:inline-flex;align-items:center;gap:8px;padding:11px 24px;border-radius:999px;
+  border:1.5px solid rgba(108,92,231,.35);color:var(--violet);font-weight:700;font-size:14px;
+  font-family:var(--f-head);transition:.3s;
+}
+.job-btn:hover{background:var(--violet);color:#fff;border-color:var(--violet);transform:translateY(-2px)}
+.benefits{display:flex;flex-wrap:wrap;gap:10px}
+.benefits span{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;
+  color:var(--ink2);padding:9px 16px;border-radius:999px;background:rgba(0,194,168,.08);
+  border:1px solid rgba(0,194,168,.2)}
+.benefits svg{width:15px;height:15px}
+
+/* ---------- CTA 横幅 ---------- */
+.cta-band{padding:0 0 clamp(70px,10vw,130px)}
+.cta-inner{
+  position:relative;border-radius:var(--r-l);overflow:hidden;padding:clamp(44px,6vw,76px) clamp(28px,6vw,80px);
+  display:flex;align-items:center;justify-content:space-between;gap:30px;flex-wrap:wrap;
+  background:linear-gradient(120deg,#241f63 0%,var(--violet) 55%,#8b5cf6 100%);
+  box-shadow:0 46px 100px -46px rgba(108,92,231,.8);
+}
+.cta-inner::before,.cta-inner::after{content:"";position:absolute;border-radius:50%}
+.cta-inner::before{width:340px;height:340px;right:-90px;top:-160px;background:rgba(255,255,255,.09)}
+.cta-inner::after{width:220px;height:220px;left:-70px;bottom:-130px;background:rgba(0,194,168,.25)}
+.cta-inner h2{font-family:var(--f-head);color:#fff;font-weight:700;font-size:clamp(24px,3.2vw,38px);
+  line-height:1.35;position:relative;z-index:1}
+.cta-inner p{color:rgba(255,255,255,.75);font-size:15px;margin-top:10px;position:relative;z-index:1}
+.cta-inner .btn-w{background:#fff;color:var(--violet-d);position:relative;z-index:1;
+  box-shadow:0 20px 44px -18px rgba(10,8,50,.6)}
+.cta-inner .btn-w:hover{transform:translateY(-3px)}
+
+/* ---------- 联系我们 ---------- */
+#contact{padding:clamp(70px,10vw,130px) 0}
+.contact-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(30px,5vw,60px);align-items:start}
+.c-info h2{font-family:var(--f-head);font-weight:700;font-size:clamp(27px,3.2vw,40px);margin:14px 0 18px;
+  line-height:1.3;letter-spacing:-.01em}
+.c-info>p{color:var(--ink2);font-size:15px;margin-bottom:28px}
+.c-rows{display:flex;flex-direction:column;gap:18px;margin-bottom:30px}
+.c-row{display:flex;gap:16px;align-items:flex-start}
+.c-row .c-ic{flex:none;width:46px;height:46px;border-radius:14px;display:flex;align-items:center;
+  justify-content:center;background:rgba(108,92,231,.1)}
+.c-row .c-ic svg{width:22px;height:22px}
+.c-row b{display:block;font-family:var(--f-head);font-size:14px;margin-bottom:2px}
+.c-row p{color:var(--ink2);font-size:14px}
+.map-art{border-radius:var(--r-l);overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow-s)}
+.map-art svg{width:100%;height:auto}
+.map-pin-pulse{transform-origin:center;animation:mapPw 2s ease-out infinite}
+@keyframes mapPw{0%{transform:scale(.4);opacity:.9}100%{transform:scale(2.6);opacity:0}}
+.form-card{border-radius:var(--r-l);padding:clamp(26px,3.5vw,44px)}
+.form-card h3{font-family:var(--f-head);font-size:22px;font-weight:700;margin-bottom:6px}
+.form-card .f-sub{color:var(--ink2);font-size:14px;margin-bottom:26px}
+.f-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field.full{grid-column:1/-1}
+.field label{font-size:13.5px;font-weight:700;color:var(--ink)}
+.field label i{font-style:normal;color:#e5484d;margin-left:3px}
+.field input,.field textarea{
+  border:1.5px solid var(--line);border-radius:var(--r-s);padding:13px 16px;font-size:14.5px;
+  background:rgba(255,255,255,.85);transition:border-color .3s,box-shadow .3s;width:100%;
+}
+.field textarea{resize:vertical;min-height:120px}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--violet);
+  box-shadow:0 0 0 4px rgba(108,92,231,.12)}
+.field.err input,.field.err textarea{border-color:#e5484d;box-shadow:0 0 0 4px rgba(229,72,77,.1)}
+.ferr{font-size:12.5px;color:#e5484d;display:none}
+.field.err .ferr{display:block}
+.f-actions{grid-column:1/-1;display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:6px}
+.f-note{font-size:12.5px;color:var(--ink3)}
+#formOk{display:none;text-align:center;padding:44px 20px}
+#formOk.show{display:block}
+#formOk .ok-ic{width:84px;height:84px;margin:0 auto 22px;border-radius:50%;
+  background:rgba(0,194,168,.12);display:flex;align-items:center;justify-content:center;
+  animation:okPop .6s var(--ease)}
+@keyframes okPop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+#formOk h3{font-family:var(--f-head);font-size:23px;font-weight:700;margin-bottom:10px}
+#formOk p{color:var(--ink2);font-size:14.5px;margin-bottom:26px}
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;
+  border-radius:50%;animation:spin .7s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn.loading .spin{display:block}
+.btn.loading{pointer-events:none;opacity:.85}
+
+/* ---------- 页脚 ---------- */
+footer{position:relative;z-index:2;background:#131230;color:#c6c8e4}
+.foot-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1.2fr;gap:clamp(28px,4vw,56px);
+  padding:clamp(54px,7vw,86px) 0 46px}
+.foot-brand{display:flex;align-items:center;gap:11px;color:#fff;font-family:var(--f-head);
+  font-weight:700;font-size:19px;margin-bottom:18px}
+.foot-brand svg{width:34px;height:34px}
+.foot-col p{font-size:13.5px;line-height:1.9;color:#a7aacd}
+.foot-col h4{color:#fff;font-family:var(--f-head);font-size:15px;font-weight:700;
+  margin-bottom:18px;letter-spacing:.06em}
+.foot-col ul{display:flex;flex-direction:column;gap:11px}
+.foot-col ul a{font-size:13.5px;color:#a7aacd;transition:color .3s,padding-left .3s;position:relative}
+.foot-col ul a:hover{color:#fff;padding-left:6px}
+.foot-c-row{display:flex;gap:11px;font-size:13.5px;color:#a7aacd;margin-bottom:12px;align-items:flex-start}
+.foot-c-row svg{flex:none;width:17px;height:17px;margin-top:3px}
+.soc{display:flex;gap:12px;margin-top:20px}
+.soc a{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.08);
+  display:flex;align-items:center;justify-content:center;transition:.3s}
+.soc a:hover{background:var(--violet);transform:translateY(-3px)}
+.soc svg{width:19px;height:19px}
+.foot-bottom{border-top:1px solid rgba(255,255,255,.09);padding:22px 0;display:flex;
+  justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#8a8db4}
+.foot-bottom a{color:#a7aacd}.foot-bottom a:hover{color:#fff}
+
+/* ---------- 返回顶部 ---------- */
+#backtop{
+  position:fixed;right:26px;bottom:26px;z-index:1000;width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,var(--violet),#8b7cf0);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 18px 40px -14px rgba(108,92,231,.7);
+  opacity:0;visibility:hidden;transform:translateY(18px);
+  transition:.4s var(--ease);
+}
+#backtop.show{opacity:1;visibility:visible;transform:none}
+#backtop:hover{transform:translateY(-4px)}
+#backtop svg{width:20px;height:20px}
+
+/* ---------- 滚动显现 ---------- */
+html.js .rv{opacity:0;transform:translateY(30px);
+  transition:opacity .8s var(--ease),transform .8s var(--ease);transition-delay:var(--d,0s)}
+html.js .rv.in{opacity:1;transform:none}
+
+/* ---------- 响应式：≤1199px 平板 ---------- */
+@media (max-width:1199px){
+  .hero-grid{grid-template-columns:1fr;gap:10px}
+  .hero-side{display:none}
+  .hero{padding-bottom:120px}
+  .stats-grid{grid-template-columns:repeat(3,1fr)}
+  .biz-grid{grid-template-columns:repeat(2,1fr)}
+  .news-grid{grid-template-columns:repeat(3,1fr)}
+  .foot-grid{grid-template-columns:1fr 1fr}
+  .nav-links{display:none}
+  #burger{display:block}
+  .nav-cta{display:none}
+}
+/* ---------- 响应式：≤768px（移动端：叙事改纵向堆叠） ---------- */
+@media (max-width:768px){
+  :root{--nav-h:62px}
+  body{font-size:15px}
+  .hero-h{font-size:clamp(34px,10vw,46px)}
+  .hero-cta .btn{flex:1;justify-content:center}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:14px}
+  .stat{padding:24px 20px 20px}
+  .stat-ring{display:none}
+  .about-grid{grid-template-columns:1fr}
+  .am-badge{left:12px;bottom:-20px}
+  .am-chip{right:8px}
+  .checks{grid-template-columns:1fr}
+  /* 时间线单侧排列 */
+  .tl::before{left:8px}
+  .tl-item,.tl-item:nth-child(even){width:100%;margin-left:0;padding:0 0 44px 38px}
+  .tl-item::before,.tl-item:nth-child(even)::before{left:1px;right:auto}
+  .biz-grid{grid-template-columns:1fr}
+  .case-grid{grid-template-columns:1fr}
+  .news-grid{grid-template-columns:1fr}
+  .job-row{grid-template-columns:1fr;gap:14px;align-items:start}
+  .job-btn{justify-self:start}
+  body:not(.mode-pin) .story-chapter{grid-template-columns:1fr;gap:24px}
+  body:not(.mode-pin) .story-chapter:nth-child(even) .ch-copy{order:0}
+  .contact-grid{grid-template-columns:1fr}
+  .f-grid{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr;gap:34px}
+  .foot-bottom{flex-direction:column;align-items:flex-start}
+  .scroll-hint{display:none}
+  #backtop{right:16px;bottom:16px;width:46px;height:46px}
+}
+/* ---------- 响应式：≤420px 小屏（375 档） ---------- */
+@media (max-width:420px){
+  .hero{padding-top:calc(var(--nav-h) + 26px)}
+  .hero-badge{font-size:11px;padding:7px 12px}
+  .hero-chips{gap:8px 16px}
+  .hero-chips li{font-size:12.5px}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .stat-n b{font-size:30px}
+  .stat-n span{font-size:17px}
+  .stat p{font-size:12px}
+  .cta-inner{padding:36px 24px}
+  .cta-inner .btn{width:100%}
+  .hf-card{display:none}
+  .ch-idx{font-size:52px}
+  .case-card,.biz-card{padding:26px 22px 24px}
+  .cm{min-width:100%}
+  .foot-brand{font-size:17px}
+}
+/* ---------- 降级 / 减少动态 ---------- */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001s!important;animation-delay:0s!important;
+    transition-duration:.15s!important}
+}
+body.reduced .hf-card,body.reduced .am-badge,body.reduced .am-chip{animation:none}
+body.reduced #cursor{display:none!important}
+</style>
+</head>
+<body class="mode-init">
+
+<!-- ======================= 加载入场 ======================= -->
+<div id="loader" aria-hidden="true">
+  <svg class="ld-mark" viewBox="0 0 80 80" fill="none" aria-hidden="true">
+    <circle cx="40" cy="40" r="34" stroke="#E3E4F6" stroke-width="3"/>
+    <path d="M40 6 a34 34 0 0 1 29.7 17.5" stroke="#6C5CE7" stroke-width="5" stroke-linecap="round"/>
+    <path d="M40 74 a34 34 0 0 1 -29.7 -17.5" stroke="#00C2A8" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="40" cy="40" r="9" fill="#6C5CE7"/>
+    <circle cx="63" cy="27" r="4.5" fill="#FFB020"/>
+  </svg>
+  <div class="ld-name">星澜科技</div>
+  <div class="ld-bar"><i></i></div>
+  <div class="ld-tip">正在构建明亮维度</div>
+</div>
+
+<!-- ======================= 自定义光标 ======================= -->
+<div id="cursor" aria-hidden="true">
+  <div class="cur-dot"></div>
+  <div class="cur-ring"><span>查看</span></div>
+</div>
+
+<!-- ======================= 顶部进度条 ======================= -->
+<div id="sbar" aria-hidden="true"><i></i></div>
+
+<!-- ======================= 3D 画布（three.js） ======================= -->
+<canvas id="gl" aria-hidden="true"></canvas>
+
+<!-- ======================= 降级背景（无 WebGL / 无 three.js 时启用） ======================= -->
+<div id="bg-fallback" aria-hidden="true">
+  <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <radialGradient id="bfG1" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#6C5CE7" stop-opacity=".16"/>
+        <stop offset="100%" stop-color="#6C5CE7" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="bfG2" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#00C2A8" stop-opacity=".15"/>
+        <stop offset="100%" stop-color="#00C2A8" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="bfCube" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#8b7cf0"/><stop offset="100%" stop-color="#6C5CE7"/>
+      </linearGradient>
+    </defs>
+    <g class="bf-b1" data-depth="0.06">
+      <circle cx="1120" cy="210" r="330" fill="url(#bfG1)"/>
+      <circle cx="220" cy="680" r="300" fill="url(#bfG2)"/>
+    </g>
+    <g class="bf-b2" data-depth="0.12" stroke="#b9bce0" fill="none" opacity=".55">
+      <ellipse cx="1050" cy="330" rx="290" ry="98" stroke-dasharray="7 10"/>
+      <ellipse cx="1050" cy="330" rx="200" ry="66" stroke-dasharray="4 9" transform="rotate(-14 1050 330)"/>
+      <circle cx="1310" cy="300" r="7" fill="#FFB020" stroke="none"/>
+      <circle cx="836" cy="392" r="5.5" fill="#00C2A8" stroke="none"/>
+    </g>
+    <g class="bf-b3" data-depth="0.2">
+      <g transform="translate(960 240) skewY(-8)">
+        <polygon points="0,-26 44,0 0,26 -44,0" fill="url(#bfCube)" opacity=".9"/>
+        <polygon points="-44,0 0,26 0,72 -44,46" fill="#5546d6" opacity=".75"/>
+        <polygon points="44,0 0,26 0,72 44,46" fill="#8b7cf0" opacity=".65"/>
+      </g>
+      <g transform="translate(1180 430) skewY(-8) scale(.62)">
+        <polygon points="0,-26 44,0 0,26 -44,0" fill="#00C2A8" opacity=".85"/>
+        <polygon points="-44,0 0,26 0,72 -44,46" fill="#009b88" opacity=".8"/>
+        <polygon points="44,0 0,26 0,72 44,46" fill="#3ad6c2" opacity=".7"/>
+      </g>
+      <g transform="translate(300 200) scale(.5) skewY(-8)">
+        <polygon points="0,-26 44,0 0,26 -44,0" fill="#FFB020" opacity=".85"/>
+        <polygon points="-44,0 0,26 0,72 -44,46" fill="#e09600" opacity=".8"/>
+        <polygon points="44,0 0,26 0,72 44,46" fill="#ffc95c" opacity=".7"/>
+      </g>
+    </g>
+  </svg>
+</div>
+
+<!-- ======================= 顶部导航 ======================= -->
+<header id="topbar">
+  <div class="wrap nav">
+    <a class="brand" href="#home" aria-label="星澜科技 首页">
+      <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <rect x="2" y="2" width="36" height="36" rx="11" fill="#6C5CE7"/>
+        <path d="M11 25 L20 10 L29 25" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="20" cy="28.5" r="3" fill="#00C2A8"/>
+        <circle cx="30" cy="12.5" r="2.2" fill="#FFB020"/>
+      </svg>
+      <span>星澜科技<small>XINGLAN TECH</small></span>
+    </a>
+    <nav class="nav-links" aria-label="主导航">
+      <a href="#home" class="on">首页</a>
+      <a href="#about">关于星澜</a>
+      <a href="#business">核心业务</a>
+      <a href="#cases">客户案例</a>
+      <a href="#news">新闻动态</a>
+      <a href="#join">加入我们</a>
+      <a href="#contact">联系星澜</a>
+    </nav>
+    <a class="btn btn-p btn-sm nav-cta" href="#contact">获取解决方案</a>
+    <button id="burger" aria-label="打开菜单" aria-expanded="false"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<!-- 移动端全屏抽屉 -->
+<div id="drawer" aria-hidden="true">
+  <a class="dl" href="#home">首页<i>01</i></a>
+  <a class="dl" href="#about">关于星澜<i>02</i></a>
+  <a class="dl" href="#business">核心业务<i>03</i></a>
+  <a class="dl" href="#cases">客户案例<i>04</i></a>
+  <a class="dl" href="#news">新闻动态<i>05</i></a>
+  <a class="dl" href="#join">加入我们<i>06</i></a>
+  <a class="dl" href="#contact">联系星澜<i>07</i></a>
+  <div class="d-foot">
+    <p><b>上海市浦东新区张江高科技园区澜启大厦 21F</b></p>
+    <p>+86 21-8000-1200 · hello@xinglan-tech.com</p>
+  </div>
+</div>
+
+<main>
+  <!-- ======================= HERO ======================= -->
+  <section id="home" class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="hero-badge glass hin d1"><span class="pulse"></span>星澜科技 · 企业数字化转型服务商</p>
+        <h1 class="hero-h">
+          <span class="hl"><i>以数据为澜，</i></span>
+          <span class="hl"><i>驱动产业<em>进化</em></i></span>
+        </h1>
+        <p class="hero-sub hin d2">为企业提供从云基础设施到智能应用的一站式数字化解决方案——云计算与数据中台、智能制造、AI 应用，三浪叠加，陪伴每一家企业穿越产业周期。</p>
+        <div class="hero-cta hin d3">
+          <a class="btn btn-p" href="#contact">获取解决方案 <svg class="ar" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8h11M9 3.5 13.5 8 9 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <a class="btn btn-o" href="#about">了解星澜</a>
+        </div>
+        <ul class="hero-chips hin d4">
+          <li>成立于 2012 年</li>
+          <li>500+ 企业客户</li>
+          <li>覆盖 20 个行业</li>
+          <li>授权专利 120 项</li>
+          <li>4 大研发中心</li>
+        </ul>
+      </div>
+      <div class="hero-side" aria-hidden="true">
+        <div class="hf-card glass hf1">
+          <b><svg viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="5" stroke="#6C5CE7" stroke-width="1.8"/><path d="M6.5 10.5l2.4 2.4 4.6-5.4" stroke="#00C2A8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>澜脑 AI 中台 3.0</b>
+          模型推理成本较上一代降低 <span class="up">40%</span>，已在金融与制造场景规模化落地。
+        </div>
+        <div class="hf-card glass hf2">
+          <b><svg viewBox="0 0 20 20" fill="none"><path d="M3 15V9m4.6 6V5m4.7 10V8m4.7 7V3.5" stroke="#6C5CE7" stroke-width="1.8" stroke-linecap="round"/></svg>实时数据底座</b>
+          日均处理企业数据 <span class="up">8TB</span>，核心链路可用性 99.99%。
+        </div>
+      </div>
+    </div>
+    <div class="scroll-hint" aria-hidden="true">滚动探索 · 明亮维度<i></i></div>
+  </section>
+
+  <!-- ======================= 滚动叙事：三章 pin 画布 ======================= -->
+  <section id="story" aria-label="三维滚动叙事">
+    <div class="story-inner">
+      <p class="story-mark">明亮维度 · 三章旅程 —— 制造 / 数据 / 全球</p>
+
+      <!-- 第一章 · 智能制造（机械臂） -->
+      <div class="story-chapter" data-ch="1">
+        <div class="ch-copy glass" style="border-radius:26px;padding:clamp(24px,3vw,40px)">
+          <div class="ch-kicker">第一章 · 智能制造</div>
+          <div class="ch-idx">01</div>
+          <h3>让每一条产线，<br>学会思考</h3>
+          <p class="ch-p">星澜以自研工业智能平台连接设备、产线与订单，机械臂在算法的指挥下完成毫秒级边缘决策——从数字孪生到柔性排产，让"会思考的工厂"成为制造业的标配。</p>
+          <div class="ch-chips">
+            <span>联网设备 100,000+ 台</span>
+            <span>产线效率 +32%</span>
+            <span>毫秒级边缘决策</span>
+          </div>
+        </div>
+        <div class="ch-art glass">
+          <span class="ch-float">3D · 机械臂</span>
+          <!-- 降级 SVG：机械臂 -->
+          <svg viewBox="0 0 520 330" fill="none" aria-hidden="true">
+            <defs><linearGradient id="sArm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b7cf0"/><stop offset="1" stop-color="#6C5CE7"/></linearGradient></defs>
+            <ellipse cx="260" cy="292" rx="150" ry="16" fill="#6C5CE7" opacity=".1"/>
+            <rect x="200" y="252" width="120" height="34" rx="12" fill="#E3E4F6"/>
+            <rect x="236" y="196" width="48" height="62" rx="14" fill="url(#sArm)"/>
+            <circle cx="260" cy="188" r="26" fill="#fff" stroke="#6C5CE7" stroke-width="5"/>
+            <rect x="243" y="96" width="34" height="102" rx="15" fill="url(#sArm)" transform="rotate(24 260 147)"/>
+            <circle cx="318" cy="112" r="19" fill="#fff" stroke="#00C2A8" stroke-width="5"/>
+            <rect x="312" y="52" width="24" height="70" rx="11" fill="url(#sArm)" transform="rotate(-32 324 87)"/>
+            <circle cx="356" cy="60" r="12" fill="#fff" stroke="#FFB020" stroke-width="4"/>
+            <path d="M362 52 l26 -14 M366 66 l28 4" stroke="#111827" stroke-width="7" stroke-linecap="round"/>
+            <circle cx="140" cy="120" r="5" fill="#00C2A8" opacity=".6"/>
+            <circle cx="420" cy="180" r="4" fill="#6C5CE7" opacity=".5"/>
+            <path d="M90 240 h80 M380 250 h70" stroke="#d9dbee" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <img class="story-shot" alt="智能制造机械臂 3D 场景" data-pose="arm">
+        </div>
+      </div>
+
+      <!-- 第二章 · 云计算与数据中台（数据立方矩阵） -->
+      <div class="story-chapter" data-ch="2">
+        <div class="ch-copy glass" style="border-radius:26px;padding:clamp(24px,3vw,40px)">
+          <div class="ch-kicker">第二章 · 云计算与数据中台</div>
+          <div class="ch-idx">02</div>
+          <h3>穿越数据的立方矩阵</h3>
+          <p class="ch-p">澜舟云底座之上，日均 8TB 的企业数据被拆解、清洗、汇聚成一颗颗有序的"记忆立方"。此刻镜头正掠过的每一枚方块，都是一次实时发生业务决策的瞬间。</p>
+          <div class="ch-chips">
+            <span>日处理数据 8TB</span>
+            <span>秒级弹性扩缩</span>
+            <span>核心链路 99.99%</span>
+          </div>
+        </div>
+        <div class="ch-art glass">
+          <span class="ch-float">3D · 数据立方</span>
+          <!-- 降级 SVG：立方矩阵 -->
+          <svg viewBox="0 0 520 330" fill="none" aria-hidden="true">
+            <defs><linearGradient id="sCb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b7cf0"/><stop offset="1" stop-color="#6C5CE7"/></linearGradient></defs>
+            <g opacity=".95">
+              <g transform="translate(150 130) skewY(-8) scale(.8)"><polygon points="0,-30 52,0 0,30 -52,0" fill="url(#sCb)"/><polygon points="-52,0 0,30 0,84 -52,54" fill="#5546d6"/><polygon points="52,0 0,30 0,84 52,54" fill="#a99df5"/></g>
+              <g transform="translate(280 100) skewY(-8) scale(.62)"><polygon points="0,-30 52,0 0,30 -52,0" fill="#00C2A8"/><polygon points="-52,0 0,30 0,84 -52,54" fill="#009b88"/><polygon points="52,0 0,30 0,84 52,54" fill="#3ad6c2"/></g>
+              <g transform="translate(392 170) skewY(-8) scale(.72)"><polygon points="0,-30 52,0 0,30 -52,0" fill="#FFB020"/><polygon points="-52,0 0,30 0,84 -52,54" fill="#e09600"/><polygon points="52,0 0,30 0,84 52,54" fill="#ffc95c"/></g>
+              <g transform="translate(236 232) skewY(-8) scale(.5)"><polygon points="0,-30 52,0 0,30 -52,0" fill="#00C2A8"/><polygon points="-52,0 0,30 0,84 -52,54" fill="#009b88"/><polygon points="52,0 0,30 0,84 52,54" fill="#3ad6c2"/></g>
+            </g>
+            <path d="M60 60 h60 M430 60 h40 M60 290 h50" stroke="#d9dbee" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="100" cy="220" r="5" fill="#6C5CE7" opacity=".45"/>
+            <circle cx="452" cy="86" r="4" fill="#00C2A8" opacity=".55"/>
+          </svg>
+          <img class="story-shot" alt="数据立方矩阵 3D 场景" data-pose="cubes">
+        </div>
+      </div>
+
+      <!-- 第三章 · 全球化交付（连线地球） -->
+      <div class="story-chapter" data-ch="3">
+        <div class="ch-copy glass" style="border-radius:26px;padding:clamp(24px,3vw,40px)">
+          <div class="ch-kicker">第三章 · 全球化交付</div>
+          <div class="ch-idx">03</div>
+          <h3>连线世界的<br>交付网络</h3>
+          <p class="ch-p">以上海、深圳、成都与新加坡四大研发中心为支点，星澜的交付光弧横跨 20 个行业、500 余家企业客户——让可靠的数字化能力，跨越时区与语言，持续在线。</p>
+          <div class="ch-chips">
+            <span>4 大研发中心</span>
+            <span>覆盖 20 个行业</span>
+            <span>500+ 企业客户</span>
+          </div>
+        </div>
+        <div class="ch-art glass">
+          <span class="ch-float">3D · 连线地球</span>
+          <!-- 降级 SVG：连线球体 -->
+          <svg viewBox="0 0 520 330" fill="none" aria-hidden="true">
+            <defs><radialGradient id="sGl" cx="38%" cy="32%" r="75%"><stop offset="0%" stop-color="#a99df5"/><stop offset="100%" stop-color="#6C5CE7"/></radialGradient></defs>
+            <circle cx="260" cy="165" r="108" fill="url(#sGl)" opacity=".92"/>
+            <ellipse cx="260" cy="165" rx="108" ry="34" stroke="#fff" stroke-opacity=".4" stroke-width="1.5"/>
+            <ellipse cx="260" cy="165" rx="108" ry="70" stroke="#fff" stroke-opacity=".22" stroke-width="1.2"/>
+            <ellipse cx="260" cy="165" rx="44" ry="108" stroke="#fff" stroke-opacity=".22" stroke-width="1.2"/>
+            <path d="M180 120 Q260 40 356 96" stroke="#00C2A8" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <path d="M170 200 Q260 300 372 210" stroke="#FFB020" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <path d="M232 66 Q160 160 246 262" stroke="#fff" stroke-opacity=".65" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+            <circle cx="180" cy="120" r="6" fill="#00C2A8"/><circle cx="356" cy="96" r="6" fill="#00C2A8"/>
+            <circle cx="170" cy="200" r="6" fill="#FFB020"/><circle cx="372" cy="210" r="6" fill="#FFB020"/>
+            <circle cx="232" cy="66" r="5" fill="#fff"/><circle cx="246" cy="262" r="5" fill="#fff"/>
+            <ellipse cx="260" cy="165" rx="150" ry="46" stroke="#b9bce0" stroke-width="1.4" stroke-dasharray="6 9" transform="rotate(-16 260 165)"/>
+          </svg>
+          <img class="story-shot" alt="全球连线交付网络 3D 场景" data-pose="earth">
+        </div>
+      </div>
+
+      <!-- HUD：章节指示 -->
+      <div class="story-hud" aria-hidden="true">
+        <div class="hud-line"><i id="hudProg"></i></div>
+        <div class="hud-dots">
+          <button type="button" data-goto="0" class="on"><i></i>智能制造</button>
+          <button type="button" data-goto="1"><i></i>云与数据</button>
+          <button type="button" data-goto="2"><i></i>全球交付</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 数据信任带 ======================= -->
+  <section id="stats" class="solid">
+    <div class="wrap">
+      <div class="sec-head rv">
+        <span class="kicker">数说星澜</span>
+        <h2>被 <span class="em">500+ 企业</span>验证过的确定性</h2>
+        <p>十四年深耕，数字是产业对我们的投票。每一项数据都可追溯、可审计、可复盘。</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat glass rv" style="--d:.0s;--w:.92">
+          <div class="stat-n"><b class="cnt" data-count="500">0</b><span>+</span></div>
+          <p>服务企业客户</p>
+          <div class="stat-bar"><i></i></div>
+        </div>
+        <div class="stat glass rv" style="--d:.08s;--w:.7">
+          <div class="stat-n"><b class="cnt" data-count="20">0</b><span>个</span></div>
+          <p>覆盖行业领域</p>
+          <div class="stat-bar"><i></i></div>
+        </div>
+        <div class="stat glass rv" style="--d:.16s;--w:.82">
+          <div class="stat-n"><b class="cnt" data-count="120">0</b><span>项</span></div>
+          <p>授权专利与软著</p>
+          <div class="stat-bar"><i></i></div>
+        </div>
+        <div class="stat glass rv" style="--d:.24s;--w:.55">
+          <div class="stat-n"><b class="cnt" data-count="4">0</b><span>大</span></div>
+          <p>研发中心 · 上海/深圳/成都/新加坡</p>
+          <div class="stat-bar"><i></i></div>
+        </div>
+        <div class="stat glass rv" style="--d:.32s;--w:.986">
+          <svg class="stat-ring" viewBox="0 0 60 60" aria-hidden="true">
+            <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#6C5CE7"/><stop offset="1" stop-color="#00C2A8"/>
+            </linearGradient></defs>
+            <circle class="bgc" cx="30" cy="30" r="26"/>
+            <circle class="fgc" cx="30" cy="30" r="26" transform="rotate(-90 30 30)"/>
+          </svg>
+          <div class="stat-n"><b class="cnt" data-count="98.6" data-dec="1">0</b><span>%</span></div>
+          <p>客户年度续约率</p>
+          <div class="stat-bar"><i></i></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 关于星澜 ======================= -->
+  <section id="about" class="solid-tint">
+    <div class="wrap">
+      <div class="about-grid">
+        <div class="about-media rv">
+          <div class="am-frame">
+            <!-- 程序化 SVG：办公 / 数据景观插画 -->
+            <svg viewBox="0 0 560 420" role="img" aria-label="星澜科技办公与数据景观插画">
+              <defs>
+                <linearGradient id="abSky" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#EEF0FF"/><stop offset="1" stop-color="#FAFAFC"/>
+                </linearGradient>
+                <linearGradient id="abTwr" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#8b7cf0"/><stop offset="1" stop-color="#5546d6"/>
+                </linearGradient>
+              </defs>
+              <rect width="560" height="420" fill="url(#abSky)"/>
+              <circle cx="452" cy="86" r="70" fill="#6C5CE7" opacity=".1"/>
+              <circle cx="86" cy="330" r="90" fill="#00C2A8" opacity=".08"/>
+              <!-- 建筑群 -->
+              <rect x="150" y="150" width="86" height="220" rx="10" fill="url(#abTwr)"/>
+              <rect x="248" y="196" width="70" height="174" rx="10" fill="#a99df5"/>
+              <rect x="330" y="170" width="92" height="200" rx="10" fill="#c9cdf2"/>
+              <g fill="#ffffff" opacity=".8">
+                <rect x="164" y="168" width="14" height="10" rx="2"/><rect x="188" y="168" width="14" height="10" rx="2"/><rect x="212" y="168" width="14" height="10" rx="2"/>
+                <rect x="164" y="192" width="14" height="10" rx="2"/><rect x="188" y="192" width="14" height="10" rx="2"/>
+                <rect x="164" y="216" width="14" height="10" rx="2"/><rect x="212" y="216" width="14" height="10" rx="2"/>
+                <rect x="262" y="214" width="12" height="9" rx="2"/><rect x="284" y="214" width="12" height="9" rx="2"/><rect x="262" y="236" width="12" height="9" rx="2"/>
+                <rect x="346" y="190" width="13" height="9" rx="2"/><rect x="368" y="190" width="13" height="9" rx="2"/><rect x="390" y="190" width="13" height="9" rx="2"/>
+                <rect x="346" y="212" width="13" height="9" rx="2"/><rect x="390" y="212" width="13" height="9" rx="2"/>
+              </g>
+              <rect x="120" y="370" width="330" height="8" rx="4" fill="#d9dbee"/>
+              <!-- 数据连线上扬 -->
+              <path d="M110 330 L200 286 L300 306 L410 236 L470 252" stroke="#00C2A8" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <g>
+                <circle cx="110" cy="330" r="5.5" fill="#00C2A8"/>
+                <circle cx="200" cy="286" r="5.5" fill="#00C2A8"/>
+                <circle cx="300" cy="306" r="5.5" fill="#FFB020"/>
+                <circle cx="410" cy="236" r="5.5" fill="#00C2A8"/>
+                <circle cx="470" cy="252" r="6.5" fill="#6C5CE7"/>
+              </g>
+              <!-- 漂浮立方 -->
+              <g transform="translate(468 120) skewY(-8) scale(.52)">
+                <polygon points="0,-30 52,0 0,30 -52,0" fill="#FFB020"/>
+                <polygon points="-52,0 0,30 0,84 -52,54" fill="#e09600"/>
+                <polygon points="52,0 0,30 0,84 52,54" fill="#ffc95c"/>
+              </g>
+              <g transform="translate(96 120) skewY(-8) scale(.4)">
+                <polygon points="0,-30 52,0 0,30 -52,0" fill="#8b7cf0"/>
+                <polygon points="-52,0 0,30 0,84 -52,54" fill="#5546d6"/>
+                <polygon points="52,0 0,30 0,84 52,54" fill="#a99df5"/>
+              </g>
+            </svg>
+          </div>
+          <div class="am-badge glass">
+            <b class="num">4</b>
+            <span>大研发中心<br>上海 · 深圳 · 成都 · 新加坡</span>
+          </div>
+          <span class="am-chip glass">国家高新技术企业</span>
+        </div>
+        <div class="about-copy">
+          <span class="kicker rv">关于星澜</span>
+          <h2 class="rv" style="--d:.06s">一支把产业<br>带进三维时代的队伍</h2>
+          <p class="lead rv" style="--d:.12s">星澜科技成立于 2012 年，总部位于上海张江，是一家以数据为核心引擎的企业数字化转型服务商。我们相信：产业进化的下一幕，属于把业务、数据与智能真正焊接在一起的组织。</p>
+          <p class="lead rv" style="--d:.18s">十四年来，我们以云计算与数据中台筑牢底座，以智能制造改造现场，以 AI 应用重塑决策——与 500 余家企业并肩，把每一次技术投入都兑现为可被审计的经营指标。</p>
+          <ul class="checks">
+            <li class="rv" style="--d:.2s"><svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" fill="#00C2A8" opacity=".14"/><path d="M6.5 11.3l3 3 6-6.6" stroke="#00C2A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> ISO27001 与等保三级认证</li>
+            <li class="rv" style="--d:.26s"><svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" fill="#00C2A8" opacity=".14"/><path d="M6.5 11.3l3 3 6-6.6" stroke="#00C2A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 授权专利与软著 120 项</li>
+            <li class="rv" style="--d:.32s"><svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" fill="#00C2A8" opacity=".14"/><path d="M6.5 11.3l3 3 6-6.6" stroke="#00C2A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 3000+ 人规模交付团队</li>
+            <li class="rv" style="--d:.38s"><svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" fill="#00C2A8" opacity=".14"/><path d="M6.5 11.3l3 3 6-6.6" stroke="#00C2A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 覆盖 20 个行业的方案库</li>
+          </ul>
+          <a class="tlink rv" style="--d:.44s" href="#timeline">了解发展历程
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8h11M9 3.5 13.5 8 9 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 发展历程 ======================= -->
+  <section id="timeline" class="solid-tint" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head rv" style="margin-left:auto;margin-right:auto;text-align:center">
+        <span class="kicker" style="justify-content:center">发展历程</span>
+        <h2>十四年，四个大浪，<span class="em">一路向澜</span></h2>
+        <p>从数据服务起步，到云、制造、AI 三线并进——每一次转身都踩在产业节拍上。</p>
+      </div>
+      <div class="tl">
+        <div class="tl-item rv"><span class="tl-year num">2012</span>
+          <div class="tl-card glass"><h4>星澜科技成立</h4><p>在上海张江注册成立，从企业数据仓库与商业智能服务起步，签下首批三家制造业客户。</p></div>
+        </div>
+        <div class="tl-item rv"><span class="tl-year num">2015</span>
+          <div class="tl-card glass"><h4>「澜舟云」1.0 发布</h4><p>首个自研云管理平台上线，标志着公司从项目制交付走向平台化产品路线。</p></div>
+        </div>
+        <div class="tl-item rv"><span class="tl-year num">2017</span>
+          <div class="tl-card glass"><h4>智能制造事业部成立</h4><p>落地首座数字样板工厂，设备联网与数字孪生能力完成从 0 到 1 的验证。</p></div>
+        </div>
+        <div class="tl-item rv"><span class="tl-year num">2019</span>
+          <div class="tl-card glass"><h4>出海东南亚</h4><p>设立新加坡研发中心，启动全球化交付网络，服务首批跨境制造与金融客户。</p></div>
+        </div>
+        <div class="tl-item rv"><span class="tl-year num">2021</span>
+          <div class="tl-card glass"><h4>「澜脑」AI 中台发布</h4><p>沉淀视觉、预测与决策算法资产，公司迈入"数据驱动智能决策"的新阶段。</p></div>
+        </div>
+        <div class="tl-item rv"><span class="tl-year num">2023</span>
+          <div class="tl-card glass"><h4>500 家客户里程碑</h4><p>数据中台累计服务 500+ 企业客户，覆盖 20 个行业，四大研发中心协同成型。</p></div>
+        </div>
+        <div class="tl-item rv"><span class="tl-year num">2026</span>
+          <div class="tl-card glass"><h4>澜脑 3.0 与新起点</h4><p>澜脑 AI 中台 3.0 发布，推理成本降低 40%；入选 2026 年度数字化转型服务商榜单。</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 核心业务 ======================= -->
+  <section id="business" class="solid">
+    <div class="wrap">
+      <div class="sec-head rv">
+        <span class="kicker">核心业务</span>
+        <h2>六大能力，<span class="em">一座桥梁</span></h2>
+        <p>从基础设施到智能应用，星澜把复杂的技术栈收敛为一条清晰的进化路径。</p>
+      </div>
+      <div class="biz-grid">
+        <article class="biz-card rv" data-tilt data-cursor="了解详情" style="--d:0s">
+          <div class="biz-top"><div class="biz-ic"><svg viewBox="0 0 30 30" fill="none"><path d="M9 22a6 6 0 1 1 1.2-11.9 7.5 7.5 0 0 1 14.3 2.4A5 5 0 0 1 24 22H9Z" stroke="#6C5CE7" stroke-width="1.9" stroke-linejoin="round"/><path d="M11 26h11" stroke="#00C2A8" stroke-width="1.9" stroke-linecap="round"/></svg></div><span class="biz-no num">01</span></div>
+          <h3>云计算与数据中台</h3>
+          <p>澜舟云提供弹性算力与多活架构；数据中台打通业务系统孤岛，让每一条数据都可信、可用、可增值。</p>
+          <div class="biz-tags"><span>混合云</span><span>实时数仓</span><span>多活容灾</span></div>
+        </article>
+        <article class="biz-card rv" data-tilt data-cursor="了解详情" style="--d:.07s">
+          <div class="biz-top"><div class="biz-ic"><svg viewBox="0 0 30 30" fill="none"><path d="M4 24V12l6 4v-4l6 4V8l10-3v19H4Z" stroke="#6C5CE7" stroke-width="1.9" stroke-linejoin="round"/><circle cx="22" cy="17" r="2.4" stroke="#00C2A8" stroke-width="1.8"/></svg></div><span class="biz-no num">02</span></div>
+          <h3>智能制造解决方案</h3>
+          <p>从设备联网到产线数字孪生，以边缘决策与算法调度持续提升良率与设备综合效率。</p>
+          <div class="biz-tags"><span>数字孪生</span><span>边缘计算</span><span>智能排产</span></div>
+        </article>
+        <article class="biz-card rv" data-tilt data-cursor="了解详情" style="--d:.14s">
+          <div class="biz-top"><div class="biz-ic"><svg viewBox="0 0 30 30" fill="none"><rect x="8" y="8" width="14" height="14" rx="4" stroke="#6C5CE7" stroke-width="1.9"/><path d="M15 2v6M15 22v6M2 15h6M22 15h6M6.5 6.5 9 9m12 12 2.5 2.5m0-17L21 9M9 21l-2.5 2.5" stroke="#00C2A8" stroke-width="1.8" stroke-linecap="round"/></svg></div><span class="biz-no num">03</span></div>
+          <h3>AI 应用开发 · 澜脑中台</h3>
+          <p>澜脑 AI 中台沉淀视觉、预测与大模型能力，3.0 版本将平均推理成本降低 40%。</p>
+          <div class="biz-tags"><span>大模型</span><span>机器视觉</span><span>智能决策</span></div>
+        </article>
+        <article class="biz-card rv" data-tilt data-cursor="了解详情" style="--d:.21s">
+          <div class="biz-top"><div class="biz-ic"><svg viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="4" stroke="#6C5CE7" stroke-width="1.9"/><circle cx="5" cy="6" r="2.6" stroke="#00C2A8" stroke-width="1.8"/><circle cx="25" cy="6" r="2.6" stroke="#00C2A8" stroke-width="1.8"/><circle cx="15" cy="26" r="2.6" stroke="#00C2A8" stroke-width="1.8"/><path d="M7 8l5 4m11-4-5 4M15 19v4.4" stroke="#6C5CE7" stroke-width="1.7" stroke-linecap="round"/></svg></div><span class="biz-no num">04</span></div>
+          <h3>工业互联网平台</h3>
+          <p>联网设备超过 10 万台，协议适配与孪生建模开箱即用，支撑跨工厂、跨区域的协同制造。</p>
+          <div class="biz-tags"><span>设备接入</span><span>协议解析</span><span>跨厂协同</span></div>
+        </article>
+        <article class="biz-card rv" data-tilt data-cursor="了解详情" style="--d:.28s">
+          <div class="biz-top"><div class="biz-ic"><svg viewBox="0 0 30 30" fill="none"><path d="M15 3 5 7v7c0 6 4.2 10.6 10 13 5.8-2.4 10-7 10-13V7l-10-4Z" stroke="#6C5CE7" stroke-width="1.9" stroke-linejoin="round"/><path d="M10.5 15l3 3 6-6.5" stroke="#00C2A8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="biz-no num">05</span></div>
+          <h3>数据治理与安全合规</h3>
+          <p>建立数据资产目录与分级授权体系，满足等保与行业合规要求，让数据流动更安心。</p>
+          <div class="biz-tags"><span>资产盘点</span><span>分级授权</span><span>等保合规</span></div>
+        </article>
+        <article class="biz-card rv" data-tilt data-cursor="了解详情" style="--d:.35s">
+          <div class="biz-top"><div class="biz-ic"><svg viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="12" stroke="#6C5CE7" stroke-width="1.9"/><path d="M20.5 9.5 17 17l-7.5 3.5L13 13l7.5-3.5Z" stroke="#00C2A8" stroke-width="1.8" stroke-linejoin="round"/></svg></div><span class="biz-no num">06</span></div>
+          <h3>数字化转型咨询</h3>
+          <p>以价值地图与路线图方法论陪跑组织与流程变革，让技术投入兑现为经营指标。</p>
+          <div class="biz-tags"><span>价值地图</span><span>组织变革</span><span>落地陪跑</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 客户案例 ======================= -->
+  <section id="cases" class="solid-tint">
+    <div class="wrap">
+      <div class="sec-head rv">
+        <span class="kicker">客户案例</span>
+        <h2>把承诺，<span class="em">写成可以被审计的数字</span></h2>
+        <p>以下案例均已获得客户授权发布，因行业保密要求对客户名称做匿名化处理。</p>
+      </div>
+      <div class="case-grid">
+        <article class="case-card rv" data-tilt data-cursor="查看案例" style="--d:0s">
+          <span class="case-tag">智能制造</span>
+          <h3>某头部车企 · 数字工厂</h3>
+          <p class="c-line"><b>挑战</b>五大车间数据割裂，换型与排产高度依赖老师傅经验。</p>
+          <p class="c-line"><b>方案</b>设备全网联 + 产线数字孪生 + 澜脑排产算法，构建柔性制造体系。</p>
+          <div class="case-metrics">
+            <div class="cm"><b>32%</b><span>产线效率提升</span></div>
+            <div class="cm"><b>21%</b><span>换型时间缩短</span></div>
+          </div>
+          <p class="case-client">合作周期 14 个月 · 覆盖 5 大车间 · 联网设备 6,800 台</p>
+        </article>
+        <article class="case-card rv" data-tilt data-cursor="查看案例" style="--d:.08s">
+          <span class="case-tag">金融数据</span>
+          <h3>某全国性银行 · 数据中台</h3>
+          <p class="c-line"><b>挑战</b>报表口径不一，夜间批处理窗口拥挤，监管报送压力大。</p>
+          <p class="c-line"><b>方案</b>实时数仓 + 指标中台 + 数据血缘治理，统一全行数据语言。</p>
+          <div class="case-metrics">
+            <div class="cm"><b>8TB</b><span>日处理数据规模</span></div>
+            <div class="cm"><b>99.99%</b><span>核心链路可用性</span></div>
+          </div>
+          <p class="case-client">合作周期 20 个月 · 接入 47 个业务系统 · 指标 3,200+</p>
+        </article>
+        <article class="case-card rv" data-tilt data-cursor="查看案例" style="--d:.16s">
+          <span class="case-tag">智慧物流</span>
+          <h3>某港口集团 · 智能调度</h3>
+          <p class="c-line"><b>挑战</b>泊位、岸桥与堆场计划靠人工经验，拥堵与空转并存。</p>
+          <p class="c-line"><b>方案</b>澜脑调度算法 + 仿真推演平台，分钟级滚动优化全局计划。</p>
+          <div class="case-metrics">
+            <div class="cm"><b>18%</b><span>吞吐周期缩短</span></div>
+            <div class="cm"><b>3 倍</b><span>计划编制效率</span></div>
+          </div>
+          <p class="case-client">合作周期 11 个月 · 覆盖 9 个泊位 · 堆场 62 万平米</p>
+        </article>
+        <article class="case-card rv" data-tilt data-cursor="查看案例" style="--d:.24s">
+          <span class="case-tag">零售消费</span>
+          <h3>某连锁零售 · AI 需求预测</h3>
+          <p class="c-line"><b>挑战</b>3,000 家门店补货凭经验，畅销缺货与滞销积压两极分化。</p>
+          <p class="c-line"><b>方案</b>澜脑需求预测 + 自动补货引擎，按门店×单品粒度滚动预测。</p>
+          <div class="case-metrics">
+            <div class="cm"><b>25%</b><span>库存周转提升</span></div>
+            <div class="cm"><b>12%</b><span>缺货率下降</span></div>
+          </div>
+          <p class="case-client">合作周期 9 个月 · 覆盖 3,000 门店 · 预测 SKU 42,000+</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 新闻动态 ======================= -->
+  <section id="news" class="solid">
+    <div class="wrap">
+      <div class="sec-head rv">
+        <span class="kicker">新闻动态</span>
+        <h2>正在发生的<span class="em">星澜时刻</span></h2>
+        <p>公司动态、行业洞察与媒体报道，记录我们与产业同行的每一步。</p>
+      </div>
+      <div class="news-grid">
+        <article class="news-card rv" data-cursor="阅读全文" style="--d:0s">
+          <div class="news-cover">
+            <svg viewBox="0 0 400 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <defs><linearGradient id="nw1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C5CE7"/><stop offset="1" stop-color="#a99df5"/></linearGradient></defs>
+              <rect width="400" height="170" fill="url(#nw1)"/>
+              <g fill="#fff" opacity=".9"><circle cx="70" cy="120" r="7"/><circle cx="150" cy="86" r="7"/><circle cx="230" cy="52" r="7"/><circle cx="310" cy="30" r="7"/></g>
+              <path d="M70 120 L150 86 L230 52 L310 30" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+              <g transform="translate(330 110) skewY(-8) scale(.42)" opacity=".92"><polygon points="0,-30 52,0 0,30 -52,0" fill="#FFB020"/><polygon points="-52,0 0,30 0,84 -52,54" fill="#e09600"/><polygon points="52,0 0,30 0,84 52,54" fill="#ffc95c"/></g>
+            </svg>
+            <span class="news-cat">产品发布</span>
+          </div>
+          <div class="news-body">
+            <p class="news-date num">2026-07-18</p>
+            <h3>星澜科技发布澜脑 AI 中台 3.0，推理成本降低 40%</h3>
+            <p>新版本引入稀疏化推理与算子融合调度，在金融风控与工业质检场景完成规模化验证，平均推理延迟下降至原来的三分之一。</p>
+            <span class="news-more">阅读全文 <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 8h11M9 3.5 13.5 8 9 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+        </article>
+        <article class="news-card rv" data-cursor="阅读全文" style="--d:.08s">
+          <div class="news-cover">
+            <svg viewBox="0 0 400 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <defs><linearGradient id="nw2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00C2A8"/><stop offset="1" stop-color="#5adecb"/></linearGradient></defs>
+              <rect width="400" height="170" fill="url(#nw2)"/>
+              <g stroke="#fff" stroke-width="2.4" opacity=".8" fill="none"><circle cx="120" cy="95" r="42"/><circle cx="255" cy="70" r="30"/><path d="M160 82l64-6"/></g>
+              <g fill="#fff"><circle cx="120" cy="95" r="6"/><circle cx="255" cy="70" r="6"/><circle cx="330" cy="120" r="6"/></g>
+              <path d="M255 70 L330 120" stroke="#fff" stroke-width="2.4" opacity=".8"/>
+            </svg>
+            <span class="news-cat">战略合作</span>
+          </div>
+          <div class="news-body">
+            <p class="news-date num">2026-06-02</p>
+            <h3>与华东智能制造研究院达成战略合作</h3>
+            <p>双方将共建"工业智能联合实验室"，围绕数字孪生建模与边缘智能展开三年期联合研发，首批成果将在汽车零部件行业落地。</p>
+            <span class="news-more">阅读全文 <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 8h11M9 3.5 13.5 8 9 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+        </article>
+        <article class="news-card rv" data-cursor="阅读全文" style="--d:.16s">
+          <div class="news-cover">
+            <svg viewBox="0 0 400 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <defs><linearGradient id="nw3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB020"/><stop offset="1" stop-color="#ffd47a"/></linearGradient></defs>
+              <rect width="400" height="170" fill="url(#nw3)"/>
+              <g fill="#fff" opacity=".92"><path d="M90 130l40-70 40 70Z" opacity=".55"/><path d="M170 130l52-96 52 96Z"/><path d="M262 130l34-58 34 58Z" opacity=".7"/></g>
+              <circle cx="330" cy="42" r="12" fill="#fff"/>
+            </svg>
+            <span class="news-cat">行业荣誉</span>
+          </div>
+          <div class="news-body">
+            <p class="news-date num">2026-05-20</p>
+            <h3>入选 2026 年度数字化转型服务商榜单</h3>
+            <p>凭借在制造与金融行业的规模化交付口碑，星澜连续三年入选该榜单，"价值可审计"的方法论获得评审团特别提及。</p>
+            <span class="news-more">阅读全文 <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 8h11M9 3.5 13.5 8 9 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 加入我们 ======================= -->
+  <section id="join" class="solid-tint">
+    <div class="wrap">
+      <div class="sec-head rv">
+        <span class="kicker">加入我们</span>
+        <h2>和一群<span class="em">认真造浪的人</span>一起工作</h2>
+        <p>我们寻找既仰望技术星空、也俯身产业现场的同路人。以下职位长期开放。</p>
+      </div>
+      <div class="job-list">
+        <div class="job-row rv" data-cursor="投递简历" style="--d:0s">
+          <div>
+            <h3>前端开发工程师</h3>
+            <div class="job-meta"><span>上海 · 张江</span><span>前端 / 可视化</span><span>全职</span></div>
+          </div>
+          <p>负责星澜产品矩阵的 Web 前端与数据可视化方向，用 Three.js、WebGL 与现代框架打磨"发布会级"的交互体验。</p>
+          <a class="job-btn" href="mailto:jobs@xinglan-tech.com?subject=应聘-前端开发工程师">投递简历</a>
+        </div>
+        <div class="job-row rv" data-cursor="投递简历" style="--d:.08s">
+          <div>
+            <h3>3D 视觉算法工程师</h3>
+            <div class="job-meta"><span>深圳</span><span>算法 / 三维视觉</span><span>全职</span></div>
+          </div>
+          <p>面向智能制造场景研究三维重建、点云理解与视觉检测算法，让机械臂与相机成为产线上最可靠的"眼睛"。</p>
+          <a class="job-btn" href="mailto:jobs@xinglan-tech.com?subject=应聘-3D视觉算法工程师">投递简历</a>
+        </div>
+        <div class="job-row rv" data-cursor="投递简历" style="--d:.16s">
+          <div>
+            <h3>解决方案架构师</h3>
+            <div class="job-meta"><span>成都 / 新加坡</span><span>咨询 / 架构</span><span>全职</span></div>
+          </div>
+          <p>深入客户现场完成业务诊断与蓝图设计，主导云、数据与 AI 方案的端到端架构，为交付结果负责。</p>
+          <a class="job-btn" href="mailto:jobs@xinglan-tech.com?subject=应聘-解决方案架构师">投递简历</a>
+        </div>
+      </div>
+      <div class="benefits rv" style="--d:.22s">
+        <span><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#00C2A8" stroke-width="1.6"/><path d="M5 8.2l2 2 4-4.4" stroke="#00C2A8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>弹性办公</span>
+        <span><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#00C2A8" stroke-width="1.6"/><path d="M5 8.2l2 2 4-4.4" stroke="#00C2A8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>六险一金</span>
+        <span><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#00C2A8" stroke-width="1.6"/><path d="M5 8.2l2 2 4-4.4" stroke="#00C2A8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>15 天年假起步</span>
+        <span><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#00C2A8" stroke-width="1.6"/><path d="M5 8.2l2 2 4-4.4" stroke="#00C2A8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>设备自由选配</span>
+        <span><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#00C2A8" stroke-width="1.6"/><path d="M5 8.2l2 2 4-4.4" stroke="#00C2A8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>年度技术大会</span>
+        <span><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#00C2A8" stroke-width="1.6"/><path d="M5 8.2l2 2 4-4.4" stroke="#00C2A8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>内部转岗通道</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= CTA 横幅 ======================= -->
+  <div class="cta-band solid-tint">
+    <div class="wrap">
+      <div class="cta-inner rv">
+        <div>
+          <h2>准备好开始了吗？</h2>
+          <p>和我们聊聊你的下一个数字化项目——第一个诊断工作坊由星澜承担。</p>
+        </div>
+        <a class="btn btn-w" href="#contact">联系我们
+          <svg class="ar" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8h11M9 3.5 13.5 8 9 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= 联系我们 ======================= -->
+  <section id="contact" class="solid">
+    <div class="wrap">
+      <div class="contact-grid">
+        <div class="c-info">
+          <span class="kicker rv">联系星澜</span>
+          <h2 class="rv" style="--d:.06s">让下一次进化，<br>从这里开始</h2>
+          <p class="rv" style="--d:.12s">留下你的需求与联系方式，解决方案顾问将在 1 个工作日内与你取得联系，并为你预约行业专属诊断。</p>
+          <div class="c-rows">
+            <div class="c-row rv" style="--d:.16s">
+              <div class="c-ic"><svg viewBox="0 0 22 22" fill="none"><path d="M4 9.5 11 4l7 5.5V18a1 1 0 0 1-1 1h-4v-5H9v5H5a1 1 0 0 1-1-1V9.5Z" stroke="#6C5CE7" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+              <div><b>公司地址</b><p>上海市浦东新区张江高科技园区澜启大厦 21F</p></div>
+            </div>
+            <div class="c-row rv" style="--d:.22s">
+              <div class="c-ic"><svg viewBox="0 0 22 22" fill="none"><path d="M5 3h3l1.6 4.2-2 1.5a12.5 12.5 0 0 0 5.7 5.7l1.5-2L19 14v3a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 3 5.2 2 2 0 0 1 5 3Z" stroke="#00C2A8" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+              <div><b>咨询电话</b><p class="num">+86 21-8000-1200（周一至周五 9:00–18:00）</p></div>
+            </div>
+            <div class="c-row rv" style="--d:.28s">
+              <div class="c-ic"><svg viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="12" rx="2.5" stroke="#FFB020" stroke-width="1.8"/><path d="m4 7 7 5.5L18 7" stroke="#FFB020" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div><b>商务邮箱</b><p>hello@xinglan-tech.com</p></div>
+            </div>
+          </div>
+          <div class="map-art rv" style="--d:.32s" aria-hidden="true">
+            <svg viewBox="0 0 520 240">
+              <rect width="520" height="240" fill="#F1F2FB"/>
+              <g stroke="#dfe1f2" stroke-width="1.4">
+                <path d="M0 40h520M0 96h520M0 152h520M0 208h520"/>
+                <path d="M52 0v240M130 0v240M224 0v240M330 0v240M430 0v240"/>
+              </g>
+              <path d="M0 120 C120 100 180 150 300 128 S 470 90 520 110" stroke="#c9cdf2" stroke-width="7" fill="none" stroke-linecap="round"/>
+              <path d="M180 0 C200 80 260 140 330 240" stroke="#e4e6f6" stroke-width="5" fill="none"/>
+              <circle cx="300" cy="128" r="26" fill="#6C5CE7" opacity=".14" class="map-pin-pulse"/>
+              <g transform="translate(300 118)">
+                <path d="M0 22 C-11 8 -13 2 -13 -4 a13 13 0 1 1 26 0 c0 6 -2 12 -13 26Z" fill="#6C5CE7"/>
+                <circle cx="0" cy="-4" r="5.5" fill="#fff"/>
+              </g>
+              <text x="322" y="108" font-size="13" font-weight="700" fill="#111827" font-family="PingFang SC,Microsoft YaHei,sans-serif">澜启大厦 · 21F</text>
+            </svg>
+          </div>
+        </div>
+        <div class="form-card glass rv" style="--d:.14s">
+          <form id="leadForm" novalidate>
+            <h3>获取专属解决方案</h3>
+            <p class="f-sub">带 <i style="color:#e5484d;font-style:normal">*</i> 为必填项，你的信息仅用于本次咨询。</p>
+            <div class="f-grid">
+              <div class="field" data-f="name">
+                <label for="fName">您的称呼<i>*</i></label>
+                <input id="fName" name="name" type="text" placeholder="如：王经理" autocomplete="name">
+                <em class="ferr">请填写您的称呼</em>
+              </div>
+              <div class="field" data-f="phone">
+                <label for="fPhone">手机号码<i>*</i></label>
+                <input id="fPhone" name="phone" type="tel" placeholder="用于顾问与您联系" autocomplete="tel">
+                <em class="ferr">请输入 11 位有效手机号</em>
+              </div>
+              <div class="field" data-f="email">
+                <label for="fEmail">企业邮箱</label>
+                <input id="fEmail" name="email" type="email" placeholder="选填，便于发送方案资料" autocomplete="email">
+                <em class="ferr">邮箱格式不正确</em>
+              </div>
+              <div class="field" data-f="company">
+                <label for="fCompany">公司名称</label>
+                <input id="fCompany" name="company" type="text" placeholder="选填">
+                <em class="ferr"></em>
+              </div>
+              <div class="field full" data-f="msg">
+                <label for="fMsg">需求描述<i>*</i></label>
+                <textarea id="fMsg" name="msg" placeholder="简单描述您的行业、规模与想解决的问题，例如：我们是一家汽车零部件工厂，希望提升产线排产效率…"></textarea>
+                <em class="ferr">请至少用 10 个字描述您的需求</em>
+              </div>
+              <div class="f-actions">
+                <button type="submit" class="btn btn-p" id="submitBtn">
+                  <span class="spin" aria-hidden="true"></span>
+                  <span class="s-txt">提交需求</span>
+                </button>
+                <span class="f-note">提交即表示同意《隐私政策》，我们承诺不向第三方泄露您的信息。</span>
+              </div>
+            </div>
+          </form>
+          <div id="formOk" role="status">
+            <div class="ok-ic">
+              <svg width="42" height="42" viewBox="0 0 42 42" fill="none"><path d="M10 22l8 8 14-16" stroke="#00C2A8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h3>提交成功！</h3>
+            <p id="okText">我们已收到您的需求，解决方案顾问将在 1 个工作日内与您联系。</p>
+            <button type="button" class="btn btn-o btn-sm" id="againBtn">再提交一份</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ======================= 页脚 ======================= -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-col">
+        <div class="foot-brand">
+          <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
+            <rect x="2" y="2" width="36" height="36" rx="11" fill="#6C5CE7"/>
+            <path d="M11 25 L20 10 L29 25" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <circle cx="20" cy="28.5" r="3" fill="#00C2A8"/>
+            <circle cx="30" cy="12.5" r="2.2" fill="#FFB020"/>
+          </svg>
+          <span>星澜科技</span>
+        </div>
+        <p>星澜科技成立于 2012 年，是一家企业数字化转型服务商。我们以云计算与数据中台、智能制造、人工智能三大能力，陪伴 500+ 企业穿越产业周期。</p>
+        <div class="soc">
+          <a href="#home" aria-label="微信公众号" title="微信公众号"><svg viewBox="0 0 20 20" fill="none"><path d="M8 3.5c-3.2 0-5.8 2.2-5.8 5 0 1.6.9 3 2.2 3.9L3.8 14l2.4-1.2c.6.15 1.2.24 1.8.24 3.2 0 5.8-2.2 5.8-5s-2.6-4.5-5.8-4.5Z" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><circle cx="6.2" cy="8.2" r=".9" fill="#fff"/><circle cx="9.8" cy="8.2" r=".9" fill="#fff"/><path d="M13.6 9.6c2 .3 3.6 1.7 3.6 3.5 0 1.2-.7 2.3-1.7 3l.5 1.4-2-.9a5.6 5.6 0 0 1-1.5.2c-1.6 0-3-.7-3.7-1.7" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg></a>
+          <a href="#home" aria-label="官方微博" title="官方微博"><svg viewBox="0 0 20 20" fill="none"><ellipse cx="9" cy="12.5" rx="6.5" ry="4.5" stroke="#fff" stroke-width="1.5"/><circle cx="9" cy="12.5" r="1.6" fill="#fff"/><path d="M13 4.5c2.3.4 4 2.3 4 4.6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><path d="M13.2 7.3c1.2.3 2.1 1.3 2.2 2.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg></a>
+          <a href="#home" aria-label="领英主页" title="领英主页"><svg viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3.5" stroke="#fff" stroke-width="1.5"/><path d="M6.5 9v4.5M6.5 6.6v.1M10 13.5V11c0-1.2.9-2 2-2s2 .8 2 2v2.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg></a>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h4>快速导航</h4>
+        <ul>
+          <li><a href="#about">关于星澜</a></li>
+          <li><a href="#business">核心业务</a></li>
+          <li><a href="#cases">客户案例</a></li>
+          <li><a href="#news">新闻动态</a></li>
+          <li><a href="#join">加入我们</a></li>
+          <li><a href="#contact">联系星澜</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>核心业务</h4>
+        <ul>
+          <li><a href="#business">云计算与数据中台</a></li>
+          <li><a href="#business">智能制造解决方案</a></li>
+          <li><a href="#business">AI 应用开发</a></li>
+          <li><a href="#business">工业互联网平台</a></li>
+          <li><a href="#business">数据治理与安全合规</a></li>
+          <li><a href="#business">数字化转型咨询</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>联系我们</h4>
+        <div class="foot-c-row"><svg viewBox="0 0 18 18" fill="none"><path d="M3.5 7.8 9 3.5l5.5 4.3V14a.8.8 0 0 1-.8.8h-3.2v-3.6H7.5v3.6H4.3a.8.8 0 0 1-.8-.8V7.8Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>上海市浦东新区张江高科技园区澜启大厦 21F</span></div>
+        <div class="foot-c-row"><svg viewBox="0 0 18 18" fill="none"><path d="M4 2.8h2.6L8 6l-1.6 1.2a10.5 10.5 0 0 0 4.4 4.4L12 10l3.2 1.4V14a1.7 1.7 0 0 1-1.8 1.7A13 13 0 0 1 2.3 4.6 1.7 1.7 0 0 1 4 2.8Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span class="num">+86 21-8000-1200</span></div>
+        <div class="foot-c-row"><svg viewBox="0 0 18 18" fill="none"><rect x="2.5" y="4" width="13" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="m3.5 5.5 5.5 4.4 5.5-4.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>hello@xinglan-tech.com</span></div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <p>© 2026 星澜科技 Xinglan Tech · 沪ICP备2026001200号-1</p>
+      <p><a href="#home">隐私政策</a> · <a href="#home">法律声明</a> · <a href="#home">网站地图</a></p>
+    </div>
+  </div>
+</footer>
+
+<!-- 返回顶部 -->
+<button id="backtop" aria-label="返回顶部">
+  <svg viewBox="0 0 20 20" fill="none"><path d="M10 16V4M4.5 9.5 10 4l5.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
+<script>
+/* ==========================================================================
+   星澜科技 · Bright Dimension 主脚本
+   结构：工具 / 入场 / 导航 / 显现与计数 / 倾斜 / 光标 / 表单 /
+        three.js 场景 / GSAP 滚动叙事 / 降级方案
+   ========================================================================== */
+(function () {
+  'use strict';
+  var doc = document.documentElement;
+  var body = document.body;
+  var q  = function (s, r) { return (r || document).querySelector(s); };
+  var qa = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var clamp = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
+  var lerp = function (a, b, t) { return a + (b - a) * t; };
+  var sstep = function (a, b, v) { var t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var isMobile = function () { return window.matchMedia('(max-width: 767px)').matches; };
+  var finePointer = window.matchMedia('(pointer: fine)').matches;
+  if (reduced) body.classList.add('reduced');
+
+  /* ---------------- 加载入场序列 ---------------- */
+  var readyFired = false;
+  function fireReady() {
+    if (readyFired) return;
+    readyFired = true;
+    body.classList.add('ready');
+  }
+  if (reduced) {
+    fireReady();
+  } else {
+    window.addEventListener('load', function () { setTimeout(fireReady, 420); });
+    setTimeout(fireReady, 2400); /* 兜底：加载最慢 2.4s 后也进入页面 */
+  }
+
+  /* ---------------- 顶部导航 / 抽屉 / 进度条 / 返回顶部 ---------------- */
+  var topbar = q('#topbar'), sbar = q('#sbar i'), backtop = q('#backtop');
+  var burger = q('#burger'), drawer = q('#drawer');
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      var y = window.scrollY || window.pageYOffset;
+      var h = doc.scrollHeight - window.innerHeight;
+      topbar.classList.toggle('scrolled', y > 24);
+      if (sbar) sbar.style.transform = 'scaleX(' + (h > 0 ? clamp(y / h, 0, 1) : 0) + ')';
+      backtop.classList.toggle('show', y > window.innerHeight * 0.9);
+      runParallax(y);
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  backtop.addEventListener('click', function () {
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+  });
+  function setDrawer(open) {
+    drawer.classList.toggle('open', open);
+    burger.classList.toggle('open', open);
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+    doc.style.overflow = open ? 'hidden' : '';
+  }
+  burger.addEventListener('click', function () { setDrawer(!drawer.classList.contains('open')); });
+  qa('#drawer a').forEach(function (a) { a.addEventListener('click', function () { setDrawer(false); }); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && drawer.classList.contains('open')) setDrawer(false);
+  });
+
+  /* ---------------- 锚点 scrollspy ---------------- */
+  var spyMap = {};
+  qa('.nav-links a').forEach(function (a) {
+    var id = (a.getAttribute('href') || '').replace('#', '');
+    if (id) spyMap[id] = a;
+  });
+  var spyIO = new IntersectionObserver(function (ents) {
+    ents.forEach(function (en) {
+      if (en.isIntersecting && spyMap[en.target.id]) {
+        qa('.nav-links a').forEach(function (a) { a.classList.remove('on'); });
+        spyMap[en.target.id].classList.add('on');
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+  ['home', 'about', 'business', 'cases', 'news', 'join', 'contact'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) spyIO.observe(el);
+  });
+
+  /* ---------------- 滚动显现（IntersectionObserver） ---------------- */
+  var rvs = qa('.rv');
+  if (reduced || !('IntersectionObserver' in window)) {
+    rvs.forEach(function (el) { el.classList.add('in'); });
+  } else {
+    var rvIO = new IntersectionObserver(function (ents) {
+      ents.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('in'); rvIO.unobserve(en.target); }
+      });
+    }, { threshold: 0.16, rootMargin: '0px 0px -6% 0px' });
+    rvs.forEach(function (el) { rvIO.observe(el); });
+  }
+
+  /* ---------------- 数字滚动计数 ---------------- */
+  function runCount(el) {
+    if (el.dataset.done) return;
+    el.dataset.done = '1';
+    var target = parseFloat(el.getAttribute('data-count')) || 0;
+    var dec = parseInt(el.getAttribute('data-dec') || '0', 10);
+    if (reduced) { el.textContent = target.toFixed(dec); return; }
+    var dur = 1500, t0 = performance.now();
+    (function step(t) {
+      var k = clamp((t - t0) / dur, 0, 1);
+      var e = 1 - Math.pow(1 - k, 3);
+      el.textContent = (target * e).toFixed(dec);
+      if (k < 1) requestAnimationFrame(step);
+      else el.textContent = target.toFixed(dec);
+    })(t0);
+  }
+  var cntIO = new IntersectionObserver(function (ents) {
+    ents.forEach(function (en) {
+      if (en.isIntersecting) {
+        qa('.cnt', en.target).forEach(runCount);
+        en.target.classList.add('in');
+        cntIO.unobserve(en.target);
+      }
+    });
+  }, { threshold: 0.4 });
+  qa('.stat').forEach(function (el) { cntIO.observe(el); });
+
+  /* ---------------- 卡片 3D 倾斜 hover 微交互 ---------------- */
+  if (finePointer && !reduced) {
+    qa('[data-tilt]').forEach(function (card) {
+      card.addEventListener('pointermove', function (e) {
+        var r = card.getBoundingClientRect();
+        var x = (e.clientX - r.left) / r.width - 0.5;
+        var y = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform =
+          'perspective(900px) rotateX(' + (-y * 5.5).toFixed(2) + 'deg) rotateY(' +
+          (x * 7).toFixed(2) + 'deg) translateY(-4px)';
+        card.style.setProperty('--gx', (x * 100 + 50).toFixed(1) + '%');
+        card.style.setProperty('--gy', (y * 100 + 50).toFixed(1) + '%');
+      });
+      card.addEventListener('pointerleave', function () { card.style.transform = ''; });
+    });
+  }
+
+  /* ---------------- 自定义光标：圆点 + 延迟跟随圆环 ---------------- */
+  if (finePointer && !reduced) {
+    body.classList.add('cur-on');
+    var cur = q('#cursor'), cDot = q('.cur-dot'), cRing = q('.cur-ring'), cLbl = q('.cur-ring span');
+    var mx = innerWidth / 2, my = innerHeight / 2, rx = mx, ry = my;
+    window.addEventListener('pointermove', function (e) {
+      mx = e.clientX; my = e.clientY;
+      cDot.style.transform = 'translate(' + mx + 'px,' + my + 'px)';
+    }, { passive: true });
+    (function curLoop() {
+      rx = lerp(rx, mx, 0.16); ry = lerp(ry, my, 0.16);
+      cRing.style.transform = 'translate(' + rx + 'px,' + ry + 'px)';
+      requestAnimationFrame(curLoop);
+    })();
+    var hotSel = 'a,button,[data-tilt],.news-card,.job-row,input,textarea';
+    document.addEventListener('pointerover', function (e) {
+      var t = e.target.closest ? e.target.closest(hotSel) : null;
+      cur.classList.toggle('on', !!t);
+      var lbl = e.target.closest ? e.target.closest('[data-cursor]') : null;
+      if (lbl) { cLbl.textContent = lbl.getAttribute('data-cursor'); cur.classList.add('lbl'); }
+      else cur.classList.remove('lbl');
+    }, { passive: true });
+  }
+
+  /* ---------------- 联系表单校验 / loading / 成功态 ---------------- */
+  var form = q('#leadForm'), okBox = q('#formOk'), submitBtn = q('#submitBtn');
+  var rules = {
+    name:  { el: '#fName',  ok: function (v) { return v.trim().length >= 1; } },
+    phone: { el: '#fPhone', ok: function (v) { return /^1[3-9]\d{9}$/.test(v.trim()); } },
+    email: { el: '#fEmail', ok: function (v) { return v.trim() === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); } },
+    msg:   { el: '#fMsg',   ok: function (v) { return v.trim().length >= 10; } }
+  };
+  function checkField(key) {
+    var r = rules[key], input = q(r.el), wrap = input.closest('.field');
+    var pass = r.ok(input.value);
+    wrap.classList.toggle('err', !pass);
+    return pass;
+  }
+  Object.keys(rules).forEach(function (k) {
+    var input = q(rules[k].el);
+    input.addEventListener('blur', function () { checkField(k); });
+    input.addEventListener('input', function () {
+      var wrap = input.closest('.field');
+      if (wrap.classList.contains('err')) checkField(k);
+    });
+  });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var allOk = true, firstBad = null;
+    Object.keys(rules).forEach(function (k) {
+      if (!checkField(k)) { allOk = false; firstBad = firstBad || q(rules[k].el); }
+    });
+    if (!allOk) { firstBad.focus(); return; }
+    var name = q('#fName').value.trim();
+    submitBtn.classList.add('loading');
+    q('.s-txt', submitBtn).textContent = '正在提交…';
+    setTimeout(function () { /* 模拟异步提交 */
+      submitBtn.classList.remove('loading');
+      q('.s-txt', submitBtn).textContent = '提交需求';
+      form.style.display = 'none';
+      q('#okText').textContent = name + '，您好！我们已收到您的需求，解决方案顾问将在 1 个工作日内与您联系。';
+      okBox.classList.add('show');
+    }, 1200);
+  });
+  q('#againBtn').addEventListener('click', function () {
+    okBox.classList.remove('show');
+    form.style.display = '';
+    form.reset();
+  });
+
+  /* ---------------- 降级层的滚动视差（flat 模式） ---------------- */
+  var bfLayers = qa('#bg-fallback [data-depth]');
+  function runParallax(y) {
+    if (!body.classList.contains('mode-flat') || reduced) return;
+    bfLayers.forEach(function (l) {
+      var d = parseFloat(l.getAttribute('data-depth')) || 0.1;
+      l.style.transform = 'translateY(' + (-(y * d) % 260).toFixed(1) + 'px)';
+    });
+  }
+
+  /* ==========================================================================
+     three.js 场景 + GSAP 滚动叙事（含多级 CDN 兜底与完整降级链）
+     ========================================================================== */
+  var THREE_SRCS = [
+    'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+    'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
+    'https://cdn.bootcdn.net/ajax/libs/three.js/r128/three.min.js',
+    'https://unpkg.com/three@0.128.0/build/three.min.js'
+  ];
+  var GSAP_SRCS = [
+    ['https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js',
+     'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js'],
+    ['https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js',
+     'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js'],
+    ['https://cdn.bootcdn.net/ajax/libs/gsap/3.12.5/gsap.min.js',
+     'https://cdn.bootcdn.net/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js'],
+    ['https://unpkg.com/gsap@3.12.5/dist/gsap.min.js',
+     'https://unpkg.com/gsap@3.12.5/dist/ScrollTrigger.min.js']
+  ];
+  function loadOne(src, timeout) {
+    return new Promise(function (res, rej) {
+      var s = document.createElement('script');
+      s.src = src; s.async = true;
+      var to = setTimeout(function () { s.remove(); rej(new Error('timeout')); }, timeout || 7000);
+      s.onload = function () { clearTimeout(to); res(); };
+      s.onerror = function () { clearTimeout(to); s.remove(); rej(new Error('error')); };
+      document.head.appendChild(s);
+    });
+  }
+  function loadChain(srcs) {
+    var p = Promise.resolve(false);
+    srcs.forEach(function (src) {
+      p = p.then(function (ok) {
+        return ok ? true : loadOne(src).then(function () { return true; }).catch(function () { return false; });
+      });
+    });
+    return p;
+  }
+  function webglOK() {
+    try {
+      var c = document.createElement('canvas');
+      return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl')));
+    } catch (e) { return false; }
+  }
+
+  var storyTarget = 0, storyP = 0;      /* 叙事进度：目标值 + 渲染环平滑值（防抖动） */
+  var storyST = null;                    /* ScrollTrigger 实例 */
+  var canvasLive = true;                 /* 画布是否可能可见 */
+  var rafId = 0, wasHidden = false;
+  var MODE = 'flat';
+
+  var boot = Promise.resolve();
+  if (!reduced) {
+    boot = loadChain(THREE_SRCS).then(function (threeOk) {
+      if (!threeOk || !window.THREE || !webglOK()) return 'flat';
+      return loadChain(GSAP_SRCS.map(function (p) { return p[0]; })).then(function (g1) {
+        if (!g1 || !window.gsap) return 'snap';              /* 有 3D 无 GSAP：快照模式 */
+        return loadChain(GSAP_SRCS.map(function (p) { return p[1]; })).then(function (g2) {
+          if (!g2 || !window.ScrollTrigger) return 'snap';
+          /* 移动端按调研文档：pin 叙事改为纵向静态帧堆叠 */
+          return isMobile() ? 'snap' : 'pin';
+        });
+      });
+    }).catch(function () { return 'flat'; });
+  }
+
+  boot.then(function (mode) {
+    MODE = mode;
+    body.classList.remove('mode-init');
+    body.classList.add('mode-' + mode);
+    if (mode === 'flat') { flatMode(); return; }
+    try { initThree(mode); }
+    catch (e) { body.classList.remove('mode-' + mode); body.classList.add('mode-flat'); MODE = 'flat'; flatMode(); }
+  });
+
+  /* ---------------- flat：分层 SVG + CSS 视差降级 ---------------- */
+  function flatMode() {
+    qa('.story-chapter').forEach(function (el) {
+      var io = new IntersectionObserver(function (ents) {
+        ents.forEach(function (en) {
+          if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+        });
+      }, { threshold: 0.2 });
+      io.observe(el);
+    });
+    onScroll();
+  }
+
+  /* ---------------- three.js 场景 ---------------- */
+  function initThree(mode) {
+    var T = window.THREE;
+    var canvas = q('#gl');
+    var LOW = isMobile() || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+    var renderer = new T.WebGLRenderer({
+      canvas: canvas, antialias: !LOW, alpha: false, powerPreference: 'high-performance'
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, LOW ? 1.5 : 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputEncoding = T.sRGBEncoding;
+    renderer.toneMapping = T.ACESFilmicToneMapping;   /* 浅色场景防过曝发灰 */
+    renderer.toneMappingExposure = 1.05;
+
+    var scene = new T.Scene();
+    scene.background = new T.Color(0xFAFAFC);          /* 与页面底色同值，避免贴图感 */
+    scene.fog = new T.Fog(0xFAFAFC, 16, 46);
+
+    var camera = new T.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 300);
+
+    /* 灯光：半球光 + 两盏平行光（调研文档方案） */
+    scene.add(new T.HemisphereLight(0xffffff, 0xdfe3ff, 0.95));
+    var key = new T.DirectionalLight(0xffffff, 0.85); key.position.set(6, 10, 8); scene.add(key);
+    var fill = new T.DirectionalLight(0xbfa9ff, 0.4); fill.position.set(-8, 4, -6); scene.add(fill);
+
+    /* 程序化环境反射（近似 RoomEnvironment 的柔光箱） */
+    try {
+      var ec = document.createElement('canvas'); ec.width = 512; ec.height = 256;
+      var g = ec.getContext('2d');
+      g.fillStyle = '#f2f3fb'; g.fillRect(0, 0, 512, 256);
+      var blobs = [[120, 70, 90, '#ffffff'], [360, 60, 110, '#dcd6ff'], [250, 190, 90, '#c8f5ee'], [470, 180, 70, '#ffe7bd']];
+      blobs.forEach(function (b) {
+        var rg = g.createRadialGradient(b[0], b[1], 8, b[0], b[1], b[2]);
+        rg.addColorStop(0, b[3]); rg.addColorStop(1, 'rgba(242,243,251,0)');
+        g.fillStyle = rg; g.fillRect(0, 0, 512, 256);
+      });
+      var et = new T.CanvasTexture(ec);
+      et.mapping = T.EquirectangularReflectionMapping;
+      var pm = new T.PMREMGenerator(renderer);
+      scene.environment = pm.fromEquirectangular(et).texture;
+      et.dispose(); pm.dispose();
+    } catch (e) { /* 环境反射失败不影响主流程 */ }
+
+    /* 磨砂玻璃材质 */
+    function glass(color, opts) {
+      opts = opts || {};
+      if (T.MeshPhysicalMaterial && !LOW) {
+        return new T.MeshPhysicalMaterial({
+          color: color, roughness: opts.rough != null ? opts.rough : 0.3,
+          metalness: 0.04, transmission: opts.trans != null ? opts.trans : 0.55,
+          clearcoat: 0.55, clearcoatRoughness: 0.35,
+          transparent: true, opacity: 1
+        });
+      }
+      return new T.MeshStandardMaterial({
+        color: color, roughness: 0.38, metalness: 0.08, transparent: true, opacity: 1
+      });
+    }
+    function matte(color) {
+      return new T.MeshStandardMaterial({ color: color, roughness: 0.5, metalness: 0.05, transparent: true });
+    }
+
+    /* 柔和接触阴影贴片 */
+    var blobTex = (function () {
+      var c = document.createElement('canvas'); c.width = c.height = 128;
+      var cg = c.getContext('2d');
+      var rg = cg.createRadialGradient(64, 64, 6, 64, 64, 62);
+      rg.addColorStop(0, 'rgba(40,38,90,0.55)'); rg.addColorStop(1, 'rgba(40,38,90,0)');
+      cg.fillStyle = rg; cg.fillRect(0, 0, 128, 128);
+      return new T.CanvasTexture(c);
+    })();
+    function blob(scale, x, y, z) {
+      var m = new T.Mesh(
+        new T.PlaneGeometry(4 * scale, 4 * scale),
+        new T.MeshBasicMaterial({ map: blobTex, transparent: true, opacity: 0.16, depthWrite: false })
+      );
+      m.rotation.x = -Math.PI / 2; m.position.set(x, y, z);
+      return m;
+    }
+
+    var world = new T.Group(); scene.add(world);
+    var heroG = new T.Group(), armG = new T.Group(), cubeG = new T.Group(), earthG = new T.Group();
+    world.add(heroG, armG, cubeG, earthG);
+
+    /* ===== Hero：磨砂玻璃数字核心（二十面体 + 双环 + 卫星） ===== */
+    heroG.position.set(3.1, 0.15, 0);
+    var heroCore = new T.Mesh(new T.IcosahedronGeometry(1.5, 0), glass(0x8b7cf0, { rough: 0.26, trans: 0.5 }));
+    heroG.add(heroCore);
+    var heroCoreWire = new T.Mesh(
+      new T.IcosahedronGeometry(1.66, 0),
+      new T.MeshBasicMaterial({ color: 0x6C5CE7, wireframe: true, transparent: true, opacity: 0.14 })
+    );
+    heroG.add(heroCoreWire);
+    var ring1 = new T.Mesh(new T.TorusGeometry(2.5, 0.05, 10, 90), matte(0x00C2A8));
+    ring1.rotation.x = Math.PI / 2.25; heroG.add(ring1);
+    var ring2 = new T.Mesh(new T.TorusGeometry(3.15, 0.035, 10, 90), matte(0xFFB020));
+    ring2.rotation.x = Math.PI / 1.8; ring2.rotation.y = 0.5; heroG.add(ring2);
+    var sats = [];
+    for (var i = 0; i < (LOW ? 6 : 10); i++) {
+      var small = new T.Mesh(
+        i % 3 === 0 ? new T.BoxGeometry(0.22, 0.22, 0.22) : new T.SphereGeometry(0.13, 12, 12),
+        matte(i % 2 ? 0x00C2A8 : 0x6C5CE7)
+      );
+      small.userData.a = (i / (LOW ? 6 : 10)) * Math.PI * 2;
+      small.userData.r = 2.5 + (i % 3) * 0.33;
+      small.userData.sp = 0.25 + (i % 4) * 0.07;
+      sats.push(small); heroG.add(small);
+    }
+    heroG.add(blob(1.4, 0, -2.4, 0));
+
+    /* ===== 第一章：智能制造机械臂（几何体组合，拆解-重组式入场） ===== */
+    armG.position.set(0, -0.2, -42); armG.scale.setScalar(1.12);
+    var armMats = { body: glass(0xeef0ff, { rough: 0.32, trans: 0.35 }), joint: glass(0x6C5CE7, { rough: 0.28, trans: 0.45 }), acc: matte(0x00C2A8) };
+    var armParts = [];
+    function part(geo, mat, px, py, pz, sx, sy, sz) {
+      var m = new T.Mesh(geo, mat);
+      m.userData.base = new T.Vector3(px, py, pz);
+      m.userData.baseRot = m.rotation.clone();
+      m.userData.scatter = new T.Vector3((Math.random() - 0.5) * 9, (Math.random() - 0.5) * 7, (Math.random() - 0.5) * 6);
+      m.position.set(px, py, pz);
+      armParts.push(m); return m;
+    }
+    var base = part(new T.CylinderGeometry(1.0, 1.25, 0.5, 28), armMats.body, 0, -1.55, 0);
+    armG.add(base);
+    var pillar = part(new T.CylinderGeometry(0.34, 0.44, 1.1, 20), armMats.body, 0, -0.75, 0);
+    armG.add(pillar);
+    var shoulder = part(new T.SphereGeometry(0.52, 24, 20), armMats.joint, 0, -0.05, 0);
+    armG.add(shoulder);
+    var upperG = new T.Group(); upperG.position.set(0, -0.05, 0); armG.add(upperG);
+    var upper = part(new T.CylinderGeometry(0.2, 0.27, 2.3, 18), armMats.body, 0, 1.15, 0);
+    upperG.add(upper);
+    var elbow = new T.Mesh(new T.SphereGeometry(0.4, 22, 18), armMats.joint);
+    elbow.position.set(0, 2.3, 0); elbow.userData.base = elbow.position.clone();
+    elbow.userData.scatter = new T.Vector3(-5, 4, 3); elbow.userData.baseRot = elbow.rotation.clone();
+    armParts.push(elbow); upperG.add(elbow);
+    var foreG = new T.Group(); foreG.position.set(0, 2.3, 0); upperG.add(foreG);
+    var fore = part(new T.CylinderGeometry(0.14, 0.2, 1.9, 16), armMats.body, 0, 0.95, 0);
+    foreG.add(fore);
+    var wrist = new T.Mesh(new T.SphereGeometry(0.27, 18, 14), armMats.joint);
+    wrist.position.set(0, 1.9, 0); wrist.userData.base = wrist.position.clone();
+    wrist.userData.scatter = new T.Vector3(4, 3, -4); wrist.userData.baseRot = wrist.rotation.clone();
+    armParts.push(wrist); foreG.add(wrist);
+    var gripper = new T.Group(); gripper.position.set(0, 1.9, 0); foreG.add(gripper);
+    var palm = part(new T.BoxGeometry(0.34, 0.2, 0.24), armMats.acc, 0, 0.06, 0);
+    gripper.add(palm);
+    var f1 = part(new T.BoxGeometry(0.09, 0.5, 0.16), armMats.joint, -0.14, 0.36, 0);
+    f1.rotation.z = 0.22; gripper.add(f1);
+    var f2 = part(new T.BoxGeometry(0.09, 0.5, 0.16), armMats.joint, 0.14, 0.36, 0);
+    f2.rotation.z = -0.22; gripper.add(f2);
+    var lamp = new T.Mesh(new T.SphereGeometry(0.09, 12, 10), new T.MeshStandardMaterial({
+      color: 0xFFB020, emissive: 0xFFB020, emissiveIntensity: 1.4, transparent: true
+    }));
+    lamp.position.set(0, -0.05, 0.5); lamp.userData.base = lamp.position.clone();
+    lamp.userData.scatter = new T.Vector3(3, -4, 3); lamp.userData.baseRot = lamp.rotation.clone();
+    armParts.push(lamp); armG.add(lamp);
+    armG.add(blob(1.5, 0, -1.86, 0));
+
+    /* ===== 第二章：数据立方矩阵（相机将穿越其中 —— 标志性瞬间） ===== */
+    cubeG.position.set(0, 0, -86);
+    var cubeMats = [glass(0x6C5CE7, { rough: 0.3, trans: 0.5 }), glass(0x00C2A8, { rough: 0.32, trans: 0.5 }),
+                    glass(0xFFB020, { rough: 0.34, trans: 0.4 }), glass(0xeef0ff, { rough: 0.28, trans: 0.55 })];
+    var cubes = [];
+    (function buildCubes() {
+      var NX = 6, NY = LOW ? 3 : 4, NZ = 6, gap = 2.75;
+      for (var ix = 0; ix < NX; ix++) {
+        for (var iy = 0; iy < NY; iy++) {
+          for (var iz = 0; iz < NZ; iz++) {
+            var x = (ix - (NX - 1) / 2) * gap;
+            if (LOW && Math.abs(x) < 1.5) continue;         /* 移动端留出中央走廊 */
+            var y = (iy - (NY - 1) / 2) * gap * 0.9;
+            var z = (iz - (NZ - 1) / 2) * gap;
+            var s = 0.85 + Math.random() * 0.6;
+            var m = new T.Mesh(new T.BoxGeometry(s, s, s), cubeMats[(ix + iy + iz) % 4]);
+            m.userData.grid = new T.Vector3(x, y, z);
+            m.userData.scatter = new T.Vector3(
+              (Math.random() - 0.5) * 30, (Math.random() - 0.5) * 22, (Math.random() - 0.5) * 26);
+            m.userData.stag = Math.random() * 0.45;
+            m.userData.baseS = s;
+            m.userData.bob = Math.random() * Math.PI * 2;
+            m.userData.pillar = (ix % 3 === 1 && iy === 0);   /* 部分立方作为"数据柱"生长 */
+            cubes.push(m); cubeG.add(m);
+          }
+        }
+      }
+    })();
+
+    /* ===== 第三章：环绕地球的连线光弧 ===== */
+    earthG.position.set(0, 0, -150);
+    var earth = new T.Mesh(new T.SphereGeometry(3.2, LOW ? 32 : 48, LOW ? 22 : 32), glass(0x8b7cf0, { rough: 0.3, trans: 0.45 }));
+    earthG.add(earth);
+    var earthWire = new T.Mesh(
+      new T.SphereGeometry(3.38, 26, 18),
+      new T.MeshBasicMaterial({ color: 0x6C5CE7, wireframe: true, transparent: true, opacity: 0.1 })
+    );
+    earthG.add(earthWire);
+    var orbit = new T.Mesh(new T.TorusGeometry(4.7, 0.02, 8, 80),
+      new T.MeshBasicMaterial({ color: 0x6C5CE7, transparent: true, opacity: 0.35 }));
+    orbit.rotation.x = Math.PI / 2.3; earthG.add(orbit);
+    var orbit2 = orbit.clone(); orbit2.rotation.x = Math.PI / 1.7; orbit2.rotation.y = 0.6; earthG.add(orbit2);
+    var sat = new T.Mesh(new T.SphereGeometry(0.14, 12, 10), matte(0xFFB020));
+    earthG.add(sat);
+    function ll(lat, lon, r) {
+      var phi = (90 - lat) * Math.PI / 180, th = (lon + 180) * Math.PI / 180;
+      return new T.Vector3(-r * Math.sin(phi) * Math.cos(th), r * Math.cos(phi), r * Math.sin(phi) * Math.sin(th));
+    }
+    var arcs = [], nodes = [];
+    (function buildEarth() {
+      var cities = [
+        [31.2, 121.5], [22.5, 114.1], [30.6, 104.1], [1.35, 103.8], [35.7, 139.7],
+        [50.1, 8.7], [51.5, -0.1], [37.3, -121.9], [25.2, 55.3], [-33.9, 151.2], [-23.5, -46.6]
+      ];
+      var pts = cities.map(function (c) { return ll(c[0], c[1], 3.28); });
+      var pairs = [[0, 3], [0, 7], [1, 5], [2, 9], [3, 6], [0, 8], [1, 10], [2, 4]];
+      var arcMat = new T.MeshBasicMaterial({ color: 0x00C2A8, transparent: true, opacity: 0.9 });
+      var arcMat2 = new T.MeshBasicMaterial({ color: 0xFFB020, transparent: true, opacity: 0.85 });
+      pairs.forEach(function (p, i) {
+        var s = pts[p[0]], e2 = pts[p[1]];
+        var lift = 1.28 + s.distanceTo(e2) / (6.6 * 3.28) * 0.5;
+        var c1 = s.clone().multiplyScalar(lift), c2 = e2.clone().multiplyScalar(lift);
+        var curve = new T.CubicBezierCurve3(s, c1, c2, e2);
+        var tube = new T.TubeGeometry(curve, 42, 0.035, 6, false);
+        var mesh = new T.Mesh(tube, i % 3 === 2 ? arcMat2 : arcMat);
+        mesh.userData.total = tube.index.count;
+        tube.setDrawRange(0, 0);
+        arcs.push(mesh); earthG.add(mesh);
+      });
+      pts.forEach(function (p, i) {
+        var n = new T.Mesh(new T.SphereGeometry(0.1, 10, 8),
+          matte(i % 3 === 0 ? 0xFFB020 : 0x00C2A8));
+        n.position.copy(p);
+        n.userData.stag = i * 0.07;
+        nodes.push(n); earthG.add(n);
+      });
+    })();
+    earthG.add(blob(2.2, 0, -3.9, 0));
+
+    /* ===== 相机飞行路径（CatmullRomCurve3）与注视点 ===== */
+    var camCurve = new T.CatmullRomCurve3([
+      new T.Vector3(0, 0.6, 11), new T.Vector3(0.4, 0.3, -2), new T.Vector3(0, 0.5, -16),
+      new T.Vector3(1.6, 0.8, -30), new T.Vector3(-2.4, 0.4, -38), new T.Vector3(0, 0.6, -54),
+      new T.Vector3(-1.6, 1.4, -68), new T.Vector3(1.6, -1.0, -80), new T.Vector3(-1.4, 1.0, -90),
+      new T.Vector3(1.5, -0.7, -100), new T.Vector3(0, 0.5, -112), new T.Vector3(2.5, 1.5, -128),
+      new T.Vector3(9, 3.0, -144), new T.Vector3(5, 1.0, -158), new T.Vector3(-4.2, 2.0, -158)
+    ], false, 'catmullrom', 0.5);
+    /* p -> 曲线参数 u 的分段映射（控制每章节奏） */
+    var U_STOPS = [[0, 0], [0.16, 0.15], [0.38, 0.34], [0.44, 0.44], [0.70, 0.72], [0.80, 0.86], [1, 0.99]];
+    function pToU(p) {
+      for (var i = 0; i < U_STOPS.length - 1; i++) {
+        var a = U_STOPS[i], b = U_STOPS[i + 1];
+        if (p <= b[0] || i === U_STOPS.length - 2) {
+          var t = clamp((p - a[0]) / (b[0] - a[0] || 1), 0, 1);
+          return lerp(a[1], b[1], t);
+        }
+      }
+      return U_STOPS[U_STOPS.length - 1][1];
+    }
+    /* 注视点分段插值：Hero → 机械臂 → 立方纵深 → 地球 */
+    var LOOKS = [
+      [0.00, new T.Vector3(3.1, 0.15, 0)],
+      [0.12, new T.Vector3(2.6, 0.2, 0)],
+      [0.22, new T.Vector3(0, -0.1, -42)],
+      [0.40, new T.Vector3(0, -0.1, -42)],
+      [0.50, new T.Vector3(0, 0, -94)],
+      [0.66, new T.Vector3(0, 0, -98)],
+      [0.82, new T.Vector3(0, 0, -150)],
+      [1.00, new T.Vector3(0, 0.3, -150)]
+    ];
+    var lookV = new T.Vector3(), lookA = new T.Vector3(), lookB = new T.Vector3();
+    function lookAtP(p) {
+      for (var i = 0; i < LOOKS.length - 1; i++) {
+        var a = LOOKS[i], b = LOOKS[i + 1];
+        if (p <= b[0] || i === LOOKS.length - 2) {
+          var t = sstep(0, 1, clamp((p - a[0]) / (b[0] - a[0] || 1), 0, 1));
+          lookA.copy(a[1]); lookB.copy(b[1]);
+          lookV.copy(lookA).lerp(lookB, t);
+          return lookV;
+        }
+      }
+      return LOOKS[LOOKS.length - 1][1];
+    }
+
+    /* ===== 分组出场（0..1）：缩放回弹 + 整体透明度 ===== */
+    function backOut(t) { var s = 1.7; t = clamp(t, 0, 1) - 1; return t * t * ((s + 1) * t + s) + 1; }
+    function setGroupAp(grp, ap) {
+      ap = clamp(ap, 0, 1);
+      var vis = ap > 0.015;
+      grp.visible = vis;
+      if (!vis) return;
+      var sc = 0.35 + 0.65 * backOut(ap);
+      grp.scale.setScalar(grp === armG ? 1.12 * sc : sc);
+      grp.traverse(function (o) {
+        if (o.isMesh && o.material && o.material.opacity !== undefined) {
+          if (o.userData.baseO === undefined) o.userData.baseO = o.material.opacity;
+          o.material.opacity = o.userData.baseO * clamp(ap * 1.15, 0, 1);
+        }
+      });
+    }
+    /* 机械臂"拆解-重组"：出场时部件从散落位聚合 */
+    function updateArmParts(ap, t) {
+      var k = sstep(0, 1, ap);
+      armParts.forEach(function (m, i) {
+        var li = sstep(0, 1, clamp((k - i * 0.045) / 0.55, 0, 1));
+        m.position.set(
+          m.userData.base.x + m.userData.scatter.x * (1 - li),
+          m.userData.base.y + m.userData.scatter.y * (1 - li),
+          m.userData.base.z + m.userData.scatter.z * (1 - li));
+        m.rotation.x = m.userData.baseRot.x + (1 - li) * 1.4;
+        m.rotation.y = m.userData.baseRot.y + (1 - li) * 0.9;
+      });
+    }
+
+    /* ===== 每帧世界更新 ===== */
+    var tmpPos = new T.Vector3();
+    var mouse = { x: 0, y: 0, sx: 0, sy: 0 };
+    window.addEventListener('pointermove', function (e) {
+      mouse.x = (e.clientX / window.innerWidth - 0.5) * 2;
+      mouse.y = (e.clientY / window.innerHeight - 0.5) * 2;
+    }, { passive: true });
+
+    var lastCamPos = new T.Vector3(), fovNow = 58;
+    function updateWorld(p, t) {
+      /* 分组出场窗口 */
+      var heroAp = mode === 'pin' ? (1 - sstep(0.0, 0.07, p)) : 1;
+      var armAp = mode === 'pin' ? sstep(0.03, 0.13, p) * (1 - sstep(0.36, 0.46, p)) : 0;
+      var cubeAp = mode === 'pin' ? sstep(0.40, 0.50, p) * (1 - sstep(0.70, 0.80, p)) : 0;
+      var earthAp = mode === 'pin' ? sstep(0.76, 0.86, p) : 0;
+      setGroupAp(heroG, heroAp);
+      setGroupAp(armG, armAp);
+      setGroupAp(cubeG, cubeAp);
+      setGroupAp(earthG, earthAp);
+
+      /* Hero 呼吸与卫星公转 */
+      if (heroG.visible) {
+        heroCore.rotation.y = t * 0.35; heroCore.rotation.x = Math.sin(t * 0.4) * 0.18;
+        heroCoreWire.rotation.copy(heroCore.rotation);
+        heroCore.position.y = Math.sin(t * 0.9) * 0.12;
+        ring1.rotation.z = t * 0.3; ring2.rotation.z = -t * 0.22;
+        sats.forEach(function (s) {
+          s.userData.a += s.userData.sp * 0.016;
+          s.position.set(Math.cos(s.userData.a) * s.userData.r, Math.sin(s.userData.a * 1.3) * 0.55, Math.sin(s.userData.a) * s.userData.r);
+        });
+      }
+      /* 机械臂待机动作 + 警示灯呼吸 */
+      if (armG.visible) {
+        updateArmParts(armAp, t);
+        upperG.rotation.z = 0.34 + Math.sin(t * 0.7) * 0.3;
+        foreG.rotation.z = -0.62 + Math.sin(t * 0.9 + 1.1) * 0.42;
+        armG.rotation.y = Math.sin(t * 0.32) * 0.5 + sstep(0, 1, armAp) * 0.4;
+        lamp.material.emissiveIntensity = 1.1 + Math.sin(t * 4.2) * 0.8;
+      }
+      /* 立方矩阵：散点聚合 + 悬浮 + 数据柱生长 */
+      if (cubeG.visible) {
+        var asm = clamp((p - 0.40) / 0.22, 0, 1);
+        var grow = clamp((p - 0.52) / 0.16, 0, 1);
+        for (var ci = 0; ci < cubes.length; ci++) {
+          var c = cubes[ci];
+          var lt = sstep(0, 1, clamp((asm * 1.45 - c.userData.stag) / 1, 0, 1));
+          c.position.set(
+            c.userData.grid.x + c.userData.scatter.x * (1 - lt),
+            c.userData.grid.y + c.userData.scatter.y * (1 - lt) + Math.sin(t * 0.8 + c.userData.bob) * 0.16 * lt,
+            c.userData.grid.z + c.userData.scatter.z * (1 - lt));
+          c.rotation.x = (1 - lt) * 2.2 + t * 0.12 * lt;
+          c.rotation.y = (1 - lt) * 1.6 + t * 0.1 * lt;
+          if (c.userData.pillar) c.scale.y = lerp(0.25, 2.6, sstep(0, 1, grow * (0.7 + 0.3 * Math.sin(ci))));
+        }
+      }
+      /* 地球：自转 + 光弧按进度绘制 + 节点亮起 + 卫星巡航 */
+      if (earthG.visible) {
+        earth.rotation.y = t * 0.12; earthWire.rotation.y = -t * 0.05;
+        var ap = clamp((p - 0.84) / 0.14, 0, 1);
+        arcs.forEach(function (a, i) {
+          var at = clamp(ap * 1.5 - i * 0.07, 0, 1);
+          a.geometry.setDrawRange(0, Math.floor(a.userData.total * at));
+        });
+        nodes.forEach(function (n) {
+          var nt = sstep(0, 1, clamp(ap * 1.6 - n.userData.stag, 0, 1));
+          n.scale.setScalar(Math.max(0.001, nt));
+        });
+        var sa = t * 0.55;
+        sat.position.set(Math.cos(sa) * 4.7, 0, Math.sin(sa) * 4.7).applyEuler(orbit.rotation);
+      }
+      /* 相机：沿曲线采样（渲染环内插值，避免直接绑 scroll 事件抖动） */
+      var u = pToU(p);
+      camCurve.getPointAt(clamp(u, 0, 1), tmpPos);
+      mouse.sx = lerp(mouse.sx, mouse.x, 0.05); mouse.sy = lerp(mouse.sy, mouse.y, 0.05);
+      tmpPos.x += mouse.sx * 0.55; tmpPos.y += -mouse.sy * 0.4;
+      camera.position.copy(tmpPos);
+      camera.lookAt(lookAtP(p));
+      /* 穿越加速感：按速度微调 FOV */
+      var spd = tmpPos.distanceTo(lastCamPos); lastCamPos.copy(tmpPos);
+      var fovT = 58 + clamp((spd - 0.25) * 9, 0, 9);
+      fovNow = lerp(fovNow, fovT, 0.06);
+      if (Math.abs(fovNow - camera.fov) > 0.05) { camera.fov = fovNow; camera.updateProjectionMatrix(); }
+    }
+
+    /* ===== 叙事进度来源 ===== */
+    if (mode === 'pin' && window.gsap && window.ScrollTrigger) {
+      window.gsap.registerPlugin(window.ScrollTrigger);
+      storyST = window.ScrollTrigger.create({
+        trigger: '#story', start: 'top top',
+        end: function () { return '+=' + Math.floor(window.innerHeight * 3.6); },
+        pin: true, anticipatePin: 1,
+        onUpdate: function (self) { storyTarget = self.progress; }
+      });
+      /* HUD 圆点点击跳章 */
+      qa('.hud-dots button').forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (!storyST) return;
+          var mid = [0.24, 0.56, 0.9][parseInt(b.getAttribute('data-goto'), 10) || 0];
+          window.scrollTo({
+            top: storyST.start + (storyST.end - storyST.start) * mid,
+            behavior: 'smooth'
+          });
+        });
+      });
+    } else {
+      storyTarget = 0; /* snap 模式：只渲染 Hero 构图 */
+    }
+
+    /* ===== 快照（snap 模式：为堆叠章节渲染静态帧） ===== */
+    if (mode === 'snap') {
+      try {
+        var poses = {
+          arm:   { pos: [4.4, 1.6, -35.5], look: [0, -0.1, -42], ap: 1 },
+          cubes: { pos: [0, 1.2, -66], look: [0, 0, -96], ap: 1 },
+          earth: { pos: [9, 3, -142], look: [0, 0, -150], ap: 1 }
+        };
+        Object.keys(poses).forEach(function (k) {
+          var ps = poses[k];
+          setGroupAp(heroG, 0);
+          setGroupAp(armG, k === 'arm' ? 1 : 0);
+          setGroupAp(cubeG, k === 'cubes' ? 1 : 0);
+          setGroupAp(earthG, k === 'earth' ? 1 : 0);
+          if (k === 'arm') updateArmParts(1, 2);
+          if (k === 'cubes') {
+            cubes.forEach(function (c) {
+              c.position.copy(c.userData.grid); c.rotation.set(0.2, 0.3, 0);
+              if (c.userData.pillar) c.scale.y = 2.2;
+            });
+          }
+          if (k === 'earth') arcs.forEach(function (a) { a.geometry.setDrawRange(0, a.userData.total); });
+          camera.position.set(ps.pos[0], ps.pos[1], ps.pos[2]);
+          camera.lookAt(ps.look[0], ps.look[1], ps.look[2]);
+          renderer.render(scene, camera);
+          var url = renderer.domElement.toDataURL('image/jpeg', 0.85);
+          var img = q('.story-shot[data-pose="' + k + '"]');
+          if (img) img.src = url;
+        });
+        /* 恢复 Hero 常驻状态 */
+        setGroupAp(armG, 0); setGroupAp(cubeG, 0); setGroupAp(earthG, 0); setGroupAp(heroG, 1);
+        cubes.forEach(function (c) { c.position.copy(c.userData.grid); c.scale.setScalar(1); });
+        arcs.forEach(function (a) { a.geometry.setDrawRange(0, 0); });
+      } catch (e) { /* 快照失败则这些章节退回 SVG 插画 */ 
+        if (!q('.story-shot[data-pose="arm"]').getAttribute('src')) body.classList.add('mode-flat');
+      }
+    }
+
+    /* ===== 可见性 / 渲染环 ===== */
+    var visIO = new IntersectionObserver(function (ents) {
+      ents.forEach(function (en) { if (en.target.id === 'home' || en.target.id === 'story') {
+        if (en.isIntersecting) canvasLive = true;
+      }});
+      canvasLive = ents.some(function (en) { return en.isIntersecting; }) || canvasLive;
+      if (!ents.length) return;
+    }, { threshold: 0 });
+    visIO.observe(q('#home')); visIO.observe(q('#story'));
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        wasHidden = true;
+        if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+      } else if (wasHidden) {
+        wasHidden = false; last = performance.now();
+        rafId = requestAnimationFrame(tick);
+      }
+    });
+
+    var last = performance.now();
+    var hudDots = qa('.hud-dots button'), hudProg = q('#hudProg');
+    var chapters = qa('.story-chapter');
+    var hudIdx = -1, chapterIdx = -2;
+    function updateHUD(p) {
+      if (hudProg) hudProg.style.transform = 'scaleX(' + p.toFixed(3) + ')';
+      var idx = p < 0.43 ? 0 : (p < 0.76 ? 1 : 2);
+      if (idx !== hudIdx) {
+        hudIdx = idx;
+        hudDots.forEach(function (b, i) { b.classList.toggle('on', i === idx); });
+      }
+      var cIdx = -1;
+      if (p >= 0.10 && p < 0.42) cIdx = 0;
+      else if (p >= 0.46 && p < 0.72) cIdx = 1;
+      else if (p >= 0.80) cIdx = 2;
+      if (cIdx !== chapterIdx) {
+        chapterIdx = cIdx;
+        chapters.forEach(function (c, i) { c.classList.toggle('active', i === cIdx); });
+      }
+    }
+
+    function tick(now) {
+      rafId = requestAnimationFrame(tick);
+      if (document.hidden) return;
+      var dt = Math.min((now - last) / 1000, 0.05); last = now;
+      if (!canvasLive) return;                      /* 画布被不透明区块覆盖时跳过渲染 */
+      storyP = lerp(storyP, storyTarget, Math.min(1, dt * 5)); /* 平滑，防滚动抖动 */
+      if (Math.abs(storyP - storyTarget) < 0.0004) storyP = storyTarget;
+      updateWorld(storyP, now / 1000);
+      renderer.render(scene, camera);
+      if (mode === 'pin') updateHUD(storyP);
+    }
+    updateWorld(0, 0);
+    renderer.render(scene, camera);
+    rafId = requestAnimationFrame(tick);
+
+    window.addEventListener('resize', function () {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, LOW ? 1.5 : 2));
+      /* 平板 / 手机切换时降级到对应模式 */
+      if (MODE === 'pin' && isMobile()) {
+        body.classList.remove('mode-pin'); body.classList.add('mode-flat'); MODE = 'flat';
+        if (storyST) { storyST.kill(false); storyST = null; }
+        flatMode();
+      }
+    });
+  }
+
+  /* 初始状态同步 */
+  onScroll();
+})();
+</script>
+</body>
+</html>

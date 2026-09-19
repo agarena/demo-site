@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#141319">
+<meta name="description" content="翻月 FLIPMO —— 深色书房里的 3D 实体台历：整页翻月、翻牌时钟、农历节气、每日一句。一页一世界。">
+<title>翻月 FLIPMO · 2026 台历 · 纸上剧场</title>
+<style>
+/* ==========================================================================
+   翻月 FLIPMO ·《翻月 · 纸上剧场》
+   深色书房桌面上的一本实体台历：
+   - 翻月 = 整页 3D 翻转（perspective + rotateX，纸张反光与阴影扫过）
+   - 翻牌时钟每秒翻牌走字
+   - 42 格日期 staggered 入场，今日格盖章弹出
+   降级：prefers-reduced-motion / 不支持 preserve-3d 时退化为 300ms 交叉淡化 + 8px 位移
+   ========================================================================== */
+
+/* ---------- 设计令牌（方向C 配色 6 色板） ---------- */
+:root{
+  --bg:#141319;              /* 书房深底 */
+  --desk:#262230;            /* 桌面 / 绒布 */
+  --paper:#F5EFE3;           /* 纸页 */
+  --accent:#FF6B4A;          /* 强调橘红 */
+  --gold:#C9A05C;            /* 烫金描边 */
+  --ink:#2C2A26;             /* 纸上墨字 */
+  --ink2:#877E6D;            /* 纸上淡墨 */
+  --red:#B23B2E;             /* 朱砂（假日 / 周末） */
+  --teal:#3F5B63;            /* 黛青（补班班标） */
+  --shadow:rgba(0,0,0,.45);  /* 阴影 */
+  --e:cubic-bezier(.2,.7,.2,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  --serif:"DM Serif Display","Noto Serif SC","STZhongsong","STSong","SimSun",serif;
+  --mono:"JetBrains Mono","Cascadia Code","SF Mono",Consolas,"Courier New",monospace;
+  /* 纸张噪点（内联 SVG feTurbulence，无外链图片） */
+  --noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/* ---------- 基础重置 ---------- */
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--serif);
+  color:#D9D2C4;
+  background:
+    radial-gradient(1100px 640px at 50% -8%, rgba(255,178,102,.10), transparent 62%),
+    radial-gradient(880px 620px at 88% 112%, rgba(70,48,96,.22), transparent 60%),
+    radial-gradient(700px 500px at 6% 108%, rgba(38,60,66,.18), transparent 60%),
+    var(--bg);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+::selection{background:rgba(255,107,74,.35);color:#FFF3E8}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
+[hidden]{display:none!important}
+
+/* ---------- 桌面与灯光氛围 ---------- */
+.desk-floor{
+  position:fixed;left:0;right:0;bottom:0;height:36vh;z-index:0;pointer-events:none;
+  background:linear-gradient(180deg, rgba(34,30,44,0) 0%, #221E2C 24%, var(--desk) 52%, #1B1823 100%);
+}
+.desk-floor::after{
+  content:"";position:absolute;inset:0;opacity:.35;background-image:var(--noise);
+}
+.vignette{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(125% 95% at 50% 18%, transparent 52%, rgba(0,0,0,.52) 100%);
+  animation:roomIn 1.2s ease both;
+}
+.lamp{
+  position:fixed;top:-160px;left:50%;transform:translateX(-50%);
+  width:76vw;height:46vh;z-index:0;pointer-events:none;
+  background:radial-gradient(52% 62% at 50% 0%, rgba(255,192,120,.13), transparent 72%);
+  filter:blur(8px);
+  animation:glow 7s ease-in-out infinite alternate;
+}
+@keyframes glow{from{opacity:.75}to{opacity:1}}
+@keyframes roomIn{from{opacity:0}}
+
+/* 灯下浮尘 */
+.motes span{
+  position:fixed;width:3px;height:3px;border-radius:50%;z-index:0;pointer-events:none;
+  background:rgba(255,205,140,.55);filter:blur(.5px);opacity:0;
+  animation:drift 10s ease-in-out infinite;
+}
+.motes span:nth-child(1){left:20%;top:26%;animation-delay:0s}
+.motes span:nth-child(2){left:33%;top:14%;animation-delay:1.6s;animation-duration:12s}
+.motes span:nth-child(3){left:58%;top:20%;animation-delay:3.1s;animation-duration:9s}
+.motes span:nth-child(4){left:72%;top:12%;animation-delay:.8s;animation-duration:13s}
+.motes span:nth-child(5){left:82%;top:30%;animation-delay:4.4s}
+.motes span:nth-child(6){left:44%;top:8%;animation-delay:5.6s;animation-duration:11s}
+@keyframes drift{
+  0%{transform:translate(0,0);opacity:0}
+  18%{opacity:.65}
+  52%{transform:translate(24px,-42px);opacity:.4}
+  82%{opacity:.25}
+  100%{transform:translate(-14px,-78px);opacity:0}
+}
+
+/* ---------- 整体骨架 ---------- */
+.wrap{
+  position:relative;z-index:1;max-width:1440px;margin:0 auto;
+  min-height:100vh;display:flex;flex-direction:column;
+  padding:18px clamp(14px,3vw,44px) 22px;
+}
+
+/* 顶栏 */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding-bottom:6px;
+  animation:fadeDown .6s var(--e) .1s both;
+}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-14px)}}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{
+  width:38px;height:38px;border-radius:9px;flex:none;
+  background:linear-gradient(150deg,#FF8A5E,var(--accent) 60%,#E04E2E);
+  color:#FFF6EC;font-size:20px;line-height:38px;text-align:center;
+  transform:rotate(-6deg);
+  box-shadow:0 6px 16px rgba(255,107,74,.35), inset 0 1px 0 rgba(255,255,255,.35);
+  animation:sealIn .5s var(--spring) .5s both;
+}
+@keyframes sealIn{from{opacity:0;transform:rotate(-14deg) scale(.5)}}
+.brand h1{font-size:clamp(18px,2.2vw,24px);font-weight:700;letter-spacing:.06em;color:#EFE7D6}
+.brand h1 i{font-style:normal;font-size:.68em;color:var(--gold);letter-spacing:.28em;margin-left:6px;vertical-align:2px}
+.brand p{font-size:11px;color:#8E8574;letter-spacing:.34em;margin-top:2px}
+.top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.year-pill{
+  font-size:11px;letter-spacing:.18em;color:var(--gold);
+  border:1px solid rgba(201,160,92,.4);border-radius:999px;padding:5px 12px;
+  background:rgba(201,160,92,.07);
+}
+.btn-gold{
+  font-size:13px;letter-spacing:.12em;color:#F3E7CF;
+  background:linear-gradient(180deg,rgba(201,160,92,.22),rgba(201,160,92,.08));
+  border:1px solid rgba(201,160,92,.55);border-radius:999px;padding:7px 16px;
+  transition:transform .2s var(--e), box-shadow .2s var(--e), background .2s;
+}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(201,160,92,.22);background:rgba(201,160,92,.26)}
+.btn-gold:active{transform:translateY(0)}
+
+/* ---------- 场景区：左舞台 + 右纸条 ---------- */
+.scene{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:18px;
+  padding-top:10px;
+}
+.stage-col{width:100%;display:flex;flex-direction:column;align-items:center;gap:16px;min-width:0}
+
+/* 3D 舞台 */
+.stage{perspective:1600px;width:100%;display:flex;justify-content:center}
+.cal-par{transform:rotateX(var(--px,0deg)) rotateY(var(--py,0deg));transition:transform .45s var(--e)}
+.cal-tilt{width:min(880px,100%);animation:dropIn .85s var(--e) .25s both;transform-style:preserve-3d}
+@keyframes dropIn{
+  0%{opacity:0;transform:translateY(-150px) rotateX(18deg) scale(1.05)}
+  62%{opacity:1;transform:translateY(10px) rotateX(-2deg) scale(.995)}
+  82%{transform:translateY(-4px) rotateX(1deg)}
+  100%{opacity:1;transform:translateY(0) rotateX(0) scale(1)}
+}
+
+/* 台历主体 */
+.desk-cal{
+  position:relative;width:100%;transform-style:preserve-3d;
+  filter:drop-shadow(0 30px 34px rgba(0,0,0,.36));
+}
+
+/* 台座（木质斜面） */
+.cal-ledge{
+  position:absolute;left:9%;right:9%;bottom:-36px;height:28px;
+  transform:translateZ(-22px);
+  background:linear-gradient(180deg,#3C3449,#241F30 78%);
+  clip-path:polygon(3.5% 0,96.5% 0,100% 100%,0 100%);
+  box-shadow:0 18px 34px var(--shadow);
+}
+.cal-ledge::before{
+  content:"";position:absolute;top:0;left:3%;right:3%;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(201,160,92,.7),transparent);
+}
+
+/* 桌面投影 */
+.cal-shadow{
+  position:absolute;left:4%;right:4%;bottom:-52px;height:38px;
+  transform:translateZ(-30px);
+  background:radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.6), transparent 72%);
+  filter:blur(7px);
+  animation:shadowIn .85s var(--e) .5s both;
+}
+@keyframes shadowIn{from{opacity:0;transform:translateZ(-30px) scaleX(.25)}}
+
+/* 两个页面层 */
+.page-under,
+.page-flip{
+  position:absolute;inset:0;
+  transform-origin:top center;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+.page-under{transform:translateZ(0);pointer-events:none}
+.page-flip{
+  position:relative;z-index:3;
+  transform:translateZ(6px);
+}
+/* 入场：纸张从装订处展开（仅启动阶段，避免与翻月动画互相重触发） */
+body.boot .page-flip{animation:unfold .72s var(--e) .85s both}
+@keyframes unfold{
+  from{transform:translateZ(6px) rotateX(-62deg);opacity:.4}
+  to{transform:translateZ(6px) rotateX(0);opacity:1}
+}
+
+/* 页面纸面 */
+.page-surface{
+  position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;
+  background:
+    radial-gradient(120% 60% at 50% -6%, rgba(255,255,255,.65), transparent 46%),
+    linear-gradient(164deg,#F9F4E9 0%, var(--paper) 46%, #EEE4D0 82%, #E7DCC5 100%);
+  border-radius:8px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.4),
+    inset 0 -14px 26px rgba(120,96,58,.10),
+    0 2px 0 -1px #E6DCC6,
+    0 4px 0 -2px #D9CDB4,
+    0 6px 0 -3px #C9BCA0,
+    0 26px 44px rgba(0,0,0,.5);
+}
+.page-surface::after{ /* 纸纹噪点 + 中缝折痕 */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:var(--noise);opacity:.06;
+}
+.page-surface::before{
+  content:"";position:absolute;left:0;right:0;top:50%;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent, rgba(90,72,42,.14), transparent);
+}
+
+/* 装订孔 */
+.holes{
+  position:absolute;top:6px;left:0;right:0;width:74%;margin:0 auto;z-index:2;
+  display:flex;justify-content:space-between;pointer-events:none;
+}
+.holes i{
+  width:12px;height:12px;border-radius:50%;background:#17141E;
+  box-shadow:inset 0 2px 3px rgba(0,0,0,.85), 0 1px 0 rgba(255,255,255,.55);
+}
+
+/* 装订环 */
+.binding{
+  position:absolute;top:-13px;left:0;right:0;width:74%;margin:0 auto;z-index:6;
+  display:flex;justify-content:space-between;pointer-events:none;
+  transform:translateZ(8px);
+}
+.binding .ring{
+  width:11px;height:27px;border-radius:6px;position:relative;
+  background:linear-gradient(105deg,#8A6A33,#EAD094 32%,#7C5F2C 58%,#C9A05C 90%);
+  box-shadow:0 3px 6px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.5);
+  animation:ringIn .45s var(--spring) both;
+}
+.binding .ring::after{
+  content:"";position:absolute;inset:3px;border-radius:3px;background:#181520;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.9);
+}
+@keyframes ringIn{from{opacity:0;transform:translateY(-18px) rotate(-10deg)}}
+
+/* 翻月动画：当前页整页 rotateX 翻转 + 目标页弹回 */
+.desk-cal.flip-next .page-flip{animation:flipNext .65s var(--e) both}
+.desk-cal.flip-prev .page-flip{animation:flipPrev .65s var(--e) both}
+@keyframes flipNext{
+  0%{transform:translateZ(6px) rotateX(0)}
+  55%{transform:translateZ(6px) rotateX(86deg)}
+  100%{transform:translateZ(6px) rotateX(160deg)}
+}
+@keyframes flipPrev{
+  0%{transform:translateZ(6px) rotateX(0)}
+  55%{transform:translateZ(6px) rotateX(-86deg)}
+  100%{transform:translateZ(6px) rotateX(-160deg)}
+}
+.desk-cal.flip-next .page-under{animation:underNext .65s var(--e) both}
+.desk-cal.flip-prev .page-under{animation:underPrev .65s var(--e) both}
+@keyframes underNext{
+  from{transform:rotateX(16deg) scale(.99)}
+  to{transform:rotateX(0) scale(1)}
+}
+@keyframes underPrev{
+  from{transform:rotateX(-16deg) scale(.99)}
+  to{transform:rotateX(0) scale(1)}
+}
+/* 降级：普通滑动切换（300ms 交叉淡化 + 8px 位移） */
+.desk-cal.rm .page-flip{animation:rmOut .3s ease both}
+.desk-cal.rm .page-under{animation:rmIn .3s ease both}
+@keyframes rmOut{to{opacity:0;transform:translateY(8px)}}
+@keyframes rmIn{from{opacity:0;transform:translateY(8px)}}
+
+/* 翻页时：纸张反光扫过 + 纸面渐暗 + 新页阴影扫过 */
+.page-dim{position:absolute;inset:0;background:#0B0810;opacity:0;pointer-events:none;z-index:4}
+.page-sheen{
+  position:absolute;inset:-12%;z-index:5;pointer-events:none;opacity:0;
+  background:linear-gradient(100deg,transparent 42%,rgba(255,255,255,.34) 50%,transparent 58%);
+  transform:translateX(-72%) skewX(-12deg);
+}
+.under-shade{
+  position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg, rgba(10,6,14,.75), transparent 72%);
+}
+.desk-cal.flip-next .page-dim{animation:dimA .65s var(--e) both}
+.desk-cal.flip-prev .page-dim{animation:dimA .65s var(--e) both}
+@keyframes dimA{0%{opacity:0}42%{opacity:.14}100%{opacity:.6}}
+.desk-cal.flip-next .page-sheen{animation:sheenA .65s ease both}
+@keyframes sheenA{
+  0%{opacity:0;transform:translateX(-72%) skewX(-12deg)}
+  28%{opacity:.9}
+  100%{opacity:0;transform:translateX(72%) skewX(-12deg)}
+}
+.desk-cal.flip-prev .page-sheen{animation:sheenB .65s ease both}
+@keyframes sheenB{
+  0%{opacity:0;transform:translateX(72%) skewX(-12deg)}
+  28%{opacity:.9}
+  100%{opacity:0;transform:translateX(-72%) skewX(-12deg)}
+}
+.desk-cal.flipping .under-shade{animation:shadeA .65s var(--e) both}
+@keyframes shadeA{0%{opacity:0}34%{opacity:.42}100%{opacity:0}}
+.desk-cal.flipping{pointer-events:none}
+
+/* ---------- 页面内容 ---------- */
+.page-head{
+  position:relative;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:30px 24px 8px;
+}
+.m-title{display:flex;align-items:baseline;gap:12px}
+.m-big{
+  font-size:clamp(28px,4.4vw,50px);line-height:1;color:var(--ink);letter-spacing:.04em;
+}
+.m-year{font-size:clamp(11px,1.2vw,14px);color:var(--ink2);letter-spacing:.22em}
+.m-seal{
+  width:30px;height:30px;border-radius:6px;flex:none;align-self:center;
+  background:var(--red);color:#F7EFE0;font-size:15px;line-height:30px;text-align:center;
+  transform:rotate(6deg);box-shadow:0 3px 8px rgba(178,59,46,.35);
+}
+.m-ghost{
+  position:absolute;right:12px;top:-6px;font-size:clamp(60px,9vw,116px);line-height:1;
+  color:rgba(44,42,38,.055);pointer-events:none;user-select:none;
+}
+.gold-rule{
+  height:2px;margin:4px 24px 8px;border-radius:2px;
+  background:linear-gradient(90deg,var(--gold), rgba(201,160,92,.15) 70%, transparent);
+}
+
+/* 星期表头 */
+.weekrow{
+  display:grid;grid-template-columns:repeat(7,1fr);gap:6px;
+  padding:2px 18px 6px;font-size:clamp(10px,1.1vw,12px);
+  color:var(--ink2);text-align:center;letter-spacing:.2em;
+}
+.weekrow span:last-child,.weekrow span:nth-child(6){color:rgba(178,59,46,.75)}
+
+/* 42 格日期网格 */
+.grid{
+  flex:1;display:grid;grid-template-columns:repeat(7,1fr);
+  grid-auto-rows:clamp(46px,7vh,68px);gap:6px;padding:0 18px 12px;
+}
+.cell{
+  position:relative;appearance:none;border:0;border-radius:9px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  background:rgba(74,62,44,.035);
+  box-shadow:inset 0 0 0 1px rgba(44,42,38,.08);
+  color:inherit;user-select:none;-webkit-tap-highlight-color:transparent;
+  opacity:0;transform:translateY(12px);
+  transition:opacity .45s var(--e), transform .45s var(--e),
+             background .22s var(--e), box-shadow .22s var(--e);
+}
+.cell.in{opacity:1;transform:none}
+.cell.in:hover,.cell.in:focus-visible{
+  transform:translateY(-4px);
+  background:#FFFDF4;
+  box-shadow:0 10px 18px rgba(40,28,10,.16), inset 0 0 0 1px rgba(201,160,92,.45);
+  z-index:2;
+}
+.cell:active{transform:translateY(-1px) scale(.97)}
+.cell.out{pointer-events:none;filter:saturate(.5)}
+.cell.out.in{opacity:.32}
+.cell.weekend .num{color:var(--red)}
+.numbox{padding:1px 9px;border-radius:999px;line-height:1.35}
+.num{
+  font-family:var(--serif);font-size:clamp(15px,1.8vw,21px);line-height:1.15;
+  color:var(--ink);font-variant-numeric:tabular-nums;
+}
+.sub{
+  font-size:clamp(8px,1vw,11px);line-height:1;color:#8A8172;
+  letter-spacing:.06em;white-space:nowrap;
+}
+.sub-fest{color:var(--red);font-weight:700}
+.sub-term,.sub-mon{color:#A2792E}
+/* 节气日整格晕染 */
+.cell.termday{
+  background:linear-gradient(180deg, rgba(201,160,92,.16), rgba(201,160,92,.05));
+  box-shadow:inset 0 0 0 1px rgba(201,160,92,.32);
+}
+/* 休 / 班 角标 */
+.badge{
+  position:absolute;top:3px;right:3px;min-width:15px;height:15px;border-radius:4px;
+  font-size:9px;line-height:15px;text-align:center;padding:0 2px;
+  font-family:"Noto Sans SC","Microsoft YaHei",sans-serif;font-weight:700;
+}
+.badge-off{background:var(--red);color:#F9F1E2;box-shadow:0 2px 5px rgba(178,59,46,.4)}
+.badge-work{background:var(--teal);color:#EAF2F0;box-shadow:0 2px 5px rgba(63,91,99,.4)}
+/* 事件色点 */
+.dots{
+  position:absolute;bottom:4px;left:0;right:0;
+  display:flex;gap:3px;justify-content:center;
+}
+.dots i{width:5px;height:5px;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+/* 今日盖章：橘红胶囊回弹弹出 */
+.cell.today .numbox{
+  background:linear-gradient(160deg,#FF8A5E,var(--accent) 62%,#E4502C);
+  color:#FFF7EE;
+  box-shadow:0 4px 12px rgba(255,107,74,.5), inset 0 1px 0 rgba(255,255,255,.4);
+  animation:stampIn .55s var(--spring) both;
+  animation-delay:calc(var(--i,0)*18ms + .28s);
+}
+.cell.today .num{color:#FFF7EE}
+.cell.today .sub{color:rgba(255,247,238,.85)}
+@keyframes stampIn{
+  0%{transform:scale(.55);opacity:0}
+  68%{transform:scale(1.1);opacity:1}
+  100%{transform:scale(1);opacity:1}
+}
+/* 点击涟漪 */
+.ripple{
+  position:absolute;border-radius:50%;pointer-events:none;z-index:3;
+  background:radial-gradient(circle, rgba(255,107,74,.4) 0%, rgba(255,107,74,.12) 46%, transparent 68%);
+  transform:scale(0);animation:rippleA .55s ease-out forwards;
+}
+@keyframes rippleA{to{transform:scale(2.4);opacity:0}}
+
+/* 页脚 */
+.page-foot{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 24px 16px;font-size:clamp(9px,1vw,11px);
+  color:var(--ink2);letter-spacing:.22em;
+}
+.page-foot b{color:rgba(201,160,92,.9);font-weight:400}
+
+/* ---------- 桌沿：月份切换 + 翻牌时钟 ---------- */
+.deskbar{
+  width:min(880px,100%);display:flex;justify-content:space-between;align-items:flex-end;gap:14px;
+  animation:fadeUp .55s var(--e) 1.45s both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}}
+.monthnav{display:flex;align-items:center;gap:12px}
+.nav-btn{
+  width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(180deg,#2B2536,#1D1926);
+  border:1px solid rgba(201,160,92,.4);color:var(--gold);
+  font-size:22px;line-height:1;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 16px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06);
+  transition:transform .2s var(--e), border-color .2s, color .2s;
+}
+.nav-btn:hover:not(:disabled){transform:translateY(-3px);border-color:var(--gold);color:#EFD9AC}
+.nav-btn:active:not(:disabled){transform:translateY(0) scale(.95)}
+.nav-btn:disabled{opacity:.3;cursor:default}
+.nav-label{font-size:clamp(15px,1.8vw,19px);color:#E4D8C0;letter-spacing:.14em;min-width:9ch;text-align:center}
+.nav-hint{font-size:10px;color:#6E6656;letter-spacing:.14em;margin-top:5px;text-align:center}
+
+/* 翻牌时钟 */
+.clock{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  background:linear-gradient(180deg,#232030,#181520);
+  border:1px solid #3B3448;border-radius:14px;
+  padding:10px 16px 8px;
+  box-shadow:0 16px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);
+  animation:popIn .5s var(--spring) 1.6s both;
+}
+@keyframes popIn{from{opacity:0;transform:scale(.8) translateY(10px)}}
+.clock-label{font-size:10px;letter-spacing:.4em;color:var(--gold);opacity:.85;text-indent:.4em}
+.clock-face{display:flex;align-items:center;gap:5px}
+.cgroup{display:flex;flex-direction:column;align-items:center;gap:4px}
+.cpair{display:flex;gap:4px}
+.clab{font-size:10px;color:#8E8574;letter-spacing:.3em;text-indent:.3em}
+.colon{
+  font-family:var(--mono);font-size:clamp(16px,2vw,26px);color:var(--gold);
+  align-self:flex-start;padding-top:.55em;line-height:1;
+  animation:blink 2s ease-in-out infinite;
+}
+@keyframes blink{0%,45%{opacity:1}55%,100%{opacity:.25}}
+
+/* 翻牌数字：上下两半 + 两片翻叶 */
+.digit{
+  position:relative;width:.8em;height:1.52em;
+  font-family:var(--mono);font-weight:700;
+  font-size:clamp(23px,2.9vw,38px);color:#F3E9D6;
+  perspective:260px;
+}
+.half,.leaf{
+  position:absolute;left:0;right:0;height:50%;overflow:hidden;
+  background:linear-gradient(180deg,#2B2536,#221D2D);
+}
+/* 内层文字盒高度必须等于数字卡总高（.digit = 1.52em）：
+   字形中线恰好落在上下半卡分割线（0.76em）上，
+   上半露字的上半、下半露字的下半；此前误用 2em，字形中段被裁掉 */
+.half i,.leaf i{
+  position:absolute;left:0;right:0;height:1.52em;line-height:1.52em;text-align:center;
+  font-style:normal;
+}
+.half.top{top:0;border-radius:6px 6px 0 0;border-bottom:1px solid rgba(0,0,0,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.half.top i{top:0}
+.half.bottom{bottom:0;border-radius:0 0 6px 6px;box-shadow:inset 0 -1px 0 rgba(255,255,255,.04)}
+.half.bottom i{bottom:0}
+.leaf{backface-visibility:hidden;-webkit-backface-visibility:hidden;z-index:3}
+.leaf.lt{top:0;border-radius:6px 6px 0 0;border-bottom:1px solid rgba(0,0,0,.7);transform-origin:center bottom;transition:transform .16s ease-in}
+.leaf.lt i{top:0}
+.leaf.lb{bottom:0;border-radius:0 0 6px 6px;transform-origin:center top;transform:rotateX(90deg);transition:transform .17s cubic-bezier(.2,.7,.3,1.1)}
+.leaf.lb i{bottom:0}
+.digit.f1 .leaf.lt{transform:rotateX(-90deg)}
+.digit.f2 .leaf.lb{transform:rotateX(0)}
+.digit.snap .leaf{transition:none!important}
+
+/* ---------- 右侧纸条区 ---------- */
+.side{
+  width:100%;max-width:520px;display:grid;gap:12px;
+}
+.card{
+  background:linear-gradient(170deg, rgba(43,37,54,.92), rgba(30,26,40,.92));
+  border:1px solid rgba(201,160,92,.22);
+  border-radius:14px;padding:16px 18px;
+  box-shadow:0 14px 26px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+}
+.card h4{
+  font-size:11px;letter-spacing:.34em;color:var(--gold);font-weight:400;margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.card h4::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(201,160,92,.35),transparent)}
+.card.slide{animation:fadeUp .5s var(--e) both}
+.card.slide:nth-child(1){animation-delay:1.35s}
+.card.slide:nth-child(2){animation-delay:1.5s}
+.card.slide:nth-child(3){animation-delay:1.65s}
+/* 今日卡 */
+.tc-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:4px}
+.tc-date{font-size:15px;color:#EFE6D2;letter-spacing:.06em}
+.tc-sub{font-size:11px;color:#9C9280;letter-spacing:.1em;margin-bottom:8px}
+.tc-sub em{font-style:normal;color:#D8B573}
+.tc-list{list-style:none;display:flex;flex-direction:column;gap:7px}
+.tc-list li{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#CFC5B0;line-height:1.45}
+.tc-list .dot{width:7px;height:7px;border-radius:50%;flex:none;box-shadow:0 0 6px currentColor}
+.tc-empty{font-size:12px;color:#7E7563;line-height:1.7}
+.tc-empty b{color:#D8B573;font-weight:400}
+/* 倒计时卡 */
+.cd-name{font-size:19px;color:#F0E7D4;letter-spacing:.1em;margin-bottom:2px}
+.cd-days{font-size:12px;color:#9C9280;margin-bottom:10px}
+.cd-days b{font-family:var(--mono);font-size:26px;color:var(--accent);margin-right:6px;font-weight:700}
+.cd-bar{height:5px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.cd-bar i{
+  display:block;height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--gold),var(--accent));
+  box-shadow:0 0 10px rgba(255,107,74,.5);
+  transition:width .8s var(--e);
+}
+/* 图例 */
+.legend ul{list-style:none;display:flex;flex-wrap:wrap;gap:8px 16px}
+.legend li{display:flex;align-items:center;gap:7px;font-size:11.5px;color:#A79D89;letter-spacing:.08em}
+.lg{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:16px;height:16px;border-radius:4px;font-size:10px;padding:0 3px;
+}
+.lg-xiu{background:var(--red);color:#F9F1E2}
+.lg-ban{background:var(--teal);color:#EAF2F0}
+.lg-jie{background:rgba(201,160,92,.16);color:#D8B573;border:1px solid rgba(201,160,92,.5)}
+.lg-dot{width:14px;height:14px;border-radius:99px;background:linear-gradient(160deg,#FF8A5E,var(--accent));padding:0}
+
+/* ---------- 每日一句 ---------- */
+.quote{
+  text-align:center;padding:18px 12px 4px;
+  animation:fadeUp .55s var(--e) 1.75s both;
+}
+.q-tag{
+  display:inline-block;font-size:10px;letter-spacing:.5em;text-indent:.5em;color:var(--gold);
+  border:1px solid rgba(201,160,92,.35);border-radius:999px;padding:4px 12px;margin-bottom:10px;
+  background:rgba(201,160,92,.06);
+}
+.quote p{
+  font-size:clamp(13px,1.6vw,16px);color:#B9AE97;letter-spacing:.14em;line-height:1.9;
+}
+.quote p::before,.quote p::after{content:"「";color:rgba(201,160,92,.6);margin:0 6px}
+.quote p::after{content:"」"}
+
+/* ---------- 事件小面板 ---------- */
+.veil{
+  position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  background:rgba(9,7,13,.62);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  opacity:0;transition:opacity .24s ease;padding:18px;
+}
+.veil.show{opacity:1}
+.panel{
+  position:relative;width:min(430px,94vw);max-height:82vh;overflow:auto;
+  background:
+    radial-gradient(110% 46% at 50% -4%, rgba(255,255,255,.6), transparent 52%),
+    linear-gradient(168deg,#F9F4E9,var(--paper) 52%,#ECE2CE);
+  border-radius:12px;padding:22px 22px 18px;
+  color:var(--ink);
+  box-shadow:0 34px 70px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.45);
+  transform:rotate(-.6deg) scale(.94) translateY(10px);
+  transition:transform .28s var(--spring);
+}
+.veil.show .panel{transform:rotate(-.6deg) scale(1) translateY(0)}
+.panel::after{content:"";position:absolute;inset:0;background-image:var(--noise);opacity:.05;pointer-events:none;border-radius:12px}
+.pin{
+  position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+  width:18px;height:18px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,#FFD9A0,var(--gold) 58%,#8A6A33);
+  box-shadow:0 4px 8px rgba(0,0,0,.4), inset 0 -2px 3px rgba(0,0,0,.3);
+}
+.p-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}
+.p-head h3{font-size:20px;color:var(--ink);letter-spacing:.04em}
+.p-head p{font-size:11.5px;color:var(--ink2);margin-top:4px;letter-spacing:.08em}
+.p-close{
+  appearance:none;border:0;background:rgba(44,42,38,.08);color:var(--ink2);
+  width:28px;height:28px;border-radius:50%;font-size:16px;line-height:1;flex:none;
+  transition:background .2s,transform .2s;
+}
+.p-close:hover{background:rgba(178,59,46,.15);color:var(--red);transform:rotate(90deg)}
+.p-list{list-style:none;display:flex;flex-direction:column;gap:6px;margin:10px 0 2px}
+.p-list li{
+  display:flex;align-items:center;gap:9px;
+  background:rgba(255,255,255,.42);border:1px solid rgba(44,42,38,.08);
+  border-radius:8px;padding:8px 10px;font-size:13px;line-height:1.5;
+  animation:listIn .3s var(--e) both;
+}
+@keyframes listIn{from{opacity:0;transform:translateX(-8px)}}
+.p-list .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.p-list .pt{flex:1;color:var(--ink)}
+.p-list .del{
+  appearance:none;border:0;background:transparent;color:rgba(44,42,38,.4);
+  font-size:15px;width:22px;height:22px;border-radius:50%;flex:none;line-height:1;
+  transition:background .2s,color .2s;
+}
+.p-list .del:hover{background:rgba(178,59,46,.14);color:var(--red)}
+.p-empty{font-size:12px;color:var(--ink2);padding:8px 2px 2px;letter-spacing:.06em}
+.p-form{margin-top:12px;position:relative;z-index:1}
+.p-row{display:flex;gap:8px}
+#pInput{
+  flex:1;min-width:0;appearance:none;border:1px solid rgba(44,42,38,.25);border-radius:8px;
+  background:rgba(255,255,255,.55);padding:9px 12px;font-size:13px;color:var(--ink);
+  transition:border-color .2s, box-shadow .2s;
+}
+#pInput::placeholder{color:#A79C86}
+#pInput:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,107,74,.18)}
+#pInput.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}55%{transform:translateX(5px)}80%{transform:translateX(-3px)}}
+.p-add{
+  appearance:none;border:0;border-radius:8px;padding:9px 14px;
+  background:linear-gradient(160deg,#FF8A5E,var(--accent) 60%,#E4502C);
+  color:#FFF7EE;font-size:13px;letter-spacing:.1em;flex:none;
+  box-shadow:0 5px 12px rgba(255,107,74,.4);
+  transition:transform .2s var(--e), box-shadow .2s;
+}
+.p-add:hover{transform:translateY(-2px);box-shadow:0 8px 16px rgba(255,107,74,.5)}
+.p-cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cat{
+  appearance:none;border:1px solid rgba(44,42,38,.18);border-radius:999px;
+  background:rgba(255,255,255,.4);padding:4px 11px;font-size:11.5px;color:#5A5245;
+  display:inline-flex;align-items:center;gap:6px;letter-spacing:.08em;
+  transition:all .18s;
+}
+.cat i{width:8px;height:8px;border-radius:50%}
+.cat.on{border-color:currentColor;color:var(--ink);background:#FFFDF4;box-shadow:0 3px 8px rgba(44,42,38,.12)}
+
+/* ---------- 响应式 ---------- */
+@media (min-width:768px){
+  .side{grid-template-columns:repeat(2,1fr);max-width:640px}
+  .legend{grid-column:1 / -1}
+}
+@media (min-width:1200px){
+  .scene{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:34px;align-items:center;width:100%}
+  .stage-col{width:auto}
+  .side{grid-template-columns:1fr;max-width:none;width:auto}
+}
+@media (max-width:767px){
+  .stage{perspective:1100px}
+  .deskbar{flex-direction:column;align-items:center;gap:14px}
+  .monthnav{flex-direction:column;gap:8px}
+  .card.slide:nth-child(1){animation-delay:1.15s}
+  .card.slide:nth-child(2){animation-delay:1.3s}
+  .card.slide:nth-child(3){animation-delay:1.45s}
+}
+@media (max-width:479px){
+  .wrap{padding:14px 12px 18px}
+  .stage{perspective:1000px}
+  .brand p{display:none}
+  .year-pill{display:none}
+  .m-year{letter-spacing:.1em}
+  .page-head{padding:26px 16px 6px}
+  .gold-rule{margin:4px 16px 6px}
+  .weekrow{padding:2px 10px 5px;letter-spacing:0;gap:4px}
+  .grid{padding:0 10px 10px;gap:4px;grid-auto-rows:clamp(44px,8.6vh,58px)}
+  .page-foot{padding:4px 16px 12px;letter-spacing:.1em}
+  /* 移动端简化：普通农历小字隐藏，保留节日 / 节气 / 初一月名 */
+  .cell .sub:not(.sub-fest):not(.sub-term):not(.sub-mon){display:none}
+  .cell .dots{display:none}
+  .nav-btn{width:40px;height:40px}
+  .clock{padding:8px 12px 6px}
+  .cal-ledge{bottom:-28px;height:22px}
+  .cal-shadow{bottom:-42px}
+}
+/* 触屏：去除悬浮抬升依赖，保留按压反馈 */
+@media (hover:none){
+  .cell.in:hover{transform:none;box-shadow:inset 0 0 0 1px rgba(44,42,38,.08);background:rgba(74,62,44,.035)}
+  .btn-gold:hover{transform:none}
+  .nav-btn:hover:not(:disabled){transform:none}
+}
+
+/* ---------- 无障碍降级：prefers-reduced-motion ---------- */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-delay:0ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+    transition-delay:0ms!important;
+  }
+  .cal-par{transform:none!important}
+  .colon{animation:none!important;opacity:.8}
+  .motes{display:none}
+}
+</style>
+</head>
+<body class="boot">
+
+<!-- 氛围层：桌面 / 暗角 / 台灯光晕 / 浮尘 -->
+<div class="desk-floor" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<div class="lamp" aria-hidden="true"></div>
+<div class="motes" aria-hidden="true">
+  <span></span><span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<div class="wrap">
+
+  <!-- ===== 顶栏 ===== -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">翻</div>
+      <div>
+        <h1>翻月<i>FLIPMO</i></h1>
+        <p>一页一世界 · 纸上剧场</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="year-pill">丙午年 · 2026</span>
+      <button type="button" class="btn-gold" id="btnToday">回到今天</button>
+    </div>
+  </header>
+
+  <!-- ===== 场景 ===== -->
+  <main class="scene">
+
+    <!-- 舞台列：3D 台历 + 桌沿控件 -->
+    <div class="stage-col">
+
+      <div class="stage" id="stage">
+        <div class="cal-par" id="calPar">
+          <div class="cal-tilt">
+            <div class="desk-cal" id="deskCal">
+
+              <!-- 台座与桌面投影 -->
+              <div class="cal-shadow" aria-hidden="true"></div>
+              <div class="cal-ledge" aria-hidden="true"></div>
+
+              <!-- 下层页（翻月时的目标月） -->
+              <div class="page-under" aria-hidden="true">
+                <div class="page-surface" id="pageUnder"></div>
+                <div class="under-shade"></div>
+              </div>
+
+              <!-- 当前页（可翻转的整页） -->
+              <div class="page-flip" id="pageFlip">
+                <div class="page-surface" id="pageCur"></div>
+                <div class="holes" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div class="page-dim" aria-hidden="true"></div>
+                <div class="page-sheen" aria-hidden="true"></div>
+              </div>
+
+              <!-- 装订环（JS 生成 12 枚，与装订孔对位） -->
+              <div class="binding" id="binding" aria-hidden="true"></div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 桌沿：月份切换（左） + 翻牌时钟（右） -->
+      <div class="deskbar">
+        <nav class="monthnav" aria-label="月份切换">
+          <div style="display:flex;align-items:center;gap:12px">
+            <button type="button" class="nav-btn" id="navPrev" aria-label="上一月">&#8249;</button>
+            <span class="nav-label" id="navLabel">2026年9月</span>
+            <button type="button" class="nav-btn" id="navNext" aria-label="下一月">&#8250;</button>
+          </div>
+          <div class="nav-hint">左右方向键 / 左右滑动 也可翻月</div>
+        </nav>
+
+        <div class="clock" role="timer" aria-label="实时时钟">
+          <span class="clock-label">本地时间</span>
+          <div class="clock-face" id="clockFace">
+            <div class="cgroup">
+              <div class="cpair" id="cH"></div>
+              <span class="clab">时</span>
+            </div>
+            <span class="colon">:</span>
+            <div class="cgroup">
+              <div class="cpair" id="cM"></div>
+              <span class="clab">分</span>
+            </div>
+            <span class="colon">:</span>
+            <div class="cgroup">
+              <div class="cpair" id="cS"></div>
+              <span class="clab">秒</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 右侧纸条区：今日 / 倒计时 / 图例 -->
+    <aside class="side" aria-label="今日信息">
+      <section class="card slide">
+        <h4>今日事件</h4>
+        <div class="tc-head">
+          <span class="tc-date" id="todayDate">—</span>
+        </div>
+        <p class="tc-sub" id="todaySub">—</p>
+        <ul class="tc-list" id="todayList"></ul>
+      </section>
+
+      <section class="card slide">
+        <h4>最近节日</h4>
+        <p class="cd-name" id="cdName">—</p>
+        <p class="cd-days"><b id="cdDays">0</b>天后</p>
+        <div class="cd-bar"><i id="cdBar" style="width:0%"></i></div>
+      </section>
+
+      <section class="card slide legend">
+        <h4>页上记号</h4>
+        <ul>
+          <li><span class="lg lg-xiu">休</span>法定假期</li>
+          <li><span class="lg lg-ban">班</span>调休补班</li>
+          <li><span class="lg lg-jie">节气</span>二十四节气</li>
+          <li><span class="lg lg-dot" aria-hidden="true"></span>今日盖章</li>
+        </ul>
+      </section>
+    </aside>
+
+  </main>
+
+  <!-- ===== 每日一句 ===== -->
+  <footer class="quote">
+    <span class="q-tag">每日一句</span>
+    <p id="quoteText">把日子过成日历，一页一页，皆是收成。</p>
+  </footer>
+
+</div>
+
+<!-- ===== 日期事件小面板 ===== -->
+<div class="veil" id="veil" hidden>
+  <section class="panel" role="dialog" aria-modal="true" aria-labelledby="pTitle">
+    <span class="pin" aria-hidden="true"></span>
+    <header class="p-head">
+      <div>
+        <h3 id="pTitle">—</h3>
+        <p id="pSub">—</p>
+      </div>
+      <button type="button" class="p-close" id="pClose" aria-label="关闭面板">×</button>
+    </header>
+    <ul class="p-list" id="pList"></ul>
+    <p class="p-empty" id="pEmpty">这一页还空着，钉一条进去吧。</p>
+    <form class="p-form" id="pForm" data-cat="work">
+      <div class="p-row">
+        <input type="text" id="pInput" maxlength="42" autocomplete="off"
+               placeholder="记点什么…（例：19:30 健身 · 腿日硬拉）" aria-label="事件内容">
+        <button type="submit" class="p-add">钉在这页</button>
+      </div>
+      <div class="p-cats" id="pCats"></div>
+    </form>
+  </section>
+</div>
+
+<noscript>
+  <div style="position:fixed;inset:auto 0 0 0;z-index:99;background:#262230;color:#D9D2C4;
+       text-align:center;padding:10px;font-size:13px;">
+    这本台历需要启用 JavaScript 才能翻页。
+  </div>
+</noscript>
+
+<script>
+(function(){
+'use strict';
+
+/* ==========================================================
+   一、内置数据（2026 年基准，取自调研文档第六节）
+   ========================================================== */
+
+var YEAR = 2026;
+
+/* 二十四节气（2026，日期 ±1 日） */
+var TERM = {
+  '1/5':'小寒','1/20':'大寒',
+  '2/4':'立春','2/19':'雨水',
+  '3/5':'惊蛰','3/20':'春分',
+  '4/5':'清明','4/20':'谷雨',
+  '5/5':'立夏','5/21':'小满',
+  '6/6':'芒种','6/21':'夏至',
+  '7/7':'小暑','7/23':'大暑',
+  '8/7':'立秋','8/23':'处暑',
+  '9/8':'白露','9/23':'秋分',
+  '10/8':'寒露','10/23':'霜降',
+  '11/7':'立冬','11/22':'小雪',
+  '12/7':'大雪','12/22':'冬至'
+};
+
+/* 公历节日与法定假期（t: off=休 work=班 无=纪念日） */
+var FEST = {
+  '1/1' :{n:'元旦', t:'off'},
+  '1/26':{n:'腊八节'},
+  '2/16':{n:'除夕', t:'off'},
+  '2/17':{n:'春节', t:'off'},
+  '3/3' :{n:'元宵节'},
+  '3/8' :{n:'妇女节'},
+  '4/5' :{n:'清明节', t:'off'},
+  '5/1' :{n:'劳动节', t:'off'},
+  '6/1' :{n:'儿童节'},
+  '6/19':{n:'端午节'},
+  '8/19':{n:'七夕'},
+  '9/10':{n:'教师节'},
+  '9/25':{n:'中秋节'},
+  '10/1':{n:'国庆节', t:'off'},
+  '10/18':{n:'重阳节'},
+  '12/25':{n:'圣诞节'}
+};
+
+/* 2026 农历月首（公历起点）：冬月跨年自 2025-12-20 起，
+   与除夕 2/16（腊月廿九）、春节 2/17、元宵 3/3、端午 6/19、
+   七夕 8/19、中秋 9/25、重阳 10/18 逐一对齐校验 */
+var LMONTHS = [
+  [new Date(2025,11,20),'冬月'],
+  [new Date(2026,0,19), '腊月'],
+  [new Date(2026,1,17), '正月'],
+  [new Date(2026,2,19), '二月'],
+  [new Date(2026,3,17), '三月'],
+  [new Date(2026,4,17), '四月'],
+  [new Date(2026,5,15), '五月'],
+  [new Date(2026,6,14), '六月'],
+  [new Date(2026,7,13), '七月'],
+  [new Date(2026,8,11), '八月'],
+  [new Date(2026,9,10), '九月'],
+  [new Date(2026,10,9), '十月'],
+  [new Date(2026,11,9), '冬月'],
+  [new Date(2027,0,8),  '腊月']
+];
+var LDAY = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十',
+            '十一','十二','十三','十四','十五','十六','十七','十八','十九','二十',
+            '廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+
+/* 每日一句（8 条轮换） */
+var QUOTES = [
+  '把日子过成日历，一页一页，皆是收成。',
+  '时间不语，却回答了所有问题。',
+  '今日宜：把想做的事，做成今天的事。',
+  '撕去的是纸，留下的是经历。',
+  '节气不催人，人自赶路。',
+  '所有的明天，都会准时抵达。',
+  '认真记下的一天，才算真正来过。',
+  '翻页之间，春天就近了一格。'
+];
+
+/* 事件分类（纸上色板） */
+var CATS = {
+  work :{n:'工作', c:'#4A6FA5'},
+  life :{n:'生活', c:'#5E8C61'},
+  mem  :{n:'纪念', c:'#B23B2E'},
+  habit:{n:'习惯', c:'#C77A2E'},
+  study:{n:'学习', c:'#7A5FA0'},
+  tip  :{n:'提醒', c:'#B08A2E'}
+};
+
+/* 示例事件（首次打开时入库，全部可删改） */
+var SEED = {
+  '9/8' :[['09:30 产品评审会 · 3F 会议室','work'],
+          ['12:00 与 avocado 组午餐约 · 公司楼下','life'],
+          ['22:00 提交周报 + 下周排期','work']],
+  '9/10':[['15:00 牙医复诊 · 安和口腔','life'],
+          ['19:30 健身 · 腿日硬拉 5×5','habit']],
+  '9/25':[['全天 中秋家宴 · 提前订月饼','mem']],
+  '10/1':[['全天 国庆出行 · 高铁 08:06 开','life']],
+  '2/17':[['全天 妈妈的生日 · 提前订花','mem']],
+  '11/11':[['20:00 线上直播课《色彩构成》第 4 讲','study']],
+  '12/31':[['全天 还款日 · 房贷扣款','tip']]
+};
+
+/* 名称表 */
+var MONTH_CN  = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+var MONTH_CAP = ['壹','贰','叁','肆','伍','陆','柒','捌','玖','拾','拾壹','拾贰'];
+var WEEK  = ['日','一','二','三','四','五','六'];
+var SEASON = {1:'冬',2:'冬',3:'春',4:'春',5:'夏',6:'夏',7:'夏',8:'秋',9:'秋',10:'秋',11:'冬',12:'冬'};
+
+/* ==========================================================
+   二、环境与状态
+   ========================================================== */
+
+var REDUCED = false;
+try { REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){}
+var HAS3D = false;
+try { HAS3D = window.CSS && CSS.supports && CSS.supports('transform-style','preserve-3d'); } catch(e){}
+var FLIP3D = HAS3D && !REDUCED;
+
+var NOW  = new Date();
+var TODAY = (NOW.getFullYear() === YEAR)
+  ? new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate())
+  : new Date(YEAR, 8, 8);           /* 非 2026 年访问时以 2026-09-08 为演示基准 */
+var curM = TODAY.getMonth();        /* 0-11 */
+var flipping = false;
+var panelKey = null;
+
+/* DOM */
+var deskCal  = document.getElementById('deskCal');
+var pageFlip = document.getElementById('pageFlip');
+var pageCur  = document.getElementById('pageCur');
+var pageUnder = document.getElementById('pageUnder');
+var binding  = document.getElementById('binding');
+var navPrev  = document.getElementById('navPrev');
+var navNext  = document.getElementById('navNext');
+var navLabel = document.getElementById('navLabel');
+var btnToday = document.getElementById('btnToday');
+var stage    = document.getElementById('stage');
+var calPar   = document.getElementById('calPar');
+var veil     = document.getElementById('veil');
+var pTitle   = document.getElementById('pTitle');
+var pSub     = document.getElementById('pSub');
+var pList    = document.getElementById('pList');
+var pEmpty   = document.getElementById('pEmpty');
+var pForm    = document.getElementById('pForm');
+var pInput   = document.getElementById('pInput');
+var pCats    = document.getElementById('pCats');
+var pClose   = document.getElementById('pClose');
+var todayDate = document.getElementById('todayDate');
+var todaySub  = document.getElementById('todaySub');
+var todayList = document.getElementById('todayList');
+var cdName = document.getElementById('cdName');
+var cdDays = document.getElementById('cdDays');
+var cdBar  = document.getElementById('cdBar');
+var quoteText = document.getElementById('quoteText');
+
+/* ==========================================================
+   三、工具函数
+   ========================================================== */
+
+function pad(n){ return (n < 10 ? '0' : '') + n; }
+function key(m, d){ return m + '/' + d; }            /* m: 1-12 */
+function $(id){ return document.getElementById(id); }
+
+function lunarOf(dt){
+  var name = '——', day = 0;
+  for (var i = 0; i < LMONTHS.length; i++){
+    if (dt >= LMONTHS[i][0]){
+      name = LMONTHS[i][1];
+      day = Math.round((dt - LMONTHS[i][0]) / 864e5) + 1;
+    }
+  }
+  return { mon: name, day: LDAY[day-1] || '' };
+}
+
+/* 某日的农历 + 节气 + 节日组合描述 */
+function dateInfo(m, d){
+  var dt = new Date(YEAR, m-1, d);
+  var L = lunarOf(dt);
+  var parts = ['农历' + L.mon + (L.day === '初一' ? '' : L.day)];
+  var t = TERM[key(m,d)];
+  var f = FEST[key(m,d)];
+  if (t) parts.push(t);
+  if (f) parts.push(f.n);
+  return parts.join(' · ');
+}
+
+/* 事件存取（localStorage，隐私模式安全降级） */
+var STORE_KEY = 'flipmo2026.events';
+function loadStore(){
+  try {
+    var raw = localStorage.getItem(STORE_KEY);
+    if (raw){ return JSON.parse(raw) || {}; }
+  } catch(e){}
+  /* 首次访问：写入示例事件 */
+  var seed = {};
+  Object.keys(SEED).forEach(function(k){
+    seed[k] = SEED[k].map(function(it){ return { t: it[0], c: it[1] }; });
+  });
+  return seed;
+}
+function saveStore(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(events)); } catch(e){}
+}
+var events = loadStore();
+
+/* ==========================================================
+   四、月页渲染
+   ========================================================== */
+
+function buildMonthHTML(m){    /* m: 0-11 */
+  var first = new Date(YEAR, m, 1);
+  var startDow = (first.getDay() + 6) % 7;   /* 周一为 0 */
+  var html = '';
+  html += '<div class="page-head">'
+       +    '<div class="m-title"><span class="m-big">' + MONTH_CN[m] + '</span>'
+       +    '<span class="m-year">2026 · 丙午年</span></div>'
+       +    '<span class="m-seal">' + SEASON[m+1] + '</span>'
+       +    '<span class="m-ghost" aria-hidden="true">' + MONTH_CAP[m] + '</span>'
+       + '</div>'
+       + '<div class="gold-rule" aria-hidden="true"></div>'
+       + '<div class="weekrow" aria-hidden="true">';
+  var w, i, d, k;
+  for (w = 0; w < 7; w++){ html += '<span>' + '一二三四五六日'.charAt(w) + '</span>'; }
+  html += '</div><div class="grid">';
+
+  for (i = 0; i < 42; i++){
+    d = new Date(YEAR, m, i + 1 - startDow);
+    var mo1 = d.getMonth() + 1, da = d.getDate();
+    k = key(mo1, da);
+    var inMonth = d.getMonth() === m;
+    var dow = d.getDay();
+    var isToday = inMonth && d.getFullYear() === TODAY.getFullYear()
+               && d.getMonth() === TODAY.getMonth() && d.getDate() === TODAY.getDate();
+    var fest = FEST[k];
+    var term = inMonth ? TERM[k] : null;
+    var cls = 'cell';
+    if (!inMonth) cls += ' out';
+    if (dow === 0 || dow === 6) cls += ' weekend';
+    if (term) cls += ' termday';
+    if (isToday) cls += ' today';
+
+    /* 副文字：节日 > 节气 > 农历（初一显示月名） */
+    var sub = '', subCls = 'sub';
+    if (inMonth && fest){ sub = fest.n; subCls += ' sub-fest'; }
+    else if (term){ sub = term; subCls += ' sub-term'; }
+    else {
+      var L = lunarOf(d);
+      sub = (L.day === '初一') ? L.mon : L.day;
+      if (L.day === '初一') subCls += ' sub-mon';
+    }
+
+    /* 休 / 班 角标 */
+    var badge = '';
+    if (inMonth && fest && fest.t === 'off'){ badge = '<span class="badge badge-off">休</span>'; }
+    else if (inMonth && fest && fest.t === 'work'){ badge = '<span class="badge badge-work">班</span>'; }
+
+    /* 事件色点（最多 3 枚） */
+    var dots = '';
+    var list = inMonth ? events[k] : null;
+    if (list && list.length){
+      dots = '<span class="dots">';
+      for (var j = 0; j < Math.min(list.length, 3); j++){
+        var c = (CATS[list[j].c] || CATS.work).c;
+        dots += '<i style="background:' + c + '"></i>';
+      }
+      dots += '</span>';
+    }
+
+    var label = mo1 + '月' + da + '日 星期' + WEEK[dow] + ' ' + dateInfo(mo1, da) + (isToday ? '，今天' : '');
+    html += '<button type="button" class="' + cls + '" style="--i:' + i + '"'
+         +  ' data-m="' + mo1 + '" data-d="' + da + '"'
+         +  (inMonth ? '' : ' tabindex="-1" aria-disabled="true"')
+         +  ' aria-label="' + label + '">'
+         +  badge
+         +  '<span class="numbox"><span class="num">' + da + '</span></span>'
+         +  '<span class="' + subCls + '">' + sub + '</span>'
+         +  dots
+         + '</button>';
+  }
+  html += '</div>'
+       +  '<div class="page-foot"><span>翻月台历 · 拾光成册</span>'
+       +  '<span>第<b>' + MONTH_CAP[m] + '</b>页 / 共拾贰页</span></div>';
+  return html;
+}
+
+/* 42 格 staggered 入场 */
+function enterCells(container, stagger){
+  var cells = container.querySelectorAll('.cell');
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      cells.forEach(function(c, i){
+        c.style.transitionDelay = stagger ? (i * 18) + 'ms' : '0ms';
+        c.classList.add('in');
+      });
+      window.setTimeout(function(){
+        cells.forEach(function(c){ c.style.transitionDelay = '0ms'; });
+      }, stagger ? 42 * 18 + 620 : 60);
+    });
+  });
+}
+
+/* ==========================================================
+   五、翻月（标志性瞬间）
+   ========================================================== */
+
+function updateNav(){
+  navLabel.textContent = YEAR + '年' + (curM + 1) + '月';
+  navPrev.disabled = (curM <= 0) || flipping;
+  navNext.disabled = (curM >= 11) || flipping;
+  btnToday.disabled = flipping;
+}
+
+function flipTo(target){
+  if (flipping || target === curM || target < 0 || target > 11) return;
+  flipping = true;
+  updateNav();
+
+  var dir = target > curM ? 'next' : 'prev';
+  var html = buildMonthHTML(target);
+  pageUnder.innerHTML = html;                       /* 目标月先藏于下层 */
+
+  var cls = FLIP3D ? ('flip-' + dir) : 'rm';        /* 降级：交叉淡化 + 8px 滑动 */
+  deskCal.classList.add('flipping', cls);
+
+  var done = false;
+  var finish = function(){
+    if (done) return;
+    done = true;
+    deskCal.classList.remove('flipping', 'flip-next', 'flip-prev', 'rm');
+    pageCur.innerHTML = html;                       /* 新页转正 */
+    pageUnder.innerHTML = '';
+    curM = target;
+    enterCells(pageCur, true);                      /* 42 格依次入场 */
+    flipping = false;
+    updateNav();
+  };
+  pageFlip.addEventListener('animationend', finish, { once: true });
+  window.setTimeout(finish, 900);                   /* 兜底：动画事件缺失也能落定 */
+}
+
+function go(delta){ flipTo(curM + delta); }
+
+function goToday(){
+  if (TODAY.getFullYear() === YEAR){ flipTo(TODAY.getMonth()); }
+}
+
+/* ==========================================================
+   六、翻牌时钟（每秒上半翻落 → 换字 → 下半展开）
+   ========================================================== */
+
+function makeDigit(parent){
+  var el = document.createElement('span');
+  el.className = 'digit';
+  el.setAttribute('aria-hidden', 'true');
+  el.innerHTML =
+      '<span class="half top"><i>0</i></span>'
+    + '<span class="half bottom"><i>0</i></span>'
+    + '<span class="leaf lt"><i>0</i></span>'
+    + '<span class="leaf lb"><i>0</i></span>';
+  el.dataset.v = '0';
+  parent.appendChild(el);
+  return el;
+}
+
+function setDigit(el, ch, animate){
+  if (el.dataset.v === ch) return;
+  var top = el.querySelector('.half.top i');
+  var bot = el.querySelector('.half.bottom i');
+  var lt  = el.querySelector('.leaf.lt i');
+  var lb  = el.querySelector('.leaf.lb i');
+
+  if (!animate){
+    top.textContent = ch; bot.textContent = ch;
+    lt.textContent = ch;  lb.textContent = ch;
+    el.dataset.v = ch;
+    return;
+  }
+  /* 兜底：上一轮动画未结束时，先无动画落定到旧值（四个面都要复位），
+     避免上下半卡新旧字拼错，再从旧值翻向新值 */
+  if (el._t1 || el._t2){
+    window.clearTimeout(el._t1); window.clearTimeout(el._t2);
+    el._t1 = el._t2 = null;
+    el.classList.add('snap'); el.classList.remove('f1','f2');
+    top.textContent = el.dataset.v; bot.textContent = el.dataset.v;
+    lt.textContent  = el.dataset.v; lb.textContent  = el.dataset.v;
+    void el.offsetHeight;                           /* 强制回流，复位翻叶 */
+    el.classList.remove('snap');
+  }
+  var old = el.dataset.v;
+  lt.textContent = old;         /* 落下的上翻叶 = 旧字上半 */
+  top.textContent = ch;         /* 上半静态卡先换新字：随旧叶落下逐渐露出（关键） */
+  lb.textContent = ch;          /* 展开的下翻叶 = 新字下半 */
+  bot.textContent = ch;         /* 下半静态卡换新字（折叠叶此刻收起，不穿帮） */
+  el.classList.add('f1');                             /* 上半 0 → -90° 翻落 */
+  el._t1 = window.setTimeout(function(){
+    el._t1 = null;
+    el.classList.add('snap');
+    el.classList.remove('f1');                        /* 上翻叶瞬间复位（-90° 侧面不可见） */
+    lt.textContent = ch;                              /* 复位后与静态上半同为新字，无跳变 */
+    void el.offsetHeight;
+    el.classList.remove('snap');
+    el.classList.add('f2');                           /* 下半 90° → 0 展开 */
+    el._t2 = window.setTimeout(function(){
+      el._t2 = null;
+      el.classList.add('snap');
+      el.classList.remove('f2');                      /* 下翻叶瞬间折回收起（内容与静态一致，无感） */
+      void el.offsetHeight;
+      el.classList.remove('snap');
+      el.dataset.v = ch;
+    }, 175);
+  }, 165);
+}
+
+var digits = [];
+(function initClock(){
+  var holder = { cH: $('cH'), cM: $('cM'), cS: $('cS') };
+  ['cH','cM','cS'].forEach(function(id){
+    for (var i = 0; i < 2; i++){ digits.push(makeDigit(holder[id])); }
+  });
+})();
+
+var lastStamp = -1;
+function clockTick(){
+  var now = new Date();
+  var stamp = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+  if (stamp !== lastStamp){
+    lastStamp = stamp;
+    var s = pad(now.getSeconds()), m = pad(now.getMinutes()), h = pad(now.getHours());
+    var str = h + m + s;
+    for (var i = 0; i < 6; i++){
+      setDigit(digits[i], str.charAt(i), FLIP3D);   /* 降级（reduced-motion / 无 3D）时静态直显 */
+    }
+  }
+  requestAnimationFrame(clockTick);                 /* 每帧重读系统时间对齐整秒边界，无漂移 */
+}
+
+/* ==========================================================
+   七、右侧纸条：今日事件 / 倒计时 / 每日一句
+   ========================================================== */
+
+function renderTodayCard(){
+  var m = TODAY.getMonth() + 1, d = TODAY.getDate();
+  todayDate.textContent = m + '月' + d + '日 · 星期' + WEEK[TODAY.getDay()];
+  var info = dateInfo(m, d);
+  var t = TERM[key(m,d)];
+  todaySub.innerHTML = t ? info.replace(t, '<em>' + t + '</em>') : info;
+
+  var list = events[key(m,d)] || [];
+  if (!list.length){
+    todayList.innerHTML = '<li class="tc-empty">今天还没有记录。<br>点台历上的日期，<b>钉一条进去</b>。</li>';
+    return;
+  }
+  var html = '';
+  list.forEach(function(ev){
+    var c = (CATS[ev.c] || CATS.work);
+    html += '<li><i class="dot" style="background:' + c.c + ';color:' + c.c + '"></i>'
+         +  '<span>' + esc(ev.t) + '</span></li>';
+  });
+  todayList.innerHTML = html;
+}
+
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderCountdown(){
+  var t0 = new Date(TODAY);
+  var doy0 = Math.round((t0 - new Date(YEAR,0,1)) / 864e5);
+  for (var i = 0; i <= 365; i++){
+    var dt = new Date(YEAR, 0, 1 + doy0 + i);
+    if (dt.getFullYear() !== YEAR) break;
+    var f = FEST[key(dt.getMonth()+1, dt.getDate())];
+    if (f){
+      if (i === 0){
+        cdName.textContent = '今天是' + f.n;
+        cdDays.textContent = 0;
+        cdBar.style.width = '100%';
+      } else {
+        cdName.textContent = f.n;
+        cdDays.textContent = i;
+        var total = Math.round((dt - new Date(YEAR,0,1)) / 864e5) || 1;
+        var pct = Math.max(4, Math.min(100, Math.round((total - i) / total * 100)));
+        cdBar.style.width = pct + '%';
+      }
+      return;
+    }
+  }
+  cdName.textContent = '今年节庆已翻完';
+  cdDays.textContent = 0;
+  cdBar.style.width = '100%';
+}
+
+function renderQuote(){
+  var doy = Math.round((TODAY - new Date(YEAR,0,0)) / 864e5);
+  quoteText.textContent = QUOTES[doy % QUOTES.length];
+}
+
+/* ==========================================================
+   八、事件小面板（点日期弹出，localStorage 持久化）
+   ========================================================== */
+
+function buildCats(){
+  var html = '';
+  Object.keys(CATS).forEach(function(id){
+    html += '<button type="button" class="cat' + (id === 'work' ? ' on' : '') + '"'
+         +  ' data-cat="' + id + '"><i style="background:' + CATS[id].c + '"></i>' + CATS[id].n + '</button>';
+  });
+  pCats.innerHTML = html;
+}
+
+function renderPanelList(){
+  var list = events[panelKey] || [];
+  pEmpty.hidden = list.length > 0;
+  var html = '';
+  list.forEach(function(ev, i){
+    var c = (CATS[ev.c] || CATS.work);
+    html += '<li><i class="dot" style="background:' + c.c + '"></i>'
+         +  '<span class="pt">' + esc(ev.t) + '</span>'
+         +  '<button type="button" class="del" data-i="' + i + '" aria-label="删除这条">×</button></li>';
+  });
+  pList.innerHTML = html;
+}
+
+function refreshPage(){
+  pageCur.innerHTML = buildMonthHTML(curM);
+  enterCells(pageCur, false);
+}
+
+function openPanel(m, d){
+  panelKey = key(m, d);
+  var dt = new Date(YEAR, m-1, d);
+  pTitle.textContent = YEAR + '年' + m + '月' + d + '日 · 星期' + WEEK[dt.getDay()];
+  pSub.textContent = dateInfo(m, d);
+  renderPanelList();
+  veil.hidden = false;
+  requestAnimationFrame(function(){ veil.classList.add('show'); });
+  window.setTimeout(function(){ pInput.focus(); }, 60);
+}
+
+function closePanel(){
+  if (veil.hidden) return;
+  veil.classList.remove('show');
+  window.setTimeout(function(){ veil.hidden = true; }, 240);
+  panelKey = null;
+}
+
+/* ==========================================================
+   九、交互绑定
+   ========================================================== */
+
+/* 装订环（12 枚，与装订孔对位，错峰落环） */
+(function buildBinding(){
+  var html = '';
+  for (var i = 0; i < 12; i++){
+    html += '<span class="ring" style="animation-delay:' + (0.55 + i * 0.045) + 's"></span>';
+  }
+  binding.innerHTML = html;
+})();
+
+/* 日期格点击（事件委托，含涟漪） */
+pageFlip.addEventListener('click', function(e){
+  var cell = e.target.closest ? e.target.closest('.cell') : null;
+  if (!cell || cell.classList.contains('out') || flipping) return;
+
+  /* 点击涟漪 */
+  var rect = cell.getBoundingClientRect();
+  var size = Math.max(rect.width, rect.height);
+  var r = document.createElement('span');
+  r.className = 'ripple';
+  r.style.width = r.style.height = size + 'px';
+  r.style.left = (e.clientX - rect.left - size/2) + 'px';
+  r.style.top  = (e.clientY - rect.top  - size/2) + 'px';
+  cell.appendChild(r);
+  window.setTimeout(function(){ if (r.parentNode) r.parentNode.removeChild(r); }, 600);
+
+  openPanel(+cell.dataset.m, +cell.dataset.d);
+});
+
+/* 面板内交互 */
+pClose.addEventListener('click', closePanel);
+veil.addEventListener('click', function(e){ if (e.target === veil) closePanel(); });
+
+pCats.addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('.cat') : null;
+  if (!b) return;
+  pCats.querySelectorAll('.cat').forEach(function(x){ x.classList.remove('on'); });
+  b.classList.add('on');
+  pForm.dataset.cat = b.dataset.cat;
+});
+
+pForm.addEventListener('submit', function(e){
+  e.preventDefault();
+  var v = pInput.value.trim();
+  if (!v){
+    pInput.classList.add('shake');
+    window.setTimeout(function(){ pInput.classList.remove('shake'); }, 420);
+    pInput.focus();
+    return;
+  }
+  if (!events[panelKey]) events[panelKey] = [];
+  events[panelKey].push({ t: v, c: pForm.dataset.cat || 'work' });
+  saveStore();
+  pInput.value = '';
+  renderPanelList();
+  refreshPage();
+  renderTodayCard();
+});
+
+pList.addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('.del') : null;
+  if (!b || !events[panelKey]) return;
+  events[panelKey].splice(+b.dataset.i, 1);
+  if (!events[panelKey].length){ delete events[panelKey]; }
+  saveStore();
+  renderPanelList();
+  refreshPage();
+  renderTodayCard();
+});
+
+/* 月份切换 */
+navPrev.addEventListener('click', function(){ go(-1); });
+navNext.addEventListener('click', function(){ go(1); });
+btnToday.addEventListener('click', goToday);
+
+/* 键盘流：←/→ 翻月，Esc 关面板 */
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape'){ closePanel(); return; }
+  var tag = e.target && e.target.tagName ? e.target.tagName : '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if (!veil.hidden) return;
+  if (e.key === 'ArrowLeft'){ go(-1); }
+  else if (e.key === 'ArrowRight'){ go(1); }
+});
+
+/* 触屏滑动翻月 */
+var tsx = 0, tsy = 0;
+stage.addEventListener('touchstart', function(e){
+  tsx = e.touches[0].clientX; tsy = e.touches[0].clientY;
+}, { passive: true });
+stage.addEventListener('touchend', function(e){
+  var dx = e.changedTouches[0].clientX - tsx;
+  var dy = e.changedTouches[0].clientY - tsy;
+  if (Math.abs(dx) > 56 && Math.abs(dy) < 70){
+    if (dx < 0){ go(1); } else { go(-1); }
+  }
+}, { passive: true });
+
+/* 指针视差：台历随鼠标轻微偏转（触屏 / 降级时不启用） */
+(function parallax(){
+  if (REDUCED) return;
+  var fine = false;
+  try { fine = window.matchMedia('(pointer: fine)').matches; } catch(e){}
+  if (!fine) return;
+  var raf = 0;
+  stage.addEventListener('mousemove', function(e){
+    if (raf) return;
+    raf = requestAnimationFrame(function(){
+      raf = 0;
+      var r = stage.getBoundingClientRect();
+      var nx = (e.clientX - r.left) / r.width - 0.5;
+      var ny = (e.clientY - r.top) / r.height - 0.5;
+      calPar.style.setProperty('--py', (nx * 4).toFixed(2) + 'deg');
+      calPar.style.setProperty('--px', (-ny * 2.2).toFixed(2) + 'deg');
+    });
+  });
+  stage.addEventListener('mouseleave', function(){
+    calPar.style.setProperty('--py', '0deg');
+    calPar.style.setProperty('--px', '0deg');
+  });
+})();
+
+/* ==========================================================
+   十、启动：渲染 + 入场序列 + 时钟
+   ========================================================== */
+
+buildCats();
+pageCur.innerHTML = buildMonthHTML(curM);
+updateNav();
+renderTodayCard();
+renderCountdown();
+renderQuote();
+
+/* 入场序列：落桌(0.25s) → 落环(0.55s) → 纸张展开(0.85s) → 42 格入场(1.4s) */
+window.setTimeout(function(){ enterCells(pageCur, true); }, REDUCED ? 0 : 1400);
+window.setTimeout(function(){ document.body.classList.remove('boot'); }, REDUCED ? 60 : 2400);
+
+/* 时钟：首帧直显，随后 rAF 对齐整秒翻牌 */
+(function(){
+  var now = new Date();
+  var str = pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+  for (var i = 0; i < 6; i++){ setDigit(digits[i], str.charAt(i), false); }
+  requestAnimationFrame(clockTick);
+})();
+
+})();
+</script>
+</body>
+</html>

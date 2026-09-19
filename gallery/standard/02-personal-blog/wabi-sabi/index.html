@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ECE7DA">
+<meta name="description" content="余白集——沈知远的个人博客。生成り底色，枯淡六色，不对称版心。侘寂风格，宜慢读。">
+<title>余白集 · 沈知远的个人博客</title>
+<script>document.documentElement.className += ' js';</script>
+<style>
+/* ==========================================================
+   余白集 · 日式侘寂 Wabi-Sabi
+   生成り #ECE7DA / 墨 #2F2B26 / 利休鼠 #888E7E
+   苔 #6F7452 / 錆 #8F4B38 / 灰青 #6C7F7A
+   不对称偏置版心 · 枯淡色 · 做旧痕迹 · 留白即内容
+   ========================================================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* 枯淡六色（日式传统色名） */
+  --kinari: #ECE7DA;   /* 生成り · 粗纸底 */
+  --sumi: #2F2B26;     /* 墨 · 标题正文 */
+  --rikei: #888E7E;    /* 利休鼠 · 弱文字图注 */
+  --koke: #6F7452;     /* 苔 · 次点缀标签 */
+  --sabi: #8F4B38;     /* 錆 · 链接印章悬停 */
+  --haisei: #6C7F7A;   /* 灰青 · 引用分隔 */
+  /* 同色系加深，用于小号文字以保证可读（AA） */
+  --koke-ink: #5B6042;
+  --haisei-ink: #57665F;
+  /* 字体栈 */
+  --serif: "Zen Old Mincho", "Shippori Mincho", "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif;
+  --sans: "Zen Kaku Gothic New", "LXGW WenKai", "Kaiti SC", "KaiTi", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --techo: "LXGW WenKai", "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif SC", serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--kinari);
+  color: var(--sumi);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.9;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* 纸纹：feTurbulence 噪点，整页覆盖，透明度 <= 4% */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  pointer-events: none;
+  opacity: .04;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23p)'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background: var(--sabi);
+  color: var(--kinari);
+}
+
+:focus-visible {
+  outline: 1px dashed var(--sabi);
+  outline-offset: 3px;
+}
+
+/* 链接：錆色细下划线，从左淡入 */
+a {
+  color: inherit;
+  text-decoration: none;
+  background-image: linear-gradient(var(--sabi), var(--sabi));
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  transition: background-size .45s ease-out, color .45s ease-out;
+}
+
+a:hover {
+  background-size: 100% 1px;
+  color: var(--sabi);
+}
+
+/* ---------- 版心：偏置，不居中 ---------- */
+.wrap {
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 0 56px;
+}
+
+/* ---------- 页顶一px墨线（阅读进度） ---------- */
+#ink-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 1px;
+  width: 0;
+  background: var(--sumi);
+  opacity: .85;
+  z-index: 120;
+}
+
+/* ---------- 返回顶部：竖排「帰る」 ---------- */
+#to-top {
+  position: fixed;
+  right: 26px;
+  bottom: 34px;
+  writing-mode: vertical-rl;
+  letter-spacing: .4em;
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--rikei);
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--rikei);
+  padding: 14px 8px 14px 4px;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition: opacity .5s ease-out, transform .5s ease-out, color .45s ease-out, border-color .45s ease-out;
+  z-index: 110;
+}
+
+#to-top.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+#to-top:hover {
+  color: var(--sabi);
+  border-color: var(--sabi);
+}
+
+/* ---------- 刊头 ---------- */
+.site-head {
+  padding: 68px 0 24px;
+}
+
+.head-grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.site-kicker {
+  font-size: 15px;
+  letter-spacing: .5em;
+  color: var(--rikei);
+  margin-bottom: 20px;
+}
+
+.head-name-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+}
+
+.site-name {
+  font-family: var(--serif);
+  font-size: 52px;
+  font-weight: 600;
+  letter-spacing: .24em;
+  line-height: 1;
+}
+
+.site-sub {
+  margin-top: 22px;
+  font-size: 16px;
+  letter-spacing: .14em;
+  color: var(--sumi);
+  opacity: .78;
+}
+
+/* 朱印一枚：錆底白字，微斜，内阴影洇墨 */
+.seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6em;
+  height: 2.6em;
+  font-size: 14px;
+  background: var(--sabi);
+  color: #F3EFE3;
+  writing-mode: vertical-rl;
+  font-family: var(--serif);
+  letter-spacing: .18em;
+  line-height: 1.1;
+  transform: rotate(-3deg);
+  border-radius: 3px;
+  box-shadow: inset 0 0 8px rgba(47, 43, 38, .5), inset 0 0 2px rgba(236, 231, 218, .25);
+  user-select: none;
+}
+
+.site-nav {
+  margin-top: 36px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 34px;
+}
+
+.site-nav a {
+  font-size: 15px;
+  letter-spacing: .34em;
+  color: var(--sumi);
+  opacity: .82;
+}
+
+.site-nav a:hover {
+  opacity: 1;
+}
+
+/* 竖排季节注记 */
+.vert {
+  writing-mode: vertical-rl;
+  letter-spacing: .42em;
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--rikei);
+}
+
+.head-season {
+  padding-top: 10px;
+  flex-shrink: 0;
+}
+
+/* ---------- 分节骨架 ---------- */
+.sec {
+  margin-top: 170px;
+}
+
+.sec-head {
+  margin-bottom: 64px;
+}
+
+.sec-title-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.sec-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--rikei);
+  border-radius: 2px;
+  color: var(--rikei);
+  font-family: var(--serif);
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.sec-title-row h2 {
+  font-family: var(--serif);
+  font-size: clamp(24px, 3vw, 30px);
+  font-weight: 600;
+  letter-spacing: .3em;
+}
+
+.sec-note {
+  margin-top: 14px;
+  font-size: 15px;
+  letter-spacing: .14em;
+  color: var(--rikei);
+}
+
+/* 卷首：五比七偏置网格，左空右文 */
+.juan-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 48px;
+  margin-top: 64px;
+}
+
+.juan-enso {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding-top: 6px;
+}
+
+.fig-enso {
+  color: var(--haisei);
+}
+
+.juan-text {
+  max-width: 34em;
+}
+
+.juan-text p {
+  font-family: var(--serif);
+  font-size: 20px;
+  line-height: 2.15;
+  letter-spacing: .06em;
+}
+
+.juan-text p + p {
+  margin-top: 1.6em;
+}
+
+.juan-sign {
+  margin-top: 44px;
+  font-family: var(--techo);
+  font-size: 16px;
+  letter-spacing: .22em;
+  color: var(--sumi);
+  opacity: .72;
+}
+
+/* 墨点做旧 */
+.blot {
+  position: absolute;
+  width: 15px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(47, 43, 38, .26), rgba(47, 43, 38, 0) 72%);
+  pointer-events: none;
+}
+
+.blot::after {
+  content: "";
+  position: absolute;
+  right: -16px;
+  bottom: -6px;
+  width: 6px;
+  height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(47, 43, 38, .2), rgba(47, 43, 38, 0) 72%);
+}
+
+/* ---------- 选读全文 ---------- */
+.essay {
+  display: grid;
+  grid-template-columns: minmax(150px, 5fr) minmax(0, 7fr);
+  gap: 44px;
+}
+
+.essay-side {
+  position: relative;
+}
+
+.vdate {
+  position: absolute;
+  right: 28px;
+  top: 6px;
+  writing-mode: vertical-rl;
+  letter-spacing: .38em;
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--rikei);
+  line-height: 2.2;
+}
+
+.essay-main {
+  max-width: 36em;
+}
+
+.essay-meta {
+  font-size: 15px;
+  letter-spacing: .3em;
+  color: var(--rikei);
+}
+
+.essay-meta .tag {
+  color: var(--koke-ink);
+}
+
+.essay-meta .dot {
+  margin: 0 .6em;
+  opacity: .6;
+}
+
+.essay-title {
+  margin-top: 18px;
+  font-family: var(--serif);
+  font-size: clamp(25px, 3vw, 31px);
+  font-weight: 600;
+  letter-spacing: .12em;
+  line-height: 1.6;
+}
+
+.essay-lede {
+  margin-top: 34px;
+  font-size: 18px;
+  letter-spacing: .03em;
+  opacity: .92;
+}
+
+.essay-main p + p,
+.essay-main p {
+  margin-top: 1.5em;
+}
+
+.essay-main .essay-title + .essay-lede {
+  margin-top: 34px;
+}
+
+.essay-main h4 {
+  margin: 3em 0 .1em;
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: .16em;
+}
+
+.essay-main h4::before {
+  content: "";
+  display: block;
+  width: 26px;
+  height: 1px;
+  background: var(--koke);
+  margin-bottom: 16px;
+}
+
+/* 引用块：灰青 */
+.essay-main blockquote {
+  margin: 2.4em 0 .4em;
+  padding: 4px 0 4px 24px;
+  border-left: 1px solid var(--haisei);
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 2;
+  letter-spacing: .05em;
+  color: var(--haisei-ink);
+}
+
+/* 插图：做旧滤镜 + 素描框 */
+.essay-fig {
+  margin-top: 56px;
+  border: 1px solid var(--rikei);
+  border-radius: 2px;
+  padding: 34px 28px 18px;
+  filter: sepia(.12) contrast(.96) brightness(.98);
+}
+
+.essay-fig svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.essay-fig figcaption {
+  margin-top: 14px;
+  font-size: 15px;
+  letter-spacing: .22em;
+  color: var(--rikei);
+  text-align: center;
+}
+
+.essay-end {
+  margin-top: 52px;
+  font-family: var(--techo);
+  font-size: 16px;
+  letter-spacing: .24em;
+  color: var(--sumi);
+  opacity: .7;
+}
+
+/* 分隔：—— ◇ —— 细线 */
+.sep {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: min(420px, 62%);
+  margin: 110px auto 0;
+  color: var(--rikei);
+  font-size: 13px;
+  letter-spacing: .6em;
+  text-indent: .6em;
+}
+
+.sep::before,
+.sep::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+  opacity: .32;
+}
+
+/* ---------- 存目（文章列表） ---------- */
+.filter-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 12px 32px;
+  margin-bottom: 22px;
+}
+
+.tab {
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 16px;
+  color: var(--rikei);
+  letter-spacing: .34em;
+  padding: 4px 2px;
+  position: relative;
+  cursor: pointer;
+  transition: color .45s ease-out;
+}
+
+.tab:hover {
+  color: var(--sumi);
+}
+
+.tab[aria-pressed="true"] {
+  color: var(--sumi);
+}
+
+.tab[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--sabi);
+}
+
+.count {
+  margin-left: auto;
+  font-size: 15px;
+  letter-spacing: .3em;
+  color: var(--rikei);
+}
+
+.entries {
+  list-style: none;
+  margin-top: 18px;
+}
+
+.entry {
+  border-bottom: 1px solid rgba(136, 142, 126, .28);
+}
+
+.entry:first-child {
+  border-top: 1px solid rgba(136, 142, 126, .28);
+}
+
+/* 交错缩进：奇偶行差约一成，行间大留白 */
+.entry:nth-child(even) {
+  padding-left: 9%;
+}
+
+.entry-head {
+  display: grid;
+  grid-template-columns: 24px 11em 1fr auto 22px;
+  gap: 16px;
+  align-items: baseline;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 26px 4px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.e-season {
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--koke-ink);
+}
+
+.e-date {
+  font-size: 15px;
+  letter-spacing: .1em;
+  color: var(--rikei);
+  white-space: nowrap;
+}
+
+.e-title {
+  font-family: var(--serif);
+  font-size: 19px;
+  letter-spacing: .08em;
+  color: var(--sumi);
+  transition: color .45s ease-out;
+}
+
+.entry-head:hover .e-title {
+  color: var(--sabi);
+}
+
+.e-full {
+  display: inline-block;
+  margin-left: 14px;
+  padding: 0 8px 1px;
+  border: 1px solid var(--sabi);
+  border-radius: 2px;
+  color: var(--sabi);
+  font-family: var(--sans);
+  font-size: 13px;
+  letter-spacing: .2em;
+  vertical-align: 3px;
+}
+
+.e-cat {
+  font-size: 15px;
+  letter-spacing: .3em;
+  color: var(--koke-ink);
+  white-space: nowrap;
+}
+
+.e-plus {
+  font-size: 16px;
+  line-height: 1;
+  color: var(--rikei);
+  justify-self: end;
+  transition: transform .5s ease-out, color .45s ease-out;
+}
+
+.entry.open .e-plus {
+  transform: rotate(45deg);
+  color: var(--sabi);
+}
+
+/* 展开摘要：grid-rows 缓慢生长 */
+.entry-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows .5s ease-out;
+}
+
+.entry-body > div {
+  overflow: hidden;
+}
+
+.entry.open .entry-body {
+  grid-template-rows: 1fr;
+}
+
+.entry-inner {
+  padding: 2px 4px 30px;
+  margin-left: calc(24px + 11em + 32px);
+  max-width: 56em;
+}
+
+.entry-inner p {
+  font-size: 16px;
+  line-height: 2;
+  color: var(--sumi);
+  opacity: .85;
+}
+
+.e-links {
+  margin-top: 14px;
+  font-size: 15px;
+  letter-spacing: .24em;
+}
+
+.e-links a {
+  color: var(--sabi);
+}
+
+/* ---------- 栏目 ---------- */
+.lanmu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 44px 64px;
+  max-width: 880px;
+  margin-left: 12%;
+  margin-top: 8px;
+}
+
+.lanmu-card {
+  text-align: left;
+  background: none;
+  border: none;
+  border-top: 1px solid rgba(136, 142, 126, .4);
+  border-radius: 0;
+  padding: 22px 6px 10px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+/* 错落：偶数卡下沉，破整齐 */
+.lanmu-card:nth-child(even) {
+  margin-top: 26px;
+}
+
+.l-name {
+  display: block;
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: .3em;
+  color: var(--sumi);
+  transition: color .45s ease-out;
+}
+
+.lanmu-card:hover .l-name {
+  color: var(--sabi);
+}
+
+.l-desc {
+  display: block;
+  margin-top: 10px;
+  font-size: 15px;
+  letter-spacing: .16em;
+  color: var(--rikei);
+}
+
+.l-count {
+  display: block;
+  margin-top: 16px;
+  font-size: 15px;
+  letter-spacing: .3em;
+  color: var(--koke-ink);
+}
+
+/* ---------- 归档 ---------- */
+.year-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 36px;
+}
+
+.year-panel {
+  margin-top: 36px;
+}
+
+.arc-list {
+  list-style: none;
+}
+
+.arc-list li {
+  display: grid;
+  grid-template-columns: 5em 1fr auto;
+  gap: 18px;
+  align-items: baseline;
+  padding: 17px 4px;
+  border-bottom: 1px solid rgba(136, 142, 126, .22);
+}
+
+.arc-list li:first-child {
+  border-top: 1px solid rgba(136, 142, 126, .22);
+}
+
+.a-m {
+  font-size: 15px;
+  letter-spacing: .3em;
+  color: var(--rikei);
+}
+
+.a-t {
+  font-family: var(--serif);
+  font-size: 17px;
+  letter-spacing: .06em;
+  color: var(--sumi);
+  opacity: .72;
+}
+
+a.a-t:hover {
+  opacity: 1;
+}
+
+.a-cat {
+  font-size: 15px;
+  letter-spacing: .3em;
+  color: var(--rikei);
+}
+
+.a-mute {
+  display: inline-block;
+  margin-left: 12px;
+  padding: 0 7px 1px;
+  border: 1px solid rgba(136, 142, 126, .55);
+  border-radius: 2px;
+  font-family: var(--sans);
+  font-size: 13px;
+  letter-spacing: .2em;
+  color: var(--rikei);
+  vertical-align: 3px;
+}
+
+/* ---------- 关于：手记体 ---------- */
+.about-grid {
+  display: grid;
+  grid-template-columns: minmax(110px, 3fr) minmax(0, 7fr);
+  gap: 56px;
+}
+
+.about-branch {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding-top: 10px;
+  opacity: .8;
+}
+
+.about-branch svg {
+  filter: sepia(.12) contrast(.96) brightness(.98);
+}
+
+.about-main {
+  max-width: 36em;
+}
+
+.techo-note p {
+  font-family: var(--techo);
+  font-size: 18px;
+  line-height: 2.25;
+  letter-spacing: .04em;
+}
+
+.techo-note p + p {
+  margin-top: 1.4em;
+}
+
+.techo-note .sign {
+  margin-top: 40px;
+  font-size: 16px;
+  letter-spacing: .26em;
+  opacity: .72;
+}
+
+/* ---------- 一笔笺（留言） ---------- */
+.letter-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
+  gap: 72px;
+}
+
+.letter-head {
+  position: relative;
+}
+
+/* 茶渍一枚：苔色残环 */
+.stain {
+  position: absolute;
+  right: 0;
+  bottom: -30px;
+  width: 148px;
+  height: 148px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, transparent 60%, rgba(111, 116, 82, .15) 68%, rgba(111, 116, 82, .05) 76%, transparent 80%);
+  transform: rotate(8deg) scaleX(1.04);
+  pointer-events: none;
+}
+
+.letter-form {
+  max-width: 560px;
+  transition: opacity .42s ease-out;
+}
+
+.letter-form.sent {
+  opacity: 0;
+}
+
+.f-row {
+  margin-bottom: 34px;
+}
+
+.f-row label {
+  display: block;
+  font-size: 15px;
+  letter-spacing: .3em;
+  color: var(--rikei);
+  margin-bottom: 4px;
+}
+
+.f-row .f-tip {
+  font-size: 13px;
+  letter-spacing: .14em;
+  opacity: .85;
+}
+
+.letter-form input,
+.letter-form textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--rikei);
+  border-radius: 0;
+  padding: 10px 2px;
+  font-family: var(--techo);
+  font-size: 17px;
+  letter-spacing: .06em;
+  color: var(--sumi);
+  transition: border-color .45s ease-out;
+}
+
+.letter-form textarea {
+  resize: vertical;
+  min-height: 118px;
+  line-height: 2;
+}
+
+.letter-form input:focus,
+.letter-form textarea:focus {
+  outline: none;
+  border-bottom-color: var(--sabi);
+}
+
+.letter-form [aria-invalid="true"] {
+  border-bottom-color: var(--sabi);
+}
+
+.f-err {
+  display: block;
+  min-height: 26px;
+  font-size: 15px;
+  letter-spacing: .1em;
+  color: var(--sabi);
+  opacity: 0;
+  transition: opacity .4s ease-out;
+}
+
+.f-err.show {
+  opacity: 1;
+}
+
+.f-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.f-submit {
+  background: transparent;
+  border: 1px solid var(--sumi);
+  border-radius: 2px;
+  padding: 12px 34px;
+  font-family: var(--serif);
+  font-size: 16px;
+  letter-spacing: .5em;
+  text-indent: .5em;
+  color: var(--sumi);
+  cursor: pointer;
+  transition: background .45s ease-out, color .45s ease-out, border-color .45s ease-out;
+}
+
+.f-submit:hover {
+  background: var(--sabi);
+  border-color: var(--sabi);
+  color: #F3EFE3;
+}
+
+.f-hint {
+  font-size: 15px;
+  letter-spacing: .1em;
+  color: var(--rikei);
+}
+
+/* 收讫回执 */
+.letter-done {
+  max-width: 560px;
+  border: 1px solid rgba(136, 142, 126, .45);
+  border-radius: 2px;
+  padding: 44px 42px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .7s ease-out, transform .7s ease-out;
+}
+
+.letter-done.show {
+  opacity: 1;
+  transform: none;
+}
+
+.done-enso {
+  width: 74px;
+  height: 60px;
+  color: var(--koke);
+  opacity: .55;
+}
+
+.done-line {
+  margin-top: 22px;
+  font-family: var(--techo);
+  font-size: 19px;
+  letter-spacing: .08em;
+}
+
+.done-sub {
+  margin-top: 10px;
+  font-size: 15px;
+  letter-spacing: .22em;
+  color: var(--rikei);
+}
+
+.f-again {
+  margin-top: 32px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--rikei);
+  border-radius: 0;
+  padding: 2px 2px 6px;
+  font: inherit;
+  font-size: 15px;
+  letter-spacing: .3em;
+  color: var(--sumi);
+  cursor: pointer;
+  transition: color .45s ease-out, border-color .45s ease-out;
+}
+
+.f-again:hover {
+  color: var(--sabi);
+  border-color: var(--sabi);
+}
+
+/* ---------- 奥付（页脚） ---------- */
+.site-foot {
+  margin-top: 190px;
+  padding: 70px 0 92px;
+  border-top: 1px solid rgba(136, 142, 126, .35);
+}
+
+.foot-sep {
+  text-align: center;
+  font-size: 13px;
+  letter-spacing: .8em;
+  text-indent: .8em;
+  color: var(--rikei);
+}
+
+.colophon {
+  margin-top: 28px;
+  text-align: center;
+  font-size: 15px;
+  letter-spacing: .3em;
+  color: var(--rikei);
+}
+
+.foot-copy {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 15px;
+  letter-spacing: .2em;
+  color: var(--rikei);
+  opacity: .85;
+}
+
+/* ---------- 缓淡显影：仅 700ms 淡入 + 8px 上移 ---------- */
+.js .rv {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .7s ease-out, transform .7s ease-out;
+}
+
+.js .rv.on {
+  opacity: 1;
+  transform: none;
+}
+
+/* 隐藏工具类 */
+.hide {
+  display: none !important;
+}
+
+/* ==========================================================
+   响应式 · 三档
+   ========================================================== */
+
+@media (max-width: 1200px) {
+  .wrap {
+    padding: 0 40px;
+  }
+
+  .sec {
+    margin-top: 130px;
+  }
+
+  .entry:nth-child(even) {
+    padding-left: 7%;
+  }
+
+  .essay {
+    grid-template-columns: minmax(90px, 3fr) minmax(0, 7fr);
+    gap: 36px;
+  }
+
+  .vdate {
+    right: 12px;
+  }
+
+  .juan-grid {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+    gap: 36px;
+  }
+
+  .lanmu-grid {
+    margin-left: 6%;
+  }
+
+  .about-grid {
+    grid-template-columns: minmax(80px, 2fr) minmax(0, 7fr);
+    gap: 40px;
+  }
+
+  .letter-grid {
+    gap: 48px;
+  }
+}
+
+@media (max-width: 767px) {
+  body {
+    font-size: 16px;
+  }
+
+  .wrap {
+    padding: 0 24px;
+  }
+
+  .site-head {
+    padding: 44px 0 10px;
+  }
+
+  .head-grid {
+    display: block;
+  }
+
+  .head-season {
+    display: none;
+  }
+
+  .site-name {
+    font-size: 38px;
+  }
+
+  .head-name-row {
+    gap: 16px;
+  }
+
+  .seal {
+    font-size: 12px;
+  }
+
+  .site-nav {
+    margin-top: 26px;
+    gap: 8px 22px;
+  }
+
+  .sec {
+    margin-top: 96px;
+  }
+
+  .sec-head {
+    margin-bottom: 44px;
+  }
+
+  .juan-grid {
+    display: block;
+  }
+
+  .juan-enso {
+    justify-content: flex-start;
+    width: 150px;
+    margin-bottom: 36px;
+  }
+
+  .essay {
+    display: block;
+  }
+
+  .essay-side {
+    margin-bottom: 20px;
+  }
+
+  .vdate {
+    position: static;
+    writing-mode: horizontal-tb;
+    letter-spacing: .24em;
+    line-height: 1.8;
+  }
+
+  .sep {
+    margin: 80px auto 0;
+  }
+
+  .entry:nth-child(even) {
+    padding-left: 4%;
+  }
+
+  .entry-head {
+    display: block;
+    position: relative;
+    padding: 22px 34px 22px 30px;
+  }
+
+  .e-season {
+    position: absolute;
+    left: 2px;
+    top: 27px;
+  }
+
+  .e-plus {
+    position: absolute;
+    right: 2px;
+    top: 25px;
+  }
+
+  .e-date {
+    display: inline-block;
+    margin-right: 16px;
+  }
+
+  .e-cat {
+    display: inline-block;
+  }
+
+  .e-title {
+    display: block;
+    margin-top: 6px;
+  }
+
+  .entry-inner {
+    margin-left: 30px;
+  }
+
+  .filter-row {
+    gap: 10px 22px;
+  }
+
+  .count {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .lanmu-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    margin-left: 0;
+    max-width: none;
+  }
+
+  .lanmu-card:nth-child(even) {
+    margin-top: 0;
+  }
+
+  .arc-list li {
+    grid-template-columns: 4.5em 1fr auto;
+    gap: 12px;
+  }
+
+  .about-grid {
+    display: block;
+  }
+
+  .about-branch {
+    display: none;
+  }
+
+  .letter-grid {
+    display: block;
+  }
+
+  .stain {
+    display: none;
+  }
+
+  .letter-form {
+    margin-top: 42px;
+    max-width: none;
+  }
+
+  .letter-done {
+    margin-top: 42px;
+    max-width: none;
+  }
+
+  .site-foot {
+    margin-top: 120px;
+    padding: 54px 0 70px;
+  }
+
+  #to-top {
+    right: 10px;
+    bottom: 16px;
+  }
+}
+
+@media (max-width: 400px) {
+  .wrap {
+    padding: 0 18px;
+  }
+
+  .site-name {
+    font-size: 31px;
+    letter-spacing: .18em;
+  }
+
+  .seal {
+    font-size: 11px;
+  }
+
+  .site-sub {
+    font-size: 15px;
+    letter-spacing: .06em;
+  }
+
+  .site-nav {
+    gap: 6px 18px;
+  }
+
+  .site-nav a {
+    letter-spacing: .24em;
+  }
+
+  .entry:nth-child(even) {
+    padding-left: 0;
+  }
+
+  .entry-head {
+    padding: 20px 30px 20px 26px;
+  }
+
+  .e-season {
+    left: 0;
+  }
+
+  .e-plus {
+    right: 0;
+  }
+
+  .entry-inner {
+    margin-left: 26px;
+    padding-right: 4px;
+  }
+
+  .juan-text p {
+    font-size: 18px;
+  }
+
+  .essay-main blockquote {
+    font-size: 17px;
+    padding-left: 16px;
+  }
+
+  .essay-fig {
+    padding: 22px 14px 12px;
+  }
+
+  .filter-row {
+    gap: 8px 18px;
+  }
+
+  .tab {
+    letter-spacing: .22em;
+  }
+
+  .f-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .letter-done {
+    padding: 32px 22px;
+  }
+}
+
+/* 动效克制：偏好减弱时，一切归静 */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .js .rv {
+    opacity: 1;
+    transform: none;
+  }
+}
+</style>
+</head>
+<body id="top">
+
+<!-- 页顶一px墨线：阅读进度 -->
+<div id="ink-progress" aria-hidden="true"></div>
+
+<!-- ============ 刊头 ============ -->
+<header class="site-head">
+  <div class="wrap head-grid">
+    <div class="head-left">
+      <p class="site-kicker">个人手记 · 起于二〇二四</p>
+      <div class="head-name-row">
+        <h1 class="site-name">余白集</h1>
+        <span class="seal" aria-label="朱印：余白">余白</span>
+      </div>
+      <p class="site-sub">沈知远的个人博客 —— 把值得想的事，写在会呼吸的页面上。</p>
+      <nav class="site-nav" aria-label="站内导航">
+        <a href="#juan">卷首</a>
+        <a href="#essays">选读</a>
+        <a href="#mokuji">存目</a>
+        <a href="#lanmu">栏目</a>
+        <a href="#archive">归档</a>
+        <a href="#about">关于</a>
+        <a href="#letter">一笔笺</a>
+      </nav>
+    </div>
+    <p class="vert head-season" aria-hidden="true">二〇二六 · 初秋 · 宜慢读</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ 其一 · 卷首 ============ -->
+  <section id="juan" class="sec sec-juan">
+    <div class="wrap" style="position:relative;">
+      <div class="sec-head rv">
+        <div class="sec-title-row">
+          <span class="sec-no" aria-hidden="true">一</span>
+          <h2>卷首</h2>
+        </div>
+        <p class="sec-note">开页几句话，写在新雨之后。</p>
+      </div>
+      <div class="juan-grid">
+        <div class="juan-enso rv" aria-hidden="true">
+          <!-- 残缺圆：一枚画不满的圆 -->
+          <svg class="fig-enso" width="210" height="210" viewBox="0 0 220 220" fill="none">
+            <path d="M118 24 A86 86 0 1 0 176 60" stroke="currentColor" stroke-width="5" stroke-linecap="round" opacity=".38"/>
+            <path d="M112 36 A76 76 0 1 0 166 66" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".2"/>
+          </svg>
+        </div>
+        <div class="juan-text rv">
+          <p>余白，不是没有话可说，而是把话说轻一些。</p>
+          <p>这里存放我写下的大部分草稿：关于杭州的雨、读了一半的书、写坏的代码与补好的碗。它们都不完整，我也不打算把它们写完整——器物有了缺口，光才进得来；页面留出空处，字才呼吸。</p>
+          <p>若你恰好路过，就读慢一点。这里没有热榜，没有必读，只有一些干燥的、安静的纸。</p>
+          <p class="juan-sign">——沈知远 谨识<br>二〇二六年 · 初秋</p>
+        </div>
+      </div>
+      <span class="blot" style="right:6%;bottom:-26px;" aria-hidden="true"></span>
+    </div>
+  </section>
+
+  <!-- ============ 其二 · 选读（两篇全文） ============ -->
+  <section id="essays" class="sec sec-essays">
+    <div class="wrap">
+      <div class="sec-head rv">
+        <div class="sec-title-row">
+          <span class="sec-no" aria-hidden="true">二</span>
+          <h2>选读</h2>
+        </div>
+        <p class="sec-note">两篇誊清了的全文，宜就灯读。</p>
+      </div>
+
+      <!-- 全文一 -->
+      <article class="essay rv" id="essay-1">
+        <aside class="essay-side">
+          <p class="vdate">行脚 · 夏末<br>二〇二六年八月廿一日</p>
+        </aside>
+        <div class="essay-main">
+          <header>
+            <p class="essay-meta"><span class="tag">行脚</span><span class="dot">·</span>夏末<span class="dot">·</span>约三分钟<span class="dot">·</span>沈知远</p>
+            <h3 class="essay-title">凌晨四点的杭州菜市场</h3>
+          </header>
+          <p class="essay-lede">八月末，陪一位开餐馆的朋友去进货。他半夜三点发来消息：「来不来？」我说来。于是凌晨四点，我站在凤起路菜市场的后巷里，替他数筐。</p>
+          <h4>一 · 三轮车的灯</h4>
+          <p>后巷没有路灯，亮全是三轮车给的。每辆车头挂一盏小灯，昏黄，摇晃，像一排被风摆着的灯笼。车斗里码着泡沫箱，鱼腥味和泡沫的味道混在一起——那是一种说不清「新鲜」还是「不新鲜」的气味。后来我才明白，那是「刚开始」的气味。</p>
+          <blockquote>「市场的热闹不是喧嚣，是一座城市在换气。」</blockquote>
+          <h4>二 · 鱼摊的水光</h4>
+          <p>鱼摊的灯最白。老板娘往水池里续冰，水漫过池沿，在地上淌成一小片亮。她挑鱼不用看，手伸进去，捞上来就是。朋友要二十斤鲫鱼，她一面捞一面报数，声音不高，却被此起彼伏的「要咯」衬得极清楚。地上那片水光映着灯，也映着我们的鞋，像谁把天空摔碎在了菜场里。</p>
+          <h4>三 · 豆腐是温的</h4>
+          <p>四点五十，豆腐摊到了。木格子掀开，热气腾一下上来。老板说，豆腐要赶在天亮前点浆，「早一刻太嫩，晚一刻太老」。我买了一块，捧在手里，是温的。原来凌晨四点不只有冷的东西——有些热，只在这个钟点有。</p>
+          <h4>四 · 天亮之前</h4>
+          <p>回去的路上，天边刚有点灰蓝。三轮车一辆一辆散进巷子里，灯就灭了，仿佛从来不曾亮过。</p>
+          <p>我常觉得写代码和赶早市像：都要赶在天亮之前把东西备齐，天一亮，就轮到别人来挑拣了。而凌晨那点笨拙的、昏黄的、不体面的亮，是给备货人自己看的。</p>
+          <figure class="essay-fig">
+            <svg viewBox="0 0 560 170" role="img" aria-label="后巷三轮车灯的速写">
+              <path d="M16 34 C 140 48, 300 18, 544 30" fill="none" stroke="#2F2B26" stroke-opacity=".45" stroke-width="1.5"/>
+              <path d="M96 40 v14" stroke="#8F4B38" stroke-opacity=".5" stroke-width="1.4"/>
+              <circle cx="96" cy="66" r="17" fill="rgba(143,75,56,.10)"/>
+              <circle cx="96" cy="66" r="9" fill="rgba(143,75,56,.16)" stroke="rgba(143,75,56,.6)" stroke-width="1.2"/>
+              <path d="M252 26 v18" stroke="#8F4B38" stroke-opacity=".5" stroke-width="1.4"/>
+              <circle cx="252" cy="56" r="19" fill="rgba(143,75,56,.08)"/>
+              <circle cx="252" cy="56" r="11" fill="rgba(143,75,56,.14)" stroke="rgba(143,75,56,.55)" stroke-width="1.2"/>
+              <path d="M430 26 v20" stroke="#8F4B38" stroke-opacity=".5" stroke-width="1.4"/>
+              <circle cx="430" cy="58" r="15" fill="rgba(143,75,56,.08)"/>
+              <circle cx="430" cy="58" r="8" fill="rgba(143,75,56,.14)" stroke="rgba(143,75,56,.55)" stroke-width="1.2"/>
+            </svg>
+            <figcaption>图一 · 后巷的灯，凭记忆画的。</figcaption>
+          </figure>
+          <p class="essay-end">——二〇二六年八月，记于回城的早班公交。</p>
+        </div>
+      </article>
+
+      <div class="sep rv" aria-hidden="true">◇</div>
+
+      <!-- 全文二 -->
+      <article class="essay rv" id="essay-2" style="margin-top:96px;">
+        <aside class="essay-side">
+          <p class="vdate">灯下 · 春<br>二〇二六年四月二日</p>
+        </aside>
+        <div class="essay-main">
+          <header>
+            <p class="essay-meta"><span class="tag">灯下</span><span class="dot">·</span>春<span class="dot">·</span>约两分钟<span class="dot">·</span>沈知远</p>
+            <h3 class="essay-title">读《阴翳礼赞》：暗处才有层次</h3>
+          </header>
+          <p class="essay-lede">春天重读《阴翳礼赞》。九十年前谷崎润一郎抱怨电灯太亮、瓷砖太白，把「暗」从人的生活里赶了出去。读的时候我正在调一个界面，越读越坐不住——我们如今做的那些亮晃晃的页面，不正是他抱怨的那种「瓷砖」么。</p>
+          <blockquote>「美不在于物体本身，而在于物体与物体之间的阴翳与明暗。」<br>——谷崎润一郎《阴翳礼赞》（译本，大意）</blockquote>
+          <h4>一 · 暗是器物的表情</h4>
+          <p>谷崎写漆器：汤盛在漆碗里，盖上盖子，端在手里，那一汪温热藏在暗处，看不见，却令人凝神。他说漆器的美只有在幽暗里才成立——光一多，它就成了一件普通的物件。</p>
+          <p>器物的表情，一半是它自己的，另一半是光给它的。亮处只见形状，暗处才见层次。</p>
+          <h4>二 · 汤豆腐的幽暗</h4>
+          <p>书里最有名的一段是汤豆腐。京都的汤豆腐要在暗色的屋子里吃，豆腐的白，是借着从矮窗漏进来的一点阴翳，才显得温润。若在日光灯下，那点白就死了。</p>
+          <p>我想起自己调过的许多界面：把所有元素都提到最高亮度、最深对比，生怕哪里看不清。结果画面是清楚了，也平了。后来学会留一两处「暗」——次要的信息沉到灰里，边界的线退到若有若无——层次反而出来了。原来留暗不是偷懒，是信任读者会看。</p>
+          <h4>三 · 把阴翳带回屏幕上</h4>
+          <p>现在做设计，我常问自己三个问题：这一屏里，什么最该亮？什么可以沉下去？什么可以干脆不说？</p>
+          <p>谷崎在书末叹息，说我们既已失去阴翳的世界，只好在旧制度里试着唤回那已然忘却的美。屏幕当然回不到纸与烛的时代，但至少可以做到：不把每一寸都点亮，不把每一句都喊响。</p>
+          <p>暗处才有层次。这句话，九十年前是说给建筑听的，如今是说给像素听的。</p>
+          <figure class="essay-fig">
+            <svg class="fig-enso" viewBox="0 0 220 160" role="img" aria-label="一枚画不满的圆">
+              <path d="M124 26 A58 58 0 1 0 168 52" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" opacity=".35"/>
+              <path d="M118 36 A50 50 0 1 0 160 56" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".18"/>
+            </svg>
+            <figcaption>图二 · 一枚画不满的圆。</figcaption>
+          </figure>
+          <p class="essay-end">——二〇二六年四月，灯下。</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ 其三 · 存目（全部分篇） ============ -->
+  <section id="mokuji" class="sec sec-mokuji">
+    <div class="wrap" style="position:relative;">
+      <div class="sec-head rv">
+        <div class="sec-title-row">
+          <span class="sec-no" aria-hidden="true">三</span>
+          <h2>存目</h2>
+        </div>
+        <p class="sec-note">已誊者标「全文」，未誊者仅存其目。点标题，可见数行摘要。</p>
+      </div>
+
+      <div class="filter-row rv" role="group" aria-label="栏目筛选">
+        <button type="button" class="tab filter-tab" data-cat="all" aria-pressed="true">全部</button>
+        <button type="button" class="tab filter-tab" data-cat="zhaomu" aria-pressed="false">朝暮</button>
+        <button type="button" class="tab filter-tab" data-cat="dengxia" aria-pressed="false">灯下</button>
+        <button type="button" class="tab filter-tab" data-cat="xingjiao" aria-pressed="false">行脚</button>
+        <button type="button" class="tab filter-tab" data-cat="zhuowu" aria-pressed="false">拙物</button>
+        <span id="mokuji-count" class="count" aria-live="polite">检得 十三 篇</span>
+      </div>
+
+      <ol id="mokuji-list" class="entries">
+
+        <li class="entry rv" data-cat="xingjiao">
+          <button type="button" class="entry-head" aria-expanded="false" aria-controls="eb-1" id="eh-1">
+            <span class="e-season" aria-hidden="true">夏</span>
+            <span class="e-date">二〇二六 · 八月二十一日</span>
+            <span class="e-title">凌晨四点的杭州菜市场<span class="e-full">全文</span></span>
+            <span class="e-cat">行脚</span>
+            <span class="e-plus" aria-hidden="true">＋</span>
+          </button>
+          <div class="entry-body" id="eb-1" role="region" aria-labelledby="eh-1">
+            <div>
+              <div class="entry-inner">
+                <p>跟着送货的三轮车走完一条街：灯、水光、温热的豆腐，和天亮之前散场的安静。全文已誊，见「选读」其一。</p>
+                <p class="e-links"><a href="#essay-1">展读全文</a></p>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="entry rv" data-cat="zhaomu">
+          <button type="button" class="entry-head" aria-expanded="false" aria-controls="eb-2" id="eh-2">
+            <span class="e-season" aria-hidden="true">夏</span>
+            <span class="e-date">二〇二六 · 六月三十日</span>
+            <span class="e-title">键盘缝里的梅雨</span>
+            <span class="e-cat">朝暮</span>
+            <span class="e-plus" aria-hidden="true">＋</span>
+          </button>
+          <div class="entry-body" id="eb-2" role="region" aria-labelledby="eh-2">
+            <div>
+              <div class="entry-inner">
+                <p>杭州的梅雨下到第十九天，机械键盘的空格键先发了霉。清理键缝像给旧屋除湿——有些潮湿，得动手才能请走。</p>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="entry rv" data-cat="zhuowu">
+          <button type="button" class="entry-head" aria-expanded="false" aria-controls="eb-3" id="eh-3">
+            <span class="e-season" aria-hidden="true">春</span>
+            <span class="e-date">二〇二六 · 五月四日</span>
+            <span class="e-title">金缮一只缺口的粗陶碗</span>
+            <span class="e-cat">拙物</span>
+            <span class="e-plus" aria-hidden="true">＋</span>
+          </button>
+          <div class="entry-body" id="eb-3" role="region" aria-labelledby="eh-3">
+            <div>
+              <div class="entry-inner">
+                <p>三个周末：生漆、金粉、等它阴干。金缮不是把裂痕藏起来，而是替它说一句：这里碎过，没关系。</p>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="entry rv" data-cat="dengxia">
+          <button type="button" class="entry-head" aria-expanded="false" aria-controls="eb-4" id="eh-4">
+            <span class="e-season" aria-hidden="true">春</span>
+            <span class="e-date">二〇二六 · 四月二日</span>
+            <span class="e-title">读《阴翳礼赞》：暗处才有层次<span class="e-full">全文</span></span>
+            <span class="e-cat">灯下</span>
+            <span class="e-plus" aria-hidden="true">＋</span>
+          </button>
+          <div class="entry-body" id="eb-4" role="region" aria-labelledby="eh-4">
+            <div>
+              <div class="entry-inner">
+                <p>重读谷崎润一郎，越读越坐不住：我们做的那些亮晃晃的界面，不正是他抱怨的那种瓷砖么。全文已誊，见「选读」其二。</p>
+                <p class="e-links"><a href="#essay-2">展读全文</a></p>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="entry rv" data-cat="zhaomu">
+          <button type="button" class="entry-head" aria-expanded="false" aria-controls="eb-5" id="eh-5">
+            <span class="e-season" aria-hidden="true">春</span>
+            <span class="e-date">二〇二六 · 三月十五日</span>
+            <span class="e-title">窗台上的青苔，比闹钟先醒</span>
+            <span class="e-cat">朝暮</span>
+            <span class="e-plus" aria-hidden="true">＋</span>
+          </button>
+          <div class="entry-body" id="eb-5" role="region" aria-labelledby="eh-5">
+            <div>
+              <div class="entry-inner">
+                <p>一盆蕨死了，盆里却长出一片苔。查了资料都说苔难养——其实它只是不需要你管。记一点「不照顾」的养护学。</p>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="entry rv" data-cat="dengxia">
+          <button type="button" class="entry-head" aria-expanded="false" aria-controls="eb-6" id="eh-6">
+            <span class="e-season" aria-hidden="true">春</span>
+            <span class="e-date">二〇二六 · 二月十九日</span>
+            <span class="e-title">衬线体为什么在屏幕上「活」了回来</span>
+            <span class="e-cat">灯下</span>
+            <span class="e-plus" aria-hidden="true">＋</span>
+          </button>
+          <div class="entry-body" id="eb-6" role="region" aria-labelledby="eh-6">
+            <div>
+              <div class="entry-inner">
+                <p>从铅字的式微讲到可变字体：高分辨率的屏幕把细节还给了衬线。杂志感回潮不是怀旧，是技术终于追上了排印。</p>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="entry rv" data-cat="dengxia">
+          <button type="button" class="entry-head" aria-expanded="false" aria-controls="eb-7" id="eh-7">
+            <span class="e-season" aria-hidden="true">冬</span>
+            <span class="e-date">二〇二五 · 十二月十一日</span>
+            <span class="e-title">旧书的折角，是前一位读者的批注</span>
+            <span class="e-cat">灯下</span>
+            <span class="e-plus" aria-hidden="true">＋</span>
+          </button>
+          <div class="entry-body" id="eb-7" role="region" aria-labelledby="eh-7">
+            <div>
+              <div class="entry-inner">
+                <p>旧书店淘来一本《陶庵梦忆》，带着三十七个折角。有两位读者在同样的地方停下来——隔着几十年，算见过一面。</p>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="entry rv" data-cat="zhuowu">
+          <button type="button" class="entry-head" aria-expanded="false" aria-controls="eb-8" id="eh-8">
+            <span class="e-season" aria-hidden="true">秋</span>
+            <span class="e-date">二〇二五 · 十一月五日</span>
+            <span class="e-title">九十天，写一个零依赖的静态站点生成器</span>
+            <span class="e-cat">拙物</span>
+            <span class="e-plus" aria-hidden="true">＋</span>
+          </button>
+          <div class="entry-body" id="eb-8" role="region" aria-labelledby="eh-8">
+            <div>
+              <div class="entry-inner">
+                <p>九十天，只用标准库，写了个零依赖的静态站点生成器。附架构草图与踩坑清单；这个博客就是它建起的第一座庭院。</p>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="entry rv" data-cat="zhaomu">
+          <button type="button" class="entry-head" aria-expanded="false" aria-controls="eb-9" id="eh-9">
+            <span class="e-season" aria-hidden="true">秋</span>
+            <span class="e-date">二〇二五 · 十月八日</span>
+            <span class="e-title">慢一点，让茶凉到正好</span>
+            <span class="e-cat">朝暮</span>
+            <span class="e-plus" aria-hidden="true">＋</span>
+          </button>
+          <div class="entry-body" id="eb-9" role="region" aria-labelledby="eh-9">
+            <div>
+              <div class="entry-inner">
+                <p>烫的时候急着喝，凉透了又惋惜。茶在六十度上下最好——写给自己的一点火候论：急，是另一种凉。</p>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="entry rv" data-cat="xingjiao">
+          <button type="button" class="entry-head" aria-expanded="false" aria-controls="eb-10" id="eh-10">
+            <span class="e-season" aria-hidden="true">秋</span>
+            <span class="e-date">二〇二五 · 九月二十日</span>
+            <span class="e-title">巷口的修伞铺，没有招牌</span>
+            <span class="e-cat">行脚</span>
+            <span class="e-plus" aria-hidden="true">＋</span>
+          </button>
+          <div class="entry-body" id="eb-10" role="region" aria-labelledby="eh-10">
+            <div>
+              <div class="entry-inner">
+                <p>巷口的修伞铺没有招牌，老师傅修一把伞收十块钱，用一下午。问他收不收徒，他说，伞都快没人用了。</p>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="entry rv" data-cat="xingjiao">
+          <button type="button" class="entry-head" aria-expanded="false" aria-controls="eb-11" id="eh-11">
+            <span class="e-season" aria-hidden="true">夏</span>
+            <span class="e-date">二〇二五 · 八月二十四日</span>
+            <span class="e-title">雨后走灵隐后山，鞋底沾了七种绿</span>
+            <span class="e-cat">行脚</span>
+            <span class="e-plus" aria-hidden="true">＋</span>
+          </button>
+          <div class="entry-body" id="eb-11" role="region" aria-labelledby="eh-11">
+            <div>
+              <div class="entry-inner">
+                <p>雨后走灵隐后山：苔的绿、蕨的绿、积水里天空的绿。数到第七种的时候，鞋已经湿透，心倒是干的。</p>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="entry rv" data-cat="zhuowu">
+          <button type="button" class="entry-head" aria-expanded="false" aria-controls="eb-12" id="eh-12">
+            <span class="e-season" aria-hidden="true">冬</span>
+            <span class="e-date">二〇二五 · 二月二十六日</span>
+            <span class="e-title">把博客首屏压进三百毫秒</span>
+            <span class="e-cat">拙物</span>
+            <span class="e-plus" aria-hidden="true">＋</span>
+          </button>
+          <div class="entry-body" id="eb-12" role="region" aria-labelledby="eh-12">
+            <div>
+              <div class="entry-inner">
+                <p>一次性能考古：字体子集化、关键样式内联、图片全部放弃。分数从四十五到九十八——快，本身也是一种安静。</p>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="entry rv" data-cat="zhuowu">
+          <button type="button" class="entry-head" aria-expanded="false" aria-controls="eb-13" id="eh-13">
+            <span class="e-season" aria-hidden="true">冬</span>
+            <span class="e-date">二〇二五 · 一月十七日</span>
+            <span class="e-title">给十年前的 Kindle 刷了个「慢读」系统</span>
+            <span class="e-cat">拙物</span>
+            <span class="e-plus" aria-hidden="true">＋</span>
+          </button>
+          <div class="entry-body" id="eb-13" role="region" aria-labelledby="eh-13">
+            <div>
+              <div class="entry-inner">
+                <p>越狱、换字体、拆掉书城，只留阅读。十年前的墨水屏慢下来了，用它的人也跟着慢下来了。</p>
+              </div>
+            </div>
+          </div>
+        </li>
+
+      </ol>
+      <span class="blot" style="left:2%;bottom:-30px;transform:scale(.7);" aria-hidden="true"></span>
+    </div>
+  </section>
+
+  <!-- ============ 其四 · 栏目 ============ -->
+  <section id="lanmu" class="sec sec-lanmu">
+    <div class="wrap">
+      <div class="sec-head rv">
+        <div class="sec-title-row">
+          <span class="sec-no" aria-hidden="true">四</span>
+          <h2>栏目</h2>
+        </div>
+        <p class="sec-note">四座小院，各有各的荒芜。点院名，回存目里检得。</p>
+      </div>
+      <div class="lanmu-grid">
+        <button type="button" class="lanmu-card rv" data-goto-cat="zhaomu">
+          <span class="l-name">朝暮</span>
+          <span class="l-desc">日常的细碎：茶、雨、窗台，与键盘。</span>
+          <span class="l-count">三 篇</span>
+        </button>
+        <button type="button" class="lanmu-card rv" data-goto-cat="dengxia">
+          <span class="l-name">灯下</span>
+          <span class="l-desc">读书与观展，暗处才有光。</span>
+          <span class="l-count">三 篇</span>
+        </button>
+        <button type="button" class="lanmu-card rv" data-goto-cat="xingjiao">
+          <span class="l-name">行脚</span>
+          <span class="l-desc">走路时想到的事，鞋底作证。</span>
+          <span class="l-count">三 篇</span>
+        </button>
+        <button type="button" class="lanmu-card rv" data-goto-cat="zhuowu">
+          <span class="l-name">拙物</span>
+          <span class="l-desc">手作与折腾，皆不完美，皆可原谅。</span>
+          <span class="l-count">四 篇</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 其五 · 归档 ============ -->
+  <section id="archive" class="sec sec-arc">
+    <div class="wrap">
+      <div class="sec-head rv">
+        <div class="sec-title-row">
+          <span class="sec-no" aria-hidden="true">五</span>
+          <h2>归档</h2>
+        </div>
+        <p class="sec-note">按年检得，淡墨记之。未誊者，标「未录」。</p>
+      </div>
+
+      <div class="year-row rv" role="group" aria-label="按年切换归档">
+        <button type="button" class="tab year-tab" data-year="2026" aria-pressed="true">二〇二六</button>
+        <button type="button" class="tab year-tab" data-year="2025" aria-pressed="false">二〇二五</button>
+        <button type="button" class="tab year-tab" data-year="2024" aria-pressed="false">二〇二四</button>
+      </div>
+
+      <div class="year-panel" data-year="2026">
+        <ul class="arc-list">
+          <li>
+            <span class="a-m">八月</span>
+            <a class="a-t" href="#essay-1">凌晨四点的杭州菜市场</a>
+            <span class="a-cat">行脚</span>
+          </li>
+          <li>
+            <span class="a-m">六月</span>
+            <span class="a-t">键盘缝里的梅雨</span>
+            <span class="a-cat">朝暮</span>
+          </li>
+          <li>
+            <span class="a-m">五月</span>
+            <span class="a-t">金缮一只缺口的粗陶碗</span>
+            <span class="a-cat">拙物</span>
+          </li>
+          <li>
+            <span class="a-m">四月</span>
+            <a class="a-t" href="#essay-2">读《阴翳礼赞》：暗处才有层次</a>
+            <span class="a-cat">灯下</span>
+          </li>
+          <li>
+            <span class="a-m">三月</span>
+            <span class="a-t">窗台上的青苔，比闹钟先醒</span>
+            <span class="a-cat">朝暮</span>
+          </li>
+          <li>
+            <span class="a-m">二月</span>
+            <span class="a-t">衬线体为什么在屏幕上「活」了回来</span>
+            <span class="a-cat">灯下</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="year-panel hide" data-year="2025">
+        <ul class="arc-list">
+          <li>
+            <span class="a-m">十二月</span>
+            <span class="a-t">旧书的折角，是前一位读者的批注</span>
+            <span class="a-cat">灯下</span>
+          </li>
+          <li>
+            <span class="a-m">十一月</span>
+            <span class="a-t">九十天，写一个零依赖的静态站点生成器</span>
+            <span class="a-cat">拙物</span>
+          </li>
+          <li>
+            <span class="a-m">十月</span>
+            <span class="a-t">慢一点，让茶凉到正好</span>
+            <span class="a-cat">朝暮</span>
+          </li>
+          <li>
+            <span class="a-m">九月</span>
+            <span class="a-t">巷口的修伞铺，没有招牌</span>
+            <span class="a-cat">行脚</span>
+          </li>
+          <li>
+            <span class="a-m">八月</span>
+            <span class="a-t">雨后走灵隐后山，鞋底沾了七种绿</span>
+            <span class="a-cat">行脚</span>
+          </li>
+          <li>
+            <span class="a-m">二月</span>
+            <span class="a-t">把博客首屏压进三百毫秒</span>
+            <span class="a-cat">拙物</span>
+          </li>
+          <li>
+            <span class="a-m">一月</span>
+            <span class="a-t">给十年前的 Kindle 刷了个「慢读」系统</span>
+            <span class="a-cat">拙物</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="year-panel hide" data-year="2024">
+        <ul class="arc-list">
+          <li>
+            <span class="a-m">十一月</span>
+            <span class="a-t">搬进运河边的那年<span class="a-mute">未录</span></span>
+            <span class="a-cat">朝暮</span>
+          </li>
+          <li>
+            <span class="a-m">七月</span>
+            <span class="a-t">读《枕草子》的秋天，未读完<span class="a-mute">未录</span></span>
+            <span class="a-cat">灯下</span>
+          </li>
+          <li>
+            <span class="a-m">四月</span>
+            <span class="a-t">关于「慢」的十三份草稿<span class="a-mute">未录</span></span>
+            <span class="a-cat">拙物</span>
+          </li>
+          <li>
+            <span class="a-m">一月</span>
+            <span class="a-t">第一次给母亲修电脑<span class="a-mute">未录</span></span>
+            <span class="a-cat">朝暮</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 其六 · 关于（手记体） ============ -->
+  <section id="about" class="sec sec-about">
+    <div class="wrap about-grid">
+      <aside class="about-branch rv" aria-hidden="true">
+        <!-- 枯枝一茎 -->
+        <svg width="170" height="300" viewBox="0 0 200 340" fill="none">
+          <path d="M60 330 C 70 250, 58 195, 96 132 C 118 94, 138 60, 150 16" stroke="#888E7E" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/>
+          <path d="M78 216 C 100 202, 118 180, 122 152" stroke="#888E7E" stroke-opacity=".38" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M96 132 C 120 128, 140 114, 148 94" stroke="#888E7E" stroke-opacity=".38" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M120 84 C 136 84, 150 76, 158 62" stroke="#888E7E" stroke-opacity=".34" stroke-width="1.1" stroke-linecap="round"/>
+          <path d="M66 272 l11 -6" stroke="#888E7E" stroke-opacity=".3" stroke-width="1"/>
+          <path d="M62 244 l12 -4" stroke="#888E7E" stroke-opacity=".26" stroke-width="1"/>
+          <path d="M88 178 l10 -8" stroke="#888E7E" stroke-opacity=".26" stroke-width="1"/>
+        </svg>
+      </aside>
+      <div class="about-main">
+        <div class="sec-head rv">
+          <div class="sec-title-row">
+            <span class="sec-no" aria-hidden="true">六</span>
+            <h2>关于</h2>
+          </div>
+          <p class="sec-note">手记数行，不成体例。</p>
+        </div>
+        <div class="techo-note rv">
+          <p>我叫沈知远，在杭州写前端。白天把组件写得规矩，夜里把句子写得散漫。信条只有八个字：慢速缓存，长期保鲜——值得想的事，值得慢慢想。</p>
+          <p>桌上有 2015 年的 Kindle，一盆仙人掌，一只金缮补过的粗陶碗。它们都还好用，我也还行。</p>
+          <p>写这个博客，是想把折腾的过程存成可供检索的思考。这里没有热榜，没有算法，没有「猜你喜欢」。你来了，读了，就是我们之间的一点阴翳。</p>
+          <p class="sign">——知远 手记 · 初秋灯下</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 其七 · 一笔笺（留言） ============ -->
+  <section id="letter" class="sec sec-letter">
+    <div class="wrap letter-grid">
+      <div class="letter-head rv">
+        <div class="sec-head" style="margin-bottom:0;">
+          <div class="sec-title-row">
+            <span class="sec-no" aria-hidden="true">七</span>
+            <h2>一笔笺</h2>
+          </div>
+          <p class="sec-note">若有想说的，写一句便可。不必成文，不必周全。</p>
+        </div>
+        <span class="stain" aria-hidden="true"></span>
+      </div>
+
+      <div>
+        <form id="letter-form" class="letter-form rv" action="#letter" novalidate>
+          <div class="f-row">
+            <label for="f-name">称呼 <span class="f-tip">（可留白，留白亦佳）</span></label>
+            <input id="f-name" name="name" type="text" maxlength="24" autocomplete="nickname">
+          </div>
+          <div class="f-row">
+            <label for="f-msg">想说的话 <span class="f-tip">（一句亦可，须落笔）</span></label>
+            <textarea id="f-msg" name="msg" rows="5" required placeholder="墨不要太浓，话不要太满。"></textarea>
+          </div>
+          <p class="f-err" id="f-err" role="alert"></p>
+          <div class="f-actions">
+            <button type="submit" class="f-submit">投递</button>
+            <span class="f-hint">投出之后，不可撤回——像所有说过的话一样。</span>
+          </div>
+        </form>
+
+        <div id="letter-done" class="letter-done" hidden>
+          <svg class="done-enso" viewBox="0 0 220 160" aria-hidden="true" fill="none">
+            <path d="M124 26 A58 58 0 1 0 168 52" stroke="currentColor" stroke-width="6" stroke-linecap="round" opacity=".5"/>
+          </svg>
+          <p id="done-who" class="done-line">——你的信，已收讫。</p>
+          <p class="done-sub">会压在砚台底下，慢慢读。</p>
+          <button type="button" id="letter-again" class="f-again">再写一封</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ 奥付 ============ -->
+<footer class="site-foot">
+  <div class="wrap">
+    <p class="foot-sep" aria-hidden="true">——◇——</p>
+    <p class="colophon">奥付：底色 生成り · 字 明朝与楷 · 印 錆色一方 · 二〇二六年秋 刊</p>
+    <p class="foot-copy">© 二〇二四 — 二〇二六 沈知远 · 余白集 · 宜慢读</p>
+  </div>
+</footer>
+
+<!-- 返回顶部：竖排「帰る」 -->
+<button id="to-top" type="button" aria-label="返回顶部">帰る</button>
+
+<script>
+(function () {
+  'use strict';
+
+  var d = document;
+
+  function $(sel, ctx) {
+    return (ctx || d).querySelector(sel);
+  }
+
+  function $all(sel, ctx) {
+    return Array.prototype.slice.call((ctx || d).querySelectorAll(sel));
+  }
+
+  /* ---------- 页顶墨线 + 帰る 显隐 ---------- */
+  var bar = $('#ink-progress');
+  var totop = $('#to-top');
+
+  function onScroll() {
+    var h = d.documentElement;
+    var top = h.scrollTop || d.body.scrollTop || 0;
+    var max = h.scrollHeight - h.clientHeight;
+    var p = max > 0 ? top / max : 0;
+    if (bar) {
+      bar.style.width = (p * 100).toFixed(2) + '%';
+    }
+    if (totop) {
+      if (top > 560) {
+        totop.classList.add('show');
+      } else {
+        totop.classList.remove('show');
+      }
+    }
+  }
+
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (!ticking) {
+      ticking = true;
+      window.requestAnimationFrame(function () {
+        onScroll();
+        ticking = false;
+      });
+    }
+  }, { passive: true });
+  onScroll();
+
+  if (totop) {
+    totop.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  /* ---------- 缓淡显影（进入视口后一次） ---------- */
+  var rvs = $all('.rv');
+  if ('IntersectionObserver' in window && rvs.length) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          en.target.classList.add('on');
+          io.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+    rvs.forEach(function (el) { io.observe(el); });
+  } else {
+    rvs.forEach(function (el) { el.classList.add('on'); });
+  }
+
+  /* ---------- 汉数字 ---------- */
+  function toCN(n) {
+    var cn = '〇一二三四五六七八九';
+    if (n <= 10) { return n === 10 ? '十' : cn[n]; }
+    if (n < 20) { return '十' + cn[n % 10]; }
+    return cn[Math.floor(n / 10)] + '十' + (n % 10 ? cn[n % 10] : '');
+  }
+
+  /* ---------- 存目：栏目筛选 ---------- */
+  var tabs = $all('.filter-tab');
+  var entries = $all('#mokuji-list .entry');
+  var countEl = $('#mokuji-count');
+
+  function applyFilter(cat) {
+    var shown = 0;
+    entries.forEach(function (en) {
+      var ok = (cat === 'all') || (en.getAttribute('data-cat') === cat);
+      en.classList.toggle('hide', !ok);
+      if (ok) { shown++; }
+    });
+    if (countEl) {
+      countEl.textContent = '检得 ' + toCN(shown) + ' 篇';
+    }
+    tabs.forEach(function (t) {
+      var on = t.getAttribute('data-cat') === cat;
+      t.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () {
+      applyFilter(t.getAttribute('data-cat'));
+    });
+  });
+  applyFilter('all');
+
+  /* ---------- 存目：文章展开（一次只展一帖） ---------- */
+  $all('.entry-head').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var li = btn.closest('.entry');
+      var wasOpen = li.classList.contains('open');
+      $all('#mokuji-list .entry.open').forEach(function (o) {
+        o.classList.remove('open');
+        var b = $('.entry-head', o);
+        if (b) { b.setAttribute('aria-expanded', 'false'); }
+      });
+      if (!wasOpen) {
+        li.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+  /* ---------- 栏目卡：筛选并回到存目 ---------- */
+  $all('[data-goto-cat]').forEach(function (card) {
+    card.addEventListener('click', function () {
+      applyFilter(card.getAttribute('data-goto-cat'));
+      var m = $('#mokuji');
+      if (m) {
+        m.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  /* ---------- 归档：按年切换 ---------- */
+  var yearTabs = $all('.year-tab');
+  var yearPanels = $all('.year-panel');
+
+  function applyYear(y) {
+    yearTabs.forEach(function (t) {
+      t.setAttribute('aria-pressed', t.getAttribute('data-year') === y ? 'true' : 'false');
+    });
+    yearPanels.forEach(function (p) {
+      p.classList.toggle('hide', p.getAttribute('data-year') !== y);
+    });
+  }
+
+  yearTabs.forEach(function (t) {
+    t.addEventListener('click', function () {
+      applyYear(t.getAttribute('data-year'));
+    });
+  });
+  if (yearTabs.length) {
+    applyYear(yearTabs[0].getAttribute('data-year'));
+  }
+
+  /* ---------- 一笔笺：校验与收讫 ---------- */
+  var form = $('#letter-form');
+  if (form) {
+    var nameI = $('#f-name');
+    var msgI = $('#f-msg');
+    var err = $('#f-err');
+    var done = $('#letter-done');
+    var again = $('#letter-again');
+    var doneWho = $('#done-who');
+
+    if (msgI) {
+      msgI.addEventListener('input', function () {
+        if (err) { err.classList.remove('show'); }
+        msgI.removeAttribute('aria-invalid');
+      });
+    }
+
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var text = ((msgI && msgI.value) || '').trim();
+      if (text.length < 2) {
+        if (err) {
+          err.textContent = '一字未着，何以寄之——想说的，写在这里便可。';
+          err.classList.add('show');
+        }
+        if (msgI) {
+          msgI.setAttribute('aria-invalid', 'true');
+          msgI.focus();
+        }
+        return;
+      }
+      var who = ((nameI && nameI.value) || '').trim();
+      if (doneWho) {
+        doneWho.textContent = who
+          ? '——「' + who + '」的信，已收讫。'
+          : '——无名氏的信，也收讫。';
+      }
+      form.classList.add('sent');
+      window.setTimeout(function () {
+        form.hidden = true;
+        if (done) {
+          done.hidden = false;
+          window.requestAnimationFrame(function () {
+            done.classList.add('show');
+          });
+        }
+      }, 420);
+    });
+
+    if (again) {
+      again.addEventListener('click', function () {
+        if (done) {
+          done.classList.remove('show');
+          done.hidden = true;
+        }
+        form.hidden = false;
+        form.classList.remove('sent');
+        if (msgI) { msgI.value = ''; }
+        if (nameI) { nameI.value = ''; }
+        if (nameI) { nameI.focus(); }
+      });
+    }
+  }
+
+})();
+</script>
+</body>
+</html>

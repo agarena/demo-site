@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="日轮塔罗馆 · 装饰艺术风格的塔罗占卜馆——放射日轮、细金线与严格中轴对称。">
+<title>日轮塔罗馆 · SOLAR DISC HOUSE OF TAROT</title>
+<style>
+/* ==========================================================
+   日轮塔罗馆 · Art Deco
+   金是「线」不是「面」；深色底占比 ≥ 65%；全站 easing 统一 ease-out
+   ========================================================== */
+:root{
+  --green:#0B2B26;          /* 深孔雀绿底 */
+  --green-deep:#071E1A;     /* 更深底：页脚/牌背夹层 */
+  --gold:#D4AF37;           /* 香槟金：线条与描边 */
+  --gold-2:#F1E0B0;         /* 浅金：高光文字 */
+  --ivory:#F5EFE0;          /* 象牙白正文 */
+  --wine:#7B2D3B;           /* 酒红：逆位/警示点缀 */
+  --muted:rgba(245,239,224,.6);
+  --line:rgba(212,175,55,.55);
+  --line-soft:rgba(212,175,55,.26);
+  --f-d:"Cinzel","Poiret One","Marcellus","Trajan Pro","Times New Roman","Noto Serif SC","SimSun",serif;
+  --f-b:"Cormorant Garamond","EB Garamond","Georgia","Noto Serif SC","SimSun",serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(1100px 640px at 50% -8%, rgba(212,175,55,.06), transparent 62%),
+    var(--green);
+  color:var(--ivory);
+  font-family:var(--f-b);
+  font-size:16.5px;
+  line-height:1.85;
+  letter-spacing:.04em;
+  overflow-x:hidden;
+}
+::selection{background:rgba(212,175,55,.35); color:#fff}
+a{color:var(--gold-2); text-decoration:none}
+button{font-family:inherit; color:inherit}
+:focus-visible{outline:1px solid var(--gold-2); outline-offset:3px}
+section{scroll-margin-top:28px}
+.wrap{max-width:1160px; margin:0 auto; padding:0 32px}
+.defs{position:absolute; width:0; height:0; overflow:hidden}
+
+/* ---------- 装饰带：锯齿 / 扇形 ---------- */
+.band{height:13px; opacity:.5; pointer-events:none}
+.band svg{display:block; width:100%; height:100%}
+.band--pad{margin:0 auto; max-width:1160px}
+
+/* ---------- 通用章节头：◆—— 菱形饰线 ——◆ ---------- */
+.sec-head{text-align:center; margin-bottom:44px}
+.orn-line{display:flex; align-items:center; justify-content:center; gap:14px; margin:0 auto 18px; max-width:560px}
+.orn-line i{flex:1; height:1px; background:linear-gradient(90deg, transparent, var(--line)); transform:scaleX(-1)}
+.orn-line i:last-child{transform:none}
+.orn-line span{color:var(--gold); font-size:10px; line-height:1}
+.sec-title{
+  font-family:var(--f-d); font-weight:600; font-size:30px;
+  letter-spacing:.32em; text-indent:.32em; color:var(--gold-2);
+}
+.sec-sub{
+  margin-top:10px; font-family:var(--f-d); font-size:12px;
+  letter-spacing:.42em; text-indent:.42em; text-transform:uppercase; color:var(--muted);
+}
+
+/* ---------- 细金线框 + 四角阶梯纹 ---------- */
+.frame{position:relative; border:1px solid var(--line); background:rgba(7,30,26,.5)}
+.frame::before{content:""; position:absolute; inset:5px; border:1px solid var(--line-soft); pointer-events:none}
+.corner{position:absolute; width:15px; height:15px; pointer-events:none}
+.corner::before{content:""; position:absolute; inset:0; border-top:1px solid var(--gold); border-left:1px solid var(--gold)}
+.corner::after{content:""; position:absolute; inset:5px; border-top:1px solid var(--line); border-left:1px solid var(--line)}
+.corner.tl{top:6px; left:6px}
+.corner.tr{top:6px; right:6px; transform:scaleX(-1)}
+.corner.bl{bottom:6px; left:6px; transform:scaleY(-1)}
+.corner.br{bottom:6px; right:6px; transform:scale(-1,-1)}
+
+/* ---------- 按钮：细金描边胶囊，hover 金线内发光 ---------- */
+.btn{
+  display:inline-block; border:1px solid var(--gold); border-radius:999px;
+  background:transparent; color:var(--gold-2); cursor:pointer;
+  font-family:var(--f-d); font-size:14px; letter-spacing:.34em; text-indent:.34em;
+  padding:13px 38px; transition:all .25s ease-out;
+}
+.btn:hover{box-shadow:inset 0 0 20px rgba(212,175,55,.4); color:#fff; border-color:var(--gold-2)}
+.btn--ghost{border-color:var(--line); color:var(--ivory)}
+.btn--ghost:hover{border-color:var(--gold)}
+.btn[disabled]{opacity:.4; cursor:default; box-shadow:none}
+
+/* ==========================================================
+   页头：馆名式铭牌 + 对称导航
+   ========================================================== */
+.site-head{border-bottom:1px solid var(--line); position:relative; background:rgba(7,30,26,.65)}
+.site-head::after{content:""; position:absolute; left:0; right:0; bottom:3px; height:1px; background:var(--line-soft)}
+.head-inner{max-width:1160px; margin:0 auto; padding:22px 32px 14px; text-align:center}
+.brand{display:flex; align-items:baseline; justify-content:center; gap:18px}
+.brand-orn{color:var(--gold); font-size:11px; transform:translateY(-2px)}
+.brand-name{font-family:var(--f-d); font-size:24px; font-weight:600; letter-spacing:.5em; text-indent:.5em; color:var(--gold-2)}
+.brand-en{font-family:var(--f-d); font-size:10.5px; letter-spacing:.4em; text-indent:.4em; text-transform:uppercase; color:var(--muted); margin-top:6px}
+.site-nav{margin-top:14px; display:flex; justify-content:center; flex-wrap:wrap; gap:6px 0}
+.site-nav a{
+  font-size:14px; letter-spacing:.3em; text-indent:.3em; color:var(--ivory);
+  padding:4px 22px; position:relative; transition:color .2s ease-out;
+}
+.site-nav a:hover{color:var(--gold-2)}
+.site-nav a+a::before{content:"◆"; position:absolute; left:-7px; top:8px; font-size:7px; color:var(--gold)}
+
+/* ==========================================================
+   HERO：放射日轮 + 馆名式标题（严格中轴对称）
+   ========================================================== */
+.hero{position:relative; text-align:center; padding:88px 24px 96px; overflow:hidden}
+.sunburst{
+  position:absolute; left:50%; top:52%; width:min(1250px,155vw); aspect-ratio:1/1;
+  transform:translate(-50%,-50%); pointer-events:none;
+  -webkit-mask-image:radial-gradient(circle at 50% 50%, #000 34%, transparent 68%);
+  mask-image:radial-gradient(circle at 50% 50%, #000 34%, transparent 68%);
+}
+.sunburst svg{width:100%; height:100%; animation:spin 60s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hero-inner{position:relative; max-width:760px; margin:0 auto}
+.hero-est{font-family:var(--f-d); font-size:12px; letter-spacing:.44em; text-indent:.44em; color:var(--gold); text-transform:uppercase}
+.hero-title{
+  margin-top:22px; font-family:var(--f-d); font-weight:600;
+  font-size:56px; line-height:1.25; letter-spacing:.34em; text-indent:.34em; color:var(--gold-2);
+  text-shadow:0 2px 24px rgba(7,30,26,.9);
+}
+.hero-en{margin-top:12px; font-family:var(--f-d); font-size:13px; letter-spacing:.5em; text-indent:.5em; text-transform:uppercase; color:var(--muted)}
+.hero .orn-line{margin:26px auto; max-width:420px}
+.hero-lead{color:var(--muted); font-size:16.5px; max-width:600px; margin:0 auto}
+
+/* 阶梯式拱门卡框（今日主牌 · 全站唯一允许的「放大居中」） */
+.arch-card{position:relative; width:252px; margin:38px auto 0}
+.arch-card svg.arch{position:absolute; inset:0; width:100%; height:100%; overflow:visible}
+.arch path{fill:none; stroke:var(--gold); stroke-width:1.5; stroke-dasharray:1; stroke-dashoffset:1; animation:archDraw 1.7s ease-out forwards}
+.arch path+i{stroke-opacity:.5}
+.arch path:nth-child(2){animation-delay:.3s; stroke-opacity:.5}
+@keyframes archDraw{to{stroke-dashoffset:0}}
+.arch-inner{position:absolute; left:17%; right:17%; top:15%; bottom:5%}
+.arch-inner svg{width:100%; height:100%}
+.arch-card .pc{height:100%}
+.hero-card-cap{margin-top:16px; font-family:var(--f-d); font-size:12.5px; letter-spacing:.34em; text-indent:.34em; color:var(--gold)}
+.hero-cta{margin-top:34px; display:flex; justify-content:center; gap:22px; flex-wrap:wrap}
+.hero .band{position:absolute; left:0; right:0; bottom:0}
+
+/* ==========================================================
+   占卜流程 · 四步
+   ========================================================== */
+#ritual{padding:96px 0 40px}
+.steps{display:grid; grid-template-columns:repeat(4,1fr); gap:22px}
+.step{padding:30px 24px 28px; text-align:center}
+.step-num{font-family:var(--f-d); font-size:30px; color:var(--gold); line-height:1}
+.step-dia{width:7px; height:7px; background:var(--gold); margin:14px auto; transform:rotate(45deg)}
+.step h3{font-family:var(--f-d); font-size:18px; letter-spacing:.3em; text-indent:.3em; color:var(--gold-2); font-weight:600}
+.step p{margin-top:12px; font-size:14px; color:var(--muted)}
+
+/* ==========================================================
+   占卜台
+   ========================================================== */
+#oracle{padding:70px 0 40px}
+.oracle-stage{padding:46px 40px 50px}
+.o-label{
+  text-align:center; font-family:var(--f-d); font-size:14px;
+  letter-spacing:.36em; text-indent:.36em; color:var(--gold); margin-bottom:22px;
+}
+.o-note{text-align:center; font-size:13.5px; color:var(--muted); margin-top:-12px; margin-bottom:22px}
+.chips{display:flex; justify-content:center; flex-wrap:wrap; gap:12px}
+.chip{
+  border:1px solid var(--line); border-radius:999px; background:transparent;
+  color:var(--ivory); font-size:14px; letter-spacing:.22em; text-indent:.22em;
+  padding:9px 24px; cursor:pointer; transition:all .2s ease-out;
+}
+.chip:hover{border-color:var(--gold)}
+.chip.on{color:var(--gold-2); border-color:var(--gold); box-shadow:inset 0 0 12px rgba(212,175,55,.28)}
+.o-divider{width:220px; height:1px; margin:34px auto; background:linear-gradient(90deg,transparent,var(--line),transparent)}
+
+/* 牌阵选择：严格对称两卡 */
+.spread-row{display:flex; justify-content:center; gap:30px; flex-wrap:wrap}
+.spread-card{
+  width:300px; padding:30px 26px 26px; text-align:center; cursor:pointer;
+  background:rgba(7,30,26,.55); border:1px solid var(--line); transition:all .25s ease-out;
+}
+.spread-card:hover,.spread-card.on{border-color:var(--gold); box-shadow:inset 0 0 24px rgba(212,175,55,.18)}
+.spread-card .s-num{font-family:var(--f-d); font-size:26px; color:var(--gold)}
+.spread-card h3{font-family:var(--f-d); font-size:18px; letter-spacing:.28em; text-indent:.28em; color:var(--gold-2); margin:8px 0 10px; font-weight:600}
+.spread-card>p{font-size:13.5px; color:var(--muted); min-height:70px}
+.s-vis{display:flex; justify-content:center; gap:10px; margin-top:14px}
+.s-vis i{width:26px; height:42px; border:1px dashed var(--line); display:block}
+.s-vis i:first-child{border-color:var(--gold)}
+.spread-card.on .s-vis i{border-style:solid; border-color:var(--line)}
+
+/* 阵位 */
+.slots{display:flex; justify-content:center; align-items:flex-start; gap:56px; margin:30px 0 34px}
+.slot{text-align:center; width:186px}
+.slot-name{font-family:var(--f-d); font-size:16px; letter-spacing:.3em; text-indent:.3em; color:var(--gold-2)}
+.slot-hint{font-size:12.5px; color:var(--muted); margin:6px 0 14px; letter-spacing:.06em}
+.slot-empty{
+  aspect-ratio:5/8; border:1px dashed var(--line); display:grid; place-items:center;
+  color:var(--muted); font-size:12px; letter-spacing:.3em; text-indent:.3em;
+}
+.slots--single .slot{width:212px}
+
+/* 塔罗牌 3D 翻面 */
+.tcard{aspect-ratio:5/8; perspective:1000px; cursor:pointer}
+.t-inner{position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform .8s ease-out}
+.tcard.flipped .t-inner{transform:rotateY(180deg)}
+.t-face{position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden}
+.t-face svg{width:100%; height:100%; display:block}
+.t-front{transform:rotateY(180deg)}
+.tcard.reversed .t-front{transform:rotateY(180deg) rotate(180deg)}
+.slot .tcard{width:100%}
+
+/* 牌堆（22 张 · 11×2 完美矩形） */
+.deck{display:grid; grid-template-columns:repeat(11,1fr); gap:12px; max-width:860px; margin:0 auto}
+.deck-card{border:0; background:transparent; padding:0; cursor:pointer; opacity:.92; transition:opacity .2s ease-out, transform .2s ease-out}
+.deck-card:hover:not([disabled]){opacity:1; transform:translateY(-4px)}
+.deck-card[disabled]{cursor:default; opacity:.42}
+.deck-card.picked{opacity:.15}
+.deck-card svg{width:100%; height:auto; display:block}
+.deck.shuffling .deck-card{animation:shufflePulse .55s ease-out}
+.deck.shuffling .deck-card:nth-child(2n){animation-delay:.06s}
+.deck.shuffling .deck-card:nth-child(3n){animation-delay:.12s}
+@keyframes shufflePulse{0%{transform:translateY(0) rotate(0)}35%{transform:translateY(-7px) rotate(-2deg)}65%{transform:translateY(3px) rotate(1.4deg)}100%{transform:none}}
+.o-center{text-align:center; margin-top:30px}
+.draw-tip{text-align:center; font-size:13.5px; color:var(--muted); letter-spacing:.14em; margin-bottom:20px}
+
+/* 解读 */
+.read-open{text-align:center; font-family:var(--f-d); font-size:15px; letter-spacing:.2em; color:var(--gold); margin-bottom:26px}
+.read-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px}
+.read-grid--single{grid-template-columns:1fr; max-width:470px; margin:0 auto}
+.read-card{padding:26px 24px 24px; text-align:center}
+.read-card header{display:flex; justify-content:center; align-items:center; gap:14px; margin-bottom:14px}
+.rc-pos{font-family:var(--f-d); font-size:15px; letter-spacing:.3em; text-indent:.3em; color:var(--gold-2)}
+.rc-badge{font-size:11.5px; letter-spacing:.2em; text-indent:.2em; border:1px solid var(--gold); color:var(--gold-2); padding:2px 12px; border-radius:999px}
+.rc-badge.is-rev{border-color:var(--wine); background:rgba(123,45,59,.28); color:var(--ivory)}
+.rc-mini{width:92px; margin:0 auto 12px}
+.rc-mini svg{width:100%; height:auto; display:block}
+.read-card h4{font-family:var(--f-d); font-size:17px; letter-spacing:.24em; text-indent:.24em; color:var(--ivory); font-weight:600}
+.read-card h4 em{font-style:normal; color:var(--gold); font-size:13px; margin-left:6px}
+.rc-keys{font-size:12.5px; letter-spacing:.14em; color:var(--gold); margin:8px 0 10px}
+.rc-text{font-size:14.5px; color:var(--muted); text-align:left}
+.read-sum{margin-top:22px; padding:28px 32px; text-align:center}
+.read-sum h4{font-family:var(--f-d); font-size:15px; letter-spacing:.4em; text-indent:.4em; color:var(--gold); margin-bottom:12px}
+.read-sum p{color:var(--ivory); font-size:15.5px}
+.o-actions{display:flex; justify-content:center; gap:20px; margin-top:32px; flex-wrap:wrap}
+
+/* ==========================================================
+   牌义图鉴
+   ========================================================== */
+#codex{padding:96px 0 40px}
+.codex-bar{display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:14px 18px; margin-bottom:34px}
+.search{
+  background:rgba(7,30,26,.6); border:1px solid var(--line); color:var(--ivory);
+  font-family:var(--f-b); font-size:14.5px; letter-spacing:.12em;
+  padding:10px 20px; width:300px; transition:border-color .2s ease-out;
+}
+.search::placeholder{color:var(--muted)}
+.search:focus{outline:none; border-color:var(--gold); box-shadow:inset 0 0 12px rgba(212,175,55,.15)}
+.g-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:22px}
+.g-card{
+  position:relative; background:rgba(7,30,26,.5); border:1px solid var(--line-soft);
+  padding:16px 12px 18px; text-align:center; cursor:pointer;
+  transition:all .25s ease-out;
+}
+.g-card::before{content:""; position:absolute; inset:5px; border:1px solid transparent; transition:border-color .25s ease-out; pointer-events:none}
+.g-card:hover{border-color:var(--gold); transform:translateY(-5px); box-shadow:0 12px 28px rgba(0,0,0,.4)}
+.g-card:hover::before{border-color:var(--line-soft)}
+.g-face{width:72%; margin:0 auto}
+.g-face svg{width:100%; height:auto; display:block}
+.g-name{font-family:var(--f-d); font-size:15.5px; letter-spacing:.2em; color:var(--gold-2); margin-top:12px}
+.g-en{font-family:var(--f-d); font-size:9.5px; letter-spacing:.24em; text-transform:uppercase; color:var(--muted); margin-top:5px}
+.g-empty{grid-column:1/-1; text-align:center; color:var(--muted); padding:50px 0; letter-spacing:.2em}
+
+/* 牌面 SVG 内部文字 */
+.pc text{font-family:var(--f-d)}
+.pc .fnum{font-size:17px; fill:var(--gold-2); letter-spacing:3px}
+.pc .fname{font-size:14.5px; fill:var(--ivory); letter-spacing:5px}
+.pc .fen{font-size:7.5px; fill:var(--gold); opacity:.75; letter-spacing:2px}
+
+/* ==========================================================
+   每日一牌（日期确定性）
+   ========================================================== */
+#daily{padding:96px 0 110px}
+.daily-stage{text-align:center}
+.daily-date{font-family:var(--f-d); font-size:13px; letter-spacing:.4em; text-indent:.4em; color:var(--gold); margin-bottom:26px}
+.arch-card--daily{width:276px}
+.daily-name{margin-top:24px; font-family:var(--f-d); font-size:24px; font-weight:600; letter-spacing:.3em; text-indent:.3em; color:var(--gold-2)}
+.daily-keys{margin-top:8px; font-size:13.5px; letter-spacing:.2em; color:var(--gold)}
+.daily-stage .orn-line{max-width:380px; margin:22px auto}
+.daily-text{max-width:560px; margin:0 auto; color:var(--ivory); font-size:16px}
+.daily-guide{
+  max-width:560px; margin:22px auto 0; padding:18px 26px;
+  border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft);
+  font-size:15.5px; color:var(--muted);
+}
+.d-label{color:var(--gold); font-family:var(--f-d); letter-spacing:.3em; margin-right:14px; font-size:13px}
+
+/* ==========================================================
+   页脚：阶梯 clip-path 顶缘 + 居中金线铭牌
+   ========================================================== */
+.footer{
+  background:var(--green-deep); border-top:1px solid var(--line);
+  clip-path:polygon(0 30px,6.25% 30px,6.25% 22px,12.5% 22px,12.5% 14px,18.75% 14px,18.75% 7px,25% 7px,25% 0,75% 0,75% 7px,81.25% 7px,81.25% 14px,87.5% 14px,87.5% 22px,93.75% 22px,93.75% 30px,100% 30px,100% 100%,0 100%);
+  padding:78px 32px 42px; text-align:center;
+}
+.foot-plaque{
+  display:inline-block; border:1px solid var(--line); padding:22px 52px; position:relative;
+}
+.foot-plaque::before{content:""; position:absolute; inset:5px; border:1px solid var(--line-soft); pointer-events:none}
+.fp-en{font-family:var(--f-d); font-size:10.5px; letter-spacing:.4em; text-transform:uppercase; color:var(--muted)}
+.fp-cn{font-family:var(--f-d); font-size:22px; letter-spacing:.5em; text-indent:.5em; color:var(--gold-2); margin:8px 0}
+.fp-est{font-family:var(--f-d); font-size:10.5px; letter-spacing:.34em; color:var(--gold)}
+.foot-nav{margin:30px 0 22px; display:flex; justify-content:center; flex-wrap:wrap; gap:4px 0}
+.foot-nav a{font-size:13.5px; letter-spacing:.28em; text-indent:.28em; color:var(--muted); padding:2px 20px; position:relative; transition:color .2s ease-out}
+.foot-nav a:hover{color:var(--gold-2)}
+.foot-nav a+a::before{content:"◆"; position:absolute; left:-6px; top:6px; font-size:6px; color:var(--gold)}
+.foot-note{font-size:12.5px; color:var(--muted); letter-spacing:.08em}
+.copy{margin-top:12px; font-family:var(--f-d); font-size:11px; letter-spacing:.26em; color:rgba(212,175,55,.6)}
+
+/* ==========================================================
+   牌义详情浮层
+   ========================================================== */
+.modal{position:fixed; inset:0; z-index:60; display:grid; place-items:center; padding:24px}
+.modal[hidden]{display:none}
+.modal-back{position:absolute; inset:0; background:rgba(7,30,26,.92)}
+.modal-card{
+  position:relative; max-width:760px; width:100%; max-height:88vh; overflow:auto;
+  display:flex; gap:36px; padding:40px 40px 36px; background:var(--green-deep);
+}
+.modal-x{
+  position:absolute; top:12px; right:16px; z-index:2; border:0; background:transparent;
+  color:var(--gold); font-size:20px; cursor:pointer; padding:6px 10px; transition:color .2s ease-out;
+}
+.modal-x:hover{color:var(--gold-2)}
+.m-face{width:236px; flex:none; align-self:flex-start}
+.m-face svg{width:100%; height:auto; display:block}
+.m-num{font-family:var(--f-d); font-size:13px; letter-spacing:.4em; color:var(--gold)}
+.m-info h3{font-family:var(--f-d); font-size:26px; font-weight:600; letter-spacing:.26em; color:var(--gold-2); margin-top:8px}
+.m-en{font-family:var(--f-d); font-size:11px; letter-spacing:.32em; text-transform:uppercase; color:var(--muted); margin-top:4px}
+.m-keys{margin:16px 0 6px; display:flex; flex-wrap:wrap; gap:8px}
+.m-keys span{border:1px solid var(--line); font-size:12px; letter-spacing:.14em; color:var(--gold-2); padding:3px 14px; border-radius:999px}
+.m-block{margin-top:18px; padding-top:14px; border-top:1px solid var(--line-soft)}
+.m-block h4{font-family:var(--f-d); font-size:13px; letter-spacing:.34em; color:var(--gold); font-weight:600}
+.m-block h4 b{font-weight:400; color:var(--wine); border:1px solid var(--wine); padding:1px 10px; border-radius:999px; font-size:11px; letter-spacing:.2em; margin-left:10px}
+.m-block p{margin-top:10px; font-size:15px; color:var(--ivory)}
+.m-block p+p{color:var(--muted); font-size:14px; margin-top:8px}
+
+/* ==========================================================
+   入场：对称式左右同时淡入（400ms ease-out）
+   ========================================================== */
+.reveal{opacity:0; transform:translateY(26px); transition:opacity .4s ease-out, transform .4s ease-out}
+.reveal.rv-l{transform:translateX(-40px)}
+.reveal.rv-r{transform:translateX(40px)}
+.reveal.in{opacity:1; transform:none}
+
+/* ==========================================================
+   响应式：≥1200 / 768 / 375
+   ========================================================== */
+@media (max-width:1199px){
+  .wrap{padding:0 28px}
+  .deck{grid-template-columns:repeat(8,1fr); max-width:640px}
+  .g-grid{grid-template-columns:repeat(3,1fr)}
+  .steps{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:767px){
+  body{font-size:15.5px}
+  .head-inner{padding:18px 20px 12px}
+  .brand-name{font-size:19px; letter-spacing:.34em; text-indent:.34em}
+  .site-nav a{padding:4px 14px; font-size:13px; letter-spacing:.2em; text-indent:.2em}
+  .hero{padding:64px 20px 84px}
+  .hero-title{font-size:34px; letter-spacing:.26em; text-indent:.26em}
+  .arch-card{width:224px}
+  .arch-card--daily{width:246px}
+  #ritual,#codex,#daily{padding-top:70px}
+  .oracle-stage{padding:34px 22px 38px}
+  .slots{flex-direction:column; align-items:center; gap:34px}
+  .deck{grid-template-columns:repeat(5,1fr); gap:10px}
+  .read-grid{grid-template-columns:1fr}
+  .g-grid{grid-template-columns:repeat(2,1fr); gap:14px}
+  .search{width:100%; max-width:320px}
+  .modal-card{flex-direction:column; align-items:center; padding:34px 22px; gap:22px; text-align:center}
+  .m-keys{justify-content:center}
+  .footer{padding:64px 20px 36px}
+  .sec-title{font-size:24px}
+  .steps{grid-template-columns:1fr}
+}
+@media (max-width:420px){
+  .wrap{padding:0 18px}
+  .hero-title{font-size:27px}
+  .deck{grid-template-columns:repeat(4,1fr)}
+  .arch-card{width:198px}
+  .btn{padding:12px 26px; font-size:13px}
+  .footer{clip-path:polygon(0 20px,8% 20px,8% 14px,16% 14px,16% 8px,25% 8px,25% 0,75% 0,75% 8px,84% 8px,84% 14px,92% 14px,92% 20px,100% 20px,100% 100%,0 100%)}
+}
+
+/* 动效降级 */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  .sunburst svg{animation:none}
+  .arch path{animation:none; stroke-dashoffset:0}
+  .t-inner,.reveal,.g-card,.spread-card,.chip,.btn{transition:none}
+  .reveal{opacity:1; transform:none}
+  .deck.shuffling .deck-card{animation:none}
+}
+</style>
+</head>
+<body>
+
+<!-- 公共 SVG 纹样：锯齿带 / 扇形带 -->
+<svg class="defs" aria-hidden="true" focusable="false">
+  <defs>
+    <pattern id="patZig" width="26" height="13" patternUnits="userSpaceOnUse">
+      <path d="M0 12 L13 2 L26 12" fill="none" stroke="#D4AF37" stroke-width="1.1"/>
+    </pattern>
+    <pattern id="patFan" width="30" height="15" patternUnits="userSpaceOnUse">
+      <path d="M-15 15 A15 15 0 0 1 15 15 M15 15 A15 15 0 0 1 45 15" fill="none" stroke="#D4AF37" stroke-width="1.1"/>
+    </pattern>
+  </defs>
+</svg>
+
+<!-- ===================== 页头 ===================== -->
+<header class="site-head">
+  <div class="head-inner">
+    <div class="brand">
+      <span class="brand-orn">◆</span>
+      <div>
+        <div class="brand-name">日轮塔罗馆</div>
+        <p class="brand-en">Solar Disc · House of Tarot</p>
+      </div>
+      <span class="brand-orn">◆</span>
+    </div>
+    <nav class="site-nav">
+      <a href="#ritual">占卜流程</a>
+      <a href="#oracle">占卜台</a>
+      <a href="#codex">牌义图鉴</a>
+      <a href="#daily">每日一牌</a>
+    </nav>
+  </div>
+  <div class="band" aria-hidden="true"><svg preserveAspectRatio="none"><rect width="100%" height="100%" fill="url(#patZig)"/></svg></div>
+</header>
+
+<main>
+  <!-- ===================== HERO：放射日轮 + 馆名式标题 ===================== -->
+  <section class="hero" id="top">
+    <div class="sunburst" aria-hidden="true">
+      <svg id="sunburstSvg" viewBox="0 0 800 800"></svg>
+    </div>
+    <div class="hero-inner">
+      <p class="hero-est">EST. 1929 · 装饰艺术占卜馆</p>
+      <h1 class="hero-title">日轮塔罗馆</h1>
+      <p class="hero-en">The House of the Solar Disc</p>
+      <div class="orn-line" aria-hidden="true"><i></i><span>◆</span><i></i></div>
+      <p class="hero-lead">以细金线与放射日轮，致意机械时代的秩序之美。在严格对称的殿堂里，二十二张大阿卡纳正静候你的提问——今日主牌已悬于日轮中央。</p>
+      <div class="arch-card">
+        <svg class="arch" viewBox="0 0 240 400" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div class="arch-inner" id="heroCardFace"></div>
+      </div>
+      <p class="hero-card-cap" id="heroCardCap">今日主牌</p>
+      <div class="hero-cta">
+        <a class="btn" href="#oracle">开 始 占 卜</a>
+        <a class="btn btn--ghost" href="#daily">今 日 一 牌</a>
+      </div>
+    </div>
+    <div class="band" aria-hidden="true"><svg preserveAspectRatio="none"><rect width="100%" height="100%" fill="url(#patFan)"/></svg></div>
+  </section>
+
+  <!-- ===================== 占卜流程 ===================== -->
+  <section id="ritual">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="orn-line" aria-hidden="true"><i></i><span>◆</span><i></i></div>
+        <h2 class="sec-title">占卜流程</h2>
+        <p class="sec-sub">The Ritual · Four Steps</p>
+      </div>
+      <div class="steps">
+        <article class="step frame reveal rv-l">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <p class="step-num">I</p><span class="step-dia" aria-hidden="true"></span>
+          <h3>择阵</h3>
+          <p>选定牌阵与所问之事。单张问当下，三张观流年——先定所问，牌才有言可发。</p>
+        </article>
+        <article class="step frame reveal">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <p class="step-num">II</p><span class="step-dia" aria-hidden="true"></span>
+          <h3>点选</h3>
+          <p>静心洗牌后默念问题，凭直觉自牌堆中点选。被你指尖停留的，即是你的牌。</p>
+        </article>
+        <article class="step frame reveal">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <p class="step-num">III</p><span class="step-dia" aria-hidden="true"></span>
+          <h3>翻牌</h3>
+          <p>逐张翻开，正逆自现。翻开之前，谁也不知道命运的金线写下了什么。</p>
+        </article>
+        <article class="step frame reveal rv-r">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <p class="step-num">IV</p><span class="step-dia" aria-hidden="true"></span>
+          <h3>解读</h3>
+          <p>每一阵位对应一段释义，末了综合成章——一篇只属于今日之你的解读。</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 占卜台 ===================== -->
+  <section id="oracle">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="orn-line" aria-hidden="true"><i></i><span>◆</span><i></i></div>
+        <h2 class="sec-title">占卜台</h2>
+        <p class="sec-sub">The Oracle Table</p>
+      </div>
+      <div class="oracle-stage frame reveal">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+
+        <!-- 步骤一 & 二：主题 + 牌阵 -->
+        <div id="oConfig">
+          <p class="o-label">第一步 · 选择问题主题</p>
+          <div class="chips" id="topicChips"></div>
+          <div class="o-divider" aria-hidden="true"></div>
+          <p class="o-label">第二步 · 选择牌阵</p>
+          <div class="spread-row">
+            <button class="spread-card" data-spread="1" type="button">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <span class="s-num">I</span>
+              <h3>单张指引</h3>
+              <p>只问一件事，抽一张牌。适合每日能量、是否题，或「此刻我最需要知道什么」。</p>
+              <div class="s-vis" aria-hidden="true"><i></i></div>
+            </button>
+            <button class="spread-card" data-spread="3" type="button">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <span class="s-num">III</span>
+              <h3>三张时间流</h3>
+              <p>过去—现在—未来。看清来路、立足当下、预见走向，最通用的经典牌阵。</p>
+              <div class="s-vis" aria-hidden="true"><i></i><i></i><i></i></div>
+            </button>
+          </div>
+        </div>
+
+        <!-- 步骤三：洗牌 + 点选 + 翻牌 -->
+        <div id="oDraw" hidden>
+          <p class="o-label" id="drawLabel">第三步 · 静心洗牌</p>
+          <p class="draw-tip" id="drawTip">点击下方按钮洗牌，洗净后凭直觉点选。</p>
+          <div class="o-center" style="margin:0 0 26px">
+            <button class="btn" id="shuffleBtn" type="button">洗 牌</button>
+          </div>
+          <div class="slots" id="slotsEl"></div>
+          <div class="deck" id="deckEl"></div>
+          <div class="o-center">
+            <button class="btn btn--ghost" id="flipAllBtn" type="button" hidden>一 次 翻 开</button>
+          </div>
+        </div>
+
+        <!-- 步骤四：解读 -->
+        <div id="oRead" hidden>
+          <p class="o-label">第四步 · 解 读</p>
+          <div id="readBox"></div>
+          <div class="o-actions">
+            <button class="btn" id="againBtn" type="button">再 来 一 次</button>
+            <button class="btn btn--ghost" id="resetBtn" type="button">换个问题 / 重选牌阵</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 牌义图鉴 ===================== -->
+  <section id="codex">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="orn-line" aria-hidden="true"><i></i><span>◆</span><i></i></div>
+        <h2 class="sec-title">大阿卡纳图鉴</h2>
+        <p class="sec-sub">Major Arcana · Twenty-Two Discs</p>
+      </div>
+      <div class="codex-bar reveal">
+        <input class="search" id="searchInput" type="search" placeholder="检索牌名 / 关键词，如「星星」或「希望」" aria-label="检索牌名或关键词">
+        <div class="chips" id="groupChips"></div>
+      </div>
+      <div class="g-grid" id="galleryGrid"></div>
+    </div>
+  </section>
+
+  <!-- ===================== 每日一牌 ===================== -->
+  <section id="daily">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="orn-line" aria-hidden="true"><i></i><span>◆</span><i></i></div>
+        <h2 class="sec-title">每日一牌</h2>
+        <p class="sec-sub">Card of the Day · Determined by Dawn</p>
+      </div>
+      <div class="daily-stage reveal">
+        <p class="daily-date" id="dailyDate"></p>
+        <div class="arch-card arch-card--daily">
+          <svg class="arch" viewBox="0 0 240 400" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div class="arch-inner" id="dailyCardFace"></div>
+        </div>
+        <h3 class="daily-name" id="dailyName"></h3>
+        <p class="daily-keys" id="dailyKeys"></p>
+        <div class="orn-line" aria-hidden="true"><i></i><span>◆</span><i></i></div>
+        <p class="daily-text" id="dailyText"></p>
+        <p class="daily-guide"><span class="d-label">今日指引</span><span id="dailyGuide"></span></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===================== 页脚 ===================== -->
+<div class="band band--pad" aria-hidden="true"><svg preserveAspectRatio="none"><rect width="100%" height="100%" fill="url(#patZig)"/></svg></div>
+<footer class="footer">
+  <div class="foot-plaque">
+    <p class="fp-en">Solar Disc · House of Tarot</p>
+    <p class="fp-cn">日 轮 塔 罗 馆</p>
+    <p class="fp-est">EST. 1929 · MCMXXIX</p>
+  </div>
+  <nav class="foot-nav">
+    <a href="#top">回到馆门</a>
+    <a href="#ritual">占卜流程</a>
+    <a href="#oracle">占卜台</a>
+    <a href="#codex">牌义图鉴</a>
+    <a href="#daily">每日一牌</a>
+  </nav>
+  <p class="foot-note">本馆内容仅供文化娱乐与自我观照之用 · 占卜结果不构成任何医疗、法律或投资建议</p>
+  <p class="copy">© 1929–2026 日轮塔罗馆 · ART DECO EDITION</p>
+</footer>
+
+<!-- ===================== 牌义详情浮层 ===================== -->
+<div class="modal" id="modal" hidden>
+  <div class="modal-back" data-close></div>
+  <div class="modal-card frame" role="dialog" aria-modal="true" aria-labelledby="mName">
+    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+    <button class="modal-x" type="button" data-close aria-label="关闭">✕</button>
+    <div class="m-face" id="mFace"></div>
+    <div class="m-info">
+      <p class="m-num" id="mNum"></p>
+      <h3 id="mName"></h3>
+      <p class="m-en" id="mEn"></p>
+      <div class="m-keys" id="mKeys"></div>
+      <div class="m-block">
+        <h4>正 位 · UPRIGHT</h4>
+        <p id="mUp"></p>
+        <p id="mDesc"></p>
+      </div>
+      <div class="m-block">
+        <h4>逆 位 · REVERSED<b>提醒与调整</b></h4>
+        <p id="mRev"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= 数据 · 22 张大阿卡纳 ================= */
+var ROMAN=['0','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX','XXI'];
+var CARDS=[
+ {name:'愚者',en:'The Fool',keys:['出发','纯真','冒险','可能性'],up:'新的开始，纯真地踏上旅程',rev:'鲁莽行事，缺乏计划',desc:'一张白纸般的出发，未必看清路，但心里有风。此刻允许自己轻装上路，别急着向所有人解释方向。'},
+ {name:'魔术师',en:'The Magician',keys:['行动力','资源','显化','技艺'],up:'资源齐备，心想事成',rev:'空有才华，欠缺章法的说辞',desc:'桌上四样元素已经齐备，缺的只是你开口说「开始」。把想法落到第一步动作上，事就成了大半。'},
+ {name:'女祭司',en:'The High Priestess',keys:['直觉','静观','潜意识','智慧'],up:'倾听直觉，静观其变',rev:'忽视内心，秘密压抑',desc:'答案不在喧哗处，在你迟迟不肯安静下来的心里。少问几个人，多听自己一遍。'},
+ {name:'皇后',en:'The Empress',keys:['丰饶','感官','孕育','自然'],up:'丰饶孕育，感官与创造',rev:'过度付出，忽视自我',desc:'允许事情慢慢长大，像照料一株植物。善待自己，丰裕会顺着这份从容到来。'},
+ {name:'皇帝',en:'The Emperor',keys:['秩序','权威','责任','骨架'],up:'秩序稳固，权威与担当',rev:'控制欲强，僵化专断',desc:'把边界立起来，秩序不会辜负你。此刻需要的是规则与担当，而不是情绪的让步。'},
+ {name:'教皇',en:'The Hierophant',keys:['传统','指引','信仰','师承'],up:'传统指引，寻求正统智慧',rev:'墨守成规，质疑权威',desc:'走一遍前人踩实的路并不丢人。传统与师承里，藏着你正需要的那把钥匙。'},
+ {name:'恋人',en:'The Lovers',keys:['联结','抉择','吸引','价值观'],up:'真心联结，价值契合的选择',rev:'关系失衡，价值冲突',desc:'心与心对齐的那一刻，选择自然清晰。忠于自己的价值观，胜过两头周全。'},
+ {name:'战车',en:'The Chariot',keys:['意志','前进','胜利','纪律'],up:'意志坚定，势如破竹',rev:'失控内耗，方向摇摆',desc:'缰绳握紧，方向唯一。把散落的意志收拢成一股，路会为你让开。'},
+ {name:'力量',en:'Strength',keys:['温柔','勇气','驯服','耐心'],up:'以柔克刚，温柔而坚定',rev:'自我怀疑，被欲望牵制',desc:'真正的力气是温柔的。不必吼叫，耐心与善意更能驯服眼前的难题。'},
+ {name:'隐士',en:'The Hermit',keys:['内省','独处','寻道','灯火'],up:'独处内省，寻找内在之光',rev:'孤立封闭，逃避现实',desc:'提一盏灯往里走。退一步不是逃避，是为了看清手里这条路。'},
+ {name:'命运之轮',en:'Wheel of Fortune',keys:['转机','周期','顺势','命运'],up:'转机降临，顺势而起',rev:'时运反复，抗拒变化',desc:'轮盘转到你这一格了。顺势而上，别在低处恋战。'},
+ {name:'正义',en:'Justice',keys:['公平','因果','抉择','制衡'],up:'因果分明，公正抉择',rev:'偏颇逃避，责任未清',desc:'账本摊开，因果分明。诚实面对自己出的那一部分力，答案自有公道。'},
+ {name:'倒吊人',en:'The Hanged Man',keys:['视角','暂停','臣服','换位'],up:'换个视角，暂停即智慧',rev:'无谓牺牲，停滞僵持',desc:'倒过来看世界，卡点往往自己松开。暂停不是浪费，是利息。'},
+ {name:'死神',en:'Death',keys:['结束','新生','放手','蜕变'],up:'结束即新生，彻底放手',rev:'拒绝告别，勉强维持',desc:'该翻篇的就让它翻篇。紧握的旧章回，正挡住新的一页。'},
+ {name:'节制',en:'Temperance',keys:['平衡','调和','耐心','流动'],up:'平衡调和，张弛有度',rev:'失衡极端，顾此失彼',desc:'两端都留一点余地，把浓的兑淡、急的放缓。调和是此刻最高级的动作。'},
+ {name:'恶魔',en:'The Devil',keys:['执念','诱惑','束缚','阴影'],up:'直面执念与诱惑',rev:'挣脱束缚，戒除依赖',desc:'链条其实很松，是你习惯了它的重量。看清那份执念，你就已经赢了一半。'},
+ {name:'高塔',en:'The Tower',keys:['骤变','破局','觉醒','释放'],up:'骤变破局，旧秩序崩塌',rev:'余震未平，恐惧延宕',desc:'塔塌的声音很响，但它拆掉的是假地基。骤变之后，真东西才立得住。'},
+ {name:'星星',en:'The Star',keys:['希望','疗愈','愿景','灵感'],up:'希望疗愈，愿景重现',rev:'失去信心，理想蒙尘',desc:'最黑的夜里，那颗星仍然在场。把愿望重新说出来，然后照顾好信心。'},
+ {name:'月亮',en:'The Moon',keys:['潜意识','迷雾','梦境','不安'],up:'潜意识浮现，直面迷雾',rev:'谎言散去，迷雾渐开',desc:'迷雾不是绝路，是尚未命名的小径。带着不确定往前走，天会亮的。'},
+ {name:'太阳',en:'The Sun',keys:['光明','喜悦','成功','坦荡'],up:'光明成功，喜悦坦荡',rev:'骄阳灼人，延迟的喜悦',desc:'一切摊在阳光下，清楚、坦荡、热气腾腾。这是牌堆里最不含糊的好消息。'},
+ {name:'审判',en:'Judgement',keys:['觉醒','召唤','复兴','宽恕'],up:'觉醒召唤，重启人生篇章',rev:'自我苛责，错失召唤',desc:'久违的召唤响起，该启程的章节别再压箱底。宽恕过去，起身应答。'},
+ {name:'世界',en:'The World',keys:['圆满','完成','里程碑','整合'],up:'圆满完成，抵达里程碑',rev:'未竟之业，临门遗憾',desc:'一个圆画完了。庆祝这个抵达，然后允许自己许下一个更大的圆。'}
+];
+CARDS.forEach(function(c,i){ c.i=i; c.roman=ROMAN[i]; c.group=i<8?0:(i<15?1:2); });
+
+var GUIDES=[
+ '今天不必回答所有问题，允许一件事悬而未决。',
+ '你等待的转机，藏在一件你一直拖延的小事里。',
+ '把今天过成「减法日」：退出一段消耗，拒绝一个勉强。',
+ '直觉比逻辑先抵达——那个第一反应，值得认真对待。',
+ '告别不是失去，是为新章节腾出位置。',
+ '慢一点也没关系，月亮也不是一夜圆的。',
+ '今天适合记录：写下三件让你感到丰盈的瞬间。',
+ '越是害怕改变，越说明那件事已经被写进了你的日程。'
+];
+var TOPICS=[
+ {k:'all',l:'综合',lens:''},
+ {k:'love',l:'爱情',lens:'把这张牌放进感情的境况里，'},
+ {k:'career',l:'事业',lens:'放到事业与手头的事务上看，'},
+ {k:'wealth',l:'财运',lens:'落到财务与资源的盘面上，'},
+ {k:'study',l:'学业',lens:'放进学业与进修的节奏里，'},
+ {k:'self',l:'自我',lens:'回到你与自己相处这件事上，'}
+];
+var SPREADS={
+ 1:{label:'单张指引',pos:[{name:'指引',hint:'当下最需要看见的讯息'}]},
+ 3:{label:'三张时间流',pos:[
+   {name:'过去',hint:'影响此事的来路与根源'},
+   {name:'现在',hint:'你正处的境况与心态'},
+   {name:'未来',hint:'事态可能的走向'}
+ ]}
+};
+var GROUPS=[{k:-1,l:'全部'},{k:0,l:'序章 0–VII'},{k:1,l:'途中 VIII–XIV'},{k:2,l:'终章 XV–XXI'}];
+var CORNERS='<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>';
+
+/* ================= SVG 生成：几何牌面 / 牌背 / 日轮 / 拱门 ================= */
+function motif(i){
+ var s,k,a,r,x,y,pts;
+ switch(i){
+  case 0:
+   return '<circle cx="100" cy="92" r="16"/><circle cx="100" cy="92" r="3" fill="#D4AF37" stroke="none"/>'+
+    '<path d="M74 116 H126"/>'+
+    '<path d="M64 226 V158 L82 136 H118 L136 158 V226"/>'+
+    '<path d="M76 226 V162 L90 144 H110 L124 162 V226"/>'+
+    '<path d="M54 226 H146"/>';
+  case 1:
+   return '<path d="M100 66 L127 112 H73 Z"/><circle cx="100" cy="118" r="6"/>'+
+    '<path d="M100 134 V224"/>'+
+    '<circle cx="80" cy="178" r="12"/><circle cx="120" cy="178" r="12"/>'+
+    '<path d="M68 224 H132"/>';
+  case 2:
+   return '<path d="M62 122 Q100 96 138 122"/>'+
+    '<rect x="62" y="122" width="14" height="104"/><rect x="124" y="122" width="14" height="104"/>'+
+    '<path d="M56 114 H84 M116 114 H144"/>'+
+    '<path d="M102 130 A26 26 0 1 0 102 182 A20 20 0 1 1 102 130"/>'+
+    '<path d="M58 226 H142"/>';
+  case 3:
+   s='<circle cx="100" cy="120" r="14"/><path d="M84 212 H116"/>';
+   for(k=-3;k<=3;k++){ a=(90+k*20)*Math.PI/180; x=100+Math.sin(a)*78; y=212-Math.cos(a)*78;
+    s+='<path d="M100 212 L'+x.toFixed(1)+' '+y.toFixed(1)+'"/>'; }
+   return s+'<path d="M56 226 H144"/>';
+  case 4:
+   return '<path d="M70 226 V130 H130 V226"/>'+
+    '<path d="M70 130 V114 H84 V98 H116 V114 H130 V130"/>'+
+    '<circle cx="100" cy="168" r="15"/><path d="M100 153 V183 M85 168 H115"/>'+
+    '<path d="M54 226 H146"/>';
+  case 5:
+   return '<path d="M100 104 l6 8 -6 8 -6 -8 Z"/>'+
+    '<path d="M68 226 V152 L100 120 L132 152 V226"/>'+
+    '<path d="M80 226 V158 L100 138 L120 158 V226"/>'+
+    '<path d="M86 176 H114 M86 192 H114"/>'+
+    '<path d="M56 226 H144"/>';
+  case 6:
+   return '<circle cx="82" cy="152" r="30"/><circle cx="118" cy="152" r="30"/>'+
+    '<path d="M100 110 l6 8 -6 8 -6 -8 Z"/>'+
+    '<path d="M100 186 V212"/><path d="M58 226 H142"/>';
+  case 7:
+   return '<path d="M100 88 l6 10 -6 10 -6 -10 Z"/>'+
+    '<path d="M64 138 L78 118 H122 L136 138"/>'+
+    '<path d="M64 138 H136 V180 H64 Z"/>'+
+    '<circle cx="80" cy="196" r="15"/><circle cx="120" cy="196" r="15"/>'+
+    '<path d="M80 181 V211 M65 196 H95 M120 181 V211 M105 196 H135"/>';
+  case 8:
+   s='<circle cx="100" cy="150" r="26"/>'+
+    '<circle cx="91" cy="145" r="2" fill="#D4AF37" stroke="none"/><circle cx="109" cy="145" r="2" fill="#D4AF37" stroke="none"/>'+
+    '<path d="M92 162 Q100 168 108 162"/>'+
+    '<circle cx="92" cy="100" r="7"/><circle cx="108" cy="100" r="7"/>';
+   for(k=0;k<12;k++){ a=k*30*Math.PI/180;
+    s+='<path d="M'+(100+Math.cos(a)*34).toFixed(1)+' '+(150+Math.sin(a)*34).toFixed(1)+' L'+(100+Math.cos(a)*46).toFixed(1)+' '+(150+Math.sin(a)*46).toFixed(1)+'"/>'; }
+   return s;
+  case 9:
+   return '<path d="M100 98 L127 114 V166 L100 182 L73 166 V114 Z"/>'+
+    '<path d="M100 122 L115 142 L100 162 L85 142 Z"/>'+
+    '<path d="M100 98 V84"/><circle cx="100" cy="76" r="7"/>'+
+    '<path d="M62 226 H138"/>';
+  case 10:
+   s='<circle cx="100" cy="152" r="50"/><circle cx="100" cy="152" r="36"/><circle cx="100" cy="152" r="9"/>';
+   for(k=0;k<8;k++){ a=k*45*Math.PI/180;
+    s+='<path d="M'+(100+Math.cos(a)*9).toFixed(1)+' '+(152+Math.sin(a)*9).toFixed(1)+' L'+(100+Math.cos(a)*50).toFixed(1)+' '+(152+Math.sin(a)*50).toFixed(1)+'"/>'; }
+   for(k=0;k<8;k++){ a=(22.5+k*45)*Math.PI/180;
+    s+='<path d="M'+(100+Math.cos(a)*50).toFixed(1)+' '+(152+Math.sin(a)*50).toFixed(1)+' L'+(100+Math.cos(a)*58).toFixed(1)+' '+(152+Math.sin(a)*58).toFixed(1)+'"/>'; }
+   return s;
+  case 11:
+   return '<path d="M62 110 H138"/><path d="M100 102 V198"/>'+
+    '<path d="M62 110 L50 134 M62 110 L74 134"/><path d="M50 134 A12 12 0 0 0 74 134"/>'+
+    '<path d="M138 110 L126 134 M138 110 L150 134"/><path d="M126 134 A12 12 0 0 0 150 134"/>'+
+    '<path d="M84 198 H116 M76 210 H124"/>';
+  case 12:
+   return '<path d="M100 96 V112"/>'+
+    '<circle cx="100" cy="150" r="40"/>'+
+    '<path d="M100 112 L128 166 H72 Z"/>'+
+    '<circle cx="100" cy="150" r="6"/>'+
+    '<path d="M62 226 H138"/>';
+  case 13:
+   s='<circle cx="100" cy="138" r="9"/><circle cx="100" cy="138" r="18"/><circle cx="100" cy="138" r="27"/>';
+   for(k=0;k<4;k++){ a=(45+k*90)*Math.PI/180;
+    s+='<path d="M'+(100+Math.cos(a)*18).toFixed(1)+' '+(138+Math.sin(a)*18).toFixed(1)+' L'+(100+Math.cos(a)*27).toFixed(1)+' '+(138+Math.sin(a)*27).toFixed(1)+'"/>'; }
+   return s+'<path d="M100 165 V222"/>'+
+    '<path d="M100 198 Q88 190 78 198"/><path d="M100 212 Q112 204 122 212"/>'+
+    '<path d="M62 226 H138"/>';
+  case 14:
+   return '<path d="M100 76 L126 124 H74 Z"/>'+
+    '<path d="M100 226 L74 178 H126 Z"/>'+
+    '<path d="M68 148 Q84 140 100 148 T132 148"/>'+
+    '<path d="M68 164 Q84 156 100 164 T132 164"/>';
+  case 15:
+   pts=[];
+   for(k=0;k<10;k++){ r=k%2?19:48; a=(-90+k*36)*Math.PI/180+Math.PI;
+    pts.push((100+Math.cos(a)*r).toFixed(1)+','+(150-Math.sin(a)*r).toFixed(1)); }
+   return '<polygon points="'+pts.join(' ')+'"/>'+
+    '<path d="M80 212 Q100 224 120 212"/>'+
+    '<circle cx="80" cy="212" r="2" fill="#D4AF37" stroke="none"/><circle cx="120" cy="212" r="2" fill="#D4AF37" stroke="none"/>';
+  case 16:
+   return '<path d="M72 210 H128 V150 H72 Z"/>'+
+    '<path d="M82 150 H118 V118 H82 Z"/>'+
+    '<path d="M92 118 H108 V96 H92 Z"/>'+
+    '<path d="M92 96 L100 84 L108 96"/>'+
+    '<path d="M96 210 V196 H104 V210"/>'+
+    '<path d="M150 82 L126 116 L138 120 L112 154"/>'+
+    '<path d="M58 226 H142"/>';
+  case 17:
+   pts=[];
+   for(k=0;k<16;k++){ r=k%2?19:46; a=(-90+k*22.5)*Math.PI/180;
+    pts.push((100+Math.cos(a)*r).toFixed(1)+','+(144-Math.sin(a)*r).toFixed(1)); }
+   return '<polygon points="'+pts.join(' ')+'"/><circle cx="100" cy="144" r="6"/>'+
+    '<circle cx="76" cy="206" r="4"/><circle cx="100" cy="216" r="4"/><circle cx="124" cy="206" r="4"/>';
+  case 18:
+   return '<path d="M120 102 A54 54 0 1 0 120 198 A44 44 0 1 1 120 102"/>'+
+    '<circle cx="132" cy="118" r="3"/><circle cx="140" cy="140" r="3"/><circle cx="134" cy="162" r="3"/>'+
+    '<path d="M62 226 H138"/>';
+  case 19:
+   s='<circle cx="100" cy="146" r="28"/><circle cx="100" cy="146" r="17" stroke-dasharray="3 4"/>';
+   for(k=0;k<16;k++){ a=k*22.5*Math.PI/180; var r1=k%2?38:44;
+    s+='<path d="M'+(100+Math.cos(a)*r1).toFixed(1)+' '+(146+Math.sin(a)*r1).toFixed(1)+' L'+(100+Math.cos(a)*(r1+12)).toFixed(1)+' '+(146+Math.sin(a)*(r1+12)).toFixed(1)+'"/>'; }
+   return s+'<path d="M58 226 H142"/>';
+  case 20:
+   return '<path d="M58 198 H142"/>'+
+    '<path d="M86 198 A14 14 0 0 1 114 198"/>'+
+    '<path d="M72 198 A28 28 0 0 1 128 198"/>'+
+    '<path d="M58 198 A42 42 0 0 1 142 198"/>'+
+    '<circle cx="100" cy="198" r="4" fill="#D4AF37" stroke="none"/>'+
+    '<path d="M100 194 L138 136"/>'+
+    '<path d="M134 126 L150 140 L138 148 Z"/>';
+  case 21:
+   return '<circle cx="100" cy="150" r="54" stroke-dasharray="7 6"/>'+
+    '<circle cx="100" cy="150" r="42"/>'+
+    '<path d="M100 126 L110 150 L100 174 L90 150 Z"/>'+
+    '<path d="M76 150 L100 141 L124 150 L100 159 Z"/>'+
+    '<circle cx="100" cy="150" r="5"/>';
+ }
+ return '';
+}
+
+function faceSVG(c){
+ var d='M18 44 V18 H44 M27 44 V27 H44';
+ var corners='<path d="'+d+'"/>'+
+  '<path d="'+d+'" transform="translate(200 0) scale(-1 1)"/>'+
+  '<path d="'+d+'" transform="translate(0 320) scale(1 -1)"/>'+
+  '<path d="'+d+'" transform="translate(200 320) scale(-1 -1)"/>';
+ return '<svg class="pc" viewBox="0 0 200 320" role="img" aria-label="'+c.name+'">'+
+  '<rect x="5" y="5" width="190" height="310" fill="#071E1A" stroke="#D4AF37" stroke-width="1.2"/>'+
+  '<rect x="11" y="11" width="178" height="298" fill="none" stroke="#D4AF37" stroke-width=".6" opacity=".75"/>'+
+  '<g fill="none" stroke="#D4AF37" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">'+corners+'</g>'+
+  '<text class="fnum" x="100" y="44" text-anchor="middle">'+c.roman+'</text>'+
+  '<g fill="none" stroke="#D4AF37" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">'+
+   '<path d="M100 54 l5 6 -5 6 -5 -6 Z"/>'+motif(c.i)+'</g>'+
+  '<text class="fname" x="100" y="278" text-anchor="middle">'+c.name+'</text>'+
+  '<text class="fen" x="100" y="296" text-anchor="middle">'+c.en.toUpperCase()+'</text>'+
+  '</svg>';
+}
+
+function backSVG(){
+ var d='M18 44 V18 H44 M27 44 V27 H44';
+ var corners='<path d="'+d+'"/>'+
+  '<path d="'+d+'" transform="translate(200 0) scale(-1 1)"/>'+
+  '<path d="'+d+'" transform="translate(0 320) scale(1 -1)"/>'+
+  '<path d="'+d+'" transform="translate(200 320) scale(-1 -1)"/>';
+ var rays='';
+ for(var k=0;k<12;k++){ var a=k*30*Math.PI/180;
+  rays+='<path d="M'+(100+Math.cos(a)*28).toFixed(1)+' '+(160+Math.sin(a)*28).toFixed(1)+
+   ' L'+(100+Math.cos(a)*92).toFixed(1)+' '+(160+Math.sin(a)*92).toFixed(1)+'"/>'; }
+ return '<svg viewBox="0 0 200 320" aria-hidden="true">'+
+  '<rect x="6" y="6" width="188" height="308" fill="#071E1A" stroke="#D4AF37" stroke-width="1.2"/>'+
+  '<rect x="14" y="14" width="172" height="292" fill="none" stroke="#D4AF37" stroke-width=".6" opacity=".8"/>'+
+  '<g fill="none" stroke="#D4AF37" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">'+
+   '<g opacity=".45">'+rays+'</g>'+
+   '<path d="M100 68 L142 160 L100 252 L58 160 Z"/>'+
+   '<path d="M100 104 L124 160 L100 216 L76 160 Z"/>'+
+   '<path d="M100 140 L112 160 L100 180 L88 160 Z"/>'+
+   '<circle cx="100" cy="160" r="10"/>'+corners+'</g></svg>';
+}
+
+function sunburstSVG(){
+ var s='',k,a,r;
+ var radii=[110,170,230,290,350];
+ for(k=0;k<radii.length;k++){ s+='<circle cx="400" cy="400" r="'+radii[k]+'" stroke-opacity="'+(0.38-0.055*k).toFixed(2)+'"/>'; }
+ for(k=0;k<48;k++){ a=k*7.5*Math.PI/180; var r1=120, r2=(k%4===0)?378:332;
+  s+='<path d="M'+(400+Math.cos(a)*r1).toFixed(1)+' '+(400+Math.sin(a)*r1).toFixed(1)+
+   ' L'+(400+Math.cos(a)*r2).toFixed(1)+' '+(400+Math.sin(a)*r2).toFixed(1)+'" stroke-opacity="'+(k%4===0?0.4:0.2)+'"/>'; }
+ for(k=0;k<24;k++){ a=k*15*Math.PI/180;
+  s+='<path d="M'+(400+Math.cos(a)*228).toFixed(1)+' '+(400+Math.sin(a)*228).toFixed(1)+
+   ' A228 228 0 0 1 '+(400+Math.cos(a+0.13)*228).toFixed(1)+' '+(400+Math.sin(a+0.13)*228).toFixed(1)+'" stroke-opacity=".3"/>'; }
+ return '<g fill="none" stroke="#D4AF37" stroke-width="1">'+s+'</g>';
+}
+
+var ARCH='<path pathLength="1" d="M12 392 V152 H30 V112 H52 V80 H84 V56 H156 V80 H188 V112 H210 V152 H228 V392"/>'+
+ '<path pathLength="1" d="M24 392 V160 H42 V122 H62 V92 H94 V68 H146 V92 H178 V122 H198 V160 H216 V392"/>';
+
+/* ================= 工具 ================= */
+function $(id){ return document.getElementById(id); }
+function strHash(s){ var h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function shuffleArr(arr){ var a=arr.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+
+/* ================= 渲染：日轮 / 拱门 / 今日牌 ================= */
+$('sunburstSvg').innerHTML=sunburstSVG();
+Array.prototype.forEach.call(document.querySelectorAll('svg.arch'),function(svg){ svg.innerHTML=ARCH; });
+
+var now=new Date();
+var dayKey=now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
+var dayHash=strHash(dayKey);
+var dailyCard=CARDS[dayHash%22];
+var dailyGuide=GUIDES[(dayHash>>>4)%8];
+var WD=['日','一','二','三','四','五','六'];
+
+$('heroCardFace').innerHTML=faceSVG(dailyCard);
+$('heroCardCap').textContent='今日主牌 · '+dailyCard.name;
+$('dailyCardFace').innerHTML=faceSVG(dailyCard);
+$('dailyDate').textContent=now.getFullYear()+' 年 '+(now.getMonth()+1)+' 月 '+now.getDate()+' 日 · 星期'+WD[now.getDay()];
+$('dailyName').textContent=dailyCard.roman+' · '+dailyCard.name;
+$('dailyKeys').textContent=dailyCard.keys.join(' ◆ ');
+$('dailyText').textContent=dailyCard.desc;
+$('dailyGuide').textContent=dailyGuide;
+
+/* ================= 图鉴：渲染 / 搜索 / 筛选 ================= */
+var gState={q:'',group:-1};
+var grid=$('galleryGrid');
+
+function renderGallery(){
+ var q=gState.q.trim().toLowerCase();
+ var list=CARDS.filter(function(c){
+  if(gState.group>=0&&c.group!==gState.group) return false;
+  if(!q) return true;
+  return (c.name+c.en+c.keys.join('')+' '+c.roman).toLowerCase().indexOf(q)>-1;
+ });
+ if(!list.length){ grid.innerHTML='<p class="g-empty">未寻得对应的牌 —— 换个关键词试试。</p>'; return; }
+ grid.innerHTML=list.map(function(c){
+  return '<button class="g-card" type="button" data-i="'+c.i+'" aria-label="查看'+c.name+'牌义">'+
+   CORNERS+'<div class="g-face">'+faceSVG(c)+'</div>'+
+   '<p class="g-name">'+c.roman+' · '+c.name+'</p>'+
+   '<p class="g-en">'+c.en+'</p></button>';
+ }).join('');
+}
+$('groupChips').innerHTML=GROUPS.map(function(g,i){
+ return '<button class="chip'+(i===0?' on':'')+'" type="button" data-g="'+g.k+'">'+g.l+'</button>';
+}).join('');
+$('groupChips').addEventListener('click',function(e){
+ var b=e.target.closest('.chip'); if(!b) return;
+ Array.prototype.forEach.call(this.querySelectorAll('.chip'),function(c){ c.classList.remove('on'); });
+ b.classList.add('on'); gState.group=+b.dataset.g; renderGallery();
+});
+$('searchInput').addEventListener('input',function(){ gState.q=this.value; renderGallery(); });
+grid.addEventListener('click',function(e){
+ var b=e.target.closest('.g-card'); if(b) openModal(CARDS[+b.dataset.i]);
+});
+renderGallery();
+
+/* ================= 牌义详情浮层 ================= */
+var modal=$('modal');
+function openModal(c){
+ $('mFace').innerHTML=faceSVG(c);
+ $('mNum').textContent='MAJOR ARCANA · '+c.roman;
+ $('mName').textContent=c.name;
+ $('mEn').textContent=c.en;
+ $('mKeys').innerHTML=c.keys.map(function(k){ return '<span>'+k+'</span>'; }).join('');
+ $('mUp').textContent=c.up;
+ $('mDesc').textContent=c.desc;
+ $('mRev').textContent=c.rev+'。——逆位并非凶兆，而是提醒：先调整，再上路。';
+ modal.hidden=false; document.body.style.overflow='hidden';
+}
+function closeModal(){ modal.hidden=true; document.body.style.overflow=''; }
+modal.addEventListener('click',function(e){ if(e.target.closest('[data-close]')) closeModal(); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!modal.hidden) closeModal(); });
+
+/* ================= 占卜台状态机 ================= */
+var S={topic:TOPICS[0],spread:0,need:0,picks:[],flipped:0};
+var oConfig=$('oConfig'),oDraw=$('oDraw'),oRead=$('oRead');
+var slotsEl=$('slotsEl'),deckEl=$('deckEl');
+
+/* 主题 chips */
+$('topicChips').innerHTML=TOPICS.map(function(t,i){
+ return '<button class="chip'+(i===0?' on':'')+'" type="button" data-k="'+t.k+'">'+t.l+'</button>';
+}).join('');
+$('topicChips').addEventListener('click',function(e){
+ var b=e.target.closest('.chip'); if(!b) return;
+ S.topic=TOPICS.filter(function(t){ return t.k===b.dataset.k; })[0];
+ Array.prototype.forEach.call(this.querySelectorAll('.chip'),function(c){ c.classList.remove('on'); });
+ b.classList.add('on');
+});
+
+/* 选牌阵 */
+Array.prototype.forEach.call(document.querySelectorAll('.spread-card'),function(btn){
+ btn.addEventListener('click',function(){
+  S.spread=+btn.dataset.spread; S.need=S.spread;
+  Array.prototype.forEach.call(document.querySelectorAll('.spread-card'),function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  startDraw();
+ });
+});
+
+function startDraw(){
+ S.picks=[]; S.flipped=0;
+ oConfig.hidden=true; oRead.hidden=true; oDraw.hidden=false;
+ $('shuffleBtn').disabled=false; $('shuffleBtn').textContent='洗 牌';
+ $('flipAllBtn').hidden=true;
+ $('drawLabel').textContent='第三步 · 静心洗牌，点选 '+S.need+' 张';
+ $('drawTip').textContent='点击「洗牌」洗净牌堆，再凭直觉点选 '+S.need+' 张。';
+ buildSlots(); buildDeck();
+}
+
+function buildSlots(){
+ var pos=SPREADS[S.spread].pos;
+ slotsEl.className='slots'+(S.spread===1?' slots--single':'');
+ slotsEl.innerHTML=pos.map(function(p,i){
+  return '<div class="slot"><p class="slot-name">'+p.name+'</p><p class="slot-hint">'+p.hint+'</p>'+
+   '<div class="slot-empty" id="slot'+i+'">'+ROMAN[i]+' · 待抽</div></div>';
+ }).join('');
+}
+
+function buildDeck(){
+ var order=shuffleArr(CARDS.map(function(c){ return c.i; }));
+ deckEl.classList.remove('shuffling');
+ deckEl.innerHTML=order.map(function(ci){
+  return '<button class="deck-card" type="button" data-ci="'+ci+'" disabled aria-label="牌背">'+backSVG()+'</button>';
+ }).join('');
+}
+
+$('shuffleBtn').addEventListener('click',function(){
+ var btn=this;
+ btn.disabled=true;
+ deckEl.classList.add('shuffling');
+ setTimeout(function(){
+  deckEl.classList.remove('shuffling');
+  Array.prototype.forEach.call(deckEl.querySelectorAll('.deck-card'),function(c){ c.disabled=false; });
+  btn.textContent='已洗净 · 请点牌';
+  $('drawTip').textContent='默念所问，自牌堆中点选 '+S.need+' 张——已选阵位会同步点亮。';
+ },700);
+});
+
+deckEl.addEventListener('click',function(e){
+ var b=e.target.closest('.deck-card'); if(!b||b.disabled) return;
+ if(S.picks.length>=S.need) return;
+ var ci=+b.dataset.ci;
+ b.classList.add('picked'); b.disabled=true;
+ var idx=S.picks.length;
+ var rev=Math.random()<0.28;               /* 正逆位在抽牌瞬间判定 */
+ S.picks.push({ci:ci,rev:rev});
+ var slot=$('slot'+idx);
+ if(slot){
+  var c=CARDS[ci];
+  slot.outerHTML='<div class="slot-wrap" id="slotW'+idx+'"><div class="tcard'+(rev?' reversed':'')+'" data-idx="'+idx+'" role="button" tabindex="0" aria-label="翻开的牌">'+
+   '<div class="t-inner"><div class="t-face t-back">'+backSVG()+'</div>'+
+   '<div class="t-face t-front">'+faceSVG(c)+'</div></div></div></div>';
+ }
+ if(S.picks.length===S.need){
+  $('drawTip').textContent='阵位已满——点击牌面逐张翻开，正逆自现。';
+  $('flipAllBtn').hidden=false;
+  Array.prototype.forEach.call(deckEl.querySelectorAll('.deck-card:not(.picked)'),function(c){ c.disabled=true; });
+ }
+});
+
+function flipSlot(el){
+ if(!el||el.classList.contains('flipped')) return;
+ el.classList.add('flipped');
+ S.flipped++;
+ $('flipAllBtn').hidden=S.flipped>=S.need;
+ if(S.flipped===S.need) setTimeout(showReading,650);
+}
+slotsEl.addEventListener('click',function(e){
+ var t=e.target.closest('.tcard'); if(t) flipSlot(t);
+});
+slotsEl.addEventListener('keydown',function(e){
+ var t=e.target.closest('.tcard');
+ if(t&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); flipSlot(t); }
+});
+$('flipAllBtn').addEventListener('click',function(){
+ var cards=slotsEl.querySelectorAll('.tcard:not(.flipped)');
+ Array.prototype.forEach.call(cards,function(t,i){ setTimeout(function(){ flipSlot(t); },i*280); });
+});
+
+function showReading(){
+ var t=S.topic, pos=SPREADS[S.spread].pos;
+ var isOpen=(t.k==='all');
+ var open=isOpen
+  ? '此刻心之所向，尚未命名——牌给出最需要看见的讯息：'
+  : '围绕「'+t.l+'」之问，'+(S.spread===1?'命运递来一张牌':'三张牌依次铺开')+'——';
+ var h='<p class="read-open">'+open+'</p>';
+ h+='<div class="read-grid'+(S.spread===1?' read-grid--single':'')+'">';
+ var nameSum=[];
+ S.picks.forEach(function(p,i){
+  var c=CARDS[p.ci]; nameSum.push(c);
+  h+='<article class="read-card frame">'+CORNERS+
+   '<header><span class="rc-pos">'+pos[i].name+'</span>'+
+   '<span class="rc-badge'+(p.rev?' is-rev':'')+'">'+(p.rev?'逆位':'正位')+'</span></header>'+
+   '<div class="rc-mini">'+faceSVG(c)+'</div>'+
+   '<h4>'+c.name+'<em>'+c.roman+'</em></h4>'+
+   '<p class="rc-keys">'+c.keys.join(' ◆ ')+'</p>'+
+   '<p class="rc-text">'+t.lens+(p.rev?c.rev:c.up)+'。</p></article>';
+ });
+ var g=(S.picks.reduce(function(a,p){ return a+p.ci; },0)+TOPICS.indexOf(t))%8;
+ h+='<div class="read-sum frame"'+(S.spread===1?' style="max-width:470px;margin:22px auto 0"':'')+'>'+CORNERS+
+  '<h4>综 合 解 读</h4><p>'+
+  (S.spread===3
+   ? '「'+nameSum[0].name+'」铺陈来路，「'+nameSum[1].name+'」立于当下，「'+nameSum[2].name+'」指向去处。'+GUIDES[g]
+   : '此牌既是一句判词，也是一盏灯。'+GUIDES[g])+
+  '</p></div>';
+ $('readBox').innerHTML=h;
+ oRead.hidden=false;
+ oRead.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+$('againBtn').addEventListener('click',function(){ startDraw(); oDraw.scrollIntoView({behavior:'smooth',block:'start'}); });
+$('resetBtn').addEventListener('click',function(){
+ oDraw.hidden=true; oRead.hidden=true; oConfig.hidden=false;
+ Array.prototype.forEach.call(document.querySelectorAll('.spread-card'),function(b){ b.classList.remove('on'); });
+ S.spread=0;
+ $('oracle').scrollIntoView({behavior:'smooth',block:'start'});
+});
+
+/* ================= 入场：对称式左右同时淡入 ================= */
+var reveals=document.querySelectorAll('.reveal');
+if('IntersectionObserver' in window){
+ var io=new IntersectionObserver(function(es){
+  es.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
+ },{threshold:.12});
+ Array.prototype.forEach.call(reveals,function(el){ io.observe(el); });
+}else{
+ Array.prototype.forEach.call(reveals,function(el){ el.classList.add('in'); });
+}
+
+})();
+</script>
+</body>
+</html>

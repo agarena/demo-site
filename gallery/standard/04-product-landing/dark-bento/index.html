@@ -1,0 +1,2181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURA Halo 1 · 世界静音，只剩音乐。</title>
+<meta name="description" content="AURA Halo 1 头戴式主动降噪耳机：48 小时续航 · 逐点降噪 · 198g 云感佩戴。现已开启预约。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='none' stroke='%238B5CF6' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%2322D3EE'/%3E%3C/svg%3E">
+<style>
+/* ============ 基础与变量 ============ */
+@property --flow { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+
+:root {
+  --bg: #09090B;
+  --card: #131316;
+  --card-2: #17171B;
+  --text: #FAFAFA;
+  --muted: #A1A1AA;
+  --violet: #8B5CF6;
+  --violet-deep: #7C3AED;
+  --cyan: #22D3EE;
+  --line: #27272A;
+  --err: #F87171;
+  --ok: #34D399;
+  --radius: 16px;
+  --pad: 24px;
+  --font: "Space Grotesk", Inter, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, "Courier New", monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 84px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.7;
+  overflow-x: hidden;
+  padding-top: 64px;
+}
+
+::selection { background: rgba(139, 92, 246, .4); color: #fff; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #0C0C0E; }
+::-webkit-scrollbar-thumb { background: #2C2C31; border-radius: 8px; border: 2px solid #0C0C0E; }
+::-webkit-scrollbar-thumb:hover { background: #3F3F46; }
+
+a { color: inherit; text-decoration: none; }
+img, svg { display: block; max-width: 100%; }
+button { font-family: inherit; cursor: pointer; }
+
+:focus-visible { outline: 2px solid var(--violet); outline-offset: 3px; border-radius: 4px; }
+
+.container { width: min(1200px, calc(100% - 48px)); margin: 0 auto; }
+section[id] { scroll-margin-top: 84px; }
+
+/* ============ 标志性记忆点：顶部极光渐变光带 ============ */
+.aurora-band {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  z-index: 200;
+  background: linear-gradient(90deg, transparent 0%, rgba(139,92,246,0) 0%, #8B5CF6 38%, #22D3EE 62%, transparent 100%);
+  background-size: 50% 100%;
+  background-repeat: no-repeat;
+  animation: aurora-slide 9s linear infinite;
+  pointer-events: none;
+}
+@keyframes aurora-slide {
+  from { background-position: -55% 0; }
+  to   { background-position: 155% 0; }
+}
+
+/* ============ 通用组件 ============ */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .22em;
+  color: var(--cyan);
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.eyebrow::before {
+  content: "";
+  width: 22px; height: 1px;
+  background: linear-gradient(90deg, var(--violet), var(--cyan));
+}
+
+.section-head { max-width: 660px; margin-bottom: 48px; }
+.section-head.center { margin-left: auto; margin-right: auto; text-align: center; }
+.section-head.center .eyebrow::after {
+  content: "";
+  width: 22px; height: 1px;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+}
+.section-head h2 {
+  font-size: clamp(28px, 3.6vw, 44px);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  margin-bottom: 14px;
+}
+.section-head p { color: var(--muted); font-size: 16px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 28px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: transform .2s ease, box-shadow .25s ease, background .25s ease, border-color .25s ease, color .25s ease;
+  white-space: nowrap;
+}
+.btn:active { transform: translateY(1px) scale(.99); }
+
+.btn-primary {
+  background: linear-gradient(180deg, #9B6DFF 0%, var(--violet-deep) 100%);
+  color: #fff;
+  box-shadow: 0 8px 28px rgba(139, 92, 246, .32), inset 0 1px 0 rgba(255,255,255,.18);
+}
+.btn-primary:hover {
+  box-shadow: 0 10px 36px rgba(139, 92, 246, .5), inset 0 1px 0 rgba(255,255,255,.22);
+  transform: translateY(-2px);
+}
+
+.btn-ghost {
+  background: rgba(255,255,255,.02);
+  border-color: #3F3F46;
+  color: var(--text);
+}
+.btn-ghost:hover { border-color: var(--violet); background: rgba(139,92,246,.1); transform: translateY(-2px); }
+
+/* 进视口淡入（克制） */
+.reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s ease, transform .7s cubic-bezier(.22,.8,.36,1); }
+.reveal.in { opacity: 1; transform: none; }
+.reveal.d1 { transition-delay: .08s; }
+.reveal.d2 { transition-delay: .16s; }
+.reveal.d3 { transition-delay: .24s; }
+
+/* ============ 顶部导航 ============ */
+.site-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 64px;
+  z-index: 100;
+  border-bottom: 1px solid transparent;
+  transition: background .3s ease, border-color .3s ease, backdrop-filter .3s ease;
+}
+.site-header.scrolled {
+  background: rgba(9, 9, 11, .74);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-bottom-color: var(--line);
+}
+.nav-inner {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; letter-spacing: .04em; }
+.brand svg { width: 28px; height: 28px; }
+.brand .sub { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: .1em; align-self: flex-end; margin-bottom: 2px; }
+
+.nav-links { display: flex; align-items: center; gap: 6px; }
+.nav-links a {
+  padding: 8px 14px;
+  font-size: 14px;
+  color: var(--muted);
+  border-radius: 8px;
+  transition: color .2s ease, background .2s ease;
+}
+.nav-links a:hover { color: var(--text); background: rgba(255,255,255,.05); }
+.nav-links a.active { color: var(--text); background: rgba(139,92,246,.14); }
+
+.nav-cta { padding: 9px 20px; font-size: 14px; border-radius: 9px; }
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 42px; height: 42px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  align-items: center;
+}
+.nav-toggle span {
+  display: block;
+  width: 18px; height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: transform .25s ease, opacity .25s ease;
+}
+.nav-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle.open span:nth-child(2) { opacity: 0; }
+.nav-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+.mobile-menu {
+  position: fixed;
+  top: 64px; left: 0; right: 0;
+  z-index: 99;
+  background: rgba(9, 9, 11, .96);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--line);
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+.mobile-menu.open { opacity: 1; transform: none; pointer-events: auto; }
+.mobile-menu a {
+  display: block;
+  padding: 15px 24px;
+  font-size: 15px;
+  color: var(--muted);
+  border-bottom: 1px solid rgba(39,39,42,.6);
+}
+.mobile-menu a:hover { color: var(--text); background: rgba(139,92,246,.08); }
+
+/* ============ Hero ============ */
+.hero {
+  position: relative;
+  padding: 72px 0 96px;
+  overflow: hidden;
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,.055) 1px, transparent 0);
+  background-size: 34px 34px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, #000 30%, transparent 75%);
+  pointer-events: none;
+}
+.hero-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.05fr .95fr;
+  align-items: center;
+  gap: 48px;
+  min-height: 560px;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid rgba(139,92,246,.45);
+  border-radius: 999px;
+  background: rgba(139,92,246,.1);
+  font-size: 13px;
+  color: #D6C7FF;
+  margin-bottom: 26px;
+}
+.hero-badge .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+}
+.hero h1 {
+  font-size: clamp(40px, 5.4vw, 64px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.18;
+  margin-bottom: 22px;
+}
+.hero h1 .grad {
+  background: linear-gradient(92deg, #A78BFA 10%, var(--cyan) 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.hero-sub {
+  color: var(--muted);
+  font-size: 17px;
+  max-width: 520px;
+  margin-bottom: 34px;
+}
+.hero-sub strong { color: var(--text); font-weight: 600; }
+.hero-ctas { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 44px; }
+
+.hero-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-top: 1px solid var(--line);
+  padding-top: 22px;
+  max-width: 540px;
+}
+.hero-stats .stat { flex: 1 1 auto; min-width: 110px; padding-right: 18px; }
+.hero-stats .stat + .stat { border-left: 1px solid var(--line); padding-left: 18px; }
+.hero-stats .num { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--text); }
+.hero-stats .num em { font-style: normal; font-size: 14px; color: var(--cyan); margin-left: 2px; }
+.hero-stats .lab { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.hero-visual { position: relative; }
+.hero-visual .glow {
+  position: absolute;
+  inset: 6% 2%;
+  background:
+    radial-gradient(ellipse 55% 45% at 38% 34%, rgba(139,92,246,.34), transparent 68%),
+    radial-gradient(ellipse 50% 42% at 66% 66%, rgba(34,211,238,.22), transparent 68%);
+  filter: blur(28px);
+  animation: glow-breathe 7s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes glow-breathe {
+  0%, 100% { opacity: .85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+.hero-visual .product-svg { position: relative; width: min(460px, 92%); margin: 0 auto; animation: float-y 7s ease-in-out infinite; }
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.chip-callout {
+  position: absolute;
+  z-index: 3;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: rgba(19,19,22,.82);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.chip-callout b { color: var(--text); font-weight: 700; }
+.chip-callout.c1 { top: 12%; right: 2%; border-color: rgba(139,92,246,.5); }
+.chip-callout.c2 { bottom: 18%; left: 0; border-color: rgba(34,211,238,.45); }
+.chip-callout .tick { position: absolute; width: 26px; height: 1px; background: var(--line); top: 50%; }
+.chip-callout.c1 .tick { left: -26px; background: rgba(139,92,246,.5); }
+.chip-callout.c2 .tick { right: -26px; background: rgba(34,211,238,.45); }
+
+/* ============ Bento 特性网格 ============ */
+.bento-section { padding: 96px 0; }
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: minmax(190px, auto);
+  gap: 16px;
+}
+.b-card {
+  position: relative;
+  grid-column: span 1;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--pad);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform .3s ease, border-color .3s ease, background .3s ease;
+}
+.b-card:hover { transform: translateY(-3px); border-color: rgba(139,92,246,.45); background: #141418; }
+/* hover 流光描边（conic-gradient 旋转） */
+.b-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(from var(--flow),
+    rgba(139,92,246,0) 0deg,
+    rgba(139,92,246,0) 235deg,
+    rgba(139,92,246,.95) 295deg,
+    rgba(34,211,238,.95) 325deg,
+    rgba(34,211,238,0) 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity .35s ease;
+  pointer-events: none;
+}
+.b-card:hover::before { opacity: 1; animation: flow-spin 2.6s linear infinite; }
+@keyframes flow-spin { to { --flow: 360deg; } }
+
+.b-card.span-2x2 { grid-column: span 2; grid-row: span 2; }
+.b-card.span-2x1 { grid-column: span 2; }
+
+.b-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .16em;
+  color: var(--violet);
+  border: 1px solid rgba(139,92,246,.35);
+  background: rgba(139,92,246,.08);
+  padding: 3px 10px;
+  border-radius: 999px;
+  align-self: flex-start;
+  margin-bottom: 14px;
+}
+.b-tag.cy { color: var(--cyan); border-color: rgba(34,211,238,.35); background: rgba(34,211,238,.07); }
+.b-card h3 { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 8px; }
+.b-card.span-2x2 h3 { font-size: 24px; }
+.b-card p { color: var(--muted); font-size: 14.5px; }
+.b-card .num-big {
+  font-family: var(--mono);
+  font-size: clamp(48px, 4.6vw, 68px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  background: linear-gradient(120deg, #FAFAFA 30%, #A78BFA 75%, var(--cyan) 105%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.b-card .num-big em { font-style: normal; font-size: .42em; }
+.b-foot { margin-top: auto; padding-top: 16px; font-family: var(--mono); font-size: 12px; color: #71717A; }
+.b-visual { margin: auto 0 14px; }
+
+/* 降噪波形 */
+.wave-line { stroke-dasharray: 640; stroke-dashoffset: 640; animation: wave-draw 2.2s .3s ease forwards; }
+@keyframes wave-draw { to { stroke-dashoffset: 0; } }
+.noise-bars rect { transform-origin: center bottom; animation: bar-b 3.2s ease-in-out infinite; }
+.noise-bars rect:nth-child(2n) { animation-delay: .4s; }
+.noise-bars rect:nth-child(3n) { animation-delay: .9s; }
+.noise-bars rect:nth-child(5n) { animation-delay: 1.4s; }
+@keyframes bar-b { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(.62); } }
+
+/* 续航条 */
+.meter { height: 8px; border-radius: 99px; background: #1F1F23; overflow: hidden; margin-top: 14px; }
+.meter i {
+  display: block; height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--violet), var(--cyan));
+  width: 0;
+  transition: width 1.4s cubic-bezier(.22,.8,.36,1);
+}
+.in .meter i { width: var(--meter, 83%); }
+
+/* 双设备图标 */
+.duo-devices { display: flex; align-items: center; gap: 10px; color: var(--muted); }
+.duo-devices .link-line { flex: 1; height: 1px; background: repeating-linear-gradient(90deg, var(--violet) 0 6px, transparent 6px 12px); opacity: .7; }
+.duo-pill {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--cyan);
+  border: 1px solid rgba(34,211,238,.35);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+/* App 卡迷你开关 */
+.mini-ui { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+.mini-ui .row { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--muted); }
+.toggle { width: 34px; height: 19px; border-radius: 99px; background: #2C2C31; position: relative; transition: background .25s ease; flex: none; }
+.toggle::after { content: ""; position: absolute; top: 2.5px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #A1A1AA; transition: transform .25s ease, background .25s ease; }
+.toggle.on { background: var(--violet); }
+.toggle.on::after { transform: translateX(14px); background: #fff; }
+
+/* ============ 参数速览带 ============ */
+.spec-strip { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: #0C0C0E; }
+.strip-grid { display: grid; grid-template-columns: repeat(6, 1fr); }
+.strip-item {
+  padding: 26px 18px;
+  text-align: center;
+  border-left: 1px solid var(--line);
+}
+.strip-item:first-child { border-left: none; }
+.strip-item .v { font-family: var(--mono); font-size: 26px; font-weight: 700; }
+.strip-item .v em { font-style: normal; font-size: 13px; color: var(--cyan); margin-left: 2px; }
+.strip-item .k { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+
+/* ============ 参数规格表 ============ */
+.spec-section { padding: 110px 0; }
+.table-wrap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  overflow-x: auto;
+}
+.spec-table { width: 100%; border-collapse: collapse; min-width: 680px; }
+.spec-table th, .spec-table td {
+  padding: 15px 20px;
+  text-align: left;
+  font-size: 14.5px;
+  border-bottom: 1px solid var(--line);
+}
+.spec-table thead th { font-size: 13px; color: var(--muted); background: #101013; padding-top: 18px; padding-bottom: 18px; }
+.spec-table thead th.param-h { color: #71717A; font-weight: 500; }
+.col-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  padding: 2px 0;
+  transition: color .2s ease;
+}
+.col-btn small { display: block; font-size: 11px; font-weight: 400; color: #71717A; margin-top: 2px; }
+.spec-table td:first-child, .spec-table thead th:first-child { color: var(--muted); font-weight: 400; }
+.spec-table td { color: #C9C9CF; }
+.spec-table td.mono, .spec-table .col-btn { font-variant-numeric: tabular-nums; }
+.spec-table td.mono { font-family: var(--mono); font-size: 13.5px; }
+
+/* 激活列 */
+.spec-table th.active .col-btn { color: var(--text); }
+.spec-table th.active, .spec-table td.active { background: rgba(139,92,246,.08); }
+.spec-table td.active { color: var(--text); font-weight: 600; }
+.spec-table tr.price-row td { font-family: var(--mono); font-size: 17px; font-weight: 700; color: var(--text); }
+.spec-table tr:last-child td { border-bottom: none; }
+.sweep { background-image: linear-gradient(90deg, rgba(139,92,246,.22), rgba(34,211,238,.12)); background-repeat: no-repeat; background-size: 0 100%; animation: col-sweep .65s ease forwards; }
+@keyframes col-sweep { to { background-size: 100% 100%; } }
+
+.spec-note { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; align-items: center; }
+.spec-note .lab { font-size: 13px; color: var(--muted); margin-right: 4px; }
+.compare-chip {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  padding: 6px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--card);
+}
+.compare-chip b { color: var(--cyan); font-weight: 700; }
+.compare-chip.v b { color: #B79CFF; }
+
+/* ============ 场景选项卡 ============ */
+.scene-section { padding: 110px 0; background: #0C0C0E; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.scene-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 36px;
+}
+.scene-tab {
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  font-size: 14.5px;
+  transition: color .2s ease, border-color .2s ease, background .2s ease;
+}
+.scene-tab:hover { color: var(--text); border-color: #3F3F46; }
+.scene-tab.active {
+  color: #fff;
+  border-color: rgba(139,92,246,.6);
+  background: rgba(139,92,246,.16);
+  box-shadow: 0 0 0 1px rgba(139,92,246,.25), 0 6px 22px rgba(139,92,246,.18);
+}
+.scene-panel { display: none; }
+.scene-panel.active { display: grid; animation: panel-in .4s ease; }
+@keyframes panel-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.scene-panel .scene-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+.scene-copy h3 { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 12px; }
+.scene-copy > p { color: var(--muted); margin-bottom: 22px; }
+.scene-points { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.scene-points li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14.5px;
+  color: #D4D4D8;
+}
+.scene-points li svg { flex: none; margin-top: 4px; }
+.scene-points li b { color: var(--cyan); font-family: var(--mono); font-size: 13px; }
+.scene-art {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(139,92,246,.08), transparent 70%),
+    var(--card);
+  padding: 28px;
+}
+
+/* ============ 评价区 ============ */
+.review-section { padding: 110px 0; }
+.rating-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(120deg, rgba(139,92,246,.1), rgba(34,211,238,.05) 60%, transparent), var(--card);
+  padding: 28px 32px;
+  margin-bottom: 22px;
+}
+.rating-score { display: flex; align-items: center; gap: 20px; }
+.rating-score .big { font-family: var(--mono); font-size: 56px; font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
+.rating-score .big em { font-style: normal; font-size: 20px; color: var(--muted); }
+.stars { display: flex; gap: 3px; }
+.stars svg { width: 18px; height: 18px; fill: var(--violet); }
+.stars svg.half { fill: url(#starHalfGrad); }
+.rating-meta { font-size: 13.5px; color: var(--muted); margin-top: 6px; }
+.logo-wall { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 34px; }
+.logo-wall .q { font-size: 14.5px; color: var(--muted); }
+.logo-wall .q b { display: block; color: var(--text); font-size: 15px; font-weight: 700; letter-spacing: .02em; }
+
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 22px;
+}
+.review-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  padding: var(--pad);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: border-color .25s ease, transform .25s ease;
+}
+.review-card:hover { border-color: rgba(139,92,246,.4); transform: translateY(-2px); }
+.review-top { display: flex; align-items: center; gap: 12px; }
+.avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  color: #fff;
+}
+.avatar.v { background: linear-gradient(135deg, #8B5CF6, #6D28D9); }
+.avatar.c { background: linear-gradient(135deg, #0EA5E9, #155E75); }
+.avatar.d { background: linear-gradient(135deg, #7C3AED, #0E7490); }
+.review-who .name { font-size: 14.5px; font-weight: 700; }
+.review-who .role { font-size: 12.5px; color: var(--muted); }
+.review-card blockquote { font-size: 15px; color: #D4D4D8; }
+.review-card blockquote::before { content: "「"; color: var(--violet); font-weight: 700; }
+.review-card blockquote::after { content: "」"; color: var(--violet); font-weight: 700; }
+.review-card .stars svg { width: 15px; height: 15px; }
+
+/* ============ 价格预约 ============ */
+.pricing-section { padding: 110px 0; background: #0C0C0E; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.seg-toggle {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 36px;
+}
+.seg-btn {
+  padding: 9px 20px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  border-radius: 9px;
+  transition: background .2s ease, color .2s ease;
+}
+.seg-btn.active { background: rgba(139,92,246,.22); color: #fff; box-shadow: inset 0 0 0 1px rgba(139,92,246,.45); }
+.price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch; }
+.price-card {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  padding: 30px 26px;
+  display: flex;
+  flex-direction: column;
+  transition: transform .25s ease, border-color .25s ease;
+}
+.price-card:hover { transform: translateY(-4px); border-color: #3F3F46; }
+.price-card.hot {
+  border-color: rgba(139,92,246,.65);
+  background: linear-gradient(180deg, rgba(139,92,246,.09), rgba(139,92,246,.02) 40%), var(--card);
+  box-shadow: 0 18px 48px rgba(139,92,246,.16);
+}
+.price-card.hot:hover { border-color: var(--violet); }
+.hot-badge {
+  position: absolute;
+  top: -13px; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .14em;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--violet), var(--cyan));
+  color: #0B0B0E;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.price-card .p-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.price-card .p-desc { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+.price-line { font-family: var(--mono); margin-bottom: 4px; }
+.price-line .cur { font-size: 16px; color: var(--muted); }
+.price-line .amount { font-size: 38px; font-weight: 700; letter-spacing: -0.02em; }
+.price-line .strike { font-size: 14px; color: #71717A; text-decoration: line-through; margin-left: 8px; }
+.price-sub { font-size: 12.5px; color: var(--cyan); margin-bottom: 22px; min-height: 20px; }
+.p-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 26px; }
+.p-list li { display: flex; gap: 9px; font-size: 13.5px; color: #C9C9CF; align-items: flex-start; }
+.p-list li svg { flex: none; margin-top: 5px; }
+.p-list li.dim { color: #71717A; }
+.price-card .btn { margin-top: auto; width: 100%; }
+.pricing-note { text-align: center; color: var(--muted); font-size: 13px; margin-top: 26px; }
+.pricing-note b { color: var(--text); }
+
+/* ============ 预约表单 ============ */
+.reserve-section { padding: 110px 0; }
+.reserve-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 56px;
+  align-items: center;
+}
+.reserve-copy h2 { font-size: clamp(28px, 3.4vw, 42px); font-weight: 700; letter-spacing: -0.015em; line-height: 1.28; margin-bottom: 16px; }
+.reserve-copy > p { color: var(--muted); margin-bottom: 26px; }
+.reserve-benefits { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+.reserve-benefits li { display: flex; gap: 11px; align-items: flex-start; font-size: 14.5px; color: #D4D4D8; }
+.reserve-benefits li b { color: var(--cyan); font-family: var(--mono); font-weight: 700; }
+.reserve-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  padding: 34px 30px;
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 7px; }
+.field label .req { color: var(--violet); margin-left: 2px; }
+.field input, .field select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #0C0C0F;
+  color: var(--text);
+  font-size: 14.5px;
+  font-family: inherit;
+  transition: border-color .2s ease, box-shadow .2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23A1A1AA' stroke-width='1.6' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+.field input::placeholder { color: #52525B; }
+.field input:focus, .field select:focus {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px rgba(139,92,246,.22), 0 0 22px rgba(139,92,246,.14);
+}
+.field .err-msg { display: none; font-size: 12.5px; color: var(--err); margin-top: 6px; }
+.field.error input, .field.error select { border-color: var(--err); }
+.field.error .err-msg { display: block; }
+.form-submit { width: 100%; margin-top: 6px; padding: 14px; font-size: 15.5px; }
+.form-foot { text-align: center; font-size: 12px; color: #71717A; margin-top: 14px; }
+
+.form-success { display: none; text-align: center; padding: 26px 6px 12px; }
+.reserve-card.done form { display: none; }
+.reserve-card.done .form-success { display: block; }
+.ok-mark { width: 84px; height: 84px; margin: 0 auto 20px; }
+.ok-mark circle {
+  fill: none;
+  stroke: var(--violet);
+  stroke-width: 3;
+  stroke-dasharray: 214;
+  stroke-dashoffset: 214;
+  animation: draw-circle .7s ease forwards;
+}
+.ok-mark path {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: draw-check .45s .55s ease forwards;
+}
+@keyframes draw-circle { to { stroke-dashoffset: 0; } }
+@keyframes draw-check { to { stroke-dashoffset: 0; } }
+.form-success h3 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+.form-success p { color: var(--muted); font-size: 14.5px; margin-bottom: 24px; }
+.form-success p b { color: var(--cyan); }
+
+/* ============ FAQ ============ */
+.faq-section { padding: 110px 0; background: #0C0C0E; border-top: 1px solid var(--line); }
+.faq-list { max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.faq-item {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  overflow: hidden;
+  transition: border-color .25s ease;
+}
+.faq-item.open { border-color: rgba(139,92,246,.5); }
+.faq-q {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 19px 22px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 15.5px;
+  font-weight: 600;
+  text-align: left;
+}
+.faq-q .idx { font-family: var(--mono); font-size: 12px; color: var(--violet); margin-right: 12px; font-weight: 400; }
+.faq-icon { position: relative; width: 18px; height: 18px; flex: none; }
+.faq-icon::before, .faq-icon::after {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 12px; height: 2px;
+  background: var(--muted);
+  transform: translate(-50%, -50%);
+  transition: transform .3s ease, background .3s ease;
+}
+.faq-icon::after { transform: translate(-50%, -50%) rotate(90deg); }
+.faq-item.open .faq-icon::after { transform: translate(-50%, -50%) rotate(0deg); }
+.faq-item.open .faq-icon::before, .faq-item.open .faq-icon::after { background: var(--violet); }
+.faq-a { max-height: 0; overflow: hidden; transition: max-height .35s ease; }
+.faq-a p { padding: 0 22px 20px 54px; color: var(--muted); font-size: 14.5px; }
+
+/* ============ 页脚 CTA + 页脚 ============ */
+.footer-cta { padding: 110px 0 90px; }
+.cta-box {
+  position: relative;
+  border-radius: 20px;
+  padding: 1.5px;
+  background: linear-gradient(120deg, rgba(139,92,246,.9), rgba(34,211,238,.7), rgba(139,92,246,.2));
+  overflow: hidden;
+}
+.cta-box-inner {
+  border-radius: 19px;
+  background:
+    radial-gradient(ellipse 70% 90% at 80% 10%, rgba(34,211,238,.12), transparent 60%),
+    radial-gradient(ellipse 60% 80% at 12% 95%, rgba(139,92,246,.14), transparent 60%),
+    #101013;
+  padding: 64px 40px;
+  text-align: center;
+}
+.cta-box-inner h2 { font-size: clamp(30px, 4.4vw, 52px); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 14px; }
+.cta-box-inner p { color: var(--muted); margin-bottom: 32px; }
+.cta-box-inner .btn { padding: 15px 40px; font-size: 16px; }
+
+.site-footer { border-top: 1px solid var(--line); background: #08080A; padding: 60px 0 34px; }
+.footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
+.footer-brand p { color: var(--muted); font-size: 13.5px; margin-top: 14px; max-width: 300px; }
+.footer-col h4 { font-size: 13px; letter-spacing: .1em; color: var(--text); margin-bottom: 16px; }
+.footer-col a { display: block; font-size: 13.5px; color: var(--muted); padding: 5px 0; transition: color .2s ease; }
+.footer-col a:hover { color: var(--cyan); }
+.footer-bottom {
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: #71717A;
+}
+
+/* ============ 浮动元素 ============ */
+.back-top {
+  position: fixed;
+  right: 26px; bottom: 26px;
+  z-index: 90;
+  width: 46px; height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(19,19,22,.9);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity .3s ease, transform .3s ease, border-color .2s ease, color .2s ease;
+}
+.back-top.show { opacity: 1; transform: none; pointer-events: auto; }
+.back-top:hover { border-color: var(--violet); color: var(--text); }
+
+.toast {
+  position: fixed;
+  left: 50%; bottom: 34px;
+  transform: translate(-50%, 16px);
+  z-index: 300;
+  background: #1C1C21;
+  border: 1px solid rgba(139,92,246,.5);
+  color: var(--text);
+  font-size: 14px;
+  padding: 11px 22px;
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease, transform .3s ease;
+  max-width: calc(100% - 40px);
+  text-align: center;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ============ 响应式 ============ */
+@media (max-width: 1100px) {
+  .strip-grid { grid-template-columns: repeat(3, 1fr); }
+  .strip-item:nth-child(4) { border-left: none; }
+  .strip-item { border-top: 1px solid var(--line); }
+  .strip-item:nth-child(-n+3) { border-top: none; }
+}
+
+@media (max-width: 980px) {
+  .bento-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: minmax(180px, auto); }
+  .hero-grid { grid-template-columns: 1fr; gap: 30px; min-height: 0; }
+  .hero-visual { order: -1; }
+  .hero-visual .product-svg { width: min(360px, 80%); }
+  .hero { padding: 44px 0 80px; }
+  .reserve-grid { grid-template-columns: 1fr; gap: 40px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 900px) {
+  .nav-links, .site-header .nav-cta { display: none; }
+  .nav-toggle { display: flex; }
+}
+
+@media (max-width: 767px) {
+  body { padding-top: 60px; }
+  .container { width: calc(100% - 36px); }
+  .bento-section, .spec-section, .scene-section, .review-section,
+  .pricing-section, .reserve-section, .faq-section, .footer-cta { padding: 72px 0; }
+  .bento-grid { grid-template-columns: 1fr; grid-auto-rows: auto; }
+  .b-card.span-2x2, .b-card.span-2x1 { grid-column: span 1; grid-row: auto; }
+  .b-card { min-height: 0; }
+  .b-visual { margin-top: 18px; }
+  .strip-grid { grid-template-columns: repeat(2, 1fr); }
+  .strip-item { border-left: none; border-top: 1px solid var(--line); }
+  .strip-item:nth-child(-n+2) { border-top: none; }
+  .strip-item:nth-child(even) { border-left: 1px solid var(--line); }
+  .scene-panel.active { grid-template-columns: 1fr; gap: 26px; }
+  .review-grid { grid-template-columns: 1fr; }
+  .price-grid { grid-template-columns: 1fr; }
+  .price-card.hot { order: -1; }
+  .form-row { grid-template-columns: 1fr; }
+  .reserve-card { padding: 26px 20px; }
+  .hero-stats .stat { min-width: 88px; padding-right: 10px; }
+  .hero-stats .stat + .stat { padding-left: 10px; }
+  .hero-stats .num { font-size: 19px; }
+  .cta-box-inner { padding: 46px 22px; }
+  .faq-a p { padding-left: 22px; }
+  .faq-q { font-size: 14.5px; padding: 16px 18px; }
+  .faq-q .idx { display: none; }
+  .chip-callout { display: none; }
+  .rating-banner { padding: 24px 20px; }
+  .rating-score .big { font-size: 44px; }
+  .logo-wall { gap: 10px 22px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 28px; margin-bottom: 34px; }
+  .scene-tabs { gap: 8px; }
+  .scene-tab { padding: 8px 16px; font-size: 13.5px; }
+}
+
+/* 尊重系统减少动效偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body id="top">
+
+<div class="aurora-band" aria-hidden="true"></div>
+
+<!-- ============ 导航 ============ -->
+<header class="site-header" id="siteHeader">
+  <div class="container nav-inner">
+    <a class="brand" href="#top" aria-label="AURA 首页">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <defs>
+          <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#22D3EE"/>
+          </linearGradient>
+        </defs>
+        <circle cx="16" cy="16" r="12.5" fill="none" stroke="url(#brandGrad)" stroke-width="2.6" stroke-dasharray="58 22" stroke-linecap="round"/>
+        <circle cx="16" cy="16" r="7" fill="none" stroke="#3F3F46" stroke-width="1.6"/>
+        <circle cx="16" cy="16" r="2.6" fill="#22D3EE"/>
+      </svg>
+      AURA <span class="sub">ACOUSTICS</span>
+    </a>
+    <nav class="nav-links" aria-label="主导航">
+      <a href="#features" data-spy>特性</a>
+      <a href="#specs" data-spy>参数</a>
+      <a href="#scenes" data-spy>场景</a>
+      <a href="#reviews" data-spy>评价</a>
+      <a href="#faq" data-spy>FAQ</a>
+    </nav>
+    <a class="btn btn-primary nav-cta" href="#reserve">立即预订</a>
+    <button class="nav-toggle" id="navToggle" aria-label="打开菜单" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#features">特性</a>
+  <a href="#specs">参数</a>
+  <a href="#scenes">场景</a>
+  <a href="#reviews">评价</a>
+  <a href="#pricing">价格</a>
+  <a href="#faq">FAQ</a>
+  <a href="#reserve" style="color:#B79CFF;font-weight:600;">立即预订 →</a>
+</div>
+
+<main>
+<!-- ============ Hero ============ -->
+<section class="hero" aria-label="产品主视觉">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <span class="hero-badge"><span class="dot" aria-hidden="true"></span>全新一代 · AURA Halo 1 现已开启预约</span>
+      <h1>世界静音，<br>只剩<span class="grad">音乐</span>。</h1>
+      <p class="hero-sub"><strong>48 小时续航 · 逐点降噪 · 一副听完全球。</strong><br>
+      AURA Halo 1 以每 200ms 扫描一次的逐点自适应降噪，与录音室级 40mm 复合振膜，把地铁、机舱与开放办公区，都变成你的私人听音室。</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="#reserve">立即预约首发
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9M8.5 3.5 13 8l-4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a class="btn btn-ghost" href="#specs">查看完整参数</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="num">-<span data-count-to="42" data-duration="1500">0</span><em>dB</em></div>
+          <div class="lab">降噪深度</div>
+        </div>
+        <div class="stat">
+          <div class="num"><span data-count-to="40" data-duration="1500">0</span><em>h</em></div>
+          <div class="lab">开降噪续航</div>
+        </div>
+        <div class="stat">
+          <div class="num"><span data-count-to="198" data-duration="1500">0</span><em>g</em></div>
+          <div class="lab">整机重量</div>
+        </div>
+        <div class="stat">
+          <div class="num"><span data-count-to="4.9" data-decimals="1" data-duration="1500">0</span><em>/5</em></div>
+          <div class="lab">用户评分</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual" aria-label="AURA Halo 1 耳机产品图">
+      <div class="glow" aria-hidden="true"></div>
+      <svg class="product-svg" viewBox="0 0 560 620" role="img" aria-label="AURA Halo 1 头戴式降噪耳机正面渲染图">
+        <defs>
+          <linearGradient id="bandGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#33333B"/>
+            <stop offset=".5" stop-color="#1B1B21"/>
+            <stop offset="1" stop-color="#3A3A44"/>
+          </linearGradient>
+          <linearGradient id="innerBandGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#26262D"/>
+            <stop offset=".5" stop-color="#141418"/>
+            <stop offset="1" stop-color="#2A2A32"/>
+          </linearGradient>
+          <linearGradient id="cupGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2A2A32"/>
+            <stop offset=".55" stop-color="#17171C"/>
+            <stop offset="1" stop-color="#101014"/>
+          </linearGradient>
+          <radialGradient id="plateGrad" cx=".38" cy=".32" r=".95">
+            <stop offset="0" stop-color="#34343E"/>
+            <stop offset=".6" stop-color="#1D1D23"/>
+            <stop offset="1" stop-color="#121216"/>
+          </radialGradient>
+          <radialGradient id="cushionGrad" cx=".5" cy=".45" r=".8">
+            <stop offset=".62" stop-color="#0A0A0C"/>
+            <stop offset="1" stop-color="#1C1C22"/>
+          </radialGradient>
+          <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#8B5CF6"/>
+            <stop offset="1" stop-color="#22D3EE"/>
+          </linearGradient>
+          <linearGradient id="sliderGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#3E3E48"/>
+            <stop offset="1" stop-color="#1A1A1F"/>
+          </linearGradient>
+          <filter id="ledGlow" x="-260%" y="-260%" width="620%" height="620%">
+            <feGaussianBlur stdDeviation="4" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- 头梁 -->
+        <path d="M96 330 A184 184 0 0 1 464 330" fill="none" stroke="url(#bandGrad)" stroke-width="30" stroke-linecap="round"/>
+        <path d="M120 332 A160 160 0 0 1 440 332" fill="none" stroke="url(#innerBandGrad)" stroke-width="13" stroke-linecap="round"/>
+        <path d="M158 200 A172 172 0 0 1 300 146" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="5" stroke-linecap="round"/>
+
+        <!-- 伸缩滑臂 -->
+        <rect x="82" y="322" width="28" height="52" rx="11" fill="url(#sliderGrad)" stroke="#2E2E36" stroke-width="1"/>
+        <rect x="450" y="322" width="28" height="52" rx="11" fill="url(#sliderGrad)" stroke="#2E2E36" stroke-width="1"/>
+        <rect x="88" y="330" width="4" height="30" rx="2" fill="rgba(255,255,255,.10)"/>
+        <rect x="468" y="330" width="4" height="30" rx="2" fill="rgba(255,255,255,.10)"/>
+
+        <!-- 左耳罩 -->
+        <g>
+          <ellipse cx="96" cy="446" rx="64" ry="76" fill="url(#cushionGrad)"/>
+          <ellipse cx="97" cy="444" rx="55" ry="67" fill="url(#cupGrad)" stroke="#2E2E36" stroke-width="1.2"/>
+          <ellipse cx="97" cy="444" rx="41" ry="52" fill="url(#plateGrad)" stroke="#32323A" stroke-width="1"/>
+          <ellipse cx="97" cy="444" rx="41" ry="52" fill="none" stroke="url(#accentGrad)" stroke-width="1.6" opacity=".85"/>
+          <text x="97" y="451" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700" fill="#5B5B66">L</text>
+          <circle cx="86" cy="502" r="2.6" fill="#26262D"/>
+          <circle cx="108" cy="502" r="2.6" fill="#26262D"/>
+        </g>
+
+        <!-- 右耳罩 -->
+        <g>
+          <ellipse cx="464" cy="446" rx="64" ry="76" fill="url(#cushionGrad)"/>
+          <ellipse cx="463" cy="444" rx="55" ry="67" fill="url(#cupGrad)" stroke="#2E2E36" stroke-width="1.2"/>
+          <ellipse cx="463" cy="444" rx="41" ry="52" fill="url(#plateGrad)" stroke="#32323A" stroke-width="1"/>
+          <ellipse cx="463" cy="444" rx="41" ry="52" fill="none" stroke="url(#accentGrad)" stroke-width="1.6" opacity=".85"/>
+          <text x="463" y="451" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700" fill="#5B5B66">R</text>
+          <circle cx="463" cy="414" r="4" fill="#22D3EE" filter="url(#ledGlow)"/>
+          <circle cx="453" cy="502" r="2.6" fill="#26262D"/>
+          <circle cx="475" cy="502" r="2.6" fill="#26262D"/>
+        </g>
+      </svg>
+      <div class="chip-callout c1"><span class="tick" aria-hidden="true"></span>逐点降噪 <b>-42dB</b></div>
+      <div class="chip-callout c2"><span class="tick" aria-hidden="true"></span>续航 <b>48h</b> · <b>198g</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Bento 特性网格 ============ -->
+<section class="bento-section" id="features">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">FEATURES · 六种安静</span>
+      <h2>为嘈杂世界设计的便当盒</h2>
+      <p>六个维度，把「安静」拆解成可以度量的工程。鼠标移上去，看它们依次亮起。</p>
+    </div>
+
+    <div class="bento-grid">
+      <!-- 大卡：逐点降噪 -->
+      <article class="b-card span-2x2 reveal">
+        <span class="b-tag">ADAPTIVE ANC</span>
+        <h3>逐点自适应降噪</h3>
+        <p>每 200ms 扫描一次环境声，48 个独立降噪分区逐点补偿。地铁的低频轰鸣、机舱的持续白噪、咖啡馆的人声嘈杂——各有各的安静法。</p>
+        <div class="b-visual" aria-hidden="true">
+          <svg viewBox="0 0 420 150">
+            <defs>
+              <linearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#22D3EE"/>
+              </linearGradient>
+            </defs>
+            <line x1="10" y1="75" x2="410" y2="75" stroke="#27272A" stroke-width="1" stroke-dasharray="4 6"/>
+            <g class="noise-bars" fill="#3F3F46">
+              <rect x="14" y="43" width="5" height="64" rx="2.5"/>
+              <rect x="24" y="28" width="5" height="94" rx="2.5"/>
+              <rect x="34" y="52" width="5" height="46" rx="2.5"/>
+              <rect x="44" y="18" width="5" height="114" rx="2.5"/>
+              <rect x="54" y="38" width="5" height="74" rx="2.5"/>
+              <rect x="64" y="24" width="5" height="102" rx="2.5"/>
+              <rect x="74" y="48" width="5" height="54" rx="2.5"/>
+              <rect x="84" y="14" width="5" height="122" rx="2.5"/>
+              <rect x="94" y="34" width="5" height="82" rx="2.5"/>
+              <rect x="104" y="46" width="5" height="58" rx="2.5"/>
+              <rect x="114" y="26" width="5" height="98" rx="2.5"/>
+            </g>
+            <path class="wave-line" d="M118 75 C 140 45, 162 105, 184 75 S 228 45, 250 75 S 294 105, 316 75 S 360 45, 382 75 S 404 92, 410 80"
+              fill="none" stroke="url(#waveGrad)" stroke-width="3" stroke-linecap="round"/>
+            <text x="16" y="138" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#71717A">环境噪声</text>
+            <text x="330" y="138" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#22D3EE">HALO 1 之后</text>
+          </svg>
+        </div>
+        <div class="b-foot">扫描周期 200ms · 降噪分区 48 · 深度 -42dB</div>
+      </article>
+
+      <!-- 宽卡：续航 -->
+      <article class="b-card span-2x1 reveal d1">
+        <span class="b-tag cy">BATTERY</span>
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:18px;">
+          <div>
+            <h3>48 小时超长续航</h3>
+            <p>北京飞纽约往返，一次充电就够了。关降噪最长 60 小时。</p>
+          </div>
+          <div class="num-big"><span data-count-to="48" data-duration="1600">0</span><em>h</em></div>
+        </div>
+        <div class="meter" style="--meter:83%;" aria-hidden="true"><i></i></div>
+        <div class="b-foot">开降噪 40h · 关降噪 60h · 待机 300h</div>
+      </article>
+
+      <!-- 小卡：双设备 -->
+      <article class="b-card reveal d2">
+        <span class="b-tag">MULTIPOINT</span>
+        <h3>双设备无缝切换</h3>
+        <p>电脑会议、手机来电，0.3 秒自动接续，不用摘耳机。</p>
+        <div class="b-foot" aria-hidden="true">
+          <div class="duo-devices">
+            <svg width="26" height="20" viewBox="0 0 26 20" fill="none"><rect x="1" y="1" width="20" height="13" rx="2" stroke="#71717A" stroke-width="1.5"/><path d="M7 18h9" stroke="#71717A" stroke-width="1.5" stroke-linecap="round"/><rect x="17" y="6" width="8" height="13" rx="1.6" fill="#131316" stroke="#8B5CF6" stroke-width="1.4"/></svg>
+            <span class="link-line"></span>
+            <span class="duo-pill">0.3s</span>
+            <span class="link-line"></span>
+            <svg width="16" height="22" viewBox="0 0 16 22" fill="none"><rect x="1" y="1" width="14" height="20" rx="3" stroke="#71717A" stroke-width="1.5"/><circle cx="8" cy="17.6" r="1.2" fill="#22D3EE"/></svg>
+          </div>
+        </div>
+      </article>
+
+      <!-- 小卡：振膜 -->
+      <article class="b-card reveal d3">
+        <span class="b-tag cy">DRIVER</span>
+        <h3>40mm 复合振膜</h3>
+        <p>高音透亮，低音下潜至 8Hz，久听不闷。</p>
+        <div class="b-foot" aria-hidden="true">
+          <svg viewBox="0 0 190 56" style="margin:0 auto;">
+            <circle cx="40" cy="28" r="24" fill="none" stroke="#27272A" stroke-width="1.5"/>
+            <circle cx="40" cy="28" r="16" fill="none" stroke="#3F3F46" stroke-width="1.5"/>
+            <circle cx="40" cy="28" r="8" fill="none" stroke="url(#waveGrad)" stroke-width="2"/>
+            <circle cx="40" cy="28" r="2.4" fill="#8B5CF6"/>
+            <text x="76" y="24" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700" fill="#FAFAFA">40mm</text>
+            <text x="76" y="41" font-family="JetBrains Mono, monospace" font-size="10" fill="#71717A">8Hz – 40kHz</text>
+          </svg>
+        </div>
+      </article>
+
+      <!-- 小卡：重量 -->
+      <article class="b-card reveal">
+        <span class="b-tag">COMFORT</span>
+        <h3>198g 云感佩戴</h3>
+        <p>记忆海绵耳垫 + 头梁减压带，戴一天也只是「没戴」。</p>
+        <div class="b-foot" style="display:flex;align-items:center;gap:14px;">
+          <svg width="52" height="34" viewBox="0 0 52 34" fill="none" aria-hidden="true"><path d="M4 28 C 14 6, 34 2, 48 6 C 40 10, 36 12, 30 18 C 40 16, 44 16, 50 20 C 38 22, 30 24, 22 26 C 28 26, 32 27, 36 29 C 24 32, 10 32, 4 28 Z" stroke="#22D3EE" stroke-width="1.4" fill="rgba(34,211,238,.07)"/></svg>
+          <span class="duo-pill" style="color:#B79CFF;border-color:rgba(139,92,246,.4);">198g ≈ 3 枚鸡蛋</span>
+        </div>
+      </article>
+
+      <!-- 宽卡：快充 -->
+      <article class="b-card span-2x1 reveal d1">
+        <span class="b-tag cy">FAST CHARGE</span>
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:18px;">
+          <div>
+            <h3>5 分钟快充 4 小时</h3>
+            <p>出门前刷牙的时间，够听一整个通勤。USB-C 正反插。</p>
+          </div>
+          <svg width="54" height="66" viewBox="0 0 54 66" aria-hidden="true">
+            <rect x="17" y="2" width="20" height="6" rx="2" fill="#3F3F46"/>
+            <rect x="6" y="8" width="42" height="52" rx="8" fill="none" stroke="url(#waveGrad)" stroke-width="2.4"/>
+            <rect x="11" y="13" width="32" height="42" rx="5" fill="rgba(139,92,246,.12)"/>
+            <path d="M30 20 20 38h8l-4 12 12-18h-8z" fill="#22D3EE"/>
+          </svg>
+        </div>
+        <div class="meter" style="--meter:100%;" aria-hidden="true"><i></i></div>
+        <div class="b-foot">充电 5min → 播放 4h · 充满 1.5h</div>
+      </article>
+
+      <!-- 小卡：App -->
+      <article class="b-card reveal d2">
+        <span class="b-tag">AURA SYNC</span>
+        <h3>Aura Sync App</h3>
+        <p>降噪 20 级可调，固件 OTA 持续进化。</p>
+        <div class="mini-ui" aria-hidden="true">
+          <div class="row"><span>自适应降噪</span><span class="toggle on"></span></div>
+          <div class="row"><span>通透模式</span><span class="toggle"></span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 参数速览带 ============ -->
+<aside class="spec-strip" aria-label="核心参数速览">
+  <div class="container strip-grid">
+    <div class="strip-item reveal"><div class="v">-<span data-count-to="42" data-duration="1300">0</span><em>dB</em></div><div class="k">降噪深度</div></div>
+    <div class="strip-item reveal d1"><div class="v"><span data-count-to="40" data-duration="1300">0</span><em>h</em></div><div class="k">开降噪续航</div></div>
+    <div class="strip-item reveal d2"><div class="v"><span data-count-to="40" data-duration="1300">0</span><em>mm</em></div><div class="k">驱动单元</div></div>
+    <div class="strip-item reveal"><div class="v"><span data-count-to="198" data-duration="1300">0</span><em>g</em></div><div class="k">整机重量</div></div>
+    <div class="strip-item reveal d1"><div class="v"><span data-count-to="5.4" data-decimals="1" data-duration="1300">0</span></div><div class="k">蓝牙版本</div></div>
+    <div class="strip-item reveal d2"><div class="v"><span data-count-to="12847" data-duration="1500">0</span><em>+</em></div><div class="k">真实评价</div></div>
+  </div>
+</aside>
+
+<!-- ============ 参数规格表 ============ -->
+<section class="spec-section" id="specs">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">SPECS · 三档全系</span>
+      <h2>参数规格表</h2>
+      <p>点击表头，聚焦任意版本——SE、标准与 Pro 共用同一副骨架，差别只在安静的程度。</p>
+    </div>
+
+    <div class="table-wrap reveal">
+      <table class="spec-table" id="specTable">
+        <thead>
+          <tr>
+            <th class="param-h" scope="col">参数 / 型号</th>
+            <th scope="col"><button class="col-btn" data-col="1" type="button">Halo 1 SE<small>轻盈入门</small></button></th>
+            <th scope="col" class="active"><button class="col-btn" data-col="2" type="button">Halo 1<small>本次主角 · 推荐</small></button></th>
+            <th scope="col"><button class="col-btn" data-col="3" type="button">Halo 1 Pro<small>极致旗舰</small></button></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>降噪深度</td>
+            <td class="mono">-32dB</td><td class="mono active">-42dB</td><td class="mono">-48dB</td>
+          </tr>
+          <tr>
+            <td>续航（开降噪）</td>
+            <td class="mono">30h</td><td class="mono active">40h</td><td class="mono">48h</td>
+          </tr>
+          <tr>
+            <td>驱动单元</td>
+            <td class="mono">38mm</td><td class="mono active">40mm 复合振膜</td><td class="mono">40mm 镀铍</td>
+          </tr>
+          <tr>
+            <td>蓝牙</td>
+            <td class="mono">5.3</td><td class="mono active">5.4</td><td class="mono">5.4 + LC3</td>
+          </tr>
+          <tr>
+            <td>通透模式</td>
+            <td>标准</td><td class="active">自适应通透</td><td>自适应通透 +</td>
+          </tr>
+          <tr>
+            <td>整机重量</td>
+            <td class="mono">205g</td><td class="mono active">198g</td><td class="mono">192g</td>
+          </tr>
+          <tr>
+            <td>快充</td>
+            <td class="mono">10min → 2h</td><td class="mono active">5min → 4h</td><td class="mono">5min → 5h</td>
+          </tr>
+          <tr>
+            <td>防尘防水</td>
+            <td class="mono">IPX4</td><td class="mono active">IPX4</td><td class="mono">IPX4</td>
+          </tr>
+          <tr class="price-row">
+            <td>预约价</td>
+            <td>¥899</td><td class="active">¥1,299</td><td>¥1,799</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="spec-note reveal">
+      <span class="lab">对比上代 AURA Air 2：</span>
+      <span class="compare-chip v">降噪深度 <b>+40%</b></span>
+      <span class="compare-chip v">续航 <b>+33%</b></span>
+      <span class="compare-chip">整机减重 <b>-7g</b></span>
+      <span class="compare-chip">新增双设备连接 <b>Multipoint</b></span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 场景选项卡 ============ -->
+<section class="scene-section" id="scenes">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">SCENES · 四种场景</span>
+      <h2>一副耳机，装下四种世界</h2>
+      <p>同一个降噪引擎，在不同场景里切换成四种性格。</p>
+    </div>
+
+    <div class="scene-tabs reveal" role="tablist" aria-label="使用场景">
+      <button class="scene-tab active" role="tab" aria-selected="true" data-scene="s1" type="button">通勤地铁</button>
+      <button class="scene-tab" role="tab" aria-selected="false" data-scene="s2" type="button">跨洲差旅</button>
+      <button class="scene-tab" role="tab" aria-selected="false" data-scene="s3" type="button">开放办公</button>
+      <button class="scene-tab" role="tab" aria-selected="false" data-scene="s4" type="button">深夜居家</button>
+    </div>
+
+    <!-- 场景 1 -->
+    <div class="scene-panel active" id="s1" role="tabpanel">
+      <div class="scene-grid">
+        <div class="scene-copy">
+          <h3>早高峰 2 号线，把轰鸣调成背景</h3>
+          <p>轮轨摩擦与隧道风噪集中在 80–300Hz，逐点降噪对这一频段额外加权 22%，报站声依旧可闻——该安静的地方安静，该听见的地方听得见。</p>
+          <ul class="scene-points">
+            <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>低频噪声抵消 <b>+22%</b>，隧道风噪显著收敛</span></li>
+            <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>捂耳即可一键切换<b>自适应通透</b>，对话不摘机</span></li>
+            <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>单程 40 分钟通勤 × 60 个工作日 = <b>40h</b> 免充电</span></li>
+          </ul>
+        </div>
+        <div class="scene-art" aria-hidden="true">
+          <svg viewBox="0 0 320 220" fill="none">
+            <rect x="30" y="50" width="260" height="120" rx="16" stroke="#3F3F46" stroke-width="2"/>
+            <rect x="52" y="72" width="70" height="46" rx="8" stroke="#52525B" stroke-width="1.6"/>
+            <rect x="198" y="72" width="70" height="46" rx="8" stroke="#52525B" stroke-width="1.6"/>
+            <line x1="160" y1="50" x2="160" y2="90" stroke="#3F3F46" stroke-width="1.4"/>
+            <line x1="140" y1="90" x2="140" y2="122" stroke="#52525B" stroke-width="1.6"/>
+            <circle cx="140" cy="132" r="10" stroke="#8B5CF6" stroke-width="1.8"/>
+            <path d="M36 148 Q90 190 160 186 T284 150" stroke="url(#waveGrad)" stroke-width="2.4" stroke-linecap="round" opacity=".9"/>
+            <g stroke="#71717A" stroke-width="1.6" stroke-linecap="round">
+              <path d="M60 96 q6 -8 0 -16"/><path d="M68 100 q9 -12 0 -24"/>
+            </g>
+            <line x1="52" y1="126" x2="82" y2="96" stroke="#F87171" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="248" cy="132" r="3" fill="#22D3EE"/>
+            <text x="150" y="205" font-family="JetBrains Mono, monospace" font-size="10" fill="#52525B" text-anchor="middle">METRO · ANC ON</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 场景 2 -->
+    <div class="scene-panel" id="s2" role="tabpanel">
+      <div class="scene-grid">
+        <div class="scene-copy">
+          <h3>12 小时红眼航班，落地还剩一半电</h3>
+          <p>机舱噪声是持续、稳定的低频墙，Halo 1 用恒定抵消策略压住它，而不是反复拉扯耳压。落地开箱开会，电量还够撑完转机。</p>
+          <ul class="scene-points">
+            <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>40h</b> 开降噪续航，京沪出发往返一趟不插电</span></li>
+            <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>耳压平衡阀设计，起降阶段<b>无闷胀感</b></span></li>
+            <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>3.5mm 有线模式，<b>零延迟</b>接机载娱乐系统</span></li>
+          </ul>
+        </div>
+        <div class="scene-art" aria-hidden="true">
+          <svg viewBox="0 0 320 220" fill="none">
+            <path d="M20 170 Q 160 120 300 158" stroke="#3F3F46" stroke-width="1.6" stroke-dasharray="3 8" stroke-linecap="round"/>
+            <g transform="translate(160 108) rotate(-8)">
+              <path d="M-56 10 C -30 2, -8 -2, 26 -4 L 46 -6 C 54 -7, 58 -2, 52 4 L 30 14 C 6 20, -22 20, -44 16 Z" fill="#1C1C22" stroke="#8B5CF6" stroke-width="1.8"/>
+              <path d="M-6 -4 L 6 -30 L 16 -30 L 8 -4 Z" fill="#1C1C22" stroke="#8B5CF6" stroke-width="1.6"/>
+              <path d="M-2 12 L 12 32 L 2 32 L -12 13 Z" fill="#1C1C22" stroke="#8B5CF6" stroke-width="1.6"/>
+              <circle cx="40" cy="-1" r="2.4" fill="#22D3EE"/>
+            </g>
+            <g stroke="#52525B" stroke-width="1.4" opacity=".8">
+              <path d="M52 62 q10 -14 24 -6 q6 -12 20 -8"/>
+              <path d="M226 52 q10 -12 22 -6 q5 -10 17 -7"/>
+            </g>
+            <text x="56" y="196" font-family="JetBrains Mono, monospace" font-size="10" fill="#52525B">PEK → JFK · 12H 05M</text>
+            <text x="222" y="196" font-family="JetBrains Mono, monospace" font-size="10" fill="#22D3EE">BATTERY 52%</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 场景 3 -->
+    <div class="scene-panel" id="s3" role="tabpanel">
+      <div class="scene-grid">
+        <div class="scene-copy">
+          <h3>把开放工位，变成单人专注舱</h3>
+          <p>键盘声与邻座通话集中在 1–4kHz 人声频段，通透模式反向增强该频段抑制。电脑会议进行中，手机来电 0.3 秒无缝接入——同事以为你消失了，其实你从未离线。</p>
+          <ul class="scene-points">
+            <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>双设备连接，会议 / 来电 <b>0.3s</b> 自动切换</span></li>
+            <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>六麦通话降噪，风噪场景同事照样<b>听清你</b></span></li>
+            <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>摘下即暂停，戴上即续播，<b>佩戴检测</b>全自动</span></li>
+          </ul>
+        </div>
+        <div class="scene-art" aria-hidden="true">
+          <svg viewBox="0 0 320 220" fill="none">
+            <rect x="90" y="46" width="140" height="92" rx="8" fill="#101014" stroke="#3F3F46" stroke-width="2"/>
+            <rect x="102" y="58" width="116" height="52" rx="4" fill="rgba(139,92,246,.1)"/>
+            <path d="M112 96 l14 -14 10 8 16 -20 12 12 10 -6 14 18" stroke="#8B5CF6" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+            <line x1="160" y1="138" x2="160" y2="156" stroke="#3F3F46" stroke-width="2"/>
+            <line x1="132" y1="162" x2="188" y2="162" stroke="#3F3F46" stroke-width="2" stroke-linecap="round"/>
+            <rect x="60" y="176" width="90" height="14" rx="7" fill="#141418" stroke="#27272A" stroke-width="1.4"/>
+            <g transform="translate(216 150)">
+              <rect x="0" y="0" width="52" height="40" rx="10" fill="#131316" stroke="#22D3EE" stroke-width="1.6"/>
+              <circle cx="15" cy="14" r="4" fill="#22D3EE"/>
+              <path d="M8 28 q7 -10 14 0 M22 28 q7 -10 14 0" stroke="#52525B" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+            </g>
+            <line x1="206" y1="170" x2="216" y2="170" stroke="#22D3EE" stroke-width="1.6" stroke-dasharray="3 4"/>
+            <text x="60" y="214" font-family="JetBrains Mono, monospace" font-size="10" fill="#52525B">FOCUS MODE · MEETING LINKED</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 场景 4 -->
+    <div class="scene-panel" id="s4" role="tabpanel">
+      <div class="scene-grid">
+        <div class="scene-copy">
+          <h3>深夜宅家，低音只吵醒你自己</h3>
+          <p>家人已睡，电影的白噪与爆炸声却停不下来？Halo 1 的封闭耳罩把声场锁在耳边，8Hz 下潜带来影院级的体感低频，而不打扰一米外的任何人。</p>
+          <ul class="scene-points">
+            <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>封闭腔体被动隔声 <b>-18dB</b>，夜看电影不扰民</span></li>
+            <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>记忆海绵耳垫 <b>0 压迫感</b>，连续 6 小时实测</span></li>
+            <li><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Aura Sync 均衡器，一键切换<b>影院 / 人声</b>声场</span></li>
+          </ul>
+        </div>
+        <div class="scene-art" aria-hidden="true">
+          <svg viewBox="0 0 320 220" fill="none">
+            <path d="M258 44 a34 34 0 1 0 24 58 a28 28 0 0 1 -24 -58 Z" fill="rgba(139,92,246,.16)" stroke="#8B5CF6" stroke-width="1.8"/>
+            <g stroke="#52525B" stroke-width="1.5" stroke-linecap="round">
+              <circle cx="66" cy="58" r="1.6" fill="#52525B"/>
+              <circle cx="92" cy="40" r="1.2" fill="#52525B"/>
+              <circle cx="112" cy="70" r="1.4" fill="#52525B"/>
+            </g>
+            <line x1="40" y1="180" x2="280" y2="180" stroke="#27272A" stroke-width="2"/>
+            <path d="M64 180 L96 132 H212 L244 180" fill="#101014" stroke="#3F3F46" stroke-width="2"/>
+            <rect x="108" y="146" width="92" height="20" rx="4" fill="rgba(34,211,238,.08)" stroke="#22D3EE" stroke-width="1.2"/>
+            <g fill="#22D3EE">
+              <path d="M236 150 v-14 l9 -2 v14" stroke="#22D3EE" stroke-width="1.6" fill="none"/>
+              <circle cx="233.5" cy="150" r="3"/>
+              <circle cx="242.5" cy="148" r="3"/>
+            </g>
+            <text x="70" y="212" font-family="JetBrains Mono, monospace" font-size="10" fill="#52525B">MIDNIGHT · CINEMA EQ</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 评价区 ============ -->
+<section class="review-section" id="reviews">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">REVIEWS · 真实口碑</span>
+      <h2>他们在安静里说了什么</h2>
+      <p>来自首批内测用户与媒体的 12,847 条评价，未经修饰，照单全收。</p>
+    </div>
+
+    <div class="rating-banner reveal">
+      <div class="rating-score">
+        <div class="big">4.9<em>/5</em></div>
+        <div>
+          <div class="stars" aria-label="评分 4.9 星（满分 5 星）">
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><defs><linearGradient id="starHalfGrad" x1="0" y1="0" x2="1" y2="0"><stop offset=".9" stop-color="#8B5CF6"/><stop offset=".9" stop-color="#3F3F46"/></linearGradient></defs><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+          </div>
+          <div class="rating-meta">综合评分 · 来自 <b style="color:var(--text)">12,847</b> 条真实评价</div>
+        </div>
+      </div>
+      <div class="logo-wall">
+        <span class="q"><b>数字尾巴</b>「戴上的一瞬间，办公室消失了。」</span>
+        <span class="q"><b>极客公园</b>「年度续航怪物。」</span>
+      </div>
+    </div>
+
+    <div class="review-grid">
+      <article class="review-card reveal">
+        <div class="review-top">
+          <span class="avatar v" aria-hidden="true">林</span>
+          <div class="review-who">
+            <div class="name">林晚舟</div>
+            <div class="role">数字尾巴 · 主编</div>
+          </div>
+          <div class="stars" style="margin-left:auto" aria-label="5 星好评">
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+          </div>
+        </div>
+        <blockquote>戴上的一瞬间，办公室消失了。我们测过 14 款旗舰降噪耳机，Halo 1 是第一个让我忘记「降噪」这个参数本身的产品。</blockquote>
+      </article>
+
+      <article class="review-card reveal d1">
+        <div class="review-top">
+          <span class="avatar c" aria-hidden="true">极</span>
+          <div class="review-who">
+            <div class="name">极客公园评测部</div>
+            <div class="role">年度评选 · 编辑推荐</div>
+          </div>
+          <div class="stars" style="margin-left:auto" aria-label="5 星好评">
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+          </div>
+        </div>
+        <blockquote>年度续航怪物。实验室实测开降噪连续播放 41.6 小时，比标称还多 1.6 小时——北京飞纽约往返两趟，我只充了一次电。</blockquote>
+      </article>
+
+      <article class="review-card reveal d2">
+        <div class="review-top">
+          <span class="avatar d" aria-hidden="true">茅</span>
+          <div class="review-who">
+            <div class="name">阿茅不忙</div>
+            <div class="role">数码博主 · 82 万粉丝</div>
+          </div>
+          <div class="stars" style="margin-left:auto" aria-label="5 星好评">
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+          </div>
+        </div>
+        <blockquote>双设备切换快到怀疑人生：电脑上开着会，手机来电「嘀」一声就接进来了，再也不用在蓝牙设置里手忙脚乱。</blockquote>
+      </article>
+
+      <article class="review-card reveal d3">
+        <div class="review-top">
+          <span class="avatar v" aria-hidden="true">陈</span>
+          <div class="review-who">
+            <div class="name">陈默</div>
+            <div class="role">少数派 · 作者</div>
+          </div>
+          <div class="stars" style="margin-left:auto" aria-label="4 星好评">
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="#3F3F46"><path d="M12 2.6 14.9 8.6l6.5.9-4.7 4.6 1.1 6.5L12 17.5 6.2 20.6l1.1-6.5L2.6 9.5l6.5-.9Z"/></svg>
+          </div>
+        </div>
+        <blockquote>198g 是真的轻，眼镜党戴一天镜腿也不夹头。唯一的缺点是太舒服，经常忘了自己在戴耳机，走出办公楼才发现还在播歌。</blockquote>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 价格预约 ============ -->
+<section class="pricing-section" id="pricing">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="eyebrow">PRICING · 三档预约</span>
+      <h2>选一档安静带走</h2>
+      <p>预约免费，不锁定付款。发售当日按预约顺序发货，首发用户加赠双年延保。</p>
+    </div>
+
+    <div style="text-align:center">
+      <div class="seg-toggle reveal" role="group" aria-label="购买方式切换">
+        <button class="seg-btn active" data-mode="single" type="button">单购</button>
+        <button class="seg-btn" data-mode="bundle" type="button">套装 · 含收纳包 / 支架 / 延保</button>
+      </div>
+    </div>
+
+    <div class="price-grid">
+      <article class="price-card reveal">
+        <div class="p-name">Halo 1 SE</div>
+        <div class="p-desc">轻盈入门 · 第一副降噪耳机</div>
+        <div class="price-line"><span class="cur">¥</span><span class="amount" data-single="899" data-bundle="1098">899</span><span class="strike" data-single="999" data-bundle="1298" hidden>¥999</span></div>
+        <div class="price-sub" data-mode-note>预约立减 100 元，已含早鸟价</div>
+        <ul class="p-list">
+          <li><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>-32dB 降噪深度</li>
+          <li><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>30h 续航 · 38mm 单元</li>
+          <li><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>蓝牙 5.3 · 205g</li>
+          <li class="dim"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M3 7h8" stroke="#52525B" stroke-width="2" stroke-linecap="round"/></svg>不支持双设备连接</li>
+        </ul>
+        <button class="btn btn-ghost pick-version" data-version="se" type="button">预约 SE</button>
+      </article>
+
+      <article class="price-card hot reveal d1">
+        <span class="hot-badge">最受欢迎 · 本次主角</span>
+        <div class="p-name">Halo 1</div>
+        <div class="p-desc">均衡满配 · 90% 用户的答案</div>
+        <div class="price-line"><span class="cur">¥</span><span class="amount" data-single="1299" data-bundle="1498">1,299</span><span class="strike" data-single="1499" data-bundle="1798" hidden>¥1,499</span></div>
+        <div class="price-sub" data-mode-note>预约立减 200 元，已含早鸟价</div>
+        <ul class="p-list">
+          <li><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>-42dB 逐点自适应降噪</li>
+          <li><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>40h 续航 · 40mm 复合振膜</li>
+          <li><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>蓝牙 5.4 · 双设备连接 · 198g</li>
+          <li><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>5 分钟快充 4 小时</li>
+        </ul>
+        <button class="btn btn-primary pick-version" data-version="std" type="button">预约 Halo 1</button>
+      </article>
+
+      <article class="price-card reveal d2">
+        <div class="p-name">Halo 1 Pro</div>
+        <div class="p-desc">极致旗舰 · 发烧友的最终答案</div>
+        <div class="price-line"><span class="cur">¥</span><span class="amount" data-single="1799" data-bundle="1998">1,799</span><span class="strike" data-single="1999" data-bundle="2298" hidden>¥1,999</span></div>
+        <div class="price-sub" data-mode-note>预约立减 200 元，已含早鸟价</div>
+        <ul class="p-list">
+          <li><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>-48dB 降噪 · 镀铍振膜</li>
+          <li><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>48h 续航 · 192g 至轻机身</li>
+          <li><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>蓝牙 5.4 + LC3 高码率</li>
+          <li><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5 5.5 10.5 11.5 3.5" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>自适应通透 + 头颅追踪音频</li>
+        </ul>
+        <button class="btn btn-ghost pick-version" data-version="pro" type="button">预约 Halo 1 Pro</button>
+      </article>
+    </div>
+
+    <p class="pricing-note reveal">预约无需付款 · 发售日 <b>2026.10.20</b> 按预约顺序发货 · 7 天无理由退换</p>
+  </div>
+</section>
+
+<!-- ============ 预约表单 ============ -->
+<section class="reserve-section" id="reserve">
+  <div class="container reserve-grid">
+    <div class="reserve-copy reveal">
+      <span class="eyebrow">RESERVE · 锁定首发</span>
+      <h2>留下联系方式，<br>首发日第一个收到它。</h2>
+      <p>预约完全免费。我们只在你需要的时刻联系你：发售提醒、订单确认，仅此而已。不发广告，不做营销骚扰。</p>
+      <ul class="reserve-benefits">
+        <li><b>01</b><span>首发价立减 100–200 元，预约后自动锁定资格</span></li>
+        <li><b>02</b><span>免费升级两年整机延保（价值 ¥199）</span></li>
+        <li><b>03</b><span>按预约顺序发货，前 1,000 名加赠定制旅行收纳包</span></li>
+      </ul>
+    </div>
+
+    <div class="reserve-card reveal d1" id="reserveCard">
+      <form id="reserveForm" novalidate>
+        <div class="form-row">
+          <div class="field" data-field="name">
+            <label for="fName">姓名<span class="req">*</span></label>
+            <input id="fName" name="name" type="text" placeholder="怎么称呼你" autocomplete="name">
+            <p class="err-msg">请填写姓名（至少 2 个字符）</p>
+          </div>
+          <div class="field" data-field="phone">
+            <label for="fPhone">手机号<span class="req">*</span></label>
+            <input id="fPhone" name="phone" type="tel" maxlength="11" placeholder="11 位手机号" autocomplete="tel" inputmode="numeric">
+            <p class="err-msg">请填写正确的 11 位手机号</p>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field" data-field="city">
+            <label for="fCity">城市<span class="req">*</span></label>
+            <input id="fCity" name="city" type="text" placeholder="发货所在城市" autocomplete="address-level2">
+            <p class="err-msg">请填写所在城市</p>
+          </div>
+          <div class="field">
+            <label for="fVersion">意向版本</label>
+            <select id="fVersion" name="version">
+              <option value="std" selected>Halo 1 · ¥1,299（推荐）</option>
+              <option value="se">Halo 1 SE · ¥899</option>
+              <option value="pro">Halo 1 Pro · ¥1,799</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary form-submit" type="submit">锁定首发资格</button>
+        <p class="form-foot">提交即代表同意《隐私政策》——本页为虚构产品演示，不会真实收集数据。</p>
+      </form>
+
+      <div class="form-success" role="status">
+        <svg class="ok-mark" viewBox="0 0 72 72" aria-hidden="true">
+          <circle cx="36" cy="36" r="34"/>
+          <path d="M22 37.5 32 47.5 51 26"/>
+        </svg>
+        <h3>预约成功</h3>
+        <p>我们已记录你的首发资格（<b id="successVersion">Halo 1</b>）。<br>发售前 48 小时将以短信提醒，敬请留意。</p>
+        <button class="btn btn-ghost" id="resetForm" type="button">再为朋友约一台</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="faq-section" id="faq">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="eyebrow">FAQ · 下单之前</span>
+      <h2>你可能想问</h2>
+      <p>没有找到答案？页面底部有人工客服入口。</p>
+    </div>
+
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false"><span><span class="idx">Q1</span>什么时间发货？预约之后要做什么？</span><span class="faq-icon" aria-hidden="true"></span></button>
+        <div class="faq-a"><p>预计 2026 年 10 月 20 日起按预约顺序发货。你不需要做任何额外操作：发售前 48 小时我们会以短信和邮件提醒，届时点击链接完成付款即可，预约资格保留 72 小时。</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false"><span><span class="idx">Q2</span>支持哪些设备？能否有线连接？</span><span class="faq-icon" aria-hidden="true"></span></button>
+        <div class="faq-a"><p>兼容 iOS / Android / Windows / macOS 与主流游戏机蓝牙。蓝牙 5.4 可同时记住 8 台设备、保持 2 台活动连接；随机附赠 3.5mm 线材，有线模式零延迟，也可在无电状态下使用。</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false"><span><span class="idx">Q3</span>长时间佩戴会不会有压耳感？戴眼镜呢？</span><span class="faq-icon" aria-hidden="true"></span></button>
+        <div class="faq-a"><p>整机仅 198g，配合慢回弹记忆海绵耳垫与分段式头梁，内测用户连续佩戴 6 小时无明显压迫感。耳垫预留了眼镜腿避让槽，镜腿较粗的用户也反馈舒适。</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false"><span><span class="idx">Q4</span>开启降噪后会有耳压不适吗？</span><span class="faq-icon" aria-hidden="true"></span></button>
+        <div class="faq-a"><p>Halo 1 采用「低频优先、缓慢收敛」的降噪策略，配合耳压平衡阀，避免了传统强降噪的「坐电梯」闷胀感。若仍敏感，可在 Aura Sync App 内将降噪强度 20 级手动调低，或开启自适应模式让它自己收敛。</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false"><span><span class="idx">Q5</span>保修政策是怎样的？</span><span class="faq-icon" aria-hidden="true"></span></button>
+        <div class="faq-a"><p>整机默认一年保修，通过本页预约的用户免费升级两年；耳垫、头梁垫等易耗件保修 6 个月。保修期内非人为故障，往返运费由我们承担。</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false"><span><span class="idx">Q6</span>可以退换货吗？</span><span class="faq-icon" aria-hidden="true"></span></button>
+        <div class="faq-a"><p>签收后 7 天内可无理由退货，15 天内出现质量问题可直接换新，往返运费均由我们承担。请注意：为保障卫生，拆封后退回的耳机耳垫将统一更换全新配件后再行翻新处理。</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 页脚 CTA ============ -->
+<section class="footer-cta" aria-label="页脚预约入口">
+  <div class="container">
+    <div class="cta-box reveal">
+      <div class="cta-box-inner">
+        <h2>世界静音，只剩音乐。</h2>
+        <p>现在预约，锁定首发价与双年延保——安静这件事，值得第一时间。</p>
+        <a class="btn btn-primary" href="#reserve">立即预约首发</a>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ 页脚 ============ -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#top" aria-label="返回顶部">
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <circle cx="16" cy="16" r="12.5" fill="none" stroke="url(#brandGrad)" stroke-width="2.6" stroke-dasharray="58 22" stroke-linecap="round"/>
+            <circle cx="16" cy="16" r="7" fill="none" stroke="#3F3F46" stroke-width="1.6"/>
+            <circle cx="16" cy="16" r="2.6" fill="#22D3EE"/>
+          </svg>
+          AURA <span class="sub">ACOUSTICS</span>
+        </a>
+        <p>AURA Acoustics 成立于 2019 年，只做一件事：用可以度量的工程，制造不可度量的安静。Halo 1 是我们的第四副耳机，也是第一副想让每个人都戴得起的主联通。</p>
+      </div>
+      <div class="footer-col">
+        <h4>产品</h4>
+        <a href="#pricing">Halo 1 SE</a>
+        <a href="#pricing">Halo 1</a>
+        <a href="#pricing">Halo 1 Pro</a>
+        <a href="#specs">配件与线材</a>
+      </div>
+      <div class="footer-col">
+        <h4>支持</h4>
+        <a href="#faq">常见问题</a>
+        <a href="#reserve">预约与订单</a>
+        <a href="#" class="todo-link">固件更新</a>
+        <a href="#" class="todo-link">保修查询</a>
+      </div>
+      <div class="footer-col">
+        <h4>公司</h4>
+        <a href="#" class="todo-link">关于 AURA</a>
+        <a href="#reviews">媒体评价</a>
+        <a href="#" class="todo-link">加入我们</a>
+        <a href="#" class="todo-link">联系客服</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 AURA Acoustics · 本页面为虚构产品演示站点</span>
+      <span>设计体系：Dark Bento · 紫 #8B5CF6 × 青 #22D3EE</span>
+    </div>
+  </div>
+</footer>
+
+<button class="back-top" id="backTop" aria-label="返回顶部" type="button">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- 工具 ---------- */
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+
+  var toastEl = $("#toast");
+  var toastTimer = null;
+  function toast(msg) {
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 2400);
+  }
+
+  /* ---------- 导航：滚动毛玻璃 ---------- */
+  var header = $("#siteHeader");
+  var backTop = $("#backTop");
+  function onScroll() {
+    var y = window.scrollY || window.pageYOffset;
+    if (header) header.classList.toggle("scrolled", y > 24);
+    if (backTop) backTop.classList.toggle("show", y > 640);
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  if (backTop) {
+    backTop.addEventListener("click", function () {
+      window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+    });
+  }
+
+  /* ---------- 移动端菜单 ---------- */
+  var navToggle = $("#navToggle");
+  var mobileMenu = $("#mobileMenu");
+  function closeMenu() {
+    if (!mobileMenu || !navToggle) return;
+    mobileMenu.classList.remove("open");
+    navToggle.classList.remove("open");
+    navToggle.setAttribute("aria-expanded", "false");
+    navToggle.setAttribute("aria-label", "打开菜单");
+  }
+  if (navToggle && mobileMenu) {
+    navToggle.addEventListener("click", function () {
+      var open = mobileMenu.classList.toggle("open");
+      navToggle.classList.toggle("open", open);
+      navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      navToggle.setAttribute("aria-label", open ? "关闭菜单" : "打开菜单");
+    });
+    $all("a", mobileMenu).forEach(function (a) { a.addEventListener("click", closeMenu); });
+  }
+
+  /* ---------- 滚动定位高亮（scroll spy） ---------- */
+  var spyLinks = $all(".nav-links a[data-spy]");
+  var spyMap = {};
+  spyLinks.forEach(function (a) {
+    var id = (a.getAttribute("href") || "").replace("#", "");
+    if (id) spyMap[id] = a;
+  });
+  if ("IntersectionObserver" in window && spyLinks.length) {
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          spyLinks.forEach(function (a) { a.classList.remove("active"); });
+          var link = spyMap[en.target.id];
+          if (link) link.classList.add("active");
+        }
+      });
+    }, { rootMargin: "-40% 0px -55% 0px" });
+    Object.keys(spyMap).forEach(function (id) {
+      var sec = document.getElementById(id);
+      if (sec) spy.observe(sec);
+    });
+  }
+
+  /* ---------- 进视口淡入 ---------- */
+  if ("IntersectionObserver" in window && !reduced) {
+    var revealIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          en.target.classList.add("in");
+          revealIO.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -36px 0px" });
+    $all(".reveal").forEach(function (el) { revealIO.observe(el); });
+  } else {
+    $all(".reveal").forEach(function (el) { el.classList.add("in"); });
+  }
+
+  /* ---------- 数字 count-up ---------- */
+  function fmt(v, dec) {
+    return v.toLocaleString("zh-CN", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+  function countUp(el) {
+    var to = parseFloat(el.getAttribute("data-count-to"));
+    var dec = parseInt(el.getAttribute("data-decimals") || "0", 10);
+    var dur = parseInt(el.getAttribute("data-duration") || "1400", 10);
+    if (isNaN(to)) return;
+    if (reduced) { el.textContent = fmt(to, dec); return; }
+    var t0 = null;
+    function frame(t) {
+      if (t0 === null) t0 = t;
+      var p = Math.min((t - t0) / dur, 1);
+      var e = 1 - Math.pow(1 - p, 4);
+      el.textContent = fmt(to * e, dec);
+      if (p < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  var counters = $all("[data-count-to]");
+  if ("IntersectionObserver" in window) {
+    var countIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          countUp(en.target);
+          countIO.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    counters.forEach(function (el) { countIO.observe(el); });
+  } else {
+    counters.forEach(countUp);
+  }
+
+  /* ---------- 场景选项卡 ---------- */
+  var sceneTabs = $all(".scene-tab");
+  sceneTabs.forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      var key = tab.getAttribute("data-scene");
+      sceneTabs.forEach(function (t) {
+        t.classList.toggle("active", t === tab);
+        t.setAttribute("aria-selected", t === tab ? "true" : "false");
+      });
+      $all(".scene-panel").forEach(function (p) {
+        p.classList.toggle("active", p.id === key);
+      });
+    });
+  });
+
+  /* ---------- 参数表：列聚焦 + 扫光 ---------- */
+  var specTable = $("#specTable");
+  if (specTable) {
+    var colBtns = $all(".col-btn", specTable);
+    function activateCol(idx, animate) {
+      var rows = specTable.rows;
+      for (var r = 0; r < rows.length; r++) {
+        var cells = rows[r].cells;
+        for (var c = 0; c < cells.length; c++) {
+          if (c === 0) continue;
+          var cell = cells[c];
+          cell.classList.toggle("active", c === idx);
+          cell.classList.remove("sweep");
+          if (animate && c === idx) {
+            void cell.offsetWidth; /* 重置动画 */
+            cell.classList.add("sweep");
+          }
+        }
+      }
+      colBtns.forEach(function (b) {
+        var th = b.closest("th");
+        th.classList.toggle("active", parseInt(b.getAttribute("data-col"), 10) === idx);
+      });
+    }
+    colBtns.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var idx = parseInt(btn.getAttribute("data-col"), 10);
+        activateCol(idx, true);
+      });
+    });
+    activateCol(2, false);
+  }
+
+  /* ---------- 价格：单购 / 套装切换 ---------- */
+  var segBtns = $all(".seg-btn");
+  var modeNotes = $all("[data-mode-note]");
+  var modeSubs = {
+    single: "预约立减，已含早鸟价",
+    bundle: "套装含旅行收纳包 + 桌面支架 + 两年延保"
+  };
+  segBtns.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var mode = btn.getAttribute("data-mode");
+      segBtns.forEach(function (b) { b.classList.toggle("active", b === btn); });
+      $all(".price-line .amount").forEach(function (el) {
+        el.textContent = Number(el.getAttribute("data-" + mode)).toLocaleString("zh-CN");
+      });
+      $all(".price-line .strike").forEach(function (el) {
+        el.textContent = "¥" + Number(el.getAttribute("data-" + mode)).toLocaleString("zh-CN");
+        el.hidden = (mode === "bundle");
+      });
+      modeNotes.forEach(function (el) { el.textContent = modeSubs[mode]; });
+    });
+  });
+
+  /* ---------- 选档直达表单 ---------- */
+  var versionSelect = $("#fVersion");
+  var versionNames = { se: "Halo 1 SE", std: "Halo 1", pro: "Halo 1 Pro" };
+  $all(".pick-version").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var v = btn.getAttribute("data-version");
+      if (versionSelect) versionSelect.value = v;
+      var target = $("#reserve");
+      if (target) target.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
+      toast("已为你选择 " + (versionNames[v] || "Halo 1") + "，填写联系方式即可锁定资格");
+    });
+  });
+
+  /* ---------- FAQ 手风琴 ---------- */
+  var faqItems = $all(".faq-item");
+  faqItems.forEach(function (item) {
+    var btn = $(".faq-q", item);
+    var panel = $(".faq-a", item);
+    if (!btn || !panel) return;
+    btn.addEventListener("click", function () {
+      var isOpen = item.classList.contains("open");
+      faqItems.forEach(function (other) {
+        if (other !== item && other.classList.contains("open")) {
+          other.classList.remove("open");
+          var p = $(".faq-a", other);
+          var b = $(".faq-q", other);
+          if (p) p.style.maxHeight = "0px";
+          if (b) b.setAttribute("aria-expanded", "false");
+        }
+      });
+      item.classList.toggle("open", !isOpen);
+      btn.setAttribute("aria-expanded", String(!isOpen));
+      panel.style.maxHeight = !isOpen ? panel.scrollHeight + "px" : "0px";
+    });
+  });
+
+  /* ---------- 预约表单 ---------- */
+  var form = $("#reserveForm");
+  var card = $("#reserveCard");
+  var successVersion = $("#successVersion");
+
+  function setError(fieldName, on) {
+    var field = $('.field[data-field="' + fieldName + '"]', form);
+    if (field) field.classList.toggle("error", !!on);
+  }
+
+  if (form) {
+    var phoneInput = $("#fPhone");
+    if (phoneInput) {
+      phoneInput.addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, "").slice(0, 11);
+      });
+    }
+
+    /* 输入即清除错误态 */
+    ["fName", "fPhone", "fCity"].forEach(function (id) {
+      var input = document.getElementById(id);
+      if (!input) return;
+      input.addEventListener("input", function () {
+        var wrap = input.closest(".field");
+        if (wrap) wrap.classList.remove("error");
+      });
+    });
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var name = $("#fName").value.trim();
+      var phone = $("#fPhone").value.trim();
+      var city = $("#fCity").value.trim();
+      var ok = true;
+
+      if (name.length < 2) { setError("name", true); ok = false; } else setError("name", false);
+      if (!/^1[3-9]\d{9}$/.test(phone)) { setError("phone", true); ok = false; } else setError("phone", false);
+      if (!city) { setError("city", true); ok = false; } else setError("city", false);
+
+      if (!ok) {
+        toast("请检查标红的字段后再提交");
+        var firstErr = $(".field.error input", form);
+        if (firstErr) firstErr.focus();
+        return;
+      }
+
+      var v = versionSelect ? versionSelect.value : "std";
+      if (successVersion) successVersion.textContent = versionNames[v] || "Halo 1";
+      if (card) card.classList.add("done");
+      toast("预约成功，首发资格已锁定");
+    });
+
+    var resetBtn = $("#resetForm");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", function () {
+        form.reset();
+        if (card) card.classList.remove("done");
+        if (versionSelect) versionSelect.value = "std";
+        setTimeout(function () {
+          var n = $("#fName");
+          if (n) n.focus();
+        }, 60);
+      });
+    }
+  }
+
+  /* ---------- 占位链接反馈 ---------- */
+  $all(".todo-link").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      toast("演示站点：该页面暂未开放，敬请期待");
+    });
+  });
+})();
+</script>
+</body>
+</html>

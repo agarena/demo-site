@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="蜡笔童绘 Crayon —— 一个像小朋友用蜡笔在图画纸上涂出来的漫画网站。每一格，都认真涂。">
+<title>蜡笔童绘 Crayon · 每一格，都认真涂</title>
+<style>
+/* ==========================================================
+   蜡笔童绘 Crayon —— 设计令牌
+   画纸米白底 / 蜡笔五色 / 炭笔灰框线
+   ========================================================== */
+:root{
+  --paper:#FAF6EC;
+  --red:#E2574E;
+  --blue:#4A89C7;
+  --yellow:#F0C24B;
+  --green:#6FAE6B;
+  --purple:#9678B6;
+  --char:#4B4A45;
+  --ink-soft:rgba(75,74,69,.66);
+  --ink-faint:rgba(75,74,69,.38);
+  --hand:"ZCOOL KuaiLe","Gochi Hand","Comic Sans MS","KaiTi","STKaiti","PingFang SC",sans-serif;
+  --body-f:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --noise:url("data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='260'%20height='260'%3E%3Cfilter%20id='n'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.8'%20numOctaves='2'%20seed='9'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3C/filter%3E%3Crect%20width='260'%20height='260'%20filter='url(%23n)'%20opacity='0.05'/%3E%3C/svg%3E");
+  --speckle:url("data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='200'%20height='200'%3E%3Cfilter%20id='s'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.5'%20numOctaves='3'%20seed='5'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%201%200%200%200%200%201%200%200%200%200%200.96%200%200%200%200.8%200'/%3E%3C/filter%3E%3Crect%20width='200'%20height='200'%20filter='url(%23s)'/%3E%3C/svg%3E");
+  --scribble:url("data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%2056'%20preserveAspectRatio='none'%3E%3Cpath%20d='M16,28%20C12,12%2042,5%2064,7%20C94,9%20112,17%20106,31%20C99,46%2054,52%2028,46%20C10,42%2010,32%2022,25%20C36,16%2080,13%2096,19'%20fill='none'%20stroke='%23E2574E'%20stroke-width='3.2'%20stroke-linecap='round'%20opacity='0.9'/%3E%3C/svg%3E");
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:86px}
+body{
+  font-family:var(--body-f);
+  color:var(--char);
+  background:var(--paper);
+  background-image:var(--noise);
+  line-height:1.7;
+  overflow-x:hidden;
+}
+::selection{background:rgba(240,194,75,.55)}
+img,svg{display:block}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:3px dashed var(--blue);outline-offset:3px}
+.vhide{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.svg-defs{position:absolute;width:0;height:0;overflow:hidden}
+.wrap{max-width:1200px;margin:0 auto;padding:0 28px}
+
+/* ==========================================================
+   蜡笔基础件：歪斜手绘框 / 蜡笔涂色块 / 手写高亮
+   ========================================================== */
+/* 歪框通用层：滤镜只作用于框线，不碰文字与图片内部 */
+.skw-frame::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border:3px solid var(--char);
+  border-radius:14px 9px 15px 8px;
+  filter:url(#cray3);
+}
+/* 蜡笔涂色块：底层半透明叠涂 + 上层错位第二笔（故意涂出边界） */
+.wax{position:relative;isolation:isolate}
+.wax::before{
+  content:"";position:absolute;inset:0;z-index:-2;
+  background:var(--wx,rgba(240,194,75,.5));
+  filter:url(#cray5);
+  transform:translate(4px,-3px) rotate(.5deg);
+  mix-blend-mode:multiply;
+}
+.wax::after{
+  content:"";position:absolute;inset:2px;z-index:-1;
+  background:inherit;
+  filter:url(#cray4);
+  opacity:.72;
+}
+/* 蜡笔填色里的纸纹留白噪点 */
+.grainy{position:relative}
+.grainy::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:var(--speckle);
+  opacity:.32;mix-blend-mode:screen;
+}
+/* 标题下的蜡笔斜涂高亮条 */
+.mark{
+  position:relative;display:inline-block;
+  font-family:var(--hand);font-weight:400;
+  padding:0 .18em;z-index:0;
+}
+.mark::after{
+  content:"";position:absolute;left:-.15em;right:-.2em;bottom:.02em;height:.58em;z-index:-1;
+  background:repeating-linear-gradient(48deg,rgba(240,194,75,.75) 0 7px,rgba(240,194,75,.4) 7px 13px);
+  transform:rotate(-1.2deg);
+  clip-path:polygon(0 18%,99% 0,100% 82%,2% 100%);
+}
+
+/* ==========================================================
+   顶栏
+   ========================================================== */
+.topbar{
+  position:sticky;top:0;z-index:60;
+  background:rgba(250,246,236,.96);
+  padding:10px 0 8px;
+}
+.topbar::after{
+  content:"";position:absolute;left:0;right:0;bottom:-4px;height:6px;
+  background:url("data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201200%208'%20preserveAspectRatio='none'%3E%3Cpath%20d='M0,5%20C80,2%20160,7%20240,4%20C330,1%20420,7%20520,4%20C620,2%20720,7%20820,4%20C920,2%201020,6%201100,3%20C1150,2%201180,5%201200,4'%20fill='none'%20stroke='%234B4A45'%20stroke-width='2.6'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+  pointer-events:none;
+}
+.topbar .wrap{display:flex;align-items:center;gap:22px}
+.logo{display:flex;align-items:center;gap:10px;flex:none}
+.logo svg{width:40px;height:40px}
+.logo b{font-family:var(--hand);font-weight:400;font-size:25px;letter-spacing:1px;transform:rotate(-1.6deg);display:inline-block}
+.logo b em{font-style:normal;color:var(--red)}
+.logo i{font-style:normal;font-size:12px;color:var(--ink-faint);letter-spacing:.14em;align-self:flex-end;margin-bottom:5px}
+.nav-links{display:flex;gap:4px;margin-left:6px}
+.nav-links a{
+  font-family:var(--hand);font-size:17px;padding:5px 13px;border-radius:10px 6px 11px 7px;
+  transition:background .18s,color .18s;
+}
+.nav-links a:hover{background:rgba(74,137,199,.16);color:#2f5b8c}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.search{
+  display:flex;align-items:center;gap:8px;position:relative;
+  padding:6px 14px;background:rgba(255,255,255,.7);
+}
+.search::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border:2.5px solid var(--ink-faint);border-radius:12px 8px 13px 9px;
+  filter:url(#cray2);transition:border-color .2s;
+}
+.search:focus-within::before{border-color:var(--red)}
+.search svg{width:16px;height:16px;stroke:var(--ink-soft)}
+.search input{border:0;background:none;outline:none;font-size:14px;width:150px;color:var(--char)}
+.search input::placeholder{color:var(--ink-faint)}
+.shelf-btn{
+  position:relative;font-family:var(--hand);font-size:16px;
+  padding:5px 14px;display:flex;align-items:center;gap:7px;
+}
+.shelf-btn::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border:2.5px solid var(--char);border-radius:9px 13px 8px 12px;
+  filter:url(#cray2);background:rgba(226,87,78,.14);transition:background .2s;
+}
+.shelf-btn:hover::before{background:rgba(226,87,78,.26)}
+.shelf-btn b{
+  font-weight:400;min-width:22px;height:22px;border-radius:50%;
+  background:var(--red);color:#fff;font-size:13px;line-height:22px;text-align:center;
+  transform:rotate(4deg);
+}
+/* 移动端横向链接行 */
+.m-links{display:none}
+.m-links a{
+  flex:none;font-family:var(--hand);font-size:16px;padding:4px 12px;
+  border:2px solid var(--ink-faint);border-radius:10px 6px 11px 7px;
+}
+
+/* ==========================================================
+   首页 Hero
+   ========================================================== */
+.hero{padding:58px 0 40px;position:relative}
+.hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:44px;align-items:center}
+.hero-copy{position:relative}
+.hero-title{display:flex;flex-wrap:wrap;margin:10px 0 4px}
+.hero-title span{
+  display:inline-block;font-family:var(--hand);font-weight:400;
+  font-size:clamp(58px,8vw,100px);line-height:1.15;
+  -webkit-text-stroke:2.5px var(--char);
+  paint-order:stroke fill;
+}
+.hero-title span:nth-child(1){color:var(--red);transform:rotate(-6deg) translateY(3px)}
+.hero-title span:nth-child(2){color:var(--blue);transform:rotate(3.5deg) translateY(-4px)}
+.hero-title span:nth-child(3){color:var(--yellow);transform:rotate(-2.5deg) translateY(4px)}
+.hero-title span:nth-child(4){color:var(--purple);transform:rotate(5deg) translateY(-2px)}
+.hero-en{
+  font-family:var(--hand);font-size:19px;letter-spacing:.34em;
+  color:var(--ink-soft);transform:rotate(-1.2deg);margin-bottom:14px;
+}
+.hero-slogan{font-family:var(--hand);font-size:clamp(19px,2vw,24px);margin-bottom:20px}
+.hero-slogan mark{background:none;color:var(--red)}
+.hero-badge{
+  display:inline-block;font-size:15px;padding:9px 18px;margin-bottom:26px;
+  background:rgba(240,194,75,.42);max-width:30em;
+}
+.hero-cta{display:flex;gap:18px;flex-wrap:wrap}
+.cbtn{
+  position:relative;display:inline-block;font-family:var(--hand);font-size:19px;
+  padding:10px 26px 12px;transition:transform .12s ease;
+}
+.cbtn::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border:3px solid var(--char);border-radius:13px 8px 14px 9px;
+  filter:url(#cray3);transition:background .2s;
+}
+.cbtn:hover{transform:translateY(-3px) rotate(-.6deg)}
+.cbtn:active{transform:translateY(0)}
+.cbtn-primary{background:rgba(226,87,78,.62);color:#fff}
+.cbtn-primary::before{background:rgba(226,87,78,.32)}
+.cbtn-ghost{background:rgba(250,246,236,.8)}
+.cbtn-ghost:hover::before{background:rgba(74,137,199,.2)}
+/* 右侧「冰箱门画作」：画纸 + 蜡笔大画 */
+.fridge-art{position:relative;transform:rotate(1.8deg)}
+.fridge-sheet{
+  position:relative;background:#fff;padding:22px 22px 30px;
+}
+.fridge-sheet::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border:3.5px solid var(--char);border-radius:8px 16px 10px 14px;
+  filter:url(#cray3);
+}
+.fridge-sheet svg{width:100%;height:auto}
+.tape{
+  position:absolute;width:92px;height:26px;
+  background:rgba(240,194,75,.6);border:1px solid rgba(75,74,69,.14);
+}
+.tape.t1{top:-13px;left:26px;transform:rotate(-8deg)}
+.tape.t2{bottom:-11px;right:30px;transform:rotate(6deg)}
+.fridge-note{
+  position:absolute;right:-6px;bottom:-30px;
+  font-family:var(--hand);font-size:15px;color:var(--ink-soft);
+  transform:rotate(-3deg);
+}
+/* 涂鸦装饰：太阳 / 云朵（每屏不超过 3 个） */
+.doodle-sun{position:absolute;top:-8px;right:14px;width:92px;height:92px}
+.doodle-cloud{position:absolute;left:-34px;bottom:6px;width:110px;height:56px}
+
+/* ==========================================================
+   手绘波浪分隔线
+   ========================================================== */
+.wave{display:block;width:100%;height:34px;margin:6px 0}
+.wave path{fill:none;stroke:rgba(75,74,69,.45);stroke-width:3;filter:url(#cray2)}
+
+/* ==========================================================
+   区块标题
+   ========================================================== */
+section{padding:52px 0 34px;position:relative}
+.sec-head{margin-bottom:30px}
+.sec-head h2{
+  font-family:var(--hand);font-weight:400;
+  font-size:clamp(28px,3.2vw,38px);display:flex;align-items:center;gap:14px;
+  transform:rotate(-.8deg);
+}
+.sec-head h2 svg{width:30px;height:30px;flex:none}
+.sec-head p{color:var(--ink-soft);font-size:15px;margin-top:2px}
+
+/* ==========================================================
+   分类筛选（蜡笔按钮，圈选态）
+   ========================================================== */
+.filters{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:14px}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.chip-row .lab{font-family:var(--hand);font-size:15px;color:var(--ink-soft);margin-right:2px}
+.chip{
+  position:relative;font-family:var(--hand);font-size:16.5px;
+  padding:4px 15px 6px;transition:color .18s;
+}
+.chip::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border:2.5px solid rgba(75,74,69,.55);border-radius:13px 8px 14px 9px;
+  filter:url(#cray2);transition:border-color .18s,background .18s;
+}
+.chip:hover{color:#2f5b8c}
+.chip:hover::before{border-color:var(--blue)}
+.chip.on{color:#7c3f38}
+.chip.on::before{background:rgba(240,194,75,.42);border-color:var(--red)}
+.chip.on::after{
+  content:"";position:absolute;inset:-7px -10px;pointer-events:none;
+  background:var(--scribble) center/100% 100% no-repeat;
+}
+.wall-count{margin-left:auto;font-family:var(--hand);font-size:15px;color:var(--ink-soft)}
+.wall-count b{color:var(--red);font-weight:400;font-size:19px}
+
+/* ==========================================================
+   封面墙（白纸片卡 + 歪框 + 蜡笔钉）
+   ========================================================== */
+.wall-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:30px 26px;padding-top:16px}
+.card{
+  position:relative;background:#fff;
+  padding:10px 10px 14px;
+  transform:rotate(var(--rot,0deg));
+  transition:transform .12s ease;
+}
+.card::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border:3px solid var(--char);border-radius:12px 8px 13px 9px;
+  filter:url(#cray3);
+}
+.card:hover{transform:rotate(0deg) translateY(-5px)}
+.card:hover::before{border-color:var(--red)}
+.pin{position:absolute;width:16px;height:3px;border-radius:2px}
+.pin.p1{top:-3px;left:16px;background:var(--red);transform:rotate(-38deg)}
+.pin.p2{bottom:8px;right:12px;background:var(--blue);transform:rotate(32deg)}
+.cover{
+  position:relative;aspect-ratio:3/4;background:#fff;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.cov-a{position:absolute;inset:5px;filter:url(#cray5)}
+.cov-b{
+  position:absolute;inset:5px;filter:url(#cray2);
+  transform:translate(6px,-4px) rotate(1.4deg);mix-blend-mode:multiply;
+}
+.cover::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:var(--speckle);opacity:.38;mix-blend-mode:screen;
+}
+.doodle{position:relative;width:62%;height:auto}
+.badge{
+  position:absolute;top:9px;left:9px;z-index:2;
+  font-family:var(--hand);font-size:12.5px;padding:2px 9px 3px;
+  background:rgba(250,246,236,.94);border:1.5px solid var(--ink-faint);
+  border-radius:8px 5px 9px 6px;
+}
+.badge.ing{color:var(--red)}
+.badge.end{color:#31639c}
+.fav{
+  position:absolute;top:7px;right:7px;z-index:3;
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(250,246,236,.94);
+  border:2px solid var(--ink-faint);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .12s ease,border-color .18s;
+}
+.fav svg{width:17px;height:17px;fill:none;stroke:var(--ink-soft);stroke-width:2;transition:fill .18s,stroke .18s}
+.fav:hover{transform:scale(1.12) rotate(-6deg);border-color:var(--red)}
+.fav.on svg{fill:var(--red);stroke:var(--red)}
+.card-info h3{
+  font-family:var(--hand);font-weight:400;font-size:19px;line-height:1.35;
+  margin:10px 2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.card-info .au{font-size:12.5px;color:var(--ink-soft);margin:1px 2px 6px}
+.card-meta{display:flex;align-items:center;gap:8px;margin:0 2px 7px}
+.score{font-family:var(--hand);font-size:15px;color:#a8741a}
+.card-meta .ep{font-size:11.5px;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin:0 2px}
+.tags i{
+  font-style:normal;font-family:var(--hand);font-size:12.5px;
+  padding:1px 9px 2px;border:1.5px solid rgba(75,74,69,.4);
+  border-radius:8px 5px 9px 6px;color:var(--ink-soft);
+}
+.wall-empty{
+  grid-column:1/-1;text-align:center;padding:70px 20px;
+  font-family:var(--hand);font-size:21px;color:var(--ink-soft);
+  transform:rotate(-1deg);
+}
+
+/* ==========================================================
+   更新日历（蜡笔格子）
+   ========================================================== */
+.cal-tip{font-family:var(--hand);font-size:16px;color:var(--ink-soft);margin-bottom:18px;transform:rotate(-.6deg)}
+.cal-tip em{font-style:normal;color:var(--red)}
+.cal-scroll{overflow-x:auto;padding-bottom:8px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:16px;min-width:980px}
+.cal-cell{position:relative;background:rgba(255,255,255,.6);padding:10px 10px 12px;min-height:150px}
+.cal-cell::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border:2.5px solid rgba(75,74,69,.6);border-radius:11px 7px 12px 8px;
+  filter:url(#cray2);
+}
+.cal-cell h4{
+  font-family:var(--hand);font-weight:400;font-size:18px;
+  margin-bottom:8px;display:flex;align-items:center;gap:6px;
+}
+.cal-cell:nth-child(1) h4{color:var(--red)}
+.cal-cell:nth-child(2) h4{color:#31639c}
+.cal-cell:nth-child(3) h4{color:#a8741a}
+.cal-cell:nth-child(4) h4{color:#3f7c3c}
+.cal-cell:nth-child(5) h4{color:#6d4d92}
+.cal-cell:nth-child(6) h4{color:var(--red)}
+.cal-cell:nth-child(7) h4{color:#31639c}
+.cal-cell h4 .dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex:none}
+.today-tag{
+  font-style:normal;font-size:12px;color:#fff;background:var(--red);
+  padding:0 6px 1px;border-radius:6px 4px 7px 4px;transform:rotate(4deg);
+}
+.cal-cell.today{background:rgba(240,194,75,.3)}
+.cal-item{
+  position:relative;display:block;width:100%;text-align:left;
+  padding:5px 8px 6px;margin-bottom:7px;
+  transition:transform .12s ease,background .18s;
+}
+.cal-item::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border:2px solid rgba(75,74,69,.35);border-radius:8px 5px 9px 6px;
+  filter:url(#cray1);
+}
+.cal-item:hover{transform:translateX(3px);background:rgba(240,194,75,.28)}
+.cal-item b{display:block;font-weight:400;font-family:var(--hand);font-size:14.5px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-item span{display:block;font-size:11.5px;color:var(--ink-soft)}
+.cal-item.is-new span::after{
+  content:"新";display:inline-block;margin-left:6px;font-family:var(--hand);
+  color:#fff;background:var(--red);font-size:10.5px;padding:0 5px 1px;
+  border-radius:5px 3px 6px 3px;transform:rotate(-5deg);
+}
+
+/* ==========================================================
+   排行榜（蜡笔奖牌 + 蜡笔 Tab）
+   ========================================================== */
+.rank-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px}
+.rank-tabs .chip{font-size:18px;padding:5px 20px 7px}
+.rank-list{list-style:none;max-width:860px}
+.rank-row{
+  display:flex;align-items:center;gap:18px;
+  padding:13px 10px;border-bottom:2px dashed rgba(75,74,69,.22);
+  transition:background .18s;cursor:pointer;
+}
+.rank-row:hover{background:rgba(240,194,75,.2)}
+.medal{
+  flex:none;width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--hand);font-weight:400;font-size:20px;
+  position:relative;background:rgba(255,255,255,.8);
+  border:2.5px solid var(--ink-faint);color:var(--ink-soft);
+}
+.m1{border-color:#a8741a;background:rgba(240,194,75,.65);color:#6b4a08;transform:rotate(-5deg)}
+.m2{border-color:#8b8880;background:rgba(200,197,188,.75);color:#55534c;transform:rotate(4deg)}
+.m3{border-color:#b06a3a;background:rgba(224,146,90,.55);color:#7c4416;transform:rotate(-3deg)}
+.rk-info{min-width:0;flex:1}
+.rk-info b{display:block;font-weight:400;font-family:var(--hand);font-size:19px;line-height:1.4}
+.rk-info span{display:block;font-size:12.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk-val{flex:none;font-family:var(--hand);font-size:16px;color:var(--red);transform:rotate(1.5deg)}
+
+/* ==========================================================
+   阅读器（白纸台 + 蜡笔分格 + 手写气泡）
+   ========================================================== */
+.reader{background:rgba(74,137,199,.07)}
+.reader-head{
+  display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;margin-bottom:20px;
+}
+.reader-head h3{font-family:var(--hand);font-weight:400;font-size:24px;transform:rotate(-.8deg)}
+.reader-head h3 em{font-style:normal;color:var(--blue);font-size:17px;margin-left:10px}
+.reader-tools{margin-left:auto;display:flex;align-items:center;gap:12px}
+.rbtn{
+  position:relative;font-family:var(--hand);font-size:15.5px;padding:5px 15px 7px;
+  transition:transform .12s ease,opacity .18s;
+}
+.rbtn::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border:2.5px solid var(--char);border-radius:10px 7px 11px 8px;
+  filter:url(#cray2);background:rgba(255,255,255,.7);transition:background .18s;
+}
+.rbtn:hover{transform:translateY(-2px)}
+.rbtn:hover::before{background:rgba(240,194,75,.35)}
+.rbtn:disabled{opacity:.35;cursor:default;transform:none}
+.rbtn.faved::before{background:rgba(226,87,78,.3);border-color:var(--red)}
+.reader-sheet{
+  position:relative;max-width:760px;margin:0 auto;
+  background:#fff;padding:26px 26px 20px;
+}
+.reader-sheet::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border:3.5px solid var(--char);border-radius:10px 18px 12px 15px;
+  filter:url(#cray3);
+}
+.reader-sheet .tape{width:110px;top:-14px;left:50%;margin-left:-55px;transform:rotate(-2deg)}
+.rpage{display:none}
+.rpage.active{display:block;animation:wipein .38s ease both}
+@keyframes wipein{
+  0%{clip-path:polygon(-40% 0,-8% 0,-40% 100%,-72% 100%);opacity:.4}
+  100%{clip-path:polygon(-40% 0,140% 0,108% 100%,-72% 100%);opacity:1}
+}
+.panel{position:relative;margin-bottom:22px}
+.panel::before{
+  content:"";position:absolute;inset:-5px;pointer-events:none;
+  border:3px solid var(--char);border-radius:9px 14px 8px 12px;
+  filter:url(#cray3);
+}
+.panel svg{width:100%;height:auto;background:#fff}
+.panel .cap{
+  margin-top:7px;font-family:var(--hand);font-size:13.5px;color:var(--ink-faint);
+  text-align:right;transform:rotate(-.6deg);
+}
+/* SVG 内文字：手写体、可微旋转，但绝不上扰动滤镜 */
+.bub{
+  font-family:var(--hand);font-size:20px;fill:var(--char);
+  text-anchor:middle;letter-spacing:1px;
+}
+.sign{font-family:var(--hand);font-size:26px;fill:#2f5b8c;text-anchor:middle;letter-spacing:3px}
+.fx{
+  font-family:var(--hand);font-size:30px;fill:var(--red);text-anchor:middle;
+  paint-order:stroke;stroke:var(--paper);stroke-width:7;letter-spacing:2px;
+}
+.fx.small{font-size:19px}
+.zz{font-family:var(--hand);font-size:24px;fill:var(--ink-soft);text-anchor:middle}
+.reader-foot{
+  display:flex;align-items:center;justify-content:center;gap:20px;
+  margin-top:26px;flex-wrap:wrap;
+}
+.rdots{display:flex;gap:10px}
+.rdot{width:14px;height:14px;border-radius:50%;border:2.5px solid var(--ink-soft);background:none;transition:background .18s,transform .18s}
+.rdot.on{background:var(--red);border-color:var(--red);transform:rotate(8deg) scale(1.15)}
+.rpage-ind{font-family:var(--hand);font-size:16px;color:var(--ink-soft)}
+.rpage-ind b{color:var(--char);font-weight:400;font-size:20px}
+.chapter-nav{display:flex;justify-content:center;gap:18px;margin-top:22px;flex-wrap:wrap}
+
+/* ==========================================================
+   页脚
+   ========================================================== */
+footer{padding:26px 0 34px;position:relative;margin-top:30px}
+.foot-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:30px;padding:20px 0 8px}
+.foot-brand b{font-family:var(--hand);font-weight:400;font-size:24px;transform:rotate(-1.5deg);display:inline-block}
+.foot-brand b em{font-style:normal;color:var(--blue)}
+.foot-brand p{font-size:13.5px;color:var(--ink-soft);margin-top:8px;max-width:24em}
+.foot-col h5{font-family:var(--hand);font-weight:400;font-size:17px;margin-bottom:10px}
+.foot-col a{display:block;font-size:13.5px;color:var(--ink-soft);padding:3px 0;transition:color .18s}
+.foot-col a:hover{color:var(--red)}
+.foot-bottom{
+  border-top:2px dashed rgba(75,74,69,.25);margin-top:16px;padding-top:16px;
+  display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center;justify-content:space-between;
+  font-size:12.5px;color:var(--ink-faint);
+}
+.foot-bottom .up{font-family:var(--hand);font-size:15px;color:var(--char)}
+.foot-bottom .up:hover{color:var(--red)}
+
+/* ==========================================================
+   Toast（蜡笔小纸条）
+   ========================================================== */
+.toast{
+  position:fixed;left:50%;bottom:36px;z-index:99;
+  transform:translateX(-50%) translateY(16px) rotate(-1deg);
+  background:rgba(250,246,236,.97);
+  font-family:var(--hand);font-size:16.5px;
+  padding:10px 24px 12px;opacity:0;pointer-events:none;
+  transition:opacity .25s ease,transform .25s ease;
+}
+.toast::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border:2.5px solid var(--char);border-radius:11px 7px 12px 8px;
+  filter:url(#cray2);background:rgba(240,194,75,.4);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0) rotate(-1deg)}
+
+/* ==========================================================
+   响应式
+   ========================================================== */
+@media (max-width:1080px){
+  .wall-grid{grid-template-columns:repeat(4,1fr)}
+  .search input{width:110px}
+}
+@media (max-width:1000px){
+  .hero .wrap{grid-template-columns:1fr;gap:30px}
+  .fridge-art{max-width:460px;margin:0 auto}
+  .doodle-sun{width:70px;height:70px;top:-20px}
+  .foot-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:768px){
+  html{scroll-padding-top:70px}
+  .nav-links,.search{display:none}
+  .m-links{display:flex;gap:8px;overflow-x:auto;padding:9px 28px 4px;scrollbar-width:none}
+  .m-links::-webkit-scrollbar{display:none}
+  .wall-grid{grid-template-columns:repeat(3,1fr);gap:22px 16px}
+  .wall-count{margin-left:0;width:100%}
+  .cal-grid{min-width:760px}
+  /* 移动端：扰动滤镜减半，防性能损耗 */
+  .card::before,.panel::before,.reader-sheet::before,.fridge-sheet::before{filter:url(#cray2)}
+  .cov-a{filter:url(#cray2)}
+  .cov-b{filter:url(#cray1)}
+  .wax::before{filter:url(#cray2)}
+  .wax::after{filter:url(#cray1)}
+  .cbtn::before{filter:url(#cray2)}
+  .chip.on::after{inset:-5px -7px}
+  .doodle-cloud{display:none}
+  section{padding:40px 0 26px}
+}
+@media (max-width:560px){
+  .wrap{padding:0 18px}
+  .m-links{padding:9px 18px 4px}
+  .wall-grid{grid-template-columns:repeat(2,1fr);gap:20px 12px}
+  .card-info h3{font-size:16.5px}
+  .hero{padding-top:34px}
+  .hero-title span{font-size:clamp(52px,15vw,72px)}
+  .reader-sheet{padding:16px 12px 12px}
+  .reader-head h3{font-size:20px}
+  .reader-head h3 em{display:block;margin:2px 0 0}
+  .reader-tools{margin-left:0}
+  .foot-grid{grid-template-columns:1fr}
+  .rk-info span{white-space:normal}
+  .fridge-note{right:4px;bottom:-24px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ SVG 滤镜与共用图形库（蜡笔扰动的唯一来源） ============ -->
+<svg class="svg-defs" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="cray1" x="-15%" y="-15%" width="130%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.055 0.085" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="cray2" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045 0.07" numOctaves="3" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.8" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="cray3" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035 0.055" numOctaves="3" seed="12" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="4.2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="cray4" x="-30%" y="-30%" width="160%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.03 0.045" numOctaves="3" seed="17" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="5.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="cray5" x="-35%" y="-35%" width="170%" height="170%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.026 0.04" numOctaves="3" seed="21" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="7.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <!-- 企鹅 -->
+    <g id="g-penguin">
+      <path d="M0,-70 C34,-70 44,-38 44,-6 C44,34 28,70 0,70 C-28,70 -44,34 -44,-6 C-44,-38 -34,-70 0,-70 Z" fill="#4B4A45"/>
+      <path d="M0,-36 C20,-36 28,-12 28,12 C28,40 16,58 0,58 C-16,58 -28,40 -28,12 C-28,-12 -20,-36 0,-36 Z" fill="#FAF6EC"/>
+      <circle cx="-15" cy="-46" r="6" fill="#FFFFFF"/>
+      <circle cx="15" cy="-46" r="6" fill="#FFFFFF"/>
+      <circle cx="-14" cy="-45" r="2.4" fill="#4B4A45"/>
+      <circle cx="14" cy="-45" r="2.4" fill="#4B4A45"/>
+      <path d="M-9,-36 L9,-36 L0,-25 Z" fill="#F0A23A"/>
+      <path d="M-44,-12 C-62,-4 -60,18 -45,26" fill="#4B4A45"/>
+      <path d="M44,-12 C62,-4 60,18 45,26" fill="#4B4A45"/>
+      <path d="M-20,68 L-8,76 M20,68 L8,76" stroke="#F0A23A" stroke-width="6" fill="none"/>
+    </g>
+    <!-- 螃蟹客户 -->
+    <g id="g-crab">
+      <path d="M-14,-20 C-16,-34 -24,-42 -30,-40 M14,-20 C16,-34 24,-42 30,-40" stroke="#4B4A45" stroke-width="4" fill="none"/>
+      <circle cx="-30" cy="-42" r="8" fill="#FFFFFF" stroke="#4B4A45" stroke-width="3.5"/>
+      <circle cx="30" cy="-42" r="8" fill="#FFFFFF" stroke="#4B4A45" stroke-width="3.5"/>
+      <circle cx="-30" cy="-41" r="2.8" fill="#4B4A45"/>
+      <circle cx="30" cy="-41" r="2.8" fill="#4B4A45"/>
+      <path d="M-4,-14 C-2,-6 2,-6 4,-14" stroke="#4B4A45" stroke-width="3" fill="none"/>
+      <ellipse cx="0" cy="8" rx="36" ry="26" fill="#E2574E" stroke="#4B4A45" stroke-width="4"/>
+      <path d="M-34,-4 C-50,-10 -58,-24 -50,-32 C-44,-38 -34,-32 -32,-22" fill="#E2574E" stroke="#4B4A45" stroke-width="4"/>
+      <path d="M34,-4 C50,-10 58,-24 50,-32 C44,-38 34,-32 32,-22" fill="#E2574E" stroke="#4B4A45" stroke-width="4"/>
+      <path d="M-26,30 C-30,38 -36,40 -40,38 M-10,34 C-12,42 -16,46 -20,44 M10,34 C12,42 16,46 20,44 M26,30 C30,38 36,40 40,38" stroke="#4B4A45" stroke-width="3.5" fill="none"/>
+    </g>
+    <!-- 冰箱 -->
+    <g id="g-fridge">
+      <rect x="-75" y="-115" width="150" height="230" rx="14" fill="rgba(74,137,199,.22)" stroke="#4B4A45" stroke-width="4"/>
+      <path d="M-75,-48 L75,-48" stroke="#4B4A45" stroke-width="3.5"/>
+      <rect x="52" y="-92" width="10" height="34" rx="5" fill="#4A89C7" stroke="#4B4A45" stroke-width="3"/>
+      <rect x="52" y="-30" width="10" height="52" rx="5" fill="#4A89C7" stroke="#4B4A45" stroke-width="3"/>
+      <path d="M-8,-80 L14,-80 M-8,-64 L6,-64" stroke="#4B4A45" stroke-width="3"/>
+    </g>
+  </defs>
+</svg>
+
+<!-- ============ 顶栏 ============ -->
+<nav class="topbar">
+  <div class="wrap">
+    <a class="logo" href="#home" aria-label="蜡笔童绘 首页">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <g filter="url(#cray2)">
+          <path d="M19,14 L24,3 L29,14 Z" fill="#F0C24B" stroke="#4B4A45" stroke-width="2.5" stroke-linejoin="round"/>
+          <rect x="18" y="14" width="12" height="27" rx="3" fill="#E2574E" stroke="#4B4A45" stroke-width="2.5"/>
+          <rect x="18" y="19" width="12" height="5" fill="#FAF6EC" stroke="none"/>
+        </g>
+      </svg>
+      <b>蜡笔<em>童绘</em></b>
+      <i>CRAYON</i>
+    </a>
+    <div class="nav-links">
+      <a href="#home">首页</a>
+      <a href="#wall">封面墙</a>
+      <a href="#calendar">更新日历</a>
+      <a href="#rank">排行榜</a>
+      <a href="#reader">阅读器</a>
+    </div>
+    <div class="nav-right">
+      <form class="search skw-frame" id="searchForm">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5,15.5 L21,21"/></svg>
+        <input type="text" id="searchInput" placeholder="搜一搜想看的漫画" aria-label="搜索漫画">
+      </form>
+      <button class="shelf-btn" id="shelfBtn" type="button">我的书架 <b id="favCount">0</b></button>
+    </div>
+  </div>
+  <div class="m-links">
+    <a href="#home">首页</a><a href="#wall">封面墙</a><a href="#calendar">更新日历</a><a href="#rank">排行榜</a><a href="#reader">阅读器</a>
+  </div>
+</nav>
+
+<!-- ============ Hero ============ -->
+<header class="hero" id="home">
+  <div class="wrap">
+    <div class="hero-copy">
+      <!-- 卡通太阳：带睫毛与笑脸 -->
+      <svg class="doodle-sun" viewBox="0 0 100 100" aria-hidden="true">
+        <g filter="url(#cray3)" stroke="#E2574E" stroke-width="3.5" stroke-linecap="round" fill="none">
+          <circle cx="50" cy="52" r="20" fill="rgba(240,194,75,.75)"/>
+          <path d="M50,22 L50,12 M50,82 L50,92 M20,52 L10,52 M80,52 L90,52 M29,31 L22,24 M71,31 L78,24 M29,73 L22,80 M71,73 L78,80"/>
+          <path d="M42,49 q3,-4 6,0 M56,49 q3,-4 6,0" stroke-width="3"/>
+          <path d="M44,58 q6,6 12,0" stroke-width="3"/>
+          <path d="M38,44 l-3,-3 M62,44 l3,-3" stroke-width="2.5"/>
+        </g>
+      </svg>
+      <h1 class="hero-title" aria-label="蜡笔童绘">
+        <span>蜡</span><span>笔</span><span>童</span><span>绘</span>
+      </h1>
+      <p class="hero-en">CRAYON COMICS · 每一格，都认真涂</p>
+      <p class="hero-slogan">歪歪扭扭的线条，是<mark>认真的证据</mark>。<br>十部原创漫画，全部由蜡笔一格一格涂出来。</p>
+      <div class="hero-badge wax grainy">本周主推：《蒸汽长安》第 40 话 · 周五 20:00 准时开涂！</div>
+      <div class="hero-cta">
+        <a class="cbtn cbtn-primary" href="#wall">去封面墙涂一眼</a>
+        <a class="cbtn cbtn-ghost" href="#calendar">看看更新日历</a>
+      </div>
+      <!-- 云朵涂鸦 -->
+      <svg class="doodle-cloud" viewBox="0 0 120 56" aria-hidden="true">
+        <g filter="url(#cray3)" stroke="#4A89C7" stroke-width="3.5" fill="rgba(255,255,255,.85)" stroke-linecap="round">
+          <path d="M22,44 C8,44 8,30 20,28 C20,16 36,12 44,20 C50,8 70,10 74,22 C88,16 102,26 96,38 C104,42 100,50 90,48 L26,48 C18,50 16,46 22,44 Z"/>
+        </g>
+      </svg>
+    </div>
+
+    <!-- 冰箱门画作：一张蜡笔大画 -->
+    <div class="fridge-art">
+      <div class="fridge-sheet">
+        <span class="tape t1" aria-hidden="true"></span>
+        <svg viewBox="0 0 460 400" role="img" aria-label="蜡笔画：太阳、彩虹、小房子和三只企鹅">
+          <g filter="url(#cray3)" stroke="#4B4A45" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+            <!-- 彩虹 -->
+            <path d="M70,330 C90,190 370,190 390,330" fill="none" stroke="#E2574E" stroke-width="13"/>
+            <path d="M92,330 C110,214 350,214 368,330" fill="none" stroke="#F0C24B" stroke-width="13"/>
+            <path d="M114,330 C130,238 330,238 346,330" fill="none" stroke="#4A89C7" stroke-width="13"/>
+            <path d="M136,330 C150,262 310,262 324,330" fill="none" stroke="#6FAE6B" stroke-width="13"/>
+            <!-- 小房子 -->
+            <rect x="182" y="268" width="96" height="66" fill="rgba(250,246,236,.9)"/>
+            <path d="M172,270 L230,216 L288,270 Z" fill="rgba(226,87,78,.55)"/>
+            <rect x="216" y="298" width="28" height="36" fill="rgba(240,194,75,.7)"/>
+            <rect x="192" y="282" width="20" height="18" fill="rgba(74,137,199,.4)"/>
+            <!-- 地面 -->
+            <path d="M36,336 C140,326 320,344 424,332" fill="none"/>
+            <path d="M60,352 l16,0 M120,346 l14,0 M330,350 l16,0 M382,344 l14,0" stroke="#6FAE6B" stroke-width="5"/>
+          </g>
+          <!-- 太阳（画里的） -->
+          <g filter="url(#cray2)" stroke="#E2574E" stroke-width="3.5" stroke-linecap="round" fill="none">
+            <circle cx="384" cy="66" r="26" fill="rgba(240,194,75,.8)"/>
+            <path d="M384,28 L384,16 M384,104 L384,116 M346,66 L334,66 M422,66 L434,66 M356,38 L348,30 M412,38 L420,30"/>
+            <path d="M374,62 q3,-4 6,0 M390,62 q3,-4 6,0 M376,74 q8,7 16,0"/>
+          </g>
+          <!-- 三只企鹅 -->
+          <g filter="url(#cray2)">
+            <use href="#g-penguin" transform="translate(120,300) scale(.62)"/>
+            <use href="#g-penguin" transform="translate(92,318) scale(.5)"/>
+          </g>
+          <g filter="url(#cray1)" stroke="#4B4A45" stroke-width="3.5" fill="none" stroke-linecap="round">
+            <path d="M150,268 C158,248 172,248 178,264" stroke="#9678B6" stroke-width="7"/>
+          </g>
+          <text class="fx small" x="230" y="392" transform="rotate(-1.5 230 392)">全家福 · 画于 6 岁</text>
+        </svg>
+        <span class="tape t2" aria-hidden="true"></span>
+      </div>
+      <p class="fridge-note">贴在冰箱上的主编写的</p>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 波浪分隔 ============ -->
+<svg class="wave" viewBox="0 0 1200 34" preserveAspectRatio="none" aria-hidden="true">
+  <path d="M0,18 C70,6 150,30 240,18 C330,8 420,28 520,16 C620,6 720,30 820,18 C920,8 1020,28 1120,16 C1160,12 1185,18 1200,16"/>
+</svg>
+
+<!-- ============ 封面墙 + 分类筛选 ============ -->
+<section id="wall">
+  <div class="wrap">
+    <header class="sec-head">
+      <h2><span class="mark">封面墙</span>
+        <svg viewBox="0 0 40 40" aria-hidden="true"><g filter="url(#cray2)"><path d="M20,5 L24,15 L35,16 L27,23 L29,34 L20,28 L11,34 L13,23 L5,16 L16,15 Z" fill="rgba(240,194,75,.7)" stroke="#4B4A45" stroke-width="2.5" stroke-linejoin="round"/></g></svg>
+      </h2>
+      <p>十部原创漫画 · 每一张封面都是用蜡笔涂的，涂出界的地方请多包涵</p>
+    </header>
+
+    <div class="filters">
+      <div class="chip-row" id="genreChips" role="group" aria-label="按题材筛选">
+        <span class="lab">题材：</span>
+        <button class="chip on" type="button" data-g="all">全部</button>
+        <button class="chip" type="button" data-g="搞笑">搞笑</button>
+        <button class="chip" type="button" data-g="治愈">治愈</button>
+        <button class="chip" type="button" data-g="热血">热血</button>
+        <button class="chip" type="button" data-g="恋爱">恋爱</button>
+        <button class="chip" type="button" data-g="科幻">科幻</button>
+        <button class="chip" type="button" data-g="悬疑">悬疑</button>
+        <button class="chip" type="button" data-g="奇幻">奇幻</button>
+        <button class="chip" type="button" data-g="日常">日常</button>
+        <button class="chip" type="button" data-g="校园">校园</button>
+        <button class="chip" type="button" data-g="美食">美食</button>
+      </div>
+      <div class="chip-row" id="statusChips" role="group" aria-label="按状态筛选">
+        <span class="lab">状态：</span>
+        <button class="chip" type="button" data-s="ing">连载中</button>
+        <button class="chip" type="button" data-s="end">已完结</button>
+      </div>
+      <span class="wall-count">这一页涂了 <b id="wallCount">10</b> 部</span>
+    </div>
+
+    <div class="wall-grid" id="wallGrid"></div>
+  </div>
+</section>
+
+<!-- ============ 更新日历 ============ -->
+<section id="calendar">
+  <div class="wrap">
+    <header class="sec-head">
+      <h2><span class="mark">更新日历</span>
+        <svg viewBox="0 0 40 40" aria-hidden="true"><g filter="url(#cray2)"><rect x="6" y="8" width="28" height="26" rx="4" fill="rgba(111,174,107,.4)" stroke="#4B4A45" stroke-width="2.5"/><path d="M6,16 L34,16 M14,8 L14,3 M26,8 L26,3" stroke="#4B4A45" stroke-width="2.5"/></g></svg>
+      </h2>
+      <p>追更日历 · 一周七格，每一格都是新蜡笔</p>
+    </header>
+    <p class="cal-tip">今天是<em id="todayName">——</em>，涂黄色格子的就是今天更新的！</p>
+    <div class="cal-scroll">
+      <div class="cal-grid" id="calGrid">
+        <div class="cal-cell" data-day="0">
+          <h4><i class="dot"></i>周一</h4>
+          <button class="cal-item is-new" type="button" data-name="蒸汽长安"><b>蒸汽长安</b><span>第 41 话 · 机关开闸</span></button>
+          <button class="cal-item" type="button" data-name="星屑信使"><b>星屑信使</b><span>完结重温 · 全 36 话</span></button>
+        </div>
+        <div class="cal-cell" data-day="1">
+          <h4><i class="dot"></i>周二</h4>
+          <button class="cal-item is-new" type="button" data-name="企鹅事务所"><b>企鹅事务所</b><span>第 61 话 · 谁偷了鱼干</span></button>
+        </div>
+        <div class="cal-cell" data-day="2">
+          <h4><i class="dot"></i>周三</h4>
+          <button class="cal-item is-new" type="button" data-name="深夜面馆"><b>深夜面馆</b><span>番外 × 面馆打烊之后</span></button>
+          <button class="cal-item is-new" type="button" data-name="量子恋爱观察报告"><b>量子恋爱观察报告</b><span>第 26 话</span></button>
+        </div>
+        <div class="cal-cell" data-day="3">
+          <h4><i class="dot"></i>周四</h4>
+          <button class="cal-item is-new" type="button" data-name="山海便利店"><b>山海便利店</b><span>第 34 话 · 深夜客人</span></button>
+        </div>
+        <div class="cal-cell" data-day="4">
+          <h4><i class="dot"></i>周五</h4>
+          <button class="cal-item is-new" type="button" data-name="剑客不下班"><b>剑客不下班</b><span>第 42 话 · 加班符</span></button>
+          <button class="cal-item is-new" type="button" data-name="午夜列车14号"><b>午夜列车14号</b><span>EP.20 · 雨夜准点</span></button>
+        </div>
+        <div class="cal-cell" data-day="5">
+          <h4><i class="dot"></i>周六</h4>
+          <button class="cal-item is-new" type="button" data-name="我在高三当魔王"><b>我在高三当魔王</b><span>第 89 话 · 晚自习称王</span></button>
+        </div>
+        <div class="cal-cell" data-day="6">
+          <h4><i class="dot"></i>周日</h4>
+          <button class="cal-item is-new" type="button" data-name="拳与花"><b>拳与花</b><span>第 13 话 · 左勾拳与玫瑰</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 排行榜 ============ -->
+<section id="rank">
+  <div class="wrap">
+    <header class="sec-head">
+      <h2><span class="mark">排行榜</span>
+        <svg viewBox="0 0 40 40" aria-hidden="true"><g filter="url(#cray2)"><circle cx="20" cy="24" r="11" fill="rgba(240,194,75,.75)" stroke="#4B4A45" stroke-width="2.5"/><path d="M14,14 L10,4 L17,8 L20,3 L23,8 L30,4 L26,14" fill="rgba(226,87,78,.5)" stroke="#4B4A45" stroke-width="2.5" stroke-linejoin="round"/><text x="20" y="30" text-anchor="middle" style="font-family:var(--hand);font-size:14px;fill:#6b4a08">1</text></g></svg>
+      </h2>
+      <p>蜡笔奖牌榜 · 名次是拿颜色涂出来的</p>
+    </header>
+    <div class="rank-tabs" id="rankTabs" role="tablist" aria-label="排行榜切换">
+      <button class="chip on" type="button" role="tab" data-rank="hot" aria-selected="true">人气榜</button>
+      <button class="chip" type="button" role="tab" data-rank="new" aria-selected="false">新作榜</button>
+      <button class="chip" type="button" role="tab" data-rank="rise" aria-selected="false">飙升榜</button>
+      <button class="chip" type="button" role="tab" data-rank="done" aria-selected="false">完结榜</button>
+    </div>
+    <ol class="rank-list" id="rankList"></ol>
+  </div>
+</section>
+
+<!-- ============ 阅读器 ============ -->
+<section class="reader" id="reader">
+  <div class="wrap">
+    <header class="sec-head">
+      <h2><span class="mark">试阅间</span>
+        <svg viewBox="0 0 40 40" aria-hidden="true"><g filter="url(#cray2)"><path d="M8,32 L8,10 C14,6 18,8 20,11 C22,8 26,6 32,10 L32,32 C26,28 22,30 20,33 C18,30 14,28 8,32 Z" fill="rgba(150,120,182,.3)" stroke="#4B4A45" stroke-width="2.5" stroke-linejoin="round"/><path d="M20,11 L20,33" stroke="#4B4A45" stroke-width="2.5"/></g></svg>
+      </h2>
+      <p>先涂一话尝尝味道 · 方向键 ← → 也能翻页</p>
+    </header>
+
+    <div class="reader-head">
+      <h3>《企鹅事务所》<em>第 1 话 · 谁偷了鱼干（四格试阅）</em></h3>
+      <div class="reader-tools">
+        <button class="rbtn" type="button" id="readerFav">收藏本话</button>
+      </div>
+    </div>
+
+    <div class="reader-sheet">
+      <span class="tape" aria-hidden="true"></span>
+
+      <!-- 第 1 页 -->
+      <div class="rpage" data-page="1">
+        <figure class="panel">
+          <svg viewBox="0 0 640 360" role="img" aria-label="第 1 格：企鹅事务所门口，戴眼镜的企鹅老板宣布开门">
+            <rect x="10" y="10" width="620" height="340" rx="20" fill="rgba(240,194,75,.16)" filter="url(#cray5)"/>
+            <g filter="url(#cray3)" stroke="#4B4A45" stroke-width="3.5" fill="none" stroke-linecap="round">
+              <path d="M28,318 C220,304 440,326 612,314"/>
+              <rect x="228" y="34" width="184" height="56" rx="10" fill="rgba(74,137,199,.28)"/>
+              <path d="M320,90 L320,120" />
+            </g>
+            <text class="sign" x="320" y="73">企鹅事务所</text>
+            <g filter="url(#cray2)">
+              <use href="#g-penguin" transform="translate(320,228) scale(1.02)"/>
+            </g>
+            <g stroke="#4B4A45" stroke-width="3" fill="none">
+              <circle cx="304" cy="181" r="11"/>
+              <circle cx="336" cy="181" r="11"/>
+              <path d="M315,181 L325,181 M293,181 L286,178 M347,181 L354,178"/>
+            </g>
+            <g filter="url(#cray2)">
+              <ellipse cx="150" cy="96" rx="108" ry="50" fill="#FFFFFF" stroke="#4B4A45" stroke-width="3.5"/>
+              <path d="M212,126 L242,158 L232,118 Z" fill="#FFFFFF" stroke="#4B4A45" stroke-width="3.5" stroke-linejoin="round"/>
+            </g>
+            <text class="bub" x="150" y="90"><tspan x="150" dy="0">企鹅事务所，</tspan><tspan x="150" dy="27">今天也准时开门！</tspan></text>
+          </svg>
+          <figcaption class="cap">第 1 格 · 开门大吉</figcaption>
+        </figure>
+
+        <figure class="panel">
+          <svg viewBox="0 0 640 360" role="img" aria-label="第 2 格：螃蟹客户哭着报案，说鱼干不见了">
+            <rect x="10" y="10" width="620" height="340" rx="20" fill="rgba(111,174,107,.16)" filter="url(#cray5)"/>
+            <g filter="url(#cray3)" stroke="#4B4A45" stroke-width="3.5" fill="none" stroke-linecap="round">
+              <rect x="30" y="252" width="580" height="58" rx="12" fill="rgba(111,174,107,.26)"/>
+              <path d="M60,252 L60,310 M580,252 L580,310" stroke-width="3"/>
+            </g>
+            <g filter="url(#cray2)">
+              <use href="#g-crab" transform="translate(180,196) scale(1.12)"/>
+              <use href="#g-penguin" transform="translate(532,238) scale(.66)"/>
+            </g>
+            <g fill="rgba(74,137,199,.85)" stroke="#4B4A45" stroke-width="2">
+              <path d="M158,186 C154,198 162,202 164,192 Z"/>
+              <path d="M202,186 C198,198 206,202 208,192 Z"/>
+            </g>
+            <g filter="url(#cray2)">
+              <ellipse cx="452" cy="104" rx="146" ry="54" fill="#FFFFFF" stroke="#4B4A45" stroke-width="3.5"/>
+              <path d="M332,140 L296,180 L346,146 Z" fill="#FFFFFF" stroke="#4B4A45" stroke-width="3.5" stroke-linejoin="round"/>
+            </g>
+            <text class="bub" x="452" y="94"><tspan x="452" dy="0">呜哇——我藏在冰箱</tspan><tspan x="452" dy="27">里的鱼干不见啦！</tspan></text>
+          </svg>
+          <figcaption class="cap">第 2 格 · 紧急报案</figcaption>
+        </figure>
+      </div>
+
+      <!-- 第 2 页 -->
+      <div class="rpage" data-page="2">
+        <figure class="panel">
+          <svg viewBox="0 0 640 360" role="img" aria-label="第 3 格：三只企鹅侦探沿着脚印追查，脚印一路通向冰箱">
+            <rect x="10" y="10" width="620" height="340" rx="20" fill="rgba(150,120,182,.14)" filter="url(#cray5)"/>
+            <g fill="rgba(75,74,69,.5)">
+              <ellipse cx="120" cy="304" rx="9" ry="5"/><ellipse cx="142" cy="288" rx="9" ry="5"/>
+              <ellipse cx="168" cy="272" rx="9" ry="5"/><ellipse cx="190" cy="256" rx="9" ry="5"/>
+              <ellipse cx="216" cy="242" rx="9" ry="5"/><ellipse cx="238" cy="226" rx="9" ry="5"/>
+              <ellipse cx="264" cy="212" rx="9" ry="5"/><ellipse cx="286" cy="196" rx="9" ry="5"/>
+            </g>
+            <g filter="url(#cray2)">
+              <use href="#g-penguin" transform="translate(360,244) scale(.86)"/>
+              <use href="#g-penguin" transform="translate(474,252) scale(.8)"/>
+              <use href="#g-penguin" transform="translate(566,258) scale(.72)"/>
+            </g>
+            <g filter="url(#cray1)" stroke="#4B4A45" stroke-width="4" fill="rgba(255,255,255,.45)">
+              <circle cx="392" cy="196" r="26"/>
+              <path d="M410,214 L434,240" stroke-width="6"/>
+            </g>
+            <g filter="url(#cray2)">
+              <ellipse cx="152" cy="92" rx="122" ry="50" fill="#FFFFFF" stroke="#4B4A45" stroke-width="3.5"/>
+              <path d="M218,124 L252,158 L238,116 Z" fill="#FFFFFF" stroke="#4B4A45" stroke-width="3.5" stroke-linejoin="round"/>
+            </g>
+            <text class="bub" x="152" y="86"><tspan x="152" dy="0">是脚印！一路通向</tspan><tspan x="152" dy="27">冰箱，出发！</tspan></text>
+            <text class="fx small" x="560" y="70" transform="rotate(4 560 70)">嘿咻 嘿咻</text>
+          </svg>
+          <figcaption class="cap">第 3 格 · 跟着脚印走</figcaption>
+        </figure>
+
+        <figure class="panel">
+          <svg viewBox="0 0 640 360" role="img" aria-label="第 4 格：企鹅踮脚靠近冰箱，冰箱门吱呀作响">
+            <rect x="10" y="10" width="620" height="340" rx="20" fill="rgba(74,137,199,.14)" filter="url(#cray5)"/>
+            <g filter="url(#cray2)">
+              <use href="#g-fridge" transform="translate(468,190) scale(.92)"/>
+            </g>
+            <g fill="rgba(75,74,69,.5)">
+              <ellipse cx="150" cy="300" rx="9" ry="5"/><ellipse cx="190" cy="282" rx="9" ry="5"/>
+              <ellipse cx="230" cy="266" rx="9" ry="5"/><ellipse cx="270" cy="252" rx="9" ry="5"/>
+            </g>
+            <g filter="url(#cray2)">
+              <use href="#g-penguin" transform="translate(230,268) scale(.82) rotate(-8)"/>
+            </g>
+            <text class="fx" x="150" y="86" transform="rotate(-4 150 86)">吱——呀——</text>
+            <text class="fx small" x="468" y="330" transform="rotate(-2 468 330)">冰箱：我什么都不知道</text>
+          </svg>
+          <figcaption class="cap">第 4 格 · 案发现场逼近</figcaption>
+        </figure>
+
+        <figure class="panel">
+          <svg viewBox="0 0 640 330" role="img" aria-label="第 5 格：一只猫睡在冰箱顶上，呼呼大睡">
+            <rect x="10" y="10" width="620" height="310" rx="20" fill="rgba(240,194,75,.18)" filter="url(#cray5)"/>
+            <g filter="url(#cray2)">
+              <use href="#g-fridge" transform="translate(430,238) scale(.8)"/>
+            </g>
+            <g filter="url(#cray2)" stroke="#4B4A45" stroke-width="4" stroke-linecap="round">
+              <ellipse cx="420" cy="116" rx="66" ry="34" fill="#8E8A7E"/>
+              <circle cx="478" cy="102" r="27" fill="#8E8A7E"/>
+              <path d="M462,80 L456,62 L474,72 Z M494,78 L500,60 L506,78 Z" fill="#8E8A7E"/>
+              <path d="M468,104 q5,4 10,0 M486,104 q5,4 10,0" stroke-width="3" fill="none"/>
+              <path d="M484,114 q4,4 8,0" stroke-width="2.5" fill="none"/>
+              <path d="M368,120 C336,112 330,142 362,142" fill="#8E8A7E"/>
+              <path d="M392,94 q6,-10 14,-2 M416,92 q6,-10 14,-2 M396,132 q8,-8 16,0" stroke-width="3" fill="none"/>
+            </g>
+            <text class="zz" x="548" y="64" transform="rotate(6 548 64)">呼噜…</text>
+            <text class="zz" x="582" y="94" transform="rotate(-4 582 94)">Zzz</text>
+            <g filter="url(#cray2)">
+              <ellipse cx="130" cy="266" rx="98" ry="42" fill="#FFFFFF" stroke="#4B4A45" stroke-width="3.5"/>
+              <path d="M188,292 L222,318 L204,284 Z" fill="#FFFFFF" stroke="#4B4A45" stroke-width="3.5" stroke-linejoin="round"/>
+            </g>
+            <text class="bub" x="130" y="272">冰箱上面……有情况！</text>
+          </svg>
+          <figcaption class="cap">第 5 格 · 嫌疑人正在睡觉</figcaption>
+        </figure>
+      </div>
+
+      <!-- 第 3 页 -->
+      <div class="rpage" data-page="3">
+        <figure class="panel">
+          <svg viewBox="0 0 640 360" role="img" aria-label="第 6 格：地上的鱼干袋子已经空了，只剩一副鱼骨头">
+            <rect x="10" y="10" width="620" height="340" rx="20" fill="rgba(226,87,78,.12)" filter="url(#cray5)"/>
+            <g filter="url(#cray3)" stroke="#4B4A45" stroke-width="4" fill="rgba(240,194,75,.4)" stroke-linejoin="round" stroke-linecap="round">
+              <path d="M132,262 C120,230 150,214 176,226 C196,206 232,214 234,240 C258,246 254,274 228,278 C216,292 168,292 156,278 C136,280 126,272 132,262 Z"/>
+              <ellipse cx="182" cy="238" rx="30" ry="12" fill="#FFFFFF"/>
+            </g>
+            <g filter="url(#cray2)" stroke="#4B4A45" stroke-width="4" fill="none" stroke-linecap="round">
+              <path d="M404,258 L500,258"/>
+              <path d="M424,258 L424,240 M444,258 L444,238 M464,258 L464,240 M484,258 L484,242"/>
+              <circle cx="516" cy="256" r="12" fill="#FFFFFF"/>
+              <circle cx="520" cy="253" r="2.5" fill="#4B4A45"/>
+              <path d="M392,258 L376,246 L376,270 Z" fill="#FFFFFF"/>
+            </g>
+            <g filter="url(#cray2)">
+              <use href="#g-penguin" transform="translate(320,258) scale(.92)"/>
+            </g>
+            <g stroke="#4B4A45" stroke-width="3" fill="none" stroke-linecap="round">
+              <circle cx="308" cy="212" r="8"/><circle cx="332" cy="212" r="8"/>
+              <path d="M300,196 L296,188 M340,196 L344,188 M316,200 L312,192 M324,200 L328,192"/>
+            </g>
+            <g filter="url(#cray2)">
+              <ellipse cx="486" cy="98" rx="116" ry="48" fill="#FFFFFF" stroke="#4B4A45" stroke-width="3.5"/>
+              <path d="M416,128 L388,164 L436,132 Z" fill="#FFFFFF" stroke="#4B4A45" stroke-width="3.5" stroke-linejoin="round"/>
+            </g>
+            <text class="bub" x="486" y="104">袋子空了……连渣都不剩</text>
+            <text class="fx small" x="180" y="120" transform="rotate(-3 180 120)">（案发现场）</text>
+          </svg>
+          <figcaption class="cap">第 6 格 · 铁证如山（字面意思）</figcaption>
+        </figure>
+
+        <figure class="panel">
+          <svg viewBox="0 0 640 380" role="img" aria-label="第 7 格：三只企鹅和老板面面相觑，宣布本案依旧毫无进展，未完待续">
+            <rect x="10" y="10" width="620" height="360" rx="20" fill="rgba(111,174,107,.14)" filter="url(#cray5)"/>
+            <g filter="url(#cray3)" stroke="#4B4A45" stroke-width="3.5" fill="none" stroke-linecap="round">
+              <path d="M28,338 C220,324 440,346 612,334"/>
+              <rect x="228" y="30" width="184" height="50" rx="10" fill="rgba(226,87,78,.26)"/>
+            </g>
+            <text class="sign" x="320" y="65" style="fill:#a8443c">未完待续</text>
+            <g filter="url(#cray2)">
+              <use href="#g-penguin" transform="translate(150,262) scale(.8)"/>
+              <use href="#g-penguin" transform="translate(320,268) scale(.86)"/>
+              <use href="#g-penguin" transform="translate(486,262) scale(.8)"/>
+            </g>
+            <g stroke="#4B4A45" stroke-width="3" fill="none">
+              <path d="M300,220 q20,-14 40,0" />
+            </g>
+            <g filter="url(#cray2)">
+              <ellipse cx="180" cy="112" rx="130" ry="50" fill="#FFFFFF" stroke="#4B4A45" stroke-width="3.5"/>
+              <path d="M252,148 L288,182 L268,140 Z" fill="#FFFFFF" stroke="#4B4A45" stroke-width="3.5" stroke-linejoin="round"/>
+            </g>
+            <text class="bub" x="180" y="104"><tspan x="180" dy="0">本所成立三年，</tspan><tspan x="180" dy="27">没一单案子正常！</tspan></text>
+            <text class="fx small" x="500" y="120" transform="rotate(3 500 120)">喵。（凶手语）</text>
+          </svg>
+          <figcaption class="cap">第 7 格 · 结案（并没有）</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="reader-foot">
+      <button class="rbtn" type="button" id="prevBtn">← 上一页</button>
+      <span class="rdots" id="rDots" aria-hidden="true"></span>
+      <span class="rpage-ind">第 <b id="pageNow">1</b> / <span id="pageAll">3</span> 页</span>
+      <button class="rbtn" type="button" id="nextBtn">下一页 →</button>
+    </div>
+    <div class="chapter-nav">
+      <button class="cbtn cbtn-ghost chapter-soon" type="button">← 上一话</button>
+      <button class="cbtn cbtn-primary chapter-soon" type="button">下一话 · 第 2 话 冰箱审讯记</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 页脚 ============ -->
+<footer>
+  <svg class="wave" viewBox="0 0 1200 34" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,16 C90,28 180,6 280,18 C380,30 480,8 580,18 C680,28 780,6 880,16 C980,26 1080,8 1200,18"/>
+  </svg>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <b>蜡笔<em>童绘</em> Crayon</b>
+        <p>一个像小朋友在图画纸上涂出来的漫画平台。我们相信：线条歪一点没关系，认真涂就好。</p>
+      </div>
+      <div class="foot-col">
+        <h5>逛一逛</h5>
+        <a href="#wall">封面墙</a>
+        <a href="#calendar">更新日历</a>
+        <a href="#rank">排行榜</a>
+        <a href="#reader">试阅间</a>
+      </div>
+      <div class="foot-col">
+        <h5>关于</h5>
+        <a href="#" class="soon" data-msg="投稿通道：先把蜡笔削尖！马上开通～">作者投稿</a>
+        <a href="#" class="soon" data-msg="常见问题：歪掉的线条是故意的！">常见问题</a>
+        <a href="#" class="soon" data-msg="小画室正在装修，蜡笔味有点重">关于我们</a>
+      </div>
+      <div class="foot-col">
+        <h5>找颜色</h5>
+        <a href="#" class="soon" data-msg="蜡笔红已就位，微信公众号筹备中">微信公众号</a>
+        <a href="#" class="soon" data-msg="请直接画一封信，塞进冰箱缝">联系我们</a>
+        <a href="#" class="soon" data-msg="交换友情链接：要画得歪才换">友情链接</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 蜡笔童绘 Crayon · 全站画面由蜡笔与 SVG 涂成，边缘歪歪的才是手绘的灵魂</span>
+      <a class="up" href="#home">↑ 回到图纸最上方</a>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+  function $(s,c){return (c||document).querySelector(s);}
+  function $$(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s));}
+  function hexA(h,a){
+    var v=parseInt(h.slice(1),16);
+    return "rgba("+((v>>16)&255)+","+((v>>8)&255)+","+(v&255)+","+a+")";
+  }
+
+  /* ---------- 漫画数据（10 部原创素材） ---------- */
+  var COMICS=[
+    {id:1,name:"星屑信使",author:"白鹿原上",tags:["科幻","治愈"],status:"end",ep:"全 36 话",score:9.6,week:0,c1:"#9678B6",c2:"#4A89C7",doodle:"star",note:"宇宙末班的邮差，替人类投递最后一封手写信。"},
+    {id:2,name:"深夜面馆",author:"陈一勺",tags:["美食","日常"],status:"end",ep:"全 48 话",score:9.4,week:2,c1:"#E2574E",c2:"#F0C24B",doodle:"bowl",note:"凌晨两点开门，只招待有故事的食客。"},
+    {id:3,name:"剑客不下班",author:"老猫头",tags:["搞笑","热血"],status:"ing",ep:"连载至第 42 话",score:9.2,week:4,c1:"#4A89C7",c2:"#6FAE6B",doodle:"sword",note:"修仙界社畜的五险一金保卫战。"},
+    {id:4,name:"我在高三当魔王",author:"阿蔓",tags:["校园","恋爱"],status:"ing",ep:"连载至第 89 话",score:9.0,week:5,c1:"#9678B6",c2:"#E2574E",doodle:"crown",note:"转学生白天刷题，晚上统治魔界。"},
+    {id:5,name:"午夜列车14号",author:"双子星",tags:["悬疑"],status:"ing",ep:"连载至 EP.20",score:8.9,week:4,c1:"#5C5A54",c2:"#4A89C7",doodle:"train",note:"每周五晚多出的一节车厢，只出现在雨夜。"},
+    {id:6,name:"企鹅事务所",author:"南极洲代表",tags:["日常","搞笑"],status:"end",ep:"全 60 话",score:9.3,week:1,c1:"#4A89C7",c2:"#F0C24B",doodle:"penguin",note:"三只企鹅接的案件，没有一单正常。"},
+    {id:7,name:"蒸汽长安",author:"墨小仟",tags:["热血","科幻"],status:"ing",ep:"连载至第 41 话",score:9.5,week:0,c1:"#F0C24B",c2:"#E2574E",doodle:"gear",note:"齿轮驱动的盛唐，机关师少年重铸长安钟楼。"},
+    {id:8,name:"量子恋爱观察报告",author:"薛定谔的猫窝",tags:["恋爱","科幻"],status:"ing",ep:"连载至第 26 话",score:9.1,week:2,c1:"#E2574E",c2:"#9678B6",doodle:"atom",note:"在被观测之前，我们既在一起也没在一起。"},
+    {id:9,name:"山海便利店",author:"山海君",tags:["奇幻","治愈"],status:"ing",ep:"连载至第 34 话",score:9.4,week:3,c1:"#6FAE6B",c2:"#F0C24B",doodle:"shop",note:"24 小时营业，人类与非人一视同仁。"},
+    {id:10,name:"拳与花",author:"一根葱",tags:["热血","恋爱"],status:"ing",ep:"连载至第 13 话",score:8.8,week:6,c1:"#E2574E",c2:"#6FAE6B",doodle:"fist",note:"花店老板娘的左勾拳，比玫瑰更先送达。"}
+  ];
+
+  /* ---------- 封面涂鸦图形库 ---------- */
+  var D={
+    star:'<g filter="url(#cray3)" stroke="#4B4A45" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">'
+      +'<path d="M60,16 L72,44 L102,46 L79,66 L87,96 L60,79 L33,96 L41,66 L18,46 L48,44 Z" fill="rgba(240,194,75,.7)"/>'
+      +'<circle cx="52" cy="54" r="3.2" fill="#4B4A45" stroke="none"/><circle cx="70" cy="54" r="3.2" fill="#4B4A45" stroke="none"/>'
+      +'<path d="M52,66 Q61,73 70,66" fill="none"/>'
+      +'<path d="M22,22 l12,0 M28,16 l0,12 M98,88 l9,0 M102.5,83.5 l0,9" stroke="#E2574E"/></g>',
+    bowl:'<g filter="url(#cray3)" stroke="#4B4A45" stroke-width="3.5" stroke-linecap="round" fill="none">'
+      +'<path d="M26,56 C26,84 42,98 60,98 C78,98 94,84 94,56 Z" fill="rgba(226,87,78,.6)"/>'
+      +'<path d="M18,56 L102,56"/>'
+      +'<path d="M42,46 q4,-14 9,0 q4,-14 9,0 q4,-14 9,0" stroke="#F0C24B" stroke-width="5"/>'
+      +'<path d="M66,14 L92,44 M78,10 L98,34"/>'
+      +'<path d="M34,36 q-6,-10 2,-18 M58,32 q-6,-10 2,-18" stroke="#9678B6"/></g>',
+    sword:'<g filter="url(#cray3)" stroke="#4B4A45" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none">'
+      +'<path d="M86,12 L100,26 L50,76 L40,66 Z" fill="rgba(74,137,199,.55)"/>'
+      +'<path d="M88,20 L52,70" stroke-width="2.5"/>'
+      +'<path d="M32,60 L60,88" stroke-width="6"/>'
+      +'<path d="M40,92 L26,104" stroke-width="7"/>'
+      +'<circle cx="22" cy="108" r="5" fill="#E2574E"/>'
+      +'<path d="M100,44 l10,-6 M104,58 l10,-2" stroke="#F0C24B"/></g>',
+    crown:'<g filter="url(#cray3)" stroke="#4B4A45" stroke-width="3.5" stroke-linejoin="round">'
+      +'<path d="M26,88 L20,38 L42,56 L60,26 L78,56 L100,38 L94,88 Z" fill="rgba(240,194,75,.72)"/>'
+      +'<path d="M27,74 L93,74" fill="none"/>'
+      +'<circle cx="20" cy="34" r="4.5" fill="#E2574E"/><circle cx="60" cy="20" r="4.5" fill="#9678B6"/><circle cx="100" cy="34" r="4.5" fill="#4A89C7"/></g>',
+    train:'<g filter="url(#cray3)" stroke="#4B4A45" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">'
+      +'<rect x="22" y="38" width="76" height="46" rx="10" fill="rgba(75,74,69,.72)"/>'
+      +'<rect x="32" y="48" width="20" height="16" rx="3" fill="#FAF6EC" stroke="none"/>'
+      +'<rect x="60" y="48" width="20" height="16" rx="3" fill="#FAF6EC" stroke="none"/>'
+      +'<circle cx="40" cy="92" r="9" fill="#F0C24B"/><circle cx="80" cy="92" r="9" fill="#F0C24B"/>'
+      +'<circle cx="88" cy="52" r="5" fill="#F0C24B" stroke="none"/>'
+      +'<path d="M12,106 L108,106" fill="none"/>'
+      +'<circle cx="98" cy="20" r="8" fill="rgba(240,194,75,.7)" stroke="none"/></g>',
+    penguin:'<g filter="url(#cray2)" stroke="#4B4A45" stroke-width="3.5" stroke-linecap="round">'
+      +'<ellipse cx="60" cy="64" rx="28" ry="36" fill="#4B4A45"/>'
+      +'<ellipse cx="60" cy="72" rx="16" ry="24" fill="#FAF6EC" stroke="none"/>'
+      +'<circle cx="50" cy="44" r="6" fill="#FFFFFF"/><circle cx="70" cy="44" r="6" fill="#FFFFFF"/>'
+      +'<circle cx="51" cy="45" r="2.4" fill="#4B4A45" stroke="none"/><circle cx="69" cy="45" r="2.4" fill="#4B4A45" stroke="none"/>'
+      +'<path d="M54,54 L66,54 L60,62 Z" fill="#F0A23A"/>'
+      +'<path d="M46,100 L54,106 M74,100 L66,106" stroke="#F0A23A" stroke-width="5"/>'
+      +'<path d="M16,108 L104,108" fill="none"/></g>',
+    gear:'<g filter="url(#cray3)" stroke="#4B4A45" stroke-width="3.5" stroke-linecap="round">'
+      +'<circle cx="60" cy="62" r="30" fill="rgba(240,194,75,.6)"/>'
+      +'<path d="M60,24 L60,12 M60,100 L60,112 M22,62 L10,62 M98,62 L110,62 M33,35 L25,27 M87,35 L95,27 M33,89 L25,97 M87,89 L95,97" stroke-width="7"/>'
+      +'<circle cx="60" cy="62" r="10" fill="#FAF6EC"/>'
+      +'<path d="M94,104 q8,-8 2,-16 M102,110 q10,-10 3,-20" fill="none" stroke="#9678B6"/></g>',
+    atom:'<g filter="url(#cray3)" stroke="#4B4A45" stroke-width="3.5" fill="none" stroke-linecap="round">'
+      +'<ellipse cx="60" cy="60" rx="40" ry="14" transform="rotate(28 60 60)" stroke="#4A89C7"/>'
+      +'<ellipse cx="60" cy="60" rx="40" ry="14" transform="rotate(-28 60 60)" stroke="#9678B6"/>'
+      +'<path d="M60,78 C53,68 40,72 44,82 C47,89 60,96 60,96 C60,96 73,89 76,82 C80,72 67,68 60,78 Z" fill="rgba(226,87,78,.75)"/>'
+      +'<circle cx="97" cy="34" r="3.5" fill="#E2574E" stroke="none"/><circle cx="24" cy="88" r="3.5" fill="#4A89C7" stroke="none"/></g>',
+    shop:'<g filter="url(#cray3)" stroke="#4B4A45" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">'
+      +'<path d="M12,100 L44,42 L72,100 Z" fill="rgba(111,174,107,.4)"/>'
+      +'<rect x="52" y="60" width="52" height="40" fill="#FAF6EC"/>'
+      +'<path d="M48,60 L108,60 L102,44 L54,44 Z" fill="rgba(226,87,78,.6)"/>'
+      +'<rect x="70" y="74" width="16" height="26" fill="rgba(240,194,75,.7)"/>'
+      +'<circle cx="60" cy="70" r="3.5" fill="#4A89C7" stroke="none"/>'
+      +'<path d="M6,100 L114,100" fill="none"/></g>',
+    fist:'<g filter="url(#cray3)" stroke="#4B4A45" stroke-width="3.5" stroke-linecap="round" fill="none">'
+      +'<path d="M60,58 L60,100" stroke="#6FAE6B" stroke-width="5"/>'
+      +'<path d="M60,78 C48,72 42,78 44,86 C52,90 58,86 60,80" stroke="#6FAE6B" stroke-width="4"/>'
+      +'<circle cx="60" cy="46" r="9" fill="#F0C24B"/>'
+      +'<ellipse cx="60" cy="26" rx="9" ry="12" fill="rgba(226,87,78,.75)"/>'
+      +'<ellipse cx="41" cy="38" rx="9" ry="12" transform="rotate(-60 41 38)" fill="rgba(226,87,78,.75)"/>'
+      +'<ellipse cx="79" cy="38" rx="9" ry="12" transform="rotate(60 79 38)" fill="rgba(226,87,78,.75)"/>'
+      +'<ellipse cx="46" cy="58" rx="9" ry="12" transform="rotate(-58 46 58)" fill="rgba(226,87,78,.75)"/>'
+      +'<ellipse cx="74" cy="58" rx="9" ry="12" transform="rotate(58 74 58)" fill="rgba(226,87,78,.75)"/>'
+      +'<path d="M18,18 l10,6 M24,10 l4,11 M100,24 l-10,6" stroke="#4B4A45" stroke-width="4"/></g>'
+  };
+
+  /* ---------- 状态 ---------- */
+  var favs=[];            // 收藏的作品 id 列表
+  var genreSet={};        // 已选题材
+  var statusSet={};       // 已选状态
+  var ROT=["-1.3deg","0.9deg","-0.6deg","1.4deg","-1deg","1.1deg","-1.5deg","0.7deg","-0.9deg","1.2deg"];
+
+  /* ---------- Toast ---------- */
+  var toastEl=$("#toast"),toastTimer=null;
+  function toast(msg){
+    if(!toastEl) return;
+    toastEl.textContent=msg;
+    toastEl.classList.add("show");
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer=setTimeout(function(){toastEl.classList.remove("show");},2200);
+  }
+
+  /* ---------- 封面墙渲染 ---------- */
+  var grid=$("#wallGrid"),countEl=$("#wallCount");
+  function match(c){
+    var gOk=true,sOk=true,g;
+    for(g in genreSet){gOk=false;if(c.tags.indexOf(g)>-1){gOk=true;break;}}
+    for(var s in statusSet){sOk=false;if(c.status===s){sOk=true;break;}}
+    return gOk&&sOk;
+  }
+  function heartSVG(){
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12,20 C5,15 3,10.5 5,7.5 C7,4.8 10.6,5.4 12,8 C13.4,5.4 17,4.8 19,7.5 C21,10.5 19,15 12,20 Z"/></svg>';
+  }
+  function cardHTML(c,i){
+    var on=favs.indexOf(c.id)>-1?" on":"";
+    var badge=c.status==="ing"?'<span class="badge ing">连载中</span>':'<span class="badge end">已完结</span>';
+    return '<article class="card" style="--rot:'+ROT[i%ROT.length]+'">'
+      +'<i class="pin p1" aria-hidden="true"></i><i class="pin p2" aria-hidden="true"></i>'
+      +'<div class="cover">'
+      +'<span class="cov-a" style="background:'+hexA(c.c1,.55)+'" aria-hidden="true"></span>'
+      +'<span class="cov-b" style="background:'+hexA(c.c2,.4)+'" aria-hidden="true"></span>'
+      +'<svg class="doodle" viewBox="0 0 120 120" aria-hidden="true">'+D[c.doodle]+'</svg>'
+      +badge
+      +'<button class="fav'+on+'" type="button" data-id="'+c.id+'" aria-label="收藏《'+c.name+'">'+heartSVG()+'</button>'
+      +'</div>'
+      +'<div class="card-info">'
+      +'<h3>'+c.name+'</h3>'
+      +'<p class="au">'+c.author+'</p>'
+      +'<div class="card-meta"><span class="score">★ '+c.score.toFixed(1)+'</span><span class="ep">'+c.ep+'</span></div>'
+      +'<div class="tags">'+c.tags.map(function(t){return "<i>"+t+"</i>";}).join("")+'</div>'
+      +'</div></article>';
+  }
+  function renderWall(){
+    if(!grid) return;
+    var list=COMICS.filter(match);
+    grid.innerHTML=list.length
+      ?list.map(cardHTML).join("")
+      :'<div class="wall-empty">这一页还是白纸～<br>换一支蜡笔颜色（分类）再试试！</div>';
+    if(countEl) countEl.textContent=list.length;
+  }
+
+  /* 筛选按钮：圈选态 */
+  function bindChips(boxId,setter){
+    var box=$(boxId);
+    if(!box) return;
+    box.addEventListener("click",function(e){
+      var b=e.target.closest(".chip");
+      if(!b) return;
+      setter(b);
+      renderWall();
+    });
+  }
+  bindChips("#genreChips",function(b){
+    var g=b.getAttribute("data-g");
+    if(g==="all"){
+      genreSet={};
+      $$(".chip",box).forEach(function(x){x.classList.toggle("on",x.getAttribute("data-g")==="all");});
+      return;
+    }
+    if(genreSet[g]){delete genreSet[g];b.classList.remove("on");}
+    else{genreSet[g]=1;b.classList.add("on");}
+    var allBtn=$('#genreChips .chip[data-g="all"]');
+    var any=false;for(var k in genreSet){any=true;break;}
+    if(allBtn) allBtn.classList.toggle("on",!any);
+  });
+  bindChips("#statusChips",function(b){
+    var s=b.getAttribute("data-s");
+    if(statusSet[s]){delete statusSet[s];b.classList.remove("on");}
+    else{statusSet[s]=1;b.classList.add("on");}
+  });
+
+  /* 收藏（事件委托，重渲染后依然有效） */
+  function toggleFav(id){
+    var i=favs.indexOf(id);
+    if(i>-1){favs.splice(i,1);}else{favs.push(id);}
+    var cEl=$("#favCount");
+    if(cEl) cEl.textContent=favs.length;
+    return i===-1;
+  }
+  if(grid){
+    grid.addEventListener("click",function(e){
+      var b=e.target.closest(".fav");
+      if(!b) return;
+      var id=+b.getAttribute("data-id");
+      var added=toggleFav(id);
+      b.classList.toggle("on",added);
+      var c=COMICS.filter(function(x){return x.id===id;})[0];
+      toast(added?("已把《"+c.name+"》贴上冰箱（加入书架）！"):("把《"+c.name+"》从冰箱上取下来啦"));
+    });
+  }
+  var shelfBtn=$("#shelfBtn");
+  if(shelfBtn){
+    shelfBtn.addEventListener("click",function(){
+      toast(favs.length?("书架上有 "+favs.length+" 本在追，加油涂！"):("书架还空着，去封面墙挑一本吧！"));
+    });
+  }
+
+  /* ---------- 更新日历：高亮今天 ---------- */
+  var WEEK=["周一","周二","周三","周四","周五","周六","周日"];
+  var jd=(new Date().getDay()+6)%7;
+  var cells=$$("#calGrid .cal-cell");
+  cells.forEach(function(cell){
+    if(+cell.getAttribute("data-day")===jd){
+      cell.classList.add("today");
+      var h=cell.querySelector("h4");
+      if(h){
+        var em=document.createElement("em");
+        em.className="today-tag";
+        em.textContent="今天";
+        h.appendChild(em);
+      }
+    }
+    $$(".cal-item",cell).forEach(function(it){
+      it.addEventListener("click",function(){
+        toast("《"+it.getAttribute("data-name")+"》更新啦，去封面墙看看吧！");
+      });
+    });
+  });
+  var todayName=$("#todayName");
+  if(todayName) todayName.textContent=WEEK[jd];
+
+  /* ---------- 排行榜 ---------- */
+  var RANKS={
+    hot:{lab:"人气",rows:[[3,"91530"],[7,"90120"],[4,"88340"],[1,"84210"],[9,"79870"]]},
+    "new":{lab:"进度",rows:[[10,"第 13 话"],[5,"EP.20"],[8,"第 26 话"],[9,"第 34 话"],[4,"第 89 话"]]},
+    rise:{lab:"七天热度",rows:[[10,"↑ 320%"],[2,"↑ 214%"],[5,"↑ 186%"],[8,"↑ 152%"],[3,"↑ 96%"]]},
+    done:{lab:"评分",rows:[[1,"9.6"],[2,"9.4"],[6,"9.3"]]}
+  };
+  var rankList=$("#rankList"),rankTabs=$("#rankTabs");
+  function renderRank(key){
+    if(!rankList) return;
+    var data=RANKS[key]||RANKS.hot;
+    rankList.innerHTML=data.rows.map(function(r,i){
+      var c=COMICS.filter(function(x){return x.id===r[0];})[0];
+      var cls=i<3?" m"+(i+1):"";
+      return '<li class="rank-row" data-name="'+c.name+'">'
+        +'<b class="medal'+cls+'">'+(i+1)+'</b>'
+        +'<div class="rk-info"><b>'+c.name+'</b><span>'+c.author+' · '+c.note+'</span></div>'
+        +'<em class="rk-val" aria-label="'+data.lab+'">'+r[1]+'</em>'
+        +'</li>';
+    }).join("");
+  }
+  if(rankTabs&&rankList){
+    rankTabs.addEventListener("click",function(e){
+      var b=e.target.closest(".chip");
+      if(!b) return;
+      $$(".chip",rankTabs).forEach(function(x){
+        var on=x===b;
+        x.classList.toggle("on",on);
+        x.setAttribute("aria-selected",on?"true":"false");
+      });
+      renderRank(b.getAttribute("data-rank"));
+    });
+    rankList.addEventListener("click",function(e){
+      var row=e.target.closest(".rank-row");
+      if(row) toast("《"+row.getAttribute("data-name")+"》正在榜上发光，去封面墙看看吧！");
+    });
+    renderRank("hot");
+  }
+
+  /* ---------- 阅读器翻页 ---------- */
+  var pages=$$(".rpage"),cur=0;
+  var prevBtn=$("#prevBtn"),nextBtn=$("#nextBtn");
+  var pageNow=$("#pageNow"),pageAll=$("#pageAll"),dotsBox=$("#rDots");
+  if(pageAll) pageAll.textContent=pages.length;
+  if(dotsBox){
+    dotsBox.innerHTML=pages.map(function(_,i){
+      return '<button class="rdot'+(i===0?" on":"")+'" type="button" data-i="'+i+'" aria-label="第'+(i+1)+'页"></button>';
+    }).join("");
+  }
+  function showPage(n){
+    if(!pages.length) return;
+    n=Math.max(0,Math.min(pages.length-1,n));
+    pages[cur].classList.remove("active");
+    cur=n;
+    pages[cur].classList.add("active");
+    if(pageNow) pageNow.textContent=cur+1;
+    if(prevBtn) prevBtn.disabled=cur===0;
+    if(nextBtn) nextBtn.disabled=cur===pages.length-1;
+    $$(".rdot",dotsBox).forEach(function(d,i){
+      d.classList.toggle("on",i===cur);
+    });
+  }
+  if(pages.length){
+    if(prevBtn) prevBtn.addEventListener("click",function(){showPage(cur-1);});
+    if(nextBtn) nextBtn.addEventListener("click",function(){showPage(cur+1);});
+    if(dotsBox){
+      dotsBox.addEventListener("click",function(e){
+        var d=e.target.closest(".rdot");
+        if(d) showPage(+d.getAttribute("data-i"));
+      });
+    }
+    document.addEventListener("keydown",function(e){
+      var t=e.target&&e.target.tagName;
+      if(t==="INPUT"||t==="TEXTAREA") return;
+      if(e.key==="ArrowLeft") showPage(cur-1);
+      else if(e.key==="ArrowRight") showPage(cur+1);
+    });
+    showPage(0);
+  }
+
+  /* 阅读器收藏 + 章节按钮（无后端，蜡笔话术兜底） */
+  var readerFav=$("#readerFav");
+  if(readerFav){
+    readerFav.addEventListener("click",function(){
+      var added=toggleFav(6);
+      readerFav.classList.toggle("faved",added);
+      readerFav.textContent=added?"已收藏本话":"收藏本话";
+      toast(added?"《企鹅事务所》第 1 话已收进书架！":"已取消收藏本话");
+    });
+  }
+  $$(".chapter-soon").forEach(function(b){
+    b.addEventListener("click",function(){
+      toast("下一话还在蜡笔盒里睡午觉，等作者涂完就来！");
+    });
+  });
+  $$(".soon").forEach(function(a){
+    a.addEventListener("click",function(e){
+      e.preventDefault();
+      toast(a.getAttribute("data-msg")||"马上就好！");
+    });
+  });
+
+  /* ---------- 搜索（前端演示） ---------- */
+  var searchForm=$("#searchForm"),searchInput=$("#searchInput");
+  if(searchForm){
+    searchForm.addEventListener("submit",function(e){
+      e.preventDefault();
+      var q=(searchInput&&searchInput.value||"").trim();
+      if(!q){toast("想搜什么？先在蜡笔盒里挑个名字～");return;}
+      var hit=COMICS.filter(function(c){return c.name.indexOf(q)>-1||c.author.indexOf(q)>-1||c.tags.join("").indexOf(q)>-1;});
+      if(hit.length){
+        toast("找到了 "+hit.length+" 部：《"+hit[0].name+"》等，已帮你圈出来！");
+        if(grid){
+          genreSet={};statusSet={};
+          $$(".chip",$("#wall")).forEach(function(x){x.classList.remove("on");});
+          var allBtn=$('#genreChips .chip[data-g="all"]');
+          if(allBtn) allBtn.classList.add("on");
+          renderWall();
+        }
+        var target=document.getElementById("wall");
+        if(target) target.scrollIntoView({behavior:"smooth"});
+      }else{
+        toast("没找到《"+q+"》…也许它还没被涂出来！");
+      }
+      if(searchInput) searchInput.value="";
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  renderWall();
+})();
+</script>
+</body>
+</html>

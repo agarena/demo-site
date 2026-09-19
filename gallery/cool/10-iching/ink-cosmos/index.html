@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="三钱问天 · 水墨玄境——以三枚铜钱敬六十四种可能的周易占卜沉浸式体验">
+<title>三钱问天 · 周易占卜 | 水墨玄境</title>
+<style>
+/* ==========================================================
+   水墨玄境 · 三钱问天  ——  单文件自包含站点
+   配色：玄墨黑 #101216 / 墨蓝 #16213E / 宣纸白 #F5F0E8
+         朱砂 #C0392B / 鎏金 #D4AF37 / 黛青 #2C4A6E
+   ========================================================== */
+:root{
+  --ink:#101216;
+  --ink2:#16213E;
+  --paper:#F5F0E8;
+  --cinn:#C0392B;
+  --gold:#D4AF37;
+  --indigo:#2C4A6E;
+  --kai:"Ma Shan Zheng","STKaiti","KaiTi","SimKai","DFKai-SB","Noto Serif SC",serif;
+  --song:"Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",serif;
+  --eng:Georgia,"Times New Roman",serif;
+  --line:rgba(212,175,55,.16);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  min-height:100vh;
+  overflow-x:hidden;
+  color:var(--paper);
+  font-family:var(--song);
+  line-height:1.8;
+  letter-spacing:.02em;
+  background:
+    radial-gradient(1100px 720px at 78% -8%, rgba(44,74,110,.55) 0%, rgba(22,33,62,.42) 38%, rgba(16,18,22,0) 74%),
+    radial-gradient(900px 640px at -10% 38%, rgba(44,74,110,.30) 0%, rgba(16,18,22,0) 62%),
+    linear-gradient(180deg,#131722 0%, var(--ink2) 30%, var(--ink) 78%, #0b0d10 100%);
+  background-attachment:fixed;
+}
+::selection{background:rgba(192,57,43,.55);color:var(--paper)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:#0c0e12}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#2C4A6E,#16213E);border-radius:6px;border:2px solid #0c0e12}
+::-webkit-scrollbar-thumb:hover{background:#3a5f8a}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:4px}
+
+/* ---------- 背景层：canvas 水墨 + 山峦 + 月 ---------- */
+#inkCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.sky{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.moon{
+  position:absolute;top:9%;right:9%;width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle at 38% 34%, #f7efd8 0%, #e8dcae 46%, #cbb87b 72%, rgba(203,184,123,0) 100%);
+  box-shadow:0 0 70px 24px rgba(212,175,55,.14), 0 0 160px 60px rgba(212,175,55,.07);
+  opacity:.85;
+}
+.mtn{position:absolute;bottom:0;left:-4%;width:108%;will-change:transform}
+.mtn path{stroke:none}
+.m1{height:30vh;opacity:.85}
+.m2{height:24vh}
+.m3{height:17vh}
+.m1 path{fill:rgba(44,74,110,.30)}
+.m2 path{fill:rgba(22,33,62,.62)}
+.m3 path{fill:rgba(8,10,14,.88)}
+
+/* ---------- 入场遮罩：水墨晕开 + 太极旋转 ---------- */
+#splash{
+  position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:26px;
+  background:radial-gradient(900px 620px at 50% 42%, #17203a 0%, var(--ink) 62%, #07080b 100%);
+  transition:opacity .9s ease, visibility .9s ease;
+}
+#splash.gone{opacity:0;visibility:hidden;pointer-events:none}
+.iblob{position:absolute;border-radius:50%;filter:blur(38px);opacity:0;animation:blobIn 2.6s ease forwards}
+.ib1{width:52vmin;height:52vmin;left:-8vmin;top:-10vmin;background:radial-gradient(circle,rgba(22,33,62,.9),rgba(22,33,62,0) 70%)}
+.ib2{width:60vmin;height:60vmin;right:-12vmin;bottom:-14vmin;background:radial-gradient(circle,rgba(44,74,110,.75),rgba(44,74,110,0) 70%);animation-delay:.35s}
+.ib3{width:34vmin;height:34vmin;left:52%;top:58%;background:radial-gradient(circle,rgba(192,57,43,.22),rgba(192,57,43,0) 70%);animation-delay:.7s}
+@keyframes blobIn{0%{opacity:0;transform:scale(.25)}55%{opacity:.85}100%{opacity:.55;transform:scale(1)}}
+.taiji{
+  position:relative;width:148px;height:148px;border-radius:50%;
+  background:conic-gradient(var(--paper) 0 50%, var(--ink) 50% 100%);
+  border:3px solid rgba(212,175,55,.75);
+  box-shadow:0 0 60px rgba(212,175,55,.22), inset 0 0 26px rgba(0,0,0,.5);
+  animation:taijiSpin 2.4s cubic-bezier(.45,.1,.35,.9) both, taijiIdle 9s linear 2.4s infinite;
+}
+.taiji::before,.taiji::after{content:'';position:absolute;border-radius:50%}
+.taiji::before{width:28px;height:28px;left:63%;top:23%;background:var(--ink);box-shadow:0 0 0 4px var(--paper)}
+.taiji::after{width:28px;height:28px;left:23%;bottom:23%;background:var(--paper);box-shadow:0 0 0 4px var(--ink)}
+@keyframes taijiSpin{from{transform:rotate(-540deg) scale(.4);opacity:0}to{transform:rotate(0deg) scale(1);opacity:1}}
+@keyframes taijiIdle{to{transform:rotate(360deg)}}
+.splash-sub{
+  font-family:var(--kai);color:var(--gold);letter-spacing:.9em;text-indent:.9em;
+  font-size:clamp(14px,2vw,18px);opacity:0;animation:fadeUp 1s ease 1.5s forwards;
+}
+#splash h1{
+  display:flex;gap:.18em;font-family:var(--kai);font-weight:400;
+  font-size:clamp(52px,10vw,104px);line-height:1.1;
+  text-shadow:0 6px 34px rgba(0,0,0,.65);
+}
+#splash h1 span{opacity:0;display:inline-block;animation:charIn 1s cubic-bezier(.2,.75,.25,1) forwards}
+#splash h1 span:nth-child(1){animation-delay:1.75s}
+#splash h1 span:nth-child(2){animation-delay:1.95s;color:var(--gold)}
+#splash h1 span:nth-child(3){animation-delay:2.15s}
+#splash h1 span:nth-child(4){animation-delay:2.35s;color:var(--cinn)}
+@keyframes charIn{
+  0%{opacity:0;filter:blur(18px);transform:translateY(22px) scale(1.5)}
+  100%{opacity:1;filter:blur(0);transform:translateY(0) scale(1)}
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.splash-tip{
+  font-size:13px;color:rgba(245,240,232,.5);letter-spacing:.35em;text-indent:.35em;
+  opacity:0;animation:fadeUp 1s ease 2.9s forwards;
+}
+
+/* ---------- 顶栏 ---------- */
+header{
+  position:fixed;top:0;left:0;right:0;z-index:60;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px clamp(16px,4vw,44px);
+  background:linear-gradient(180deg, rgba(13,16,22,.86), rgba(13,16,22,.55));
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .seal-s{
+  width:38px;height:38px;border:2px solid var(--cinn);border-radius:6px;color:var(--cinn);
+  font-family:var(--kai);font-size:15px;line-height:1.05;display:flex;align-items:center;justify-content:center;
+  transform:rotate(-4deg);letter-spacing:1px;box-shadow:0 0 14px rgba(192,57,43,.25);
+}
+.brand b{font-family:var(--kai);font-weight:400;font-size:20px;letter-spacing:.2em}
+nav{display:flex;align-items:center;gap:clamp(12px,2.6vw,30px)}
+nav a{
+  font-size:15px;color:rgba(245,240,232,.78);position:relative;padding:4px 2px;transition:color .3s;
+}
+nav a::after{
+  content:'';position:absolute;left:0;bottom:-2px;height:2px;width:100%;background:linear-gradient(90deg,var(--gold),var(--cinn));
+  transform:scaleX(0);transform-origin:left;transition:transform .35s ease;
+}
+nav a:hover{color:var(--gold)}
+nav a:hover::after{transform:scaleX(1)}
+#soundToggle{
+  background:transparent;border:1px solid var(--line);color:rgba(245,240,232,.72);
+  border-radius:999px;padding:5px 14px;font-size:13px;letter-spacing:.15em;transition:all .3s;
+}
+#soundToggle:hover{border-color:var(--gold);color:var(--gold)}
+#soundToggle.on{border-color:var(--gold);color:var(--gold);box-shadow:0 0 12px rgba(212,175,55,.28)}
+
+/* ---------- 通用版式 ---------- */
+main{position:relative;z-index:2}
+section{position:relative;padding:clamp(64px,9vh,110px) clamp(18px,4vw,44px)}
+.wrap{max-width:1120px;margin:0 auto;position:relative}
+.sec-head{display:flex;align-items:baseline;gap:18px;margin-bottom:clamp(26px,4vh,44px)}
+.sec-head .no{
+  font-family:var(--eng);font-size:14px;color:var(--gold);letter-spacing:.3em;
+  border:1px solid rgba(212,175,55,.4);padding:3px 10px;border-radius:3px;transform:translateY(-4px);
+}
+.sec-head h2{font-family:var(--kai);font-weight:400;font-size:clamp(30px,4.6vw,44px);letter-spacing:.14em}
+.sec-head .hint{font-size:13px;color:rgba(245,240,232,.45);letter-spacing:.2em}
+.panel{
+  background:linear-gradient(158deg, rgba(22,33,62,.52), rgba(14,17,24,.72));
+  border:1px solid var(--line);border-radius:18px;
+  box-shadow:0 18px 50px rgba(0,0,0,.4), inset 0 1px 0 rgba(245,240,232,.05);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,.35),transparent);margin:0 auto;max-width:1120px}
+
+/* ---------- 首屏 · 今日一卦 ---------- */
+#hero{min-height:92vh;display:flex;align-items:center;padding-top:110px}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(28px,4vw,60px);align-items:center}
+.hero-left .eyebrow{
+  color:var(--gold);font-size:14px;letter-spacing:.55em;text-indent:.55em;margin-bottom:18px;
+  display:flex;align-items:center;gap:14px;
+}
+.hero-left .eyebrow::before{content:'';width:44px;height:1px;background:linear-gradient(90deg,var(--gold),transparent)}
+.hero-title{font-family:var(--kai);font-weight:400;font-size:clamp(46px,7.4vw,88px);line-height:1.22;letter-spacing:.06em}
+.hero-title em{font-style:normal;color:var(--gold)}
+.hero-title .cn-red{color:var(--cinn)}
+.hero-lead{margin:22px 0 30px;color:rgba(245,240,232,.82);font-size:clamp(15px,1.5vw,17.5px);max-width:34em}
+.hero-cta{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+.btn{
+  position:relative;overflow:hidden;border-radius:999px;padding:13px 34px;font-size:16px;letter-spacing:.24em;text-indent:.24em;
+  border:1px solid var(--gold);color:var(--ink);background:linear-gradient(120deg,#e8c96a,var(--gold) 55%,#a9842a);
+  font-family:var(--song);font-weight:600;transition:transform .3s, box-shadow .3s;
+  box-shadow:0 10px 26px rgba(212,175,55,.22);
+}
+.btn::before{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.5) 50%,transparent 70%);transform:translateX(-110%);transition:transform .7s ease}
+.btn:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(212,175,55,.34)}
+.btn:hover::before{transform:translateX(110%)}
+.btn:active{transform:translateY(-1px) scale(.98)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-ghost{
+  background:transparent;color:var(--paper);border:1px solid rgba(245,240,232,.3);box-shadow:none;font-weight:400;
+}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);box-shadow:0 0 18px rgba(212,175,55,.18)}
+.btn-cinn{border-color:var(--cinn);background:linear-gradient(120deg,#d4553f,var(--cinn) 60%,#7e2418);color:#ffe9e2;box-shadow:0 10px 26px rgba(192,57,43,.28)}
+.btn-cinn:hover{box-shadow:0 16px 36px rgba(192,57,43,.4)}
+.hero-right{position:relative}
+.daily-card{padding:30px 30px 26px;position:relative;overflow:hidden;transition:transform .4s, box-shadow .4s}
+.daily-card:hover{transform:translateY(-6px);box-shadow:0 26px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(212,175,55,.25)}
+.daily-card::after{
+  content:'今日';position:absolute;top:14px;right:-34px;transform:rotate(38deg);
+  background:linear-gradient(120deg,var(--cinn),#8e2a1c);color:#ffe9e2;font-size:12px;letter-spacing:.3em;
+  padding:4px 40px;box-shadow:0 4px 12px rgba(0,0,0,.4);
+}
+.daily-card h3{font-family:var(--kai);font-weight:400;font-size:22px;letter-spacing:.2em;color:var(--gold);margin-bottom:4px}
+.daily-card .date{font-size:13px;color:rgba(245,240,232,.5);letter-spacing:.2em;margin-bottom:18px}
+.daily-body{display:flex;gap:22px;align-items:center;cursor:pointer}
+.daily-lines{display:flex;flex-direction:column-reverse;gap:6px;min-width:120px}
+.daily-lines b{height:5px;border-radius:3px;background:var(--paper);box-shadow:0 0 8px rgba(245,240,232,.35)}
+.daily-lines b.yin{background:linear-gradient(90deg,var(--paper) 0 40%,transparent 40% 60%,var(--paper) 60% 100%)}
+.daily-meta b{font-family:var(--kai);font-weight:400;font-size:34px;letter-spacing:.1em;display:block;line-height:1.2}
+.daily-meta i{font-style:normal;font-size:13px;color:rgba(245,240,232,.6);display:block;margin-top:6px}
+.daily-text{margin-top:18px;padding-top:14px;border-top:1px dashed rgba(212,175,55,.25);font-size:14px;color:rgba(245,240,232,.78)}
+.hero-deco{
+  position:absolute;right:-8px;top:46%;writing-mode:vertical-rl;font-family:var(--kai);
+  font-size:clamp(18px,2vw,24px);letter-spacing:.5em;color:rgba(245,240,232,.14);pointer-events:none;user-select:none;
+}
+.scroll-cue{
+  position:absolute;left:50%;bottom:26px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;
+  color:rgba(245,240,232,.45);font-size:12px;letter-spacing:.4em;text-indent:.4em;
+}
+.scroll-cue i{width:1px;height:44px;background:linear-gradient(180deg,var(--gold),transparent);display:block;animation:cueDrop 2s ease infinite}
+@keyframes cueDrop{0%{transform:scaleY(0);transform-origin:top}55%{transform:scaleY(1);transform-origin:top}56%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* ---------- 起卦仪式 ---------- */
+.ritual-grid{display:grid;grid-template-columns:1.06fr .94fr;gap:clamp(24px,3vw,44px);align-items:start}
+.ritual-left{padding:clamp(22px,3vw,36px)}
+.q-label{font-size:14px;color:var(--gold);letter-spacing:.3em;margin-bottom:10px;display:block}
+#questionInput{
+  width:100%;background:rgba(16,18,22,.6);border:1px solid rgba(245,240,232,.16);border-radius:10px;
+  color:var(--paper);font-family:var(--song);font-size:15px;padding:13px 16px;letter-spacing:.05em;
+  transition:border-color .3s, box-shadow .3s;resize:none;
+}
+#questionInput::placeholder{color:rgba(245,240,232,.32)}
+#questionInput:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.14)}
+.method-tabs{display:flex;gap:10px;margin:24px 0 20px;flex-wrap:wrap}
+.method-tab{
+  flex:1;min-width:110px;background:transparent;border:1px solid rgba(245,240,232,.16);border-radius:10px;
+  color:rgba(245,240,232,.65);padding:11px 8px;font-size:14.5px;letter-spacing:.16em;transition:all .3s;font-family:var(--song);
+}
+.method-tab small{display:block;font-size:11px;letter-spacing:.1em;color:rgba(245,240,232,.4);margin-top:2px}
+.method-tab:hover{border-color:rgba(212,175,55,.5);color:var(--paper)}
+.method-tab.active{
+  border-color:var(--gold);color:var(--gold);
+  background:linear-gradient(180deg,rgba(212,175,55,.14),rgba(212,175,55,.04));
+  box-shadow:0 0 16px rgba(212,175,55,.16) inset;
+}
+.mpanel{display:none;animation:panelIn .5s ease}
+.mpanel.active{display:block}
+@keyframes panelIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.mnote{font-size:13px;color:rgba(245,240,232,.55);margin-bottom:16px;line-height:1.9}
+.num-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.num-row input{
+  width:130px;background:rgba(16,18,22,.6);border:1px solid rgba(245,240,232,.16);border-radius:10px;color:var(--paper);
+  font-family:var(--eng);font-size:20px;text-align:center;padding:11px 8px;transition:border-color .3s;
+}
+.num-row input:focus{outline:none;border-color:var(--gold)}
+.num-row span{color:rgba(245,240,232,.5)}
+.ritual-actions{display:flex;gap:14px;margin-top:26px;flex-wrap:wrap;align-items:center}
+#skipBtn{display:none}
+#skipBtn.show{display:inline-block;animation:fadeUp .4s ease}
+
+/* 铜钱掷币台 */
+.coin-stage{margin-top:30px;padding:34px 20px 44px;text-align:center;position:relative;overflow:hidden;
+  background:radial-gradient(420px 240px at 50% 62%, rgba(44,74,110,.35), rgba(10,12,16,.2) 72%);
+  border:1px solid var(--line);border-radius:16px;
+}
+.coin-stage::before{
+  content:'';position:absolute;left:50%;bottom:16px;transform:translateX(-50%);
+  width:78%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,.4),transparent);
+}
+#tossStatus{
+  min-height:26px;font-size:14.5px;color:var(--gold);letter-spacing:.22em;margin-bottom:22px;
+  text-shadow:0 0 14px rgba(212,175,55,.35);transition:opacity .3s;
+}
+.coin-tray{display:flex;justify-content:center;gap:clamp(18px,4vw,44px);perspective:760px;padding-top:14px}
+.coin-wrap{position:relative;width:96px;height:96px}
+.coin-shadow{
+  position:absolute;left:50%;bottom:-24px;width:74px;height:14px;transform:translateX(-50%);
+  background:radial-gradient(closest-side,rgba(0,0,0,.6),transparent);transition:transform .45s ease, opacity .45s;
+}
+.coin-wrap.air .coin-shadow{transform:translateX(-50%) scale(.45);opacity:.4}
+.coin{
+  position:absolute;inset:0;transform-style:preserve-3d;
+  transition:transform .5s cubic-bezier(.3,1.2,.45,1);
+  filter:drop-shadow(0 12px 16px rgba(0,0,0,.45));
+}
+.coin:hover{filter:drop-shadow(0 12px 16px rgba(0,0,0,.45)) brightness(1.08)}
+.face{
+  position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  background:radial-gradient(circle at 34% 28%, #f2dd96 0%, var(--gold) 38%, #96742a 70%, #58431a 100%);
+  box-shadow:inset 0 0 0 6px rgba(88,67,26,.9), inset 0 0 20px rgba(0,0,0,.42), inset 0 0 0 9px rgba(212,175,55,.4);
+}
+.face.front{transform:translateZ(5px)}
+.face.back{transform:rotateY(180deg) translateZ(5px)}
+.face .hole{
+  position:absolute;left:50%;top:50%;width:27px;height:27px;transform:translate(-50%,-50%);
+  background:linear-gradient(140deg,#181207,#33270f);border:3px solid rgba(88,67,26,.95);
+  border-radius:3px;box-shadow:inset 0 0 9px #000, 0 0 5px rgba(212,175,55,.45);
+}
+.face.front b{
+  position:absolute;font-family:var(--kai);font-weight:400;font-size:21px;color:#3a2c0c;
+  text-shadow:0 1px 0 rgba(255,232,150,.5);line-height:1;
+}
+.face.front b:nth-child(1){top:7px;left:50%;transform:translateX(-50%)}
+.face.front b:nth-child(2){right:8px;top:50%;transform:translateY(-50%)}
+.face.front b:nth-child(3){bottom:7px;left:50%;transform:translateX(-50%)}
+.face.front b:nth-child(4){left:8px;top:50%;transform:translateY(-50%)}
+.face.back .mini-taiji{
+  position:absolute;left:50%;top:50%;width:44px;height:44px;transform:translate(-50%,-50%);border-radius:50%;
+  background:conic-gradient(#3a2c0c 0 50%, #e8cd7c 50% 100%);
+  box-shadow:inset 0 0 0 3px rgba(88,67,26,.85), 0 0 8px rgba(0,0,0,.3);
+}
+.face.back .mini-taiji::before,.face.back .mini-taiji::after{content:'';position:absolute;border-radius:50%;width:9px;height:9px}
+.face.back .mini-taiji::before{left:60%;top:20%;background:#e8cd7c}
+.face.back .mini-taiji::after{left:20%;bottom:20%;background:#3a2c0c}
+.badge{
+  position:absolute;left:50%;bottom:-46px;transform:translateX(-50%) translateY(6px);
+  min-width:34px;text-align:center;font-family:var(--kai);font-size:15px;padding:2px 9px;border-radius:6px;
+  border:1px solid rgba(245,240,232,.25);color:rgba(245,240,232,.75);opacity:0;transition:all .35s ease;
+}
+.badge.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.badge.zh{border-color:var(--gold);color:var(--gold);box-shadow:0 0 10px rgba(212,175,55,.3)}
+.coin-legend{margin-top:52px;font-size:12.5px;color:rgba(245,240,232,.45);letter-spacing:.14em}
+.coin-legend b{color:rgba(212,175,55,.85);font-weight:400}
+
+/* 卦架：六爻 */
+.stand-wrap{padding:clamp(22px,3vw,34px)}
+.stand-title{font-family:var(--kai);font-weight:400;font-size:21px;letter-spacing:.3em;color:var(--gold);margin-bottom:6px}
+.stand-sub{font-size:12.5px;color:rgba(245,240,232,.45);letter-spacing:.12em;margin-bottom:22px}
+#stand{display:flex;flex-direction:column;gap:14px}
+.slot{display:flex;align-items:center;gap:16px;min-height:44px}
+.slot .ptag{
+  width:44px;text-align:right;font-size:12.5px;color:rgba(245,240,232,.4);letter-spacing:.2em;flex:none;
+  transition:color .4s;
+}
+.slot .line-wrap{flex:1;display:flex;justify-content:center}
+.slot .line-wrap svg{width:min(240px,72%);height:auto;overflow:visible}
+.slot .ph{
+  display:block;width:min(240px,72%);height:10px;border-radius:5px;
+  border:1px dashed rgba(245,240,232,.18);transition:opacity .4s;
+}
+.slot.filled .ph{display:none}
+.slot.filled .ptag{color:var(--gold)}
+.yao .st{fill:none;stroke:var(--paper);stroke-width:8.5;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset .55s ease;filter:drop-shadow(0 0 6px rgba(245,240,232,.22))}
+.yao.drawn .st{stroke-dashoffset:0}
+.yao .mk{opacity:0;transition:opacity .5s ease .6s}
+.yao.drawn .mk{opacity:1;transform-origin:center;animation:mkPulse 2.2s ease-in-out infinite}
+.yao .mk circle{fill:none;stroke:var(--cinn);stroke-width:3}
+.yao .mk path{fill:none;stroke:var(--cinn);stroke-width:3;stroke-linecap:round}
+@keyframes mkPulse{0%,100%{opacity:.9}50%{opacity:.35}}
+.stand-legend{margin-top:24px;padding-top:16px;border-top:1px dashed rgba(212,175,55,.22);font-size:12.5px;color:rgba(245,240,232,.5);letter-spacing:.1em;line-height:2}
+.stand-legend i{font-style:normal;color:var(--cinn)}
+
+/* ---------- 结果区 ---------- */
+#result{display:none;padding-top:20px}
+#result.show{display:block;animation:panelIn .8s ease}
+.res-hero{text-align:center;margin-bottom:40px;position:relative;padding:34px 0 10px}
+.ink-wrap{position:relative;display:inline-block;padding:16px 40px}
+.ink-blot{
+  position:absolute;left:50%;top:50%;width:130%;height:190%;transform:translate(-50%,-50%) scale(.2);
+  border-radius:50%;opacity:0;pointer-events:none;
+  background:radial-gradient(closest-side, rgba(192,57,43,.34) 0%, rgba(22,33,62,.5) 46%, rgba(16,18,22,0) 74%);
+  filter:blur(14px);
+}
+.ink-wrap.reveal .ink-blot{animation:blotSpread 1.5s cubic-bezier(.2,.65,.3,1) forwards}
+@keyframes blotSpread{0%{opacity:0;transform:translate(-50%,-50%) scale(.15)}45%{opacity:1}100%{opacity:.75;transform:translate(-50%,-50%) scale(1.08)}}
+.ink-big{position:relative;font-family:var(--kai);font-size:clamp(64px,11vw,132px);line-height:1.1;letter-spacing:.08em;
+  text-shadow:0 10px 44px rgba(0,0,0,.7)}
+.ink-big span{display:inline-block;opacity:0;filter:blur(18px);transform:translateY(24px) scale(1.55)}
+.ink-wrap.reveal .ink-big span{animation:charIn 1.05s cubic-bezier(.2,.75,.25,1) forwards}
+.ink-wrap.reveal .ink-big span:nth-child(2){animation-delay:.18s;color:var(--gold)}
+#resSub{margin-top:10px;font-size:15px;color:rgba(245,240,232,.75);letter-spacing:.3em;opacity:0;transition:opacity .9s ease .8s}
+.ink-wrap.reveal + #resSub, #result.now #resSub{opacity:1}
+#resLuck{
+  display:inline-block;margin-top:14px;padding:5px 22px;border-radius:999px;font-size:14px;letter-spacing:.4em;text-indent:.4em;
+  border:1px solid var(--gold);color:var(--gold);background:rgba(212,175,55,.08);opacity:0;transition:opacity .9s ease 1.1s;
+}
+#result.now #resLuck{opacity:1}
+.ink-wrap.reveal ~ .luck-row #resLuck{opacity:1}
+#result.now .ink-big span{opacity:1;filter:none;transform:none;animation:none}
+#result.now .ink-blot{animation:none;opacity:.55;transform:translate(-50%,-50%) scale(1)}
+.luck-row{margin-top:14px}
+.hex-duo{display:grid;grid-template-columns:1fr 190px 1fr;gap:22px;align-items:stretch;margin-bottom:34px}
+.hex-card{padding:26px 22px;text-align:center;cursor:pointer;transition:transform .35s, box-shadow .35s, border-color .35s}
+.hex-card:hover{transform:translateY(-5px);border-color:rgba(212,175,55,.4);box-shadow:0 20px 46px rgba(0,0,0,.45)}
+.hex-card h4{font-family:var(--kai);font-weight:400;font-size:15px;letter-spacing:.4em;color:rgba(245,240,232,.55);margin-bottom:4px}
+.hex-card .hname{font-family:var(--kai);font-size:30px;letter-spacing:.14em;color:var(--gold);margin:4px 0 16px}
+.hex-card .hfull{font-size:12.5px;color:rgba(245,240,232,.5);letter-spacing:.24em;margin-top:14px}
+.hex-card .lines-box{display:flex;flex-direction:column;gap:10px;align-items:center}
+.hex-card .lines-box svg{width:min(200px,84%);height:auto;overflow:visible}
+.mv-col{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;padding:20px 12px;text-align:center}
+.mv-col .mv-title{font-size:13px;letter-spacing:.34em;color:rgba(245,240,232,.5)}
+.mv-col .mv-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.mv-col .mv-tag{
+  font-size:13px;padding:3px 12px;border-radius:999px;border:1px solid var(--cinn);color:#f0a294;
+  background:rgba(192,57,43,.12);letter-spacing:.1em;animation:mkPulse 2.4s infinite;
+}
+.mv-col .mv-none{font-size:13px;color:rgba(245,240,232,.5)}
+.mv-col .arrow{font-family:var(--eng);color:var(--gold);font-size:22px;opacity:.75}
+/* 结果卷轴卡 · 四 Tab */
+.scroll-card{overflow:hidden;position:relative}
+.rtabs{display:flex;border-bottom:1px solid var(--line);background:rgba(10,12,16,.4)}
+.rtab{
+  flex:1;background:transparent;border:none;color:rgba(245,240,232,.55);font-family:var(--kai);
+  font-size:17px;letter-spacing:.3em;padding:15px 6px;position:relative;transition:color .3s;
+}
+.rtab::after{content:'';position:absolute;left:20%;right:20%;bottom:-1px;height:2px;background:linear-gradient(90deg,var(--cinn),var(--gold));transform:scaleX(0);transition:transform .35s ease}
+.rtab:hover{color:var(--paper)}
+.rtab.active{color:var(--gold)}
+.rtab.active::after{transform:scaleX(1)}
+.rpane{display:none;padding:clamp(22px,3vw,36px);animation:panelIn .5s ease}
+.rpane.active{display:block}
+.rpane h5{font-family:var(--kai);font-weight:400;font-size:22px;letter-spacing:.2em;color:var(--gold);margin-bottom:6px}
+.rpane .ori{font-size:clamp(17px,1.8vw,20px);letter-spacing:.1em;margin:12px 0 10px;color:var(--paper)}
+.rpane .mod{color:rgba(245,240,232,.8);font-size:15px}
+.rpane .meta-line{font-size:13px;color:rgba(245,240,232,.5);letter-spacing:.18em;margin-bottom:14px}
+.mrow{display:flex;gap:14px;align-items:flex-start;padding:13px 0;border-bottom:1px dashed rgba(245,240,232,.12)}
+.mrow:last-of-type{border-bottom:none}
+.mtag{flex:none;font-family:var(--kai);font-size:16px;color:var(--gold);border:1px solid rgba(212,175,55,.4);border-radius:6px;padding:2px 12px;letter-spacing:.1em}
+.mtag.yin6{color:#f0a294;border-color:rgba(192,57,43,.55)}
+.mdesc{font-size:14.5px;color:rgba(245,240,232,.82)}
+.hint{font-size:13px;color:rgba(245,240,232,.45);margin-top:16px;letter-spacing:.08em}
+.duan-grid{display:grid;grid-template-columns:auto 1fr;gap:12px 22px;align-items:center;margin:14px 0 6px}
+.duan-big{
+  grid-row:span 3;width:88px;height:88px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--kai);font-size:44px;color:#ffe9e2;background:linear-gradient(150deg,var(--cinn),#7e2418);
+  box-shadow:0 12px 30px rgba(192,57,43,.35);transform:rotate(-3deg);
+}
+.duan-item{font-size:15px;color:rgba(245,240,232,.85)}
+.duan-item b{font-weight:400;color:var(--gold);letter-spacing:.2em;margin-right:10px}
+.duan-item.ji b{color:#f0a294}
+.res-actions{display:flex;gap:14px;margin-top:30px;flex-wrap:wrap;justify-content:center}
+.quote-strip{
+  max-width:1120px;margin:44px auto 0;text-align:center;font-family:var(--kai);font-size:clamp(17px,2vw,21px);
+  color:rgba(245,240,232,.6);letter-spacing:.24em;
+}
+.quote-strip b{color:var(--gold);font-weight:400}
+
+/* ---------- 六十四卦速查 ---------- */
+.lookup-tools{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+#searchInput{
+  flex:1;min-width:220px;background:rgba(16,18,22,.6);border:1px solid rgba(245,240,232,.16);border-radius:999px;
+  color:var(--paper);font-size:15px;padding:11px 20px;letter-spacing:.06em;transition:border-color .3s, box-shadow .3s;
+}
+#searchInput::placeholder{color:rgba(245,240,232,.32)}
+#searchInput:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.12)}
+#gridCount{font-size:13px;color:rgba(245,240,232,.5);letter-spacing:.2em}
+.grid-scroller{overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch}
+#grid{display:grid;grid-template-columns:56px repeat(8,minmax(74px,1fr));gap:6px;min-width:720px}
+.gcell{
+  background:rgba(22,33,62,.34);border:1px solid rgba(245,240,232,.08);border-radius:10px;
+  padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:7px;
+  color:var(--paper);transition:transform .25s, border-color .25s, background .25s, opacity .3s;font-family:var(--song);
+}
+.gcell:hover{transform:translateY(-4px) scale(1.03);border-color:var(--gold);background:rgba(44,74,110,.45);z-index:2}
+.gcell.dim{opacity:.14;filter:grayscale(1)}
+.gcell .mini{display:flex;flex-direction:column;gap:3px;width:34px}
+.gcell .mini b{height:2.5px;border-radius:2px;background:rgba(245,240,232,.85)}
+.gcell .mini b.yin{background:linear-gradient(90deg,rgba(245,240,232,.85) 0 40%,transparent 40% 60%,rgba(245,240,232,.85) 60% 100%)}
+.gcell .cn{font-family:var(--kai);font-size:15.5px;letter-spacing:.05em}
+.gcell:hover .mini b{background:var(--gold)}
+.gcell:hover .mini b.yin{background:linear-gradient(90deg,var(--gold) 0 40%,transparent 40% 60%,var(--gold) 60% 100%)}
+.ghead{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-size:12px;color:rgba(212,175,55,.75);letter-spacing:.1em;font-family:var(--kai);
+}
+.ghead .sym{font-size:19px}
+.gcorner{background:transparent;border:none}
+
+/* ---------- 周易知识卷轴 ---------- */
+.know-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(22px,3vw,34px)}
+.roller{position:relative;padding:34px 30px 30px;background:linear-gradient(168deg, rgba(22,33,62,.5), rgba(14,17,24,.75));
+  border-radius:6px;box-shadow:0 16px 40px rgba(0,0,0,.4);transition:transform .35s, box-shadow .35s}
+.roller::before,.roller::after{
+  content:'';position:absolute;left:-6px;right:-6px;height:12px;border-radius:6px;
+  background:linear-gradient(90deg,#4a3814, var(--gold) 30%, #f2dd96 50%, var(--gold) 70%, #4a3814);
+  box-shadow:0 4px 10px rgba(0,0,0,.5);z-index:1;
+}
+.roller::before{top:-6px}
+.roller::after{bottom:-6px}
+.roller:hover{transform:translateY(-6px);box-shadow:0 26px 56px rgba(0,0,0,.55)}
+.roller h3{font-family:var(--kai);font-weight:400;font-size:23px;letter-spacing:.24em;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.roller h3 .dot{width:8px;height:8px;background:var(--cinn);border-radius:50%;flex:none;box-shadow:0 0 8px rgba(192,57,43,.7)}
+.roller p{font-size:14.5px;color:rgba(245,240,232,.8);margin-bottom:10px}
+.roller .em{color:var(--gold)}
+.bagua-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.bagua-row span{
+  border:1px solid rgba(212,175,55,.3);border-radius:8px;padding:6px 10px;font-size:13px;color:rgba(245,240,232,.8);
+  letter-spacing:.08em;transition:border-color .3s, transform .3s;
+}
+.bagua-row span:hover{border-color:var(--gold);transform:translateY(-3px)}
+.bagua-row .sym{font-size:17px;color:var(--gold);margin-right:4px}
+.step-list{list-style:none;counter-reset:st}
+.step-list li{position:relative;padding:6px 0 6px 40px;font-size:14.5px;color:rgba(245,240,232,.82)}
+.step-list li::before{
+  counter-increment:st;content:counter(st,cjk-ideographic);position:absolute;left:0;top:8px;
+  width:26px;height:26px;border-radius:50%;border:1px solid var(--gold);color:var(--gold);
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+}
+.know-quote{
+  margin-top:clamp(30px,4vw,44px);text-align:center;padding:26px 20px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  font-family:var(--kai);font-size:clamp(18px,2.2vw,24px);letter-spacing:.3em;color:rgba(245,240,232,.7);
+}
+.know-quote b{color:var(--cinn);font-weight:400}
+
+/* ---------- 页脚 ---------- */
+footer{position:relative;z-index:2;padding:64px 24px 46px;text-align:center;
+  border-top:1px solid var(--line);background:linear-gradient(180deg, rgba(10,12,16,.2), rgba(6,7,9,.75))}
+.foot-seal{
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:74px;height:74px;
+  border:2.5px solid var(--cinn);border-radius:8px;color:var(--cinn);font-family:var(--kai);font-size:22px;
+  letter-spacing:4px;line-height:1.15;transform:rotate(-4deg);margin-bottom:20px;
+  box-shadow:0 0 22px rgba(192,57,43,.28), inset 0 0 12px rgba(192,57,43,.18);
+}
+.foot-slogan{font-family:var(--kai);font-size:20px;letter-spacing:.3em;color:rgba(245,240,232,.75);margin-bottom:14px}
+.foot-links{display:flex;gap:26px;justify-content:center;margin-bottom:18px;font-size:13.5px;color:rgba(245,240,232,.5)}
+.foot-links a{transition:color .3s}
+.foot-links a:hover{color:var(--gold)}
+.foot-note{font-size:12.5px;color:rgba(245,240,232,.38);letter-spacing:.12em;max-width:560px;margin:0 auto;line-height:2}
+
+/* ---------- 详情弹层 ---------- */
+#modal{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:22px}
+#modal.open{display:flex}
+#modal .mask{position:absolute;inset:0;background:rgba(6,7,10,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{
+  position:relative;width:min(620px,100%);max-height:86vh;overflow-y:auto;border-radius:18px;
+  background:linear-gradient(160deg,#1a2440,#101216);border:1px solid rgba(212,175,55,.3);
+  box-shadow:0 30px 90px rgba(0,0,0,.7);animation:panelIn .45s ease;padding:34px clamp(20px,4vw,38px);
+}
+#modalClose{
+  position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;
+  background:transparent;border:1px solid rgba(245,240,232,.25);color:rgba(245,240,232,.7);font-size:17px;transition:all .3s;
+}
+#modalClose:hover{border-color:var(--cinn);color:var(--cinn);transform:rotate(90deg)}
+.m-head{text-align:center;margin-bottom:20px}
+.m-head .mname{font-family:var(--kai);font-size:52px;color:var(--gold);letter-spacing:.14em;line-height:1.2}
+.m-head .mfull{font-size:13.5px;color:rgba(245,240,232,.55);letter-spacing:.3em;margin-top:2px}
+.m-hex{display:flex;flex-direction:column;gap:9px;align-items:center;margin:18px 0 20px}
+.m-hex svg{width:min(230px,72%);height:auto;overflow:visible}
+.m-tri{display:flex;justify-content:center;gap:22px;font-size:13.5px;color:rgba(212,175,55,.85);letter-spacing:.12em;margin-bottom:16px}
+.m-sec{padding:14px 0;border-top:1px dashed rgba(245,240,232,.14)}
+.m-sec h6{font-size:13px;color:var(--gold);letter-spacing:.34em;margin-bottom:6px}
+.m-sec p{font-size:14.5px;color:rgba(245,240,232,.82)}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1199px){
+  .ritual-grid{grid-template-columns:1fr}
+  .hero-grid{grid-template-columns:1fr;gap:40px}
+  .hex-duo{grid-template-columns:1fr 1fr}
+  .mv-col{grid-column:1 / -1;flex-direction:row;justify-content:center;padding:14px}
+  .know-grid{grid-template-columns:1fr}
+}
+@media (max-width:767px){
+  nav a{font-size:13.5px}
+  .brand b{display:none}
+  .coin-wrap{width:78px;height:78px}
+  .coin-wrap .face.front b{font-size:17px}
+  .coin-wrap .face .hole{width:22px;height:22px}
+  .face.back .mini-taiji{width:36px;height:36px}
+  .hex-duo{grid-template-columns:1fr}
+  .mv-col{flex-direction:column}
+  .rtab{font-size:15px;letter-spacing:.14em;padding:13px 4px}
+  .duan-grid{grid-template-columns:1fr}
+  .duan-big{grid-row:auto;justify-self:center}
+  .hero-deco{display:none}
+  #grid{grid-template-columns:44px repeat(8,minmax(62px,1fr));min-width:560px}
+}
+@media (max-width:374px){
+  .coin-wrap{width:64px;height:64px}
+  .coin-tray{gap:14px}
+  .btn{padding:12px 24px;font-size:14.5px}
+  section{padding-left:14px;padding-right:14px}
+}
+/* ---------- 降级：减少动态 ---------- */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.001s !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001s !important;
+    scroll-behavior:auto !important;
+  }
+  .taiji{animation:none;transform:none}
+  .yao .st{stroke-dashoffset:0}
+  .yao .mk,.ink-big span,.splash-sub,.splash-tip,#splash h1 span{opacity:1;filter:none;transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ 入场遮罩 ============ -->
+<div id="splash" aria-label="开场动画">
+  <div class="iblob ib1"></div>
+  <div class="iblob ib2"></div>
+  <div class="iblob ib3"></div>
+  <div class="taiji" aria-hidden="true"></div>
+  <div class="splash-sub">水 墨 玄 境</div>
+  <h1><span>三</span><span>钱</span><span>问</span><span>天</span></h1>
+  <div class="splash-tip">凝神静气 · 点击任意处入局</div>
+</div>
+
+<!-- ============ 背景层 ============ -->
+<canvas id="inkCanvas" aria-hidden="true"></canvas>
+<div class="sky" aria-hidden="true">
+  <div class="moon"></div>
+  <svg class="mtn m1" viewBox="0 0 1440 300" preserveAspectRatio="none">
+    <path d="M0 300 L0 190 L140 120 L300 185 L430 95 L600 175 L760 80 L920 170 L1080 110 L1240 190 L1440 130 L1440 300 Z"/>
+  </svg>
+  <svg class="mtn m2" viewBox="0 0 1440 300" preserveAspectRatio="none">
+    <path d="M0 300 L0 230 L180 170 L340 225 L520 140 L700 215 L880 150 L1060 230 L1240 180 L1440 240 L1440 300 Z"/>
+  </svg>
+  <svg class="mtn m3" viewBox="0 0 1440 300" preserveAspectRatio="none">
+    <path d="M0 300 L0 270 L220 215 L420 265 L640 200 L860 268 L1080 225 L1300 280 L1440 250 L1440 300 Z"/>
+  </svg>
+</div>
+
+<!-- ============ 顶栏 ============ -->
+<header>
+  <div class="brand">
+    <span class="seal-s">问天</span>
+    <b>三钱问天</b>
+  </div>
+  <nav>
+    <a href="#ritual">起卦仪式</a>
+    <a href="#lookup">六十四卦</a>
+    <a href="#knowledge">周易知识</a>
+    <button id="soundToggle" type="button" aria-pressed="false">音效 关</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ============ 首屏 · 今日一卦 ============ -->
+  <section id="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-left">
+        <div class="eyebrow">周易六十四卦 · 沉浸式问占</div>
+        <div class="hero-title">水墨玄境<br><em>三钱</em><span class="cn-red">问</span>天</div>
+        <p class="hero-lead">一日一卦，不为问吉凶，只为停三秒。静心默想今日之事，让六爻替你把局面摆开——三枚铜钱连掷六次，爻线逐笔落成，墨晕散处，卦名自现。</p>
+        <div class="hero-cta">
+          <button class="btn" id="heroAsk" type="button">摇今日一卦</button>
+          <a class="btn btn-ghost" href="#lookup">查看六十四卦</a>
+          <a class="btn btn-ghost" href="#knowledge">了解起卦方法</a>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="panel daily-card" id="dailyCard" title="点击查看卦象详解">
+          <h3>今日一卦</h3>
+          <div class="date" id="todayDate">——</div>
+          <div class="daily-body">
+            <div class="daily-lines" id="dailyMini" aria-hidden="true"></div>
+            <div class="daily-meta">
+              <b id="dailyName">——</b>
+              <i id="dailyFull">——</i>
+            </div>
+          </div>
+          <div class="daily-text" id="dailyText">——</div>
+        </div>
+        <span class="hero-deco">观象授时 · 感而遂通</span>
+      </div>
+    </div>
+    <div class="scroll-cue" aria-hidden="true"><span>入局</span><i></i></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 起卦仪式 ============ -->
+  <section id="ritual">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="no">壹</span>
+        <h2>起卦仪式</h2>
+        <span class="hint">凝神 · 择法 · 成卦 · 观象</span>
+      </div>
+      <div class="ritual-grid">
+        <div class="panel ritual-left">
+          <label class="q-label" for="questionInput">诚心所问（可选，一事一占）</label>
+          <textarea id="questionInput" rows="2" placeholder="默念所问之事，或写下以存卦中……"></textarea>
+
+          <div class="method-tabs" role="tablist">
+            <button class="method-tab active" data-m="coin" type="button">铜钱摇卦<small>最合古法</small></button>
+            <button class="method-tab" data-m="time" type="button">时间起卦<small>以当下时辰</small></button>
+            <button class="method-tab" data-m="num" type="button">数字起卦<small>任报两数</small></button>
+          </div>
+
+          <div class="mpanel active" id="p-coin">
+            <p class="mnote">三枚铜钱，有字一面为「字」记三，无字一面为「背」记二；三钱相加，六为老阴、七为少阳、八为少阴、九为老阳。连掷六次，自下而上而成卦；遇老阳老阴即为动爻，动则生变。</p>
+            <div class="coin-stage">
+              <div id="tossStatus">铜钱静候，心念既定便可摇卦</div>
+              <div class="coin-tray" id="coinTray">
+                <div class="coin-wrap">
+                  <div class="coin"><div class="face front"><b>元</b><b>亨</b><b>利</b><b>贞</b><i class="hole"></i></div><div class="face back"><span class="mini-taiji"></span></div></div>
+                  <div class="coin-shadow"></div>
+                  <span class="badge"></span>
+                </div>
+                <div class="coin-wrap">
+                  <div class="coin"><div class="face front"><b>元</b><b>亨</b><b>利</b><b>贞</b><i class="hole"></i></div><div class="face back"><span class="mini-taiji"></span></div></div>
+                  <div class="coin-shadow"></div>
+                  <span class="badge"></span>
+                </div>
+                <div class="coin-wrap">
+                  <div class="coin"><div class="face front"><b>元</b><b>亨</b><b>利</b><b>贞</b><i class="hole"></i></div><div class="face back"><span class="mini-taiji"></span></div></div>
+                  <div class="coin-shadow"></div>
+                  <span class="badge"></span>
+                </div>
+              </div>
+              <div class="coin-legend">字 ＝ 三 · 背 ＝ 二 · <b>六老阴动</b> · 七少阳 · 八少阴 · <b>九老阳动</b></div>
+            </div>
+            <div class="ritual-actions">
+              <button class="btn btn-cinn" id="tossBtn" type="button">凝神 · 三摇成卦</button>
+              <button class="btn btn-ghost" id="quickBtn" type="button">速占 · 一键出卦</button>
+              <button class="btn btn-ghost" id="skipBtn" type="button">跳过动画</button>
+            </div>
+          </div>
+
+          <div class="mpanel" id="p-time">
+            <p class="mnote">梅花易数之时卦：以年支数加月加日除八取上卦，再加时支数除八取下卦，四数之和除六取动爻。此处以公历近似演算，严格古法当以农历干支为准，仅参考其意。</p>
+            <p class="mnote" id="nowStr">——</p>
+            <div class="ritual-actions">
+              <button class="btn btn-cinn" id="timeBtn" type="button">以此时辰起卦</button>
+              <button class="btn btn-ghost" id="skipBtnT" type="button">跳过动画</button>
+            </div>
+          </div>
+
+          <div class="mpanel" id="p-num">
+            <p class="mnote">心中所念化为一数：前数除八余者为上卦，后数除八余者为下卦（余零取坤），两数之和除六定动爻（余零动上爻）。卦序：乾一兑二，离三震四，巽五坎六，艮七坤八。</p>
+            <div class="num-row">
+              <input type="number" id="numA" min="1" placeholder="占数一" aria-label="第一个占数">
+              <span>与</span>
+              <input type="number" id="numB" min="1" placeholder="占数二" aria-label="第二个占数">
+            </div>
+            <div class="ritual-actions">
+              <button class="btn btn-cinn" id="numBtn" type="button">以数起卦</button>
+              <button class="btn btn-ghost" id="skipBtnN" type="button">跳过动画</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel stand-wrap">
+          <div class="stand-title">六 爻 卦 架</div>
+          <div class="stand-sub">自下而上 · 六爻成卦 · 动爻以朱砂记之</div>
+          <div id="stand">
+            <div class="slot"><span class="ptag">上爻</span><span class="line-wrap"><span class="ph"></span></span></div>
+            <div class="slot"><span class="ptag">五爻</span><span class="line-wrap"><span class="ph"></span></span></div>
+            <div class="slot"><span class="ptag">四爻</span><span class="line-wrap"><span class="ph"></span></span></div>
+            <div class="slot"><span class="ptag">三爻</span><span class="line-wrap"><span class="ph"></span></span></div>
+            <div class="slot"><span class="ptag">二爻</span><span class="line-wrap"><span class="ph"></span></span></div>
+            <div class="slot"><span class="ptag">初爻</span><span class="line-wrap"><span class="ph"></span></span></div>
+          </div>
+          <div class="stand-legend">
+            <i>○</i> 老阳（动）　<i>✕</i> 老阴（动）　长横为阳 · 两段为阴<br>
+            六爻既成，墨晕散开处，便是你的卦。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 卦象结果 ============ -->
+  <section id="result">
+    <div class="wrap">
+      <div class="res-hero">
+        <div class="ink-wrap" id="inkWrap">
+          <span class="ink-blot" aria-hidden="true"></span>
+          <div class="ink-big" id="inkName"></div>
+        </div>
+        <div id="resSub">——</div>
+        <div class="luck-row"><span id="resLuck">——</span></div>
+      </div>
+
+      <div class="hex-duo">
+        <div class="panel hex-card" id="benCard" title="点击查看本卦详解">
+          <h4>本 卦</h4>
+          <div class="hname" id="benName">——</div>
+          <div class="lines-box" id="benHex"></div>
+          <div class="hfull" id="benFull">——</div>
+        </div>
+        <div class="panel mv-col">
+          <span class="mv-title">动 爻</span>
+          <span class="arrow">↓变↓</span>
+          <div class="mv-list" id="mvList"></div>
+        </div>
+        <div class="panel hex-card" id="bianCard" title="点击查看变卦详解">
+          <h4>变 卦</h4>
+          <div class="hname" id="bianName">——</div>
+          <div class="lines-box" id="bianHex"></div>
+          <div class="hfull" id="bianFull">——</div>
+        </div>
+      </div>
+
+      <div class="panel scroll-card">
+        <div class="rtabs" role="tablist">
+          <button class="rtab active" data-t="gua" type="button">卦 辞</button>
+          <button class="rtab" data-t="yao" type="button">动 爻</button>
+          <button class="rtab" data-t="bian" type="button">变 卦</button>
+          <button class="rtab" data-t="duan" type="button">断 语</button>
+        </div>
+        <div class="rpane active" id="pane-gua"></div>
+        <div class="rpane" id="pane-yao"></div>
+        <div class="rpane" id="pane-bian"></div>
+        <div class="rpane" id="pane-duan"></div>
+      </div>
+
+      <div class="res-actions">
+        <button class="btn btn-ghost" id="againBtn" type="button">再占一卦</button>
+        <button class="btn" id="copyBtn" type="button">存为卦签</button>
+      </div>
+    </div>
+    <p class="quote-strip">「 卦辞是<b>镜子</b>，照见的是你心里已有的答案。 」</p>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 六十四卦速查 ============ -->
+  <section id="lookup">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="no">贰</span>
+        <h2>六十四卦速查</h2>
+        <span class="hint">行主上卦 · 列主下卦 · 点按观详</span>
+      </div>
+      <div class="lookup-tools">
+        <input type="text" id="searchInput" placeholder="检索卦名或全名，如：谦 / 地山谦 / 15">
+        <span id="gridCount">六十四卦全集</span>
+      </div>
+      <div class="grid-scroller">
+        <div id="grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 周易知识卷轴 ============ -->
+  <section id="knowledge">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="no">叁</span>
+        <h2>周易知识卷轴</h2>
+        <span class="hint">四则入门 · 展卷可读</span>
+      </div>
+      <div class="know-grid">
+        <div class="roller">
+          <h3><span class="dot"></span>阴阳爻</h3>
+          <p>阳爻「—」为刚为健，象天；阴爻「- -」为柔为顺，象地。三爻相叠而成八卦，八卦相重而成<span class="em">六十四卦</span>。</p>
+          <p>六爻自下而上称初、二、三、四、五、上；阳爻称九，阴爻称六，如「初九」「六二」「上九」——读经先识爻。</p>
+        </div>
+        <div class="roller">
+          <h3><span class="dot"></span>八卦取象</h3>
+          <p>八卦者，天地自然八象：<span class="em">乾天、坤地、震雷、巽风、坎水、离火、艮山、兑泽</span>。上下两卦相配，即成一卦之意境。</p>
+          <div class="bagua-row">
+            <span><i class="sym">☰</i>乾·天</span><span><i class="sym">☷</i>坤·地</span><span><i class="sym">☳</i>震·雷</span><span><i class="sym">☴</i>巽·风</span>
+            <span><i class="sym">☵</i>坎·水</span><span><i class="sym">☲</i>离·火</span><span><i class="sym">☶</i>艮·山</span><span><i class="sym">☱</i>兑·泽</span>
+          </div>
+        </div>
+        <div class="roller">
+          <h3><span class="dot"></span>六爻与动爻</h3>
+          <p>老变而少不变：老阳九、老阴六为<span class="em">动爻</span>，动则爻变，本卦之外又生变卦（之卦）。一爻动者，古人多「以动爻之辞断」。</p>
+          <p>多爻俱动，则参之以卦辞大象；六爻皆静，则以本卦卦辞为断，静守其正可也。</p>
+        </div>
+        <div class="roller">
+          <h3><span class="dot"></span>起卦四步</h3>
+          <ol class="step-list">
+            <li>默念所问之事——一事一占，心诚则明</li>
+            <li>选择起卦方式——铜钱摇卦最合古法，时间、数字起卦最为便捷</li>
+            <li>凝神摇卦——三枚铜钱连掷六次，自下而上而成卦</li>
+            <li>观象解卦——读卦辞爻辞，参断语建议，可存为卦签随时回味</li>
+          </ol>
+        </div>
+      </div>
+      <div class="know-quote">「 一阴一阳之谓道 · <b>乐天知命而不忧</b> 」</div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ 页脚 ============ -->
+<footer>
+  <span class="foot-seal">问天</span>
+  <div class="foot-slogan">以三枚铜钱，敬六十四种可能</div>
+  <div class="foot-links">
+    <a href="#hero">今日一卦</a>
+    <a href="#ritual">起卦仪式</a>
+    <a href="#lookup">六十四卦</a>
+    <a href="#knowledge">周易知识</a>
+  </div>
+  <p class="foot-note">水墨玄境 · 三钱问天 · 丙午年<br>本站内容仅供传统文化研究与娱乐参考，重大决策请理性判断。</p>
+</footer>
+
+<!-- ============ 卦象详情弹层 ============ -->
+<div id="modal" role="dialog" aria-modal="true" aria-label="卦象详情">
+  <div class="mask" id="modalMask"></div>
+  <div class="modal-box">
+    <button id="modalClose" type="button" aria-label="关闭">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<noscript><p style="text-align:center;padding:20px;color:#F5F0E8">本站占卜仪式需启用 JavaScript 方可运行。</p></noscript>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= 工具 ================= */
+var $ = function(s){ return document.querySelector(s); };
+var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+var RM = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function randBit(){
+  if (window.crypto && window.crypto.getRandomValues){
+    var a = new Uint8Array(1); window.crypto.getRandomValues(a); return a[0] & 1;
+  }
+  return Math.random() < 0.5 ? 0 : 1;
+}
+function rnd(n){ return Math.floor(Math.random() * n); }
+
+/* ================= 卦象数据 ================= */
+/* 八卦（自下而上三爻，1 阳 0 阴），序合先天：乾一兑二离三震四巽五坎六艮七坤八 */
+var TRIG = [
+  { n:'乾', sym:'☰', nat:'天', a:[1,1,1] },
+  { n:'兑', sym:'☱', nat:'泽', a:[1,1,0] },
+  { n:'离', sym:'☲', nat:'火', a:[1,0,1] },
+  { n:'震', sym:'☳', nat:'雷', a:[1,0,0] },
+  { n:'巽', sym:'☴', nat:'风', a:[0,1,1] },
+  { n:'坎', sym:'☵', nat:'水', a:[0,1,0] },
+  { n:'艮', sym:'☶', nat:'山', a:[0,0,1] },
+  { n:'坤', sym:'☷', nat:'地', a:[0,0,0] }
+];
+TRIG.forEach(function(t){ t.s = t.a.join(''); });
+
+/* 六十四卦：HEX[上卦][下卦]，六爻由上下卦合成（下→上） */
+var HEX = [
+  /* 上乾 */
+  [
+    { n:'乾', f:'乾为天', num:1,  t:'元亨利贞', m:'天行健，宜自强不息，刚健有为则大通', k:'大吉' },
+    { n:'履', f:'天泽履', num:10, t:'履虎尾，不咥人，亨', m:'如踩虎尾，宜谨慎有礼，循礼而行则无虞', k:'慎而吉' },
+    { n:'同人', f:'天火同人', num:13, t:'同人于野，亨，利涉大川', m:'与人和同，宜志同道合，同心则大事可为', k:'吉' },
+    { n:'无妄', f:'天雷无妄', num:25, t:'其匪正有眚，不利有攸往', m:'守正无妄为，宜循道而行，妄动则生灾', k:'守正则吉' },
+    { n:'姤', f:'天风姤', num:44, t:'女壮，勿用取女', m:'一阴始生，宜防微杜渐，勿纵小患成大患', k:'慎' },
+    { n:'讼', f:'天水讼', num:6,  t:'有孚窒，中吉终凶', m:'争讼非善事，宜和解退让，逞强必两伤', k:'凶宜和解' },
+    { n:'遁', f:'天山遁', num:33, t:'亨，远小人，不恶而严', m:'退避保身，宜远小人而自持威严，退则亨', k:'退则亨' },
+    { n:'否', f:'天地否', num:12, t:'不利君子贞，大往小来', m:'天地不交，宜守正静待，不宜妄动强求', k:'闭塞宜守' }
+  ],
+  /* 上兑 */
+  [
+    { n:'夬', f:'泽天夬', num:43, t:'扬于王庭，孚号有厉', m:'当断则断，宜光明正大去除积弊，果决则吉', k:'果决则吉' },
+    { n:'兑', f:'兑为泽', num:58, t:'亨，利贞', m:'和颜悦色，宜以诚相待，两泽相悦则亨通', k:'吉' },
+    { n:'革', f:'泽火革', num:49, t:'巳日乃孚，元亨利贞，悔亡', m:'顺天应人，宜去故取新，变革得时则悔亡', k:'变则通' },
+    { n:'随', f:'泽雷随', num:17, t:'元亨利贞，无咎', m:'随顺时势，宜择善而从，随时则无咎', k:'吉' },
+    { n:'大过', f:'泽风大过', num:28, t:'栋桡，利有攸往，亨', m:'非常之时行非常之事，宜格外审慎量力', k:'险中求通' },
+    { n:'困', f:'泽水困', num:47, t:'亨，贞，大人吉，有言不信', m:'身处困顿，宜守正少言，困而不失其所亨', k:'困中守正' },
+    { n:'咸', f:'泽山咸', num:31, t:'亨，利贞，取女吉', m:'二气交感，宜以至诚相应，相感则吉', k:'吉' },
+    { n:'萃', f:'泽地萃', num:45, t:'亨，王假有庙，利见大人', m:'聚人以正，宜用诚相聚，聚而不散则亨', k:'吉' }
+  ],
+  /* 上离 */
+  [
+    { n:'大有', f:'火天大有', num:14, t:'元亨', m:'大有所获，宜顺天休命，盈而不骄则长保', k:'大吉' },
+    { n:'睽', f:'火泽睽', num:38, t:'小事吉', m:'异中有同，宜求同存异，小事可吉大事宜缓', k:'小吉' },
+    { n:'离', f:'离为火', num:30, t:'利贞，亨，畜牝牛吉', m:'附丽光明，宜柔顺守中，丽于正则亨', k:'吉' },
+    { n:'噬嗑', f:'火雷噬嗑', num:21, t:'亨，利用狱', m:'明察刚断，宜咬断梗阻，去其间则通', k:'断则吉' },
+    { n:'鼎', f:'火风鼎', num:50, t:'元吉，亨', m:'鼎新凝命，宜养贤任能，鼎盛之象大吉', k:'大吉' },
+    { n:'未济', f:'火水未济', num:64, t:'亨，小狐汔济，濡其尾，无攸利', m:'事未竟成，宜慎择所行，慎终如始终得济', k:'慎终则济' },
+    { n:'旅', f:'火山旅', num:56, t:'小亨，旅贞吉', m:'行旅在外，宜柔顺谨慎，处旅守正则吉', k:'小吉' },
+    { n:'晋', f:'火地晋', num:35, t:'康侯用锡马蕃庶，昼日三接', m:'日出地上，宜进而光明，晋升之象', k:'吉' }
+  ],
+  /* 上震 */
+  [
+    { n:'大壮', f:'雷天大壮', num:34, t:'利贞', m:'刚壮得正，宜以正驭强，切莫恃壮而骄', k:'壮而利贞' },
+    { n:'归妹', f:'雷泽归妹', num:54, t:'征凶，无攸利', m:'位不当而躁进有凶，宜守正以待，不宜妄动', k:'凶宜守' },
+    { n:'丰', f:'雷火丰', num:55, t:'王假之，勿忧，宜日中', m:'明动相资而盛大，宜守中不骄，盛极思危', k:'盛宜守中' },
+    { n:'震', f:'震为雷', num:51, t:'亨，震来虩虩，笑言哑哑', m:'惊变面前，宜镇定自若，戒惧则可致亨通', k:'镇定则亨' },
+    { n:'恒', f:'雷风恒', num:32, t:'亨，无咎，利贞', m:'持恒守常，宜久于其道，恒则有成', k:'吉' },
+    { n:'解', f:'雷水解', num:40, t:'利西南，有攸往夙吉', m:'险难消解，宜速行宽政，赦过宥罪则吉', k:'往则吉' },
+    { n:'小过', f:'雷山小过', num:62, t:'利贞，可小事，不可大事', m:'小有过越，宜下不宜上，小事可为大事宜慎', k:'小事吉' },
+    { n:'豫', f:'雷地豫', num:16, t:'利建侯行师', m:'和乐顺动，宜谋定后动，顺而动则众从', k:'吉' }
+  ],
+  /* 上巽 */
+  [
+    { n:'小畜', f:'风天小畜', num:9,  t:'亨，密云不雨，自我西郊', m:'力量尚蓄未发，宜积聚待时，小有所畜则亨', k:'蓄待则亨' },
+    { n:'中孚', f:'风泽中孚', num:61, t:'豚鱼吉，利涉大川', m:'中心诚信，宜以诚感人，信立则可涉险难', k:'大吉' },
+    { n:'家人', f:'风火家人', num:37, t:'利女贞', m:'正家之道，宜以威信恩爱为先，家正则天下定', k:'吉' },
+    { n:'益', f:'风雷益', num:42, t:'利有攸往，利涉大川', m:'损上益下，宜厚施得众，益人终自益', k:'大吉' },
+    { n:'巽', f:'巽为风', num:57, t:'小亨，利有攸往，利见大人', m:'谦逊顺入，宜申命行事，柔顺则小亨', k:'小吉' },
+    { n:'涣', f:'风水涣', num:59, t:'亨，王假有庙，利涉大川', m:'涣散之时，宜以诚聚涣，立事挽心则亨', k:'聚则亨' },
+    { n:'渐', f:'风山渐', num:53, t:'女归吉，利贞', m:'鸿渐于陆，宜循序渐进，渐进而吉', k:'吉' },
+    { n:'观', f:'风地观', num:20, t:'盥而不荐，有孚颙若', m:'观仰大道，宜中正以观天下，观人亦自观', k:'平而利观' }
+  ],
+  /* 上坎 */
+  [
+    { n:'需', f:'水天需', num:5,  t:'有孚，光亨，贞吉，利涉大川', m:'云上于天，宜守正待时，时机至则利涉大川', k:'待则吉' },
+    { n:'节', f:'水泽节', num:60, t:'亨，苦节不可贞', m:'节制有度，宜不苦不纵，有度则久亨', k:'有度则亨' },
+    { n:'既济', f:'水火既济', num:63, t:'亨小，利贞，初吉终乱', m:'功德初成，宜慎终如始，防微杜渐，勿由盛转衰', k:'吉防终乱' },
+    { n:'屯', f:'水雷屯', num:3,  t:'元亨利贞，勿用有攸往', m:'万物初生多艰，宜蓄力勿冒进，扎根则利建侯', k:'艰宜蓄力' },
+    { n:'井', f:'水风井', num:48, t:'改邑不改井，无丧无得', m:'养人不穷，宜守位不废，养德如养井', k:'平' },
+    { n:'坎', f:'坎为水', num:29, t:'习坎，有孚，维心亨', m:'重险之中，宜守信而行，心亨则履险如夷', k:'险中信则亨' },
+    { n:'蹇', f:'水山蹇', num:39, t:'利西南，不利东北', m:'行路艰难，宜止而反身修德，待时而后进', k:'难宜守' },
+    { n:'比', f:'水地比', num:8,  t:'吉，原筮元永贞，无咎', m:'亲比相辅，宜择善而从，相亲以正则吉', k:'吉' }
+  ],
+  /* 上艮 */
+  [
+    { n:'大畜', f:'山天大畜', num:26, t:'利贞，不家食吉，利涉大川', m:'养贤蓄德，宜大有作为，厚积自能涉川', k:'吉' },
+    { n:'损', f:'山泽损', num:41, t:'有孚，元吉，无咎可贞', m:'惩忿窒欲，宜损己利人，善损则元吉', k:'损而元吉' },
+    { n:'贲', f:'山火贲', num:22, t:'亨，小利有攸往', m:'文饰得宜，宜质朴为本，饰不过实则亨', k:'小吉' },
+    { n:'颐', f:'山雷颐', num:27, t:'贞吉，观颐，自求口实', m:'观颐自养，宜慎言节食，养正则吉', k:'养正则吉' },
+    { n:'蛊', f:'山风蛊', num:18, t:'元亨，利涉大川', m:'积弊待治，宜整饬革新，治蛊则元亨', k:'治则元亨' },
+    { n:'蒙', f:'山水蒙', num:4,  t:'亨，匪我求童蒙，童蒙求我', m:'蒙昧待启，宜虚心求教，诚问则亨', k:'问则亨' },
+    { n:'艮', f:'艮为山', num:52, t:'艮其背，不获其身', m:'知止而后有定，宜时止则止，止得其所则无咎', k:'止得其所' },
+    { n:'剥', f:'山地剥', num:23, t:'不利有攸往', m:'阴盛剥阳，宜厚下安宅，静待剥极而复', k:'剥宜静' }
+  ],
+  /* 上坤 */
+  [
+    { n:'泰', f:'地天泰', num:11, t:'小往大来，吉亨', m:'天地交泰，宜上下相通，通泰则大吉', k:'大吉' },
+    { n:'临', f:'地泽临', num:19, t:'元亨利贞，至于八月有凶', m:'以临其事，宜盛时思危，临事而惧则吉', k:'吉盛思危' },
+    { n:'明夷', f:'地火明夷', num:36, t:'利艰贞', m:'晦而转明，宜藏锋守志，用晦而明', k:'晦中守正' },
+    { n:'复', f:'地雷复', num:24, t:'亨，出入无疾，朋来无咎', m:'一阳来复，宜顺养生机，否极泰来之始', k:'吉' },
+    { n:'升', f:'地风升', num:46, t:'元亨，用见大人，勿恤', m:'木生地中，宜积小以高大，循序渐进则升', k:'吉' },
+    { n:'师', f:'地水师', num:7,  t:'贞，丈人吉，无咎', m:'兴师动众，宜有纪律正道，师出以律则吉', k:'正则吉' },
+    { n:'谦', f:'地山谦', num:15, t:'亨，君子有终', m:'谦受益满招损，宜卑以自守，谦谦君子有终', k:'大吉' },
+    { n:'坤', f:'坤为地', num:2,  t:'元亨，利牝马之贞', m:'地势坤，宜厚德载物，柔顺践行则安贞吉', k:'吉' }
+  ]
+];
+
+/* 扁平化 + 索引 */
+var ALL = [];
+var byKey = {};
+HEX.forEach(function(row, u){
+  row.forEach(function(h, l){
+    h.u = u; h.l = l; h.key = u * 8 + l;
+    ALL.push(h); byKey[h.key] = h;
+  });
+});
+
+function trigIdx(sig){
+  for (var i = 0; i < 8; i++){ if (TRIG[i].s === sig) return i; }
+  return 7;
+}
+/* 六爻（下→上，1/0）→ 卦对象 */
+function hexFromLines(lines){
+  var lower = lines.slice(0, 3).join('');
+  var upper = lines.slice(3, 6).join('');
+  return HEX[trigIdx(upper)][trigIdx(lower)];
+}
+function yangOf(v){ return v === 7 || v === 9; }
+function isMoving(v){ return v === 6 || v === 9; }
+function yaoChar(v){ return v === 9 ? '老阳' : v === 6 ? '老阴' : v === 7 ? '少阳' : '少阴'; }
+var POSN = ['初', '二', '三', '四', '五', '上'];
+function yaoName(i, yang){
+  var y = yang ? '九' : '六';
+  return i === 0 ? '初' + y : (i === 5 ? '上' + y : y + POSN[i]);
+}
+var POS_MEANING = [
+  '初爻为事之端倪，机藏于微，起手之势已定方向。',
+  '二爻居下卦之中，守正则进退有据，宜稳住阵脚。',
+  '三爻处内外之交，多凶多惧，慎防过亢与躁进。',
+  '四爻近君多惧，进退皆须得体，慎之又慎。',
+  '五爻得中得位，为卦之主，大势在此一举。',
+  '上爻居卦之穷极，物极必反，穷则思变。'
+];
+
+/* ================= 定时器登记（可跳过） ================= */
+var TIMERS = [];
+function later(fn, ms){ TIMERS.push(window.setTimeout(fn, ms)); }
+function clearLater(){ TIMERS.forEach(function(id){ window.clearTimeout(id); }); TIMERS = []; }
+
+/* ================= 音效（Web Audio 合成） ================= */
+var AC = null, soundOn = false;
+function ensureAC(){
+  if (!AC){
+    try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ AC = null; }
+  }
+  if (AC && AC.state === 'suspended'){ AC.resume(); }
+  return AC;
+}
+function clack(){
+  if (!soundOn) return;
+  var ac = ensureAC(); if (!ac) return;
+  var t = ac.currentTime;
+  var o = ac.createOscillator(), g = ac.createGain();
+  o.type = 'square';
+  o.frequency.setValueAtTime(1500 + Math.random() * 700, t);
+  o.frequency.exponentialRampToValueAtTime(240, t + 0.08);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.16, t + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+  o.connect(g); g.connect(ac.destination);
+  o.start(t); o.stop(t + 0.14);
+}
+function gong(){
+  if (!soundOn) return;
+  var ac = ensureAC(); if (!ac) return;
+  var t = ac.currentTime;
+  [196, 392, 588].forEach(function(f, i){
+    var o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.16 / (i + 1), t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+    o.connect(g); g.connect(ac.destination);
+    o.start(t); o.stop(t + 1.25);
+  });
+}
+$('#soundToggle').addEventListener('click', function(){
+  soundOn = !soundOn;
+  this.classList.toggle('on', soundOn);
+  this.textContent = soundOn ? '音效 开' : '音效 关';
+  this.setAttribute('aria-pressed', soundOn ? 'true' : 'false');
+  if (soundOn){ ensureAC(); clack(); }
+});
+
+/* ================= 爻线 SVG（逐笔书写） ================= */
+function yaoSvg(v, baseDelay){
+  var yang = yangOf(v);
+  var strokes = yang
+    ? ['M10 13 C 60 10.5, 140 15.5, 190 13']
+    : ['M10 13 C 40 10.5, 68 15, 92 13', 'M108 13 C 132 10.5, 162 15, 190 13'];
+  var p = '';
+  strokes.forEach(function(d, i){
+    var dl = ((baseDelay || 0) + i * 0.26).toFixed(2);
+    p += '<path class="st" d="' + d + '" pathLength="100" style="transition-delay:' + dl + 's"/>';
+  });
+  var mk = '';
+  if (v === 9){
+    mk = '<g class="mk" style="transition-delay:' + ((baseDelay || 0) + 0.45).toFixed(2) + 's"><circle cx="215" cy="13" r="6.5"/></g>';
+  } else if (v === 6){
+    mk = '<g class="mk" style="transition-delay:' + ((baseDelay || 0) + 0.45).toFixed(2) + 's"><path d="M208 6 L222 20"/><path d="M222 6 L208 20"/></g>';
+  }
+  return '<svg class="yao" viewBox="0 0 232 26" aria-hidden="true">' + p + mk + '</svg>';
+}
+function drawYaoNow(container, v, baseDelay){
+  container.innerHTML = yaoSvg(v, baseDelay);
+  var svg = container.querySelector('svg');
+  if (RM){
+    svg.classList.add('drawn');
+  } else {
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ svg.classList.add('drawn'); });
+    });
+  }
+}
+/* 大卦：六行自上而下（index 5..0），书写自下而上 */
+function buildBigHex(el, values, animate){
+  el.innerHTML = '';
+  for (var j = 5; j >= 0; j--){
+    var row = document.createElement('div');
+    row.className = 'yrow';
+    row.innerHTML = yaoSvg(values[j], animate ? (5 - j) * 0.3 : 0);
+    el.appendChild(row);
+  }
+  var svgs = el.querySelectorAll('svg');
+  if (!animate || RM){
+    Array.prototype.forEach.call(svgs, function(s){ s.classList.add('drawn'); });
+  } else {
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        Array.prototype.forEach.call(svgs, function(s){ s.classList.add('drawn'); });
+      });
+    });
+  }
+}
+
+/* ================= canvas 水墨粒子背景 ================= */
+(function inkBackground(){
+  var cvs = $('#inkCanvas');
+  if (!cvs || !cvs.getContext) return;
+  var ctx = cvs.getContext('2d');
+  if (!ctx) return;
+
+  var W = 0, H = 0, DPR = 1;
+  var particles = [], drops = [], sprites = [];
+  var mouseX = 0, mouseY = 0, parX = 0, parY = 0;
+  var running = !RM;
+
+  function makeBlob(size, tone){
+    var c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    var g = c.getContext('2d');
+    if (!g) return c;
+    var cx = size / 2;
+    for (var i = 0; i < 9; i++){
+      var ang = Math.random() * Math.PI * 2;
+      var rr = Math.random() * size * 0.2;
+      var x = cx + Math.cos(ang) * rr, y = cx + Math.sin(ang) * rr;
+      var r = size * (0.16 + Math.random() * 0.16);
+      var grad = g.createRadialGradient(x, y, 0, x, y, r);
+      grad.addColorStop(0, 'rgba(' + tone + ',0.32)');
+      grad.addColorStop(0.65, 'rgba(' + tone + ',0.15)');
+      grad.addColorStop(1, 'rgba(' + tone + ',0)');
+      g.fillStyle = grad;
+      g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    }
+    for (var k = 0; k < 26; k++){
+      g.fillStyle = 'rgba(' + tone + ',' + (0.04 + Math.random() * 0.08).toFixed(2) + ')';
+      g.beginPath();
+      g.arc(cx + (Math.random() - 0.5) * size * 0.7, cx + (Math.random() - 0.5) * size * 0.7, 1 + Math.random() * 2.2, 0, Math.PI * 2);
+      g.fill();
+    }
+    return c;
+  }
+
+  function init(){
+    DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+    W = window.innerWidth; H = window.innerHeight;
+    cvs.width = W * DPR; cvs.height = H * DPR;
+    cvs.style.width = W + 'px'; cvs.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    if (!sprites.length){
+      sprites = [makeBlob(210, '110,132,172'), makeBlob(170, '90,112,150'),
+                 makeBlob(230, '24,34,58'), makeBlob(150, '190,160,90')];
+    }
+    var isSmall = W < 769 || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+    var N = isSmall ? 42 : 88;             /* 低端移动端粒子减半，总量 ≤120 */
+    particles = [];
+    for (var i = 0; i < N; i++){
+      particles.push({
+        x: Math.random() * W, y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.16, vy: -0.06 - Math.random() * 0.2,
+        rot: Math.random() * Math.PI * 2, vr: (Math.random() - 0.5) * 0.0035,
+        s: 0.35 + Math.random() * 0.85,
+        d: 0.35 + Math.random() * 0.85,
+        sp: sprites[rnd(sprites.length)],
+        a: 0.10 + Math.random() * 0.22,
+        ph: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  function frame(){
+    ctx.clearRect(0, 0, W, H);
+    parX += ((mouseX - W / 2) * 0.03 - parX) * 0.04;
+    parY += ((mouseY - H / 2) * 0.03 - parY) * 0.04;
+    for (var i = 0; i < particles.length; i++){
+      var p = particles[i];
+      p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.ph += 0.008;
+      if (p.y < -140) { p.y = H + 120; p.x = Math.random() * W; }
+      if (p.x < -160) p.x = W + 150;
+      if (p.x > W + 160) p.x = -150;
+      var breathe = 0.75 + Math.sin(p.ph) * 0.25;
+      ctx.save();
+      ctx.globalAlpha = p.a * breathe;
+      ctx.translate(p.x + parX * p.d, p.y + parY * p.d);
+      ctx.rotate(p.rot);
+      var sz = p.sp.width * p.s;
+      ctx.drawImage(p.sp, -sz / 2, -sz / 2, sz, sz);
+      ctx.restore();
+    }
+    /* 点击墨滴扩散 */
+    for (var j = drops.length - 1; j >= 0; j--){
+      var d = drops[j];
+      d.r += 2.4; d.a *= 0.945;
+      if (d.a < 0.012){ drops.splice(j, 1); continue; }
+      ctx.save();
+      ctx.globalAlpha = d.a;
+      ctx.strokeStyle = 'rgba(212,175,55,0.5)';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = d.a * 0.8;
+      ctx.strokeStyle = 'rgba(140,160,200,0.4)';
+      ctx.beginPath(); ctx.arc(d.x, d.y, d.r * 0.62, 0, Math.PI * 2); ctx.stroke();
+      if (d.sp){
+        ctx.globalAlpha = d.a * 0.5;
+        var dsz = d.r * 1.7;
+        ctx.drawImage(d.sp, d.x - dsz / 2, d.y - dsz / 2, dsz, dsz);
+      }
+      ctx.restore();
+    }
+    if (running) requestAnimationFrame(frame);
+  }
+
+  function staticPaint(){
+    ctx.clearRect(0, 0, W, H);
+    for (var i = 0; i < particles.length; i++){
+      var p = particles[i];
+      ctx.save();
+      ctx.globalAlpha = p.a;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      var sz = p.sp.width * p.s;
+      ctx.drawImage(p.sp, -sz / 2, -sz / 2, sz, sz);
+      ctx.restore();
+    }
+  }
+
+  window.addEventListener('resize', function(){
+    init();
+    if (RM) staticPaint();
+  });
+  window.addEventListener('pointermove', function(e){ mouseX = e.clientX; mouseY = e.clientY; }, { passive: true });
+  window.addEventListener('pointerdown', function(e){
+    if (RM || drops.length > 14) return;
+    drops.push({ x: e.clientX, y: e.clientY, r: 4, a: 0.5, sp: sprites[rnd(sprites.length)] });
+  }, { passive: true });
+  document.addEventListener('visibilitychange', function(){
+    if (RM) return;
+    if (document.hidden){ running = false; }
+    else if (!running){ running = true; requestAnimationFrame(frame); }
+  });
+
+  init();
+  if (RM){ staticPaint(); } else { requestAnimationFrame(frame); }
+})();
+
+/* ================= 山峦视差 ================= */
+(function mountains(){
+  var mts = $$('.mtn');
+  if (!mts.length) return;
+  var mx = 0, tick = false;
+  function apply(){
+    var y = window.scrollY || window.pageYOffset || 0;
+    mts.forEach(function(m, i){
+      var k = 0.05 + i * 0.05;
+      m.style.transform = 'translate3d(' + (mx * (i + 1) * 5).toFixed(1) + 'px,' + (y * k).toFixed(1) + 'px,0)';
+    });
+    tick = false;
+  }
+  window.addEventListener('scroll', function(){
+    if (!tick && !RM){ tick = true; requestAnimationFrame(apply); }
+  }, { passive: true });
+  window.addEventListener('pointermove', function(e){
+    if (RM) return;
+    mx = (e.clientX / window.innerWidth - 0.5);
+    if (!tick){ tick = true; requestAnimationFrame(apply); }
+  }, { passive: true });
+})();
+
+/* ================= 入场遮罩 ================= */
+(function splashCtl(){
+  var sp = $('#splash');
+  if (!sp) return;
+  var dismissed = false;
+  function dismiss(){
+    if (dismissed) return;
+    dismissed = true;
+    sp.classList.add('gone');
+    window.setTimeout(function(){ if (sp.parentNode) sp.style.display = 'none'; }, RM ? 60 : 950);
+  }
+  if (RM){
+    window.setTimeout(dismiss, 700);
+  } else {
+    window.setTimeout(dismiss, 5200);
+  }
+  sp.addEventListener('click', dismiss);
+})();
+
+/* ================= 起卦引擎 ================= */
+var RIT = { running: false, values: null, question: '' };
+var slots = $$('#stand .slot');
+var tossBtn = $('#tossBtn'), quickBtn = $('#quickBtn'), skipBtn = $('#skipBtn');
+var statusEl = $('#tossStatus');
+var resultEl = $('#result');
+var coinTray = $('#coinTray');
+
+function setStatus(t){ if (statusEl) statusEl.textContent = t; }
+function resetCoins(){
+  $$('#coinTray .coin').forEach(function(c){
+    c.style.transition = 'none';
+    c.style.transform = 'translateY(0) rotateX(0deg) rotateY(0deg)';
+  });
+  $$('#coinTray .badge').forEach(function(b){ b.classList.remove('on', 'zh'); });
+  $$('#coinTray .coin-wrap').forEach(function(w){ w.classList.remove('air'); });
+}
+function resetStand(){
+  slots.forEach(function(s){
+    s.classList.remove('filled');
+    s.querySelector('.line-wrap').innerHTML = '<span class="ph"></span>';
+  });
+}
+function hideResult(){
+  resultEl.classList.remove('show', 'now');
+  var iw = $('#inkWrap');
+  iw.classList.remove('reveal');
+}
+/* 铜钱组合：v6 全背，v9 全字，v7 一字，v8 两字（随机换位） */
+function facesFor(v){
+  var f;
+  if (v === 9) f = [true, true, true];
+  else if (v === 6) f = [false, false, false];
+  else if (v === 7) f = [true, false, false];
+  else f = [true, true, false];
+  for (var i = f.length - 1; i > 0; i--){
+    var j = rnd(i + 1), tmp = f[i]; f[i] = f[j]; f[j] = tmp;
+  }
+  return f;
+}
+function rollValues(){
+  var out = [];
+  for (var i = 0; i < 6; i++){
+    var s = 0;
+    for (var k = 0; k < 3; k++) s += randBit() ? 3 : 2;
+    out.push(s);
+  }
+  return out;
+}
+function writeYaoAt(idx, v){
+  var slot = slots[5 - idx];
+  slot.classList.add('filled');
+  drawYaoNow(slot.querySelector('.line-wrap'), v, 0);
+  var yang = yangOf(v);
+  setStatus('第' + (idx + 1) + '爻 · ' + yaoName(idx, yang) + ' 落定 —— ' + yaoChar(v) + (isMoving(v) ? '（动）' : ''));
+}
+function beginRitual(){
+  if (RIT.running) return;
+  RIT.running = true;
+  RIT.question = ($('#questionInput') && $('#questionInput').value.trim()) || '';
+  RIT.values = rollValues();      /* 算法先行：结果在动画开始前同步算好，动画只是播放结果 */
+  clearLater();
+  resetCoins();
+  resetStand();
+  hideResult();
+  [tossBtn, quickBtn, $('#timeBtn'), $('#numBtn')].forEach(function(b){ if (b) b.disabled = true; });
+}
+function endRitual(){
+  RIT.running = false;
+  [tossBtn, quickBtn, $('#timeBtn'), $('#numBtn')].forEach(function(b){ if (b) b.disabled = false; });
+  ['#skipBtn', '#skipBtnT', '#skipBtnN'].forEach(function(s){
+    var b = $(s); if (b) b.classList.remove('show');
+  });
+}
+
+/* —— 铜钱摇卦：六掷逐爻 —— */
+function doToss(idx, done){
+  var v = RIT.values[idx];
+  var faces = facesFor(v);
+  var coins = $$('#coinTray .coin');
+  var badges = $$('#coinTray .badge');
+  var wraps = $$('#coinTray .coin-wrap');
+  setStatus('第' + (idx + 1) + '掷 · 铜钱旋转，问心所向……');
+  coins.forEach(function(c){
+    c.style.transition = 'none';
+    c.style.transform = 'translateY(0) rotateX(0deg) rotateY(0deg)';
+  });
+  badges.forEach(function(b){ b.classList.remove('on', 'zh'); });
+  void coinTray.offsetWidth;
+
+  faces.forEach(function(front, k){
+    var spins = 720 + rnd(2) * 360;
+    var yTotal = 1080 + (front ? 0 : 180);
+    later(function(){
+      wraps[k].classList.add('air');
+      coins[k].style.transition = 'transform .48s cubic-bezier(.2,.6,.4,1)';
+      coins[k].style.transform = 'translateY(-118px) rotateX(' + spins + 'deg) rotateY(' + (yTotal - 360) + 'deg)';
+    }, 60 + k * 70);
+    later(function(){
+      coins[k].style.transition = 'transform .5s cubic-bezier(.34,1.25,.5,1)';
+      coins[k].style.transform = 'translateY(0) rotateX(' + (spins * 2) + 'deg) rotateY(' + yTotal + 'deg)';
+    }, 560 + k * 70);
+    later(function(){
+      wraps[k].classList.remove('air');
+      clack();
+      badges[k].textContent = front ? '字' : '背';
+      badges[k].classList.toggle('zh', front);
+      badges[k].classList.add('on');
+    }, 1030 + k * 70);
+  });
+  later(function(){ writeYaoAt(idx, v); }, 1180);
+  later(done, 1780);
+}
+function startCoin(){
+  beginRitual();
+  if (RM){ endRitual(); renderResult(true); return; }
+  skipBtn.classList.add('show');
+  var i = 0;
+  var next = function(){
+    if (i >= 6){
+      setStatus('六爻既成，卦象已显');
+      gong();
+      later(function(){ renderResult(false); }, 420);
+      return;
+    }
+    doToss(i, function(){ i++; next(); });
+  };
+  next();
+}
+
+/* —— 时间起卦（梅花易数，公历近似） —— */
+function timeValues(){
+  var d = new Date();
+  var yearBranch = (((d.getFullYear() - 4) % 12) + 12) % 12 + 1;  /* 子1…亥12 */
+  var month = d.getMonth() + 1, day = d.getDate();
+  var hourBranch = Math.floor(((d.getHours() + 1) % 24) / 2) + 1; /* 子1…亥12 */
+  var up = (yearBranch + month + day) % 8;            if (up === 0) up = 8;
+  var low = (yearBranch + month + day + hourBranch) % 8; if (low === 0) low = 8;
+  var mv = (yearBranch + month + day + hourBranch) % 6;  if (mv === 0) mv = 6;
+  var lines = TRIG[low - 1].a.concat(TRIG[up - 1].a);  /* 下三爻 + 上三爻 */
+  var vals = lines.map(function(y){ return y ? 7 : 8; });
+  vals[mv - 1] = vals[mv - 1] === 7 ? 9 : 6;           /* 动爻转老 */
+  return vals;
+}
+/* —— 数字起卦 —— */
+function numValues(a, b){
+  var up = a % 8;  if (up === 0) up = 8;
+  var low = b % 8; if (low === 0) low = 8;
+  var mv = (a + b) % 6; if (mv === 0) mv = 6;
+  var lines = TRIG[low - 1].a.concat(TRIG[up - 1].a);
+  var vals = lines.map(function(y){ return y ? 7 : 8; });
+  vals[mv - 1] = vals[mv - 1] === 7 ? 9 : 6;
+  return vals;
+}
+function playFast(values, label){
+  beginRitual();
+  RIT.values = values;
+  if (RM){ endRitual(); renderResult(true); return; }
+  $('#skipBtnT').classList.add('show');
+  $('#skipBtnN').classList.add('show');
+  setStatus(label);
+  var i = 0;
+  var step = function(){
+    if (i >= 6){
+      setStatus('六爻既成，卦象已显');
+      gong();
+      later(function(){ renderResult(false); }, 420);
+      return;
+    }
+    writeYaoAt(i, values[i]);
+    i++;
+    later(step, 540);
+  };
+  later(step, 200);
+}
+function startNum(){
+  var a = $('#numA').value.trim(), b = $('#numB').value.trim();
+  if (a === '' || b === '' || !isFinite(+a) || !isFinite(+b) || +a <= 0 || +b <= 0){
+    setStatus('请报出两个正整数，心念所系之数');
+    return;
+  }
+  playFast(numValues(Math.floor(+a), Math.floor(+b)), '以数为占 · 起数成卦……');
+}
+
+/* ================= 结果渲染 ================= */
+function parseYiJi(m){
+  var parts = m.split(/[，,；;]/);
+  var yi = [], ji = [];
+  parts.forEach(function(p){
+    if (/^(宜|可|利|适合|顺)/.test(p)) yi.push(p.replace(/^(宜|可|利|适合)/, ''));
+    else if (/^(勿|忌|不宜|莫|切莫)/.test(p)) ji.push(p.replace(/^(勿|忌|不宜|莫|切莫)/, ''));
+  });
+  if (!yi.length) yi.push('顺时而动，心正则事谐');
+  if (!ji.length) ji.push('三心二意，急功近利');
+  return { yi: yi, ji: ji };
+}
+function hexLinesOf(h){
+  return TRIG[h.l].a.concat(TRIG[h.u].a);
+}
+function renderResult(instant){
+  var vals = RIT.values;
+  var lines = vals.map(function(v){ return yangOf(v) ? 1 : 0; });
+  var chVals = vals.map(function(v){ return v === 9 ? 6 : (v === 6 ? 9 : v); });
+  var chLines = chVals.map(function(v){ return yangOf(v) ? 1 : 0; });
+  var hex = hexFromLines(lines);
+  var hex2 = hexFromLines(chLines);
+  var movers = [];
+  vals.forEach(function(v, i){ if (isMoving(v)) movers.push({ i: i, v: v }); });
+
+  /* 卦名墨晕 */
+  var inkName = $('#inkName');
+  inkName.innerHTML = '';
+  hex.n.split('').forEach(function(ch){
+    var s = document.createElement('span');
+    s.textContent = ch;
+    inkName.appendChild(s);
+  });
+  $('#resSub').textContent = hex.f + ' · 周易第' + hex.num + '卦';
+  $('#resLuck').textContent = hex.k;
+  $('#benName').textContent = hex.n;
+  $('#benFull').textContent = hex.f;
+  $('#bianName').textContent = hex2.n;
+  $('#bianFull').textContent = hex2.f;
+
+  buildBigHex($('#benHex'), vals, !instant);
+  var cleanVals = hexLinesOf(hex2).map(function(y){ return y ? 7 : 8; });
+  buildBigHex($('#bianHex'), cleanVals, !instant);
+
+  /* 动爻列 */
+  var mvList = $('#mvList');
+  if (!movers.length){
+    mvList.innerHTML = '<span class="mv-none">六爻安静<br>以本卦卦辞断</span>';
+  } else {
+    mvList.innerHTML = movers.map(function(o){
+      return '<span class="mv-tag">' + yaoName(o.i, yangOf(o.v)) + '</span>';
+    }).join('');
+  }
+
+  /* 四 Tab 内容 */
+  var triLine = '上' + TRIG[hex.u].n + '（' + TRIG[hex.u].nat + '）下' + TRIG[hex.l].n + '（' + TRIG[hex.l].nat + '）· ' + hex.f;
+  $('#pane-gua').innerHTML =
+    '<h5>卦 辞</h5>' +
+    '<p class="meta-line">' + triLine + '</p>' +
+    '<p class="ori">「' + hex.t + '」</p>' +
+    '<p class="mod">白话：' + hex.m + '。</p>' +
+    '<p class="hint">卦辞为全卦之总断，静爻之时以此为准。</p>';
+
+  if (!movers.length){
+    $('#pane-yao').innerHTML =
+      '<h5>动 爻</h5>' +
+      '<p class="mod">本卦六爻安静，无老阳老阴之变——古人遇静卦，即以本卦卦辞断之，静守为上。</p>' +
+      '<p class="hint">铜钱摇卦本可无动爻；时间、数字起卦必有动爻。</p>';
+  } else {
+    $('#pane-yao').innerHTML =
+      '<h5>动 爻</h5>' +
+      movers.map(function(o){
+        return '<div class="mrow"><span class="mtag ' + (o.v === 6 ? 'yin6' : '') + '">' + yaoName(o.i, yangOf(o.v)) + '</span>' +
+          '<span class="mdesc">' + (o.v === 9 ? '老阳（九）——阳极将变，刚极生变。' : '老阴（六）——阴极将变，柔极生变。') + POS_MEANING[o.i] + '</span></div>';
+      }).join('') +
+      '<p class="hint">断卦以动爻之辞为主，参之变卦；多爻动者，合观其势。</p>';
+  }
+
+  if (hex2.key === hex.key){
+    $('#pane-bian').innerHTML =
+      '<h5>变 卦</h5>' +
+      '<p class="mod">六爻无变，变卦即本卦——局面已成定势，宜守常不变。</p>';
+  } else {
+    $('#pane-bian').innerHTML =
+      '<h5>变 卦 · 之卦</h5>' +
+      '<p class="meta-line">' + hex.n + ' 之 ' + hex2.n + '（' + hex2.f + '）</p>' +
+      '<p class="ori">「' + hex2.t + '」</p>' +
+      '<p class="mod">白话：' + hex2.m + '。变卦示事之归宿，与本卦相参而观其走向。</p>';
+  }
+
+  var yj = parseYiJi(hex.m);
+  $('#pane-duan').innerHTML =
+    '<h5>断 语</h5>' +
+    '<div class="duan-grid">' +
+      '<div class="duan-big">' + hex.k.charAt(hex.k.length - 1) + '</div>' +
+      '<div class="duan-item"><b>倾 向</b>' + hex.k + '</div>' +
+      '<div class="duan-item"><b>宜</b>' + yj.yi.join('；') + '</div>' +
+      '<div class="duan-item ji"><b>忌</b>' + yj.ji.join('；') + '</div>' +
+    '</div>' +
+    '<p class="mod">一句建议：' + hex.m + '。</p>' +
+    '<p class="hint">卦辞是镜子，照见的是你心里已有的答案。</p>';
+
+  /* 重置 Tab 到第一页 */
+  $$('.rtab').forEach(function(t, i){ t.classList.toggle('active', i === 0); });
+  $$('.rpane').forEach(function(p, i){ p.classList.toggle('active', i === 0); });
+
+  RIT.lastHex = hex;
+  RIT.lastHexKey2 = hex2.key;
+  resultEl.classList.add('show');
+  if (instant || RM){
+    resultEl.classList.add('now');
+    $('#inkWrap').classList.remove('reveal');
+    resultEl.scrollIntoView({ behavior: 'auto', block: 'start' });
+  } else {
+    var iw = $('#inkWrap');
+    iw.classList.remove('reveal');
+    void iw.offsetWidth;
+    later(function(){ iw.classList.add('reveal'); }, 150);
+    later(function(){ resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 950);
+  }
+  endRitual();
+}
+
+/* 跳过动画：清空所有未触发步骤，立即成卦 */
+function skipAll(){
+  clearLater();
+  if (!RIT.values || !RIT.running) return;
+  RIT.running = false;
+  resetCoins();
+  slots.forEach(function(s, idx){
+    s.classList.remove('filled');
+    s.querySelector('.line-wrap').innerHTML = '<span class="ph"></span>';
+  });
+  RIT.values.forEach(function(v, i){
+    var slot = slots[5 - i];
+    slot.classList.add('filled');
+    drawYaoNow(slot.querySelector('.line-wrap'), v, 0);
+  });
+  setStatus('六爻既成，卦象已显（已跳过动画）');
+  renderResult(true);
+}
+
+/* ================= 事件绑定 ================= */
+tossBtn.addEventListener('click', startCoin);
+quickBtn.addEventListener('click', function(){
+  beginRitual();
+  endRitual();
+  renderResult(true);
+});
+skipBtn.addEventListener('click', skipAll);
+$('#skipBtnT').addEventListener('click', skipAll);
+$('#skipBtnN').addEventListener('click', skipAll);
+$('#timeBtn').addEventListener('click', function(){
+  playFast(timeValues(), '以' + new Date().toLocaleDateString('zh-CN') + '此时辰起卦……');
+});
+$('#numBtn').addEventListener('click', startNum);
+
+$$('.method-tab').forEach(function(tab){
+  tab.addEventListener('click', function(){
+    $$('.method-tab').forEach(function(t){ t.classList.remove('active'); });
+    this.classList.add('active');
+    var m = this.getAttribute('data-m');
+    $$('.mpanel').forEach(function(p){ p.classList.remove('active'); });
+    var panel = $('#p-' + m);
+    if (panel) panel.classList.add('active');
+    if (m === 'time'){
+      var d = new Date();
+      $('#nowStr').textContent = '当前：' + d.toLocaleDateString('zh-CN') + ' ' +
+        d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) + ' · 时支属' +
+        ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'][Math.floor(((d.getHours() + 1) % 24) / 2)];
+    }
+  });
+});
+
+$$('.rtab').forEach(function(tab){
+  tab.addEventListener('click', function(){
+    $$('.rtab').forEach(function(t){ t.classList.remove('active'); });
+    this.classList.add('active');
+    var t = this.getAttribute('data-t');
+    $$('.rpane').forEach(function(p){ p.classList.remove('active'); });
+    var pane = $('#pane-' + t);
+    if (pane) pane.classList.add('active');
+  });
+});
+
+$('#againBtn').addEventListener('click', function(){
+  hideResult();
+  resetStand();
+  resetCoins();
+  setStatus('铜钱静候，心念既定便可摇卦');
+  $('#ritual').scrollIntoView({ behavior: RM ? 'auto' : 'smooth' });
+});
+
+$('#copyBtn').addEventListener('click', function(){
+  var btn = this;
+  if (!RIT.lastHex || !RIT.values) return;
+  var hex = RIT.lastHex;
+  var q = RIT.question ? '所问：' + RIT.question + '\n' : '';
+  var text = '【三钱问天 · 卦签】\n' + q + hex.f + '（周易第' + hex.num + '卦）\n' +
+    '卦辞：' + hex.t + '\n白话：' + hex.m + '。\n倾向：' + hex.k + '\n——卦辞是镜子，照见的是你心里已有的答案。';
+  function done(ok){
+    var old = btn.textContent;
+    btn.textContent = ok ? '已存入剪贴' : '复制未成';
+    window.setTimeout(function(){ btn.textContent = old; }, 1600);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ fallback(); });
+  } else { fallback(); }
+  function fallback(){
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      done(!!ok);
+    } catch(e){ done(false); }
+  }
+});
+
+/* 首屏 CTA */
+$('#heroAsk').addEventListener('click', function(){
+  $('#ritual').scrollIntoView({ behavior: RM ? 'auto' : 'smooth' });
+  window.setTimeout(function(){
+    var q = $('#questionInput');
+    if (q) q.focus({ preventScroll: true });
+  }, RM ? 100 : 700);
+});
+
+/* ================= 六十四卦速查 ================= */
+function miniLines(h){
+  var lines = hexLinesOf(h);       /* 下→上 */
+  var s = '';
+  for (var j = 5; j >= 0; j--){
+    s += '<b' + (lines[j] ? '' : ' class="yin"') + '></b>';
+  }
+  return s;
+}
+(function buildGrid(){
+  var grid = $('#grid');
+  var html = '<div class="ghead gcorner"></div>';
+  TRIG.forEach(function(t){
+    html += '<div class="ghead"><span class="sym">' + t.sym + '</span><span>' + t.n + '</span></div>';
+  });
+  TRIG.forEach(function(tu, u){
+    html += '<div class="ghead"><span class="sym">' + tu.sym + '</span><span>' + tu.n + '</span></div>';
+    TRIG.forEach(function(tl, l){
+      var h = HEX[u][l];
+      html += '<button class="gcell" data-k="' + h.key + '" type="button" title="' + h.f + '">' +
+        '<span class="mini">' + miniLines(h) + '</span><span class="cn">' + h.n + '</span></button>';
+    });
+  });
+  grid.innerHTML = html;
+  grid.addEventListener('click', function(e){
+    var cell = e.target.closest ? e.target.closest('.gcell') : null;
+    if (cell) openHex(+cell.getAttribute('data-k'));
+  });
+})();
+$('#searchInput').addEventListener('input', function(){
+  var q = this.value.trim();
+  var cells = $$('#grid .gcell');
+  var hit = 0;
+  cells.forEach(function(c){
+    var h = byKey[+c.getAttribute('data-k')];
+    var match = q === '' ||
+      h.n.indexOf(q) > -1 || h.f.indexOf(q) > -1 ||
+      String(h.num) === q || h.t.indexOf(q) > -1;
+    c.classList.toggle('dim', !match);
+    if (match) hit++;
+  });
+  $('#gridCount').textContent = q === '' ? '六十四卦全集' : ('命中 ' + hit + ' 卦');
+});
+
+/* ================= 详情弹层 ================= */
+function openHex(key){
+  var h = byKey[key];
+  if (!h) return;
+  var lines = hexLinesOf(h);
+  var vals = lines.map(function(y){ return y ? 7 : 8; });
+  var yj = parseYiJi(h.m);
+  var body = '<div class="m-head">' +
+      '<div class="mname">' + h.n + '</div>' +
+      '<div class="mfull">' + h.f + ' · 周易第' + h.num + '卦 · ' + h.k + '</div>' +
+    '</div>' +
+    '<div class="m-hex">' + yaoSvg(vals[5], 0) + yaoSvg(vals[4], 0) + yaoSvg(vals[3], 0) +
+      yaoSvg(vals[2], 0) + yaoSvg(vals[1], 0) + yaoSvg(vals[0], 0) + '</div>' +
+    '<div class="m-tri"><span>上' + TRIG[h.u].n + '（' + TRIG[h.u].nat + '）</span><span>下' + TRIG[h.l].n + '（' + TRIG[h.l].nat + '）</span></div>' +
+    '<div class="m-sec"><h6>卦 辞</h6><p>「' + h.t + '」</p></div>' +
+    '<div class="m-sec"><h6>白 话</h6><p>' + h.m + '。</p></div>' +
+    '<div class="m-sec"><h6>断 语</h6><p>宜：' + yj.yi.join('；') + '　｜　忌：' + yj.ji.join('；') + '</p></div>';
+  $('#modalBody').innerHTML = body;
+  var svgs = $('#modalBody').querySelectorAll('svg');
+  Array.prototype.forEach.call(svgs, function(s, idx){
+    if (RM){ s.classList.add('drawn'); }
+    else {
+      s.querySelectorAll('.st').forEach(function(p){
+        p.style.transitionDelay = ((5 - idx) * 0.12).toFixed(2) + 's';
+      });
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){ s.classList.add('drawn'); });
+      });
+    }
+  });
+  $('#modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeHex(){
+  $('#modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+$('#modalClose').addEventListener('click', closeHex);
+$('#modalMask').addEventListener('click', closeHex);
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') closeHex();
+});
+$('#dailyCard').addEventListener('click', function(){
+  if (window.__dailyKey != null) openHex(window.__dailyKey);
+});
+$('#benCard').addEventListener('click', function(){
+  if (RIT.lastHex) openHex(RIT.lastHex.key);
+});
+$('#bianCard').addEventListener('click', function(){
+  if (RIT.lastHexKey2 != null) openHex(RIT.lastHexKey2);
+});
+
+/* ================= 今日一卦（按日期轮换） ================= */
+(function daily(){
+  var d = new Date();
+  var seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  var h = ALL[seed % ALL.length];
+  window.__dailyKey = h.key;
+  $('#todayDate').textContent = d.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
+  $('#dailyMini').innerHTML = miniLines(h);
+  $('#dailyName').textContent = h.n;
+  $('#dailyFull').textContent = h.f;
+  $('#dailyText').textContent = h.t + ' —— ' + h.m;
+})();
+
+})();
+</script>
+</body>
+</html>

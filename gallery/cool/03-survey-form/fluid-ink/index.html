@@ -1,0 +1,2223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e1118">
+<meta name="description" content="流体墨水 · 2026 城市青年阅读习惯调查——一份浮在活墨上的收集表，指针可搅动墨流，提交时有全屏墨浪冲击波。">
+<title>流体墨水 · 2026 城市青年阅读习惯调查</title>
+<style>
+/* ==========================================================
+   流体墨水 Fluid Ink · 收集表
+   深蓝黑玄墨底 + 一抹朱红/金；表单永居不透明实底卡；
+   背景为 WebGL stable-fluids 实时墨流（可被指针搅动）。
+   ========================================================== */
+:root{
+  --ink-0:#0a0c10;
+  --ink-1:#0e1118;          /* 深蓝黑玄墨（页面/画布基色） */
+  --ink-card:#1a151b;       /* 实底卡 */
+  --ink-card-2:#231b22;     /* 卡片悬停提亮 */
+  --paper:#f2ecdf;          /* 暖纸白正文 */
+  --paper-dim:#b6ad9f;      /* 弱文字 */
+  --indigo:#5d7fae;         /* 靛 */
+  --indigo-deep:#1f3a5f;
+  --verm:#c8452f;           /* 朱砂 */
+  --verm-deep:#8e2c1c;
+  --gold:#c9a45c;           /* 金泥 */
+  --gold-bright:#e6c987;
+  --err:#e8795f;            /* 错误文字（暗底可读） */
+  --line:rgba(226,203,151,.14);
+  --serif:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
+  --kai:"Kaiti SC","STKaiti","KaiTi","Noto Serif SC",serif;
+  --sans:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  --mono:"SF Mono","JetBrains Mono","Cascadia Mono",Consolas,monospace;
+  color-scheme:dark;
+}
+*{ margin:0; padding:0; box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  font-family:var(--sans);
+  background:var(--ink-1);
+  color:var(--paper);
+  line-height:1.7;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+body.locked{ overflow:hidden; }
+::selection{ background:rgba(200,69,47,.55); color:#fff8ec; }
+::-webkit-scrollbar{ width:10px; }
+::-webkit-scrollbar-track{ background:#0b0d12; }
+::-webkit-scrollbar-thumb{ background:#2b2530; border-radius:8px; border:2px solid #0b0d12; }
+::-webkit-scrollbar-thumb:hover{ background:#4a3b30; }
+button{ font-family:inherit; }
+:focus-visible{ outline:2px solid var(--gold-bright); outline-offset:2px; border-radius:4px; }
+
+/* ---------- 背景层：墨流体画布 + 无 WebGL 兜底色块 ---------- */
+#ink{
+  position:fixed; inset:0; z-index:0;
+  width:100%; height:100%;
+  display:block; background:var(--ink-1);
+}
+.blobs{ position:fixed; inset:0; z-index:0; display:none; overflow:hidden; background:var(--ink-1); }
+.no-fluid .blobs{ display:block; }
+.no-fluid #ink{ display:none; }
+.blob{ position:absolute; width:46vmax; height:46vmax; border-radius:50%; filter:blur(72px); opacity:.32; }
+.b1{ background:radial-gradient(circle at 35% 35%, #274a77, transparent 65%); top:-10%; left:-12%; animation:drift1 26s ease-in-out infinite alternate; }
+.b2{ background:radial-gradient(circle at 60% 40%, #6e2418, transparent 62%); bottom:-14%; right:-10%; animation:drift2 32s ease-in-out infinite alternate; }
+.b3{ background:radial-gradient(circle at 50% 50%, #6d5424, transparent 60%); top:32%; left:54%; opacity:.18; animation:drift3 38s ease-in-out infinite alternate; }
+@keyframes drift1{ to{ transform:translate(9vw,7vh) scale(1.16); } }
+@keyframes drift2{ to{ transform:translate(-8vw,-6vh) scale(1.1); } }
+@keyframes drift3{ to{ transform:translate(-10vw,5vh) scale(1.22); } }
+
+/* ---------- 顶栏：品牌 + 进度墨条 ---------- */
+.topbar{
+  position:fixed; top:0; left:0; right:0; z-index:50;
+  display:flex; align-items:center; gap:22px;
+  padding:10px 22px;
+  background:rgba(13,15,21,.97);
+  border-bottom:1px solid rgba(226,203,151,.12);
+}
+.brand{ display:flex; align-items:center; gap:11px; flex:none; }
+.brand-seal{
+  width:34px; height:34px; display:grid; place-items:center;
+  background:#b23a26; color:#f7efdd;
+  font-family:var(--kai); font-size:17px;
+  border-radius:6px; transform:rotate(-4deg);
+  box-shadow:inset 0 0 0 2px rgba(247,239,221,.35), 0 4px 12px rgba(0,0,0,.4);
+}
+.brand-t strong{ display:block; font-family:var(--serif); font-size:14px; letter-spacing:.14em; color:var(--paper); }
+.brand-t em{ display:block; font-style:normal; font-size:10.5px; letter-spacing:.24em; color:var(--paper-dim); }
+.progress-wrap{ display:flex; align-items:center; gap:16px; flex:1; max-width:620px; margin-left:auto; }
+.inkbar{
+  position:relative; flex:1; height:4px;
+  background:rgba(242,236,223,.1); border-radius:99px;
+}
+.inkbar i{
+  position:absolute; left:0; top:0; bottom:0; width:0%;
+  border-radius:99px;
+  background:linear-gradient(90deg,#2c4a74 0%, #7a5a2e 62%, #c8452f 100%);
+  box-shadow:0 0 10px rgba(200,69,47,.35);
+  transition:width .55s cubic-bezier(.3,.8,.3,1);
+}
+.inkbar i::after{ /* 墨条端头：一颗悬而未落的墨滴 */
+  content:""; position:absolute; right:-4px; top:50%;
+  width:9px; height:9px; margin-top:-4.5px; border-radius:50%;
+  background:var(--verm); box-shadow:0 0 12px rgba(200,69,47,.85);
+}
+.topbar.done .inkbar i::after{ background:var(--gold-bright); box-shadow:0 0 12px rgba(230,201,135,.9); }
+.progress-num{ flex:none; white-space:nowrap; font-size:12px; color:var(--paper-dim); font-variant-numeric:tabular-nums; }
+.progress-num b{ font-family:var(--serif); font-size:15px; color:var(--gold-bright); margin-right:8px; }
+
+/* ---------- 版心 ---------- */
+.wrap{ position:relative; z-index:2; max-width:780px; margin:0 auto; padding:96px 20px 100px; }
+
+/* ---------- 通用实底卡（表单永远住在实底上——可读性红线） ---------- */
+.card-solid{
+  background:var(--ink-card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  box-shadow:0 18px 44px rgba(0,0,0,.38);
+}
+
+/* ---------- 开场：墨题卡 ---------- */
+.hero{ position:relative; overflow:hidden; padding:56px 54px 46px; animation:inkIn .95s cubic-bezier(.2,.7,.3,1) .12s backwards; }
+@keyframes inkIn{
+  from{ opacity:0; transform:translateY(28px); filter:blur(14px); }
+  to{ opacity:1; transform:none; filter:blur(0); }
+}
+.hero::before{ /* 巨字水印 */
+  content:"墨"; position:absolute; right:-34px; bottom:-76px;
+  font-family:var(--kai); font-size:300px; line-height:1;
+  color:rgba(201,164,92,.05); pointer-events:none;
+}
+.hero-drip{ /* 墨滴入水：开场一滴金墨坠落 */
+  position:absolute; top:16px; left:58px; width:10px; height:15px;
+  background:radial-gradient(circle at 40% 30%, var(--gold-bright), #a67c33 72%);
+  border-radius:52% 48% 55% 45% / 62% 62% 38% 38%;
+  animation:dripFall 1.7s cubic-bezier(.5,0,.6,1) .3s both;
+}
+@keyframes dripFall{
+  0%{ transform:translateY(-48px) scale(.7,.8); opacity:0; }
+  25%{ opacity:1; }
+  58%{ transform:translateY(4px) scale(1,1.2); opacity:1; }
+  74%{ transform:translateY(-2px) scale(.95,1.04); opacity:.85; }
+  100%{ transform:translateY(-2px) scale(.9,1); opacity:0; }
+}
+.hero-fall{ /* 竖排落款 */
+  position:absolute; right:24px; top:50%; transform:translateY(-50%);
+  writing-mode:vertical-rl; letter-spacing:.44em;
+  font-family:var(--kai); font-size:13px; color:rgba(242,236,223,.3);
+  border-right:1px solid rgba(201,164,92,.28); padding-right:14px; height:62%;
+}
+.kicker{ font-size:12px; letter-spacing:.5em; color:var(--gold); }
+.hero-title{
+  font-family:var(--serif); font-weight:700;
+  font-size:clamp(30px, 4.6vw, 52px); line-height:1.24;
+  margin:18px 0 4px; text-shadow:0 2px 26px rgba(0,0,0,.55);
+}
+.hero-title .t2{ display:block; font-size:.52em; color:var(--gold-bright); letter-spacing:.18em; margin-top:10px; }
+.hero-sub{ max-width:58ch; margin-top:16px; font-size:15.5px; line-height:1.95; color:#cdc4b4; }
+.hero-meta{ list-style:none; display:flex; flex-wrap:wrap; gap:10px; margin:24px 0 28px; }
+.hero-meta li{
+  font-size:12.5px; color:var(--paper-dim);
+  border:1px solid var(--line); border-radius:99px;
+  padding:6px 15px; background:rgba(0,0,0,.22);
+}
+.hero-meta li b{ color:var(--gold-bright); font-weight:600; }
+.hero-hint{ display:flex; align-items:center; gap:10px; margin-top:24px; font-size:12.5px; color:var(--paper-dim); }
+.hero-hint::before{ content:""; flex:none; width:26px; height:1px; background:var(--gold); opacity:.6; }
+
+/* ---------- 分节标题 ---------- */
+.sec-head{ display:flex; align-items:center; gap:16px; margin:46px 0 18px; }
+.sec-head h2{
+  display:flex; align-items:center; gap:13px; flex:none;
+  font-family:var(--serif); font-size:22px; letter-spacing:.14em; color:var(--paper);
+}
+.sec-head h2 i{
+  font-style:normal; width:34px; height:34px; display:grid; place-items:center;
+  font-size:16px; color:#0e1118; transform:rotate(-4deg);
+  background:linear-gradient(150deg,var(--gold),#8f6a2d); border-radius:8px;
+  box-shadow:0 5px 14px rgba(0,0,0,.45);
+}
+.sec-line{ flex:1; height:10px; min-width:40px; }
+.sec-line svg{ display:block; width:100%; height:10px; color:var(--gold); opacity:.5; }
+.sec-sub{ flex:none; font-size:11.5px; letter-spacing:.22em; color:var(--paper-dim); }
+
+/* ---------- 题目卡 ---------- */
+.qcard{
+  position:relative; padding:26px 30px 22px; margin-bottom:22px;
+  transition:transform .35s cubic-bezier(.2,.7,.3,1), border-color .35s,
+             background-color .35s, box-shadow .35s, opacity .6s ease;
+}
+.js .qcard:not(.in){ opacity:0; transform:translateY(24px); }
+.qcard.in{ opacity:1; }
+.qcard::before{ /* 顶部金线 */
+  content:""; position:absolute; top:0; left:20px; right:20px; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(201,164,92,.5), transparent);
+}
+.qcard::after{ /* 跟随指针的局部提亮 */
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:radial-gradient(300px 210px at var(--mx,50%) var(--my,50%), rgba(230,201,135,.08), transparent 66%);
+  opacity:0; transition:opacity .35s;
+}
+.qcard:hover{
+  transform:translateY(-4px);
+  background:var(--ink-card-2);
+  border-color:rgba(201,164,92,.34);
+  box-shadow:0 24px 54px rgba(0,0,0,.5), 0 0 0 1px rgba(201,164,92,.08), 0 0 46px -6px rgba(201,164,92,.16);
+}
+.qcard:hover::after{ opacity:1; }
+.qcard.q-bad{ border-color:rgba(224,106,82,.55); box-shadow:0 0 0 1px rgba(224,106,82,.35), 0 10px 30px rgba(160,50,30,.18); }
+.qcard.shake{ animation:shake .42s ease; }
+@keyframes shake{
+  0%,100%{ transform:translateX(0); }
+  20%{ transform:translateX(-6px); } 40%{ transform:translateX(5px); }
+  60%{ transform:translateX(-4px); } 80%{ transform:translateX(3px); }
+}
+.q-hidden{ display:none !important; }
+.q-head{ display:flex; align-items:baseline; gap:14px; }
+.q-no{
+  flex:none; font-family:var(--serif); font-size:30px; line-height:1;
+  color:rgba(201,164,92,.42);
+}
+@supports (-webkit-text-stroke:1px black){
+  .q-no{ color:transparent; -webkit-text-stroke:1px rgba(201,164,92,.55); }
+}
+.q-title{ font-family:var(--serif); font-size:19px; font-weight:600; letter-spacing:.02em; color:var(--paper); }
+.req{ color:var(--err); font-style:normal; margin-left:3px; }
+.qtag{
+  margin-left:auto; flex:none; align-self:center;
+  font-size:11px; letter-spacing:.18em; color:var(--gold);
+  border:1px solid rgba(201,164,92,.35); border-radius:99px; padding:3px 10px;
+}
+.q-desc{ margin:8px 0 0; font-size:13px; color:var(--paper-dim); }
+.q-body{ margin-top:16px; }
+.q-err{ margin-top:12px; font-size:13.5px; color:var(--err); display:flex; gap:7px; align-items:baseline; }
+.q-err:empty{ display:none; }
+.q-err::before{ content:"※"; flex:none; }
+
+/* ---------- 单选 / 多选 ---------- */
+.opts{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.opt{
+  position:relative; display:flex; align-items:center; gap:12px;
+  padding:12px 14px; border:1px solid var(--line); border-radius:10px;
+  background:rgba(255,255,255,.022); cursor:pointer;
+  transition:border-color .25s, background .25s, transform .25s;
+}
+.opt:hover{ border-color:rgba(201,164,92,.5); background:rgba(201,164,92,.06); transform:translateX(4px); }
+.opt input{ position:absolute; opacity:0; width:1px; height:1px; }
+.opt input:focus-visible + .dot{ box-shadow:0 0 0 3px rgba(201,164,92,.35); }
+.opt .dot{
+  flex:none; width:18px; height:18px; position:relative;
+  border:1.5px solid rgba(242,236,223,.4); border-radius:50%; transition:.25s;
+}
+.opt input:checked + .dot{ border-color:var(--gold-bright); box-shadow:0 0 10px rgba(201,164,92,.4); }
+.opt input:checked + .dot::after{
+  content:""; position:absolute; inset:3.5px; border-radius:50%;
+  background:radial-gradient(circle, var(--gold-bright), #a67c33);
+}
+.opt:has(input:checked){ border-color:rgba(201,164,92,.55); background:rgba(201,164,92,.09); }
+.opt.check .dot{ border-radius:5px; }
+.opt.check input:checked + .dot::after{
+  content:""; position:absolute; inset:3px; border-radius:3px;
+  background:var(--gold-bright);
+  clip-path:polygon(14% 46%, 0 62%, 40% 100%, 100% 22%, 84% 8%, 38% 68%);
+}
+.opt-txt{ font-size:14.5px; color:#e6dfd1; }
+.other-in{
+  margin-left:auto; width:132px; flex:none;
+  padding:6px 10px; font-size:13px; color:var(--paper);
+  background:rgba(0,0,0,.28); border:1px solid var(--line); border-radius:6px;
+  opacity:.4; transition:.25s;
+}
+.other-in::placeholder{ color:var(--paper-dim); }
+.other-in:disabled{ pointer-events:none; }
+.opt input:checked ~ .other-in{ opacity:1; border-color:rgba(201,164,92,.5); }
+
+/* ---------- 输入框 / 下拉 / 日期 ---------- */
+.tin,.sel{
+  width:100%; padding:13px 15px; font-size:15px; color:var(--paper);
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(226,203,151,.2); border-radius:9px;
+  transition:border-color .25s, box-shadow .25s, background .25s;
+}
+.tin::placeholder{ color:rgba(182,173,159,.55); }
+.tin:hover,.sel:hover{ border-color:rgba(201,164,92,.4); }
+.tin:focus,.sel:focus{
+  outline:none; border-color:var(--gold);
+  background:rgba(201,164,92,.06);
+  box-shadow:0 0 0 3px rgba(201,164,92,.13);
+}
+.sel{
+  appearance:none; -webkit-appearance:none; cursor:pointer;
+  padding-right:44px;
+  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23c9a45c' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 16px center;
+}
+.sel option{ background:#1b151b; color:var(--paper); }
+textarea.tin{ min-height:96px; resize:vertical; line-height:1.85; }
+.ta-meta{ display:flex; justify-content:space-between; margin-top:6px; font-size:12px; color:var(--paper-dim); }
+
+/* ---------- 评分星 ---------- */
+.stars{ display:flex; flex-direction:row-reverse; justify-content:flex-end; gap:6px; margin-top:4px; }
+.star-l{ position:relative; cursor:pointer; line-height:1; }
+.star-l input{ position:absolute; opacity:0; width:1px; height:1px; }
+.star-l .star{
+  display:inline-block; font-size:36px; line-height:1;
+  color:rgba(242,236,223,.2);
+  transition:color .18s, transform .18s, text-shadow .18s;
+}
+.star-l:hover .star, .star-l:hover ~ .star-l .star{ color:var(--gold-bright); transform:scale(1.14) rotate(-4deg); }
+.star-l.lit .star{ color:var(--gold); text-shadow:0 0 16px rgba(201,164,92,.5); }
+.star-l input:focus-visible + .star{ outline:2px solid var(--gold-bright); outline-offset:3px; border-radius:4px; }
+.echo{ margin-top:10px; min-height:1.3em; font-family:var(--serif); font-size:13.5px; letter-spacing:.06em; color:var(--gold-bright); }
+
+/* ---------- NPS 意愿量表 ---------- */
+.combo-block + .combo-block{ margin-top:26px; padding-top:24px; border-top:1px dashed rgba(226,203,151,.15); }
+.sub-q{ font-family:var(--serif); font-size:16.5px; font-weight:600; color:var(--paper); }
+.nps-scale{ display:block; margin-top:4px; font-family:var(--sans); font-weight:400; font-size:12px; color:var(--paper-dim); letter-spacing:.08em; }
+.nps{ display:grid; grid-template-columns:repeat(11,1fr); gap:5px; margin-top:14px; }
+.nps-opt{
+  position:relative; display:grid; place-items:center; padding:11px 0;
+  font-size:14px; font-variant-numeric:tabular-nums; color:var(--paper-dim);
+  border:1px solid var(--line); border-radius:8px;
+  background:rgba(255,255,255,.02); cursor:pointer;
+  transition:transform .22s, border-color .22s, background .22s, color .22s, box-shadow .22s;
+}
+.nps-opt:hover{ border-color:var(--gold); color:var(--paper); transform:translateY(-3px); background:rgba(201,164,92,.08); }
+.nps-opt input{ position:absolute; opacity:0; width:1px; height:1px; }
+.nps-opt input:focus-visible + span{ outline:2px solid var(--gold-bright); outline-offset:2px; border-radius:4px; }
+.nps-opt.sel,.nps-opt:has(input:checked){
+  background:linear-gradient(160deg, rgba(200,69,47,.9), rgba(142,44,28,.95));
+  border-color:#e06a52; color:#fdf6e8; font-weight:700;
+  box-shadow:0 6px 18px rgba(200,69,47,.32);
+}
+
+/* ---------- 矩阵题 ---------- */
+.matrix{ border:1px solid rgba(226,203,151,.12); border-radius:10px; overflow:hidden; }
+.mrow{ display:grid; grid-template-columns:1.5fr repeat(4,1fr); align-items:stretch; }
+.mrow + .mrow{ border-top:1px dashed rgba(226,203,151,.1); }
+.mrow:not(.mhead):hover{ background:rgba(201,164,92,.045); }
+.mhead{ background:rgba(201,164,92,.08); }
+.mhead span{
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  padding:10px 6px; font-size:12.5px; letter-spacing:.08em; color:var(--gold);
+}
+.mhead .mscene{ justify-content:flex-start; padding-left:14px; }
+.mscene{ display:flex; align-items:center; padding:13px 8px 13px 14px; font-family:var(--serif); font-size:14.5px; letter-spacing:.04em; color:var(--paper); }
+.mcell{ position:relative; display:flex; align-items:center; justify-content:center; padding:13px 4px; cursor:pointer; }
+.mcell input{ position:absolute; opacity:0; width:1px; height:1px; }
+.mcell i{
+  width:18px; height:18px; position:relative; border-radius:50%;
+  border:1.5px solid rgba(242,236,223,.35); transition:.22s;
+}
+.mcell:hover i{ border-color:var(--gold); transform:scale(1.16); }
+.mcell input:checked + i{
+  border-color:var(--gold-bright);
+  background:radial-gradient(circle, var(--gold-bright) 0 5px, transparent 5.5px);
+  box-shadow:0 0 10px rgba(201,164,92,.35);
+}
+.mcell input:focus-visible + i{ box-shadow:0 0 0 3px rgba(201,164,92,.3); }
+.matrix-scroll{ margin-top:2px; }
+
+/* ---------- 上传题 ---------- */
+.dropzone{
+  display:grid; place-items:center; gap:7px; padding:32px 16px;
+  border:1.5px dashed rgba(226,203,151,.32); border-radius:12px;
+  background:rgba(255,255,255,.015); cursor:pointer; text-align:center;
+  color:var(--paper-dim); transition:.28s;
+}
+.dropzone:hover,.dropzone.drag{ border-color:var(--gold); background:rgba(201,164,92,.06); color:var(--paper); transform:translateY(-2px); }
+.dropzone svg{ width:34px; height:34px; opacity:.75; }
+.dropzone b{ font-family:var(--serif); font-weight:500; letter-spacing:.1em; color:var(--gold-bright); }
+.dropzone small{ font-size:11.5px; letter-spacing:.08em; }
+.file-info{ margin-top:10px; min-height:1.3em; font-size:13px; }
+.file-info.ok{ color:var(--gold-bright); }
+.file-info.bad{ color:var(--err); }
+
+/* ---------- 提交条 ---------- */
+.submit-bar{
+  display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+  padding:26px 30px; margin-top:6px;
+}
+.submit-note{ font-family:var(--serif); font-size:13.5px; letter-spacing:.1em; color:var(--paper-dim); }
+.btn{
+  appearance:none; -webkit-appearance:none; border:0; cursor:pointer;
+  border-radius:10px; font-size:16px;
+  transition:transform .25s cubic-bezier(.3,.8,.3,1), box-shadow .25s, filter .25s, background .25s, border-color .25s;
+}
+.btn-primary{
+  position:relative; padding:16px 44px;
+  font-family:var(--serif); font-size:17px; letter-spacing:.28em; text-indent:.28em;
+  color:#fdf6e8;
+  background:linear-gradient(160deg,#c8452f,#9a2f1e 78%);
+  box-shadow:0 10px 28px rgba(200,69,47,.28), inset 0 0 0 1px rgba(247,239,221,.22);
+}
+.btn-primary:hover{ transform:translateY(-2px); filter:brightness(1.12); box-shadow:0 16px 40px rgba(200,69,47,.42), inset 0 0 0 1px rgba(247,239,221,.4); }
+.btn-primary:active{ transform:translateY(1px) scale(.99); }
+.btn-primary:disabled{ cursor:default; filter:saturate(.45) brightness(.8); }
+.btn-ghost{
+  padding:13px 32px; background:transparent;
+  font-family:var(--serif); letter-spacing:.24em; text-indent:.24em;
+  color:var(--gold-bright); border:1px solid rgba(201,164,92,.45);
+}
+.btn-ghost:hover{ background:rgba(201,164,92,.1); border-color:var(--gold-bright); transform:translateY(-2px); }
+.btn .btn-loading{ display:none; align-items:center; }
+.btn.loading .btn-loading{ display:inline-flex; }
+.btn.loading .btn-txt{ display:none; }
+.btn-loading i{ font-style:normal; animation:blink 1s infinite; }
+.btn-loading i:nth-child(2){ animation-delay:.2s; }
+.btn-loading i:nth-child(3){ animation-delay:.4s; }
+@keyframes blink{ 0%,100%{ opacity:.15; } 50%{ opacity:1; } }
+
+/* ---------- 提交冲击波 ---------- */
+.shockring{
+  position:fixed; z-index:80; width:14px; height:14px; margin:-7px 0 0 -7px;
+  border-radius:50%; border:2px solid rgba(230,201,135,.85); pointer-events:none;
+  box-shadow:0 0 30px rgba(200,69,47,.45), inset 0 0 14px rgba(230,201,135,.3);
+  animation:ringOut 1.05s cubic-bezier(.15,.75,.4,1) forwards;
+}
+.shockring.r2{ border-color:rgba(224,106,82,.75); animation-duration:1.3s; animation-delay:.12s; }
+@keyframes ringOut{
+  0%{ transform:scale(.4); opacity:.95; }
+  100%{ transform:scale(230); opacity:0; }
+}
+
+/* ---------- 成功页：墨滴凝印 ---------- */
+.success{
+  position:fixed; inset:0; z-index:70;
+  display:grid; place-items:center; padding:24px;
+  background:rgba(10,11,16,.92);
+  opacity:0; transition:opacity .5s ease;
+}
+.success.show{ opacity:1; }
+.success[hidden]{ display:none; }
+.success-inner{ max-width:540px; text-align:center; }
+.seal-stage{ position:relative; width:150px; height:150px; margin:0 auto 32px; }
+.seal-blob{
+  position:absolute; inset:6px; opacity:0;
+  background:radial-gradient(circle at 42% 38%, #d4553a, #8e2c1c 74%);
+  border-radius:58% 42% 55% 45% / 48% 56% 44% 52%;
+  filter:blur(6px);
+}
+.success.show .seal-blob{ animation:blobIn 1s cubic-bezier(.5,0,.4,1) .15s both; }
+@keyframes blobIn{
+  0%{ opacity:0; transform:scale(2.7); filter:blur(15px); }
+  30%{ opacity:.92; }
+  62%{ opacity:.85; transform:scale(1.1); filter:blur(3px); }
+  100%{ opacity:0; transform:scale(.2); filter:blur(6px); }
+}
+.seal{
+  position:absolute; inset:15px;
+  display:grid; grid-template:1fr 1fr / 1fr 1fr; place-items:center;
+  background:linear-gradient(155deg,#c0392b,#8e2c1c); color:#f7efdd;
+  border-radius:10px; transform:rotate(-6deg);
+  box-shadow:0 14px 40px rgba(150,45,25,.42), inset 0 0 0 2px rgba(247,239,221,.4), inset 0 0 24px rgba(60,10,5,.5);
+  -webkit-box-reflect:below 6px linear-gradient(transparent 62%, rgba(242,236,223,.13));
+}
+.success.show .seal{ animation:stamp .55s cubic-bezier(.2,1.4,.4,1) .74s backwards; }
+@keyframes stamp{
+  0%{ opacity:0; transform:rotate(-16deg) scale(2.1); filter:blur(3px); }
+  60%{ opacity:1; transform:rotate(-6deg) scale(.95); filter:blur(0); }
+  78%{ transform:rotate(-6.6deg) scale(1.05); }
+  100%{ opacity:1; transform:rotate(-6deg) scale(1); }
+}
+.seal span{
+  font-family:var(--kai); font-size:33px; font-weight:700; line-height:1;
+  text-shadow:0 1px 2px rgba(70,12,6,.6);
+}
+.seal span:nth-child(1){ grid-area:1/2; }  /* 共 · 右上 */
+.seal span:nth-child(2){ grid-area:2/2; }  /* 读 · 右下 */
+.seal span:nth-child(3){ grid-area:1/1; }  /* 之 · 左上 */
+.seal span:nth-child(4){ grid-area:2/1; }  /* 印 · 左下 */
+.splat-dot{
+  position:absolute; left:50%; top:50%; width:8px; height:8px; border-radius:50%;
+  background:#b23a26; opacity:0;
+}
+.success.show .splat-dot{ animation:dotOut .8s ease-out .95s both; }
+@keyframes dotOut{
+  0%{ opacity:.9; transform:translate(0,0) scale(1); }
+  100%{ opacity:0; transform:translate(var(--dx),var(--dy)) scale(.35); }
+}
+.success h2{ font-family:var(--serif); font-size:34px; letter-spacing:.22em; text-indent:.22em; color:var(--paper); }
+.success .sub{ margin-top:12px; font-size:14.5px; line-height:1.95; color:#cdc4b4; }
+.receipt{
+  display:inline-block; margin:24px 0 4px; padding:11px 24px;
+  font-family:var(--mono); font-size:15px; letter-spacing:.1em; color:var(--gold-bright);
+  border:1px dashed rgba(201,164,92,.5); border-radius:8px;
+  background:rgba(201,164,92,.06);
+}
+.stat{ margin-top:8px; font-size:12.5px; color:var(--paper-dim); }
+.success-actions{ display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-top:30px; }
+.rise{ animation:riseIn .6s ease var(--d,0s) backwards; }
+.success.show .rise{ animation-name:riseIn; }
+@keyframes riseIn{
+  from{ opacity:0; transform:translateY(18px); }
+  to{ opacity:1; transform:none; }
+}
+
+/* ---------- 页脚落款 ---------- */
+.footer{
+  position:relative; z-index:2;
+  background:#0b0d12; border-top:1px solid rgba(226,203,151,.1);
+  padding:28px 20px 36px; text-align:center;
+  font-size:12.5px; letter-spacing:.14em; line-height:2.1; color:#8f877a;
+}
+.f-seal{
+  display:inline-grid; place-items:center; vertical-align:-6px;
+  width:26px; height:26px; margin:0 8px;
+  background:#b23a26; color:#f7efdd; border-radius:5px;
+  font-family:var(--kai); font-size:13px; transform:rotate(-5deg);
+  box-shadow:inset 0 0 0 1.5px rgba(247,239,221,.4);
+}
+
+/* ---------- 响应式：≥1200 / 768 / 375 ---------- */
+@media (max-width:1199px){
+  .hero-fall{ display:none; }
+  .wrap{ max-width:720px; }
+}
+@media (max-width:767px){
+  .wrap{ padding:86px 12px 76px; }
+  .topbar{ gap:10px; padding:8px 12px; }
+  .brand-t em{ display:none; }
+  .progress-num span{ display:none; }
+  .hero{ padding:36px 22px 32px; }
+  .hero::before{ font-size:190px; right:-44px; bottom:-52px; }
+  .hero-drip{ left:26px; }
+  .sec-head h2{ font-size:19px; }
+  .sec-sub{ display:none; }
+  .qcard{ padding:20px 16px 16px; border-radius:12px; }
+  .q-no{ font-size:24px; }
+  .q-head{ gap:10px; }
+  .qtag{ display:none; }
+  .opts{ grid-template-columns:1fr; }
+  .matrix-scroll{ overflow-x:auto; margin:0 -16px; padding:0 16px 6px; -webkit-overflow-scrolling:touch; }
+  .matrix{ min-width:540px; }
+  .nps{ grid-template-columns:repeat(6,1fr); }
+  .star-l .star{ font-size:31px; }
+  .submit-bar{ flex-direction:column; align-items:stretch; text-align:center; }
+  .btn-primary{ width:100%; }
+  .success h2{ font-size:26px; }
+  .seal span{ font-size:28px; }
+}
+
+/* ---------- 减动效：一切归于静止 ---------- */
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior:auto; }
+  *, *::before, *::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- 墨流体画布（stable-fluids 实时求解） -->
+<canvas id="ink" aria-hidden="true"></canvas>
+
+<!-- 无 WebGL 兜底：慢速漂移的墨色光斑 -->
+<div class="blobs" aria-hidden="true">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
+
+<!-- 顶栏：品牌 + 进度墨条 -->
+<header class="topbar" id="topbar">
+  <div class="brand">
+    <span class="brand-seal" aria-hidden="true">岛</span>
+    <div class="brand-t">
+      <strong>岛上书店</strong>
+      <em>城市共读计划 · 流体墨水卷</em>
+    </div>
+  </div>
+  <div class="progress-wrap">
+    <div class="inkbar" role="progressbar" aria-label="问卷填写进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="inkbar"><i id="inkFill"></i></div>
+    <div class="progress-num"><b id="progPct">0%</b><span id="progCnt">已答 0 / 12 题</span></div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <!-- 开场：墨色题引 -->
+    <section class="hero card-solid" id="top">
+      <i class="hero-drip" aria-hidden="true"></i>
+      <p class="kicker">流体墨水 · 城市共读计划 · 墨问第叁期</p>
+      <h1 class="hero-title">
+        2026 城市青年<br>阅读习惯调查
+        <span class="t2">—— 一间虚构书店的年度问卷 ——</span>
+      </h1>
+      <p class="hero-sub">
+        这是一摊会呼吸的活墨：它在你作答时静静流淌，指针划过卡片之外的墨面，会拖出涡卷般的墨丝。
+        问卷由虚构书店「岛上书店」发起，想听听这一年的你，与书相处得如何。
+      </p>
+      <ul class="hero-meta">
+        <li>共 <b>12</b> 题</li>
+        <li>约 <b>3</b> 分钟</li>
+        <li>匿名填写</li>
+        <li>数据仅用于生成年度阅读报告</li>
+      </ul>
+      <button type="button" class="btn btn-ghost" id="startBtn">蘸墨 · 开始作答</button>
+      <p class="hero-hint">在卡片之外的墨面上滑动指针可搅动墨流；提交的一瞬，会有全屏墨浪。</p>
+      <span class="hero-fall" aria-hidden="true">墨问 · 以书为渡 · 以墨为引</span>
+    </section>
+
+    <!-- 问卷主体 -->
+    <form id="survey" novalidate>
+
+      <!-- 第壹节 · 基本信息 -->
+      <div class="sec-head">
+        <h2><i>壹</i>基本信息</h2>
+        <span class="sec-line" aria-hidden="true">
+          <svg viewBox="0 0 200 10" preserveAspectRatio="none"><path d="M2 7 C40 2 82 9 122 5 S 176 3 198 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+        </span>
+        <span class="sec-sub">第 1 - 2 题</span>
+      </div>
+
+      <article class="qcard card-solid" data-name="q1" data-type="radio" data-required="1">
+        <header class="q-head">
+          <span class="q-no" aria-hidden="true">01</span>
+          <h3 class="q-title">你的年龄段是？<em class="req" aria-hidden="true">*</em></h3>
+          <span class="qtag">单选</span>
+        </header>
+        <div class="q-body opts">
+          <label class="opt"><input type="radio" name="q1" value="18-24 岁"><span class="dot"></span><span class="opt-txt">18-24 岁</span></label>
+          <label class="opt"><input type="radio" name="q1" value="25-30 岁"><span class="dot"></span><span class="opt-txt">25-30 岁</span></label>
+          <label class="opt"><input type="radio" name="q1" value="31-35 岁"><span class="dot"></span><span class="opt-txt">31-35 岁</span></label>
+          <label class="opt"><input type="radio" name="q1" value="36 岁及以上"><span class="dot"></span><span class="opt-txt">36 岁及以上</span></label>
+        </div>
+        <p class="q-err" aria-live="polite"></p>
+      </article>
+
+      <article class="qcard card-solid" data-name="q2" data-type="radio" data-required="1">
+        <header class="q-head">
+          <span class="q-no" aria-hidden="true">02</span>
+          <h3 class="q-title">你目前的身份是？<em class="req" aria-hidden="true">*</em></h3>
+          <span class="qtag">单选 · 可补充</span>
+        </header>
+        <div class="q-body opts">
+          <label class="opt"><input type="radio" name="q2" value="在校学生"><span class="dot"></span><span class="opt-txt">在校学生</span></label>
+          <label class="opt"><input type="radio" name="q2" value="职场新人"><span class="dot"></span><span class="opt-txt">职场新人（0-3 年）</span></label>
+          <label class="opt"><input type="radio" name="q2" value="资深职场人"><span class="dot"></span><span class="opt-txt">资深职场人</span></label>
+          <label class="opt"><input type="radio" name="q2" value="自由职业"><span class="dot"></span><span class="opt-txt">自由职业</span></label>
+          <label class="opt opt-other">
+            <input type="radio" name="q2" value="其他"><span class="dot"></span><span class="opt-txt">其他</span>
+            <input type="text" class="other-in" name="q2other" placeholder="请说明" aria-label="其他身份说明" disabled>
+          </label>
+        </div>
+        <p class="q-err" aria-live="polite"></p>
+      </article>
+
+      <!-- 第贰节 · 阅读行为 -->
+      <div class="sec-head">
+        <h2><i>贰</i>阅读行为</h2>
+        <span class="sec-line" aria-hidden="true">
+          <svg viewBox="0 0 200 10" preserveAspectRatio="none"><path d="M2 7 C40 2 82 9 122 5 S 176 3 198 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+        </span>
+        <span class="sec-sub">第 3 - 7 题</span>
+      </div>
+
+      <article class="qcard card-solid" data-name="q3" data-type="check" data-required="1">
+        <header class="q-head">
+          <span class="q-no" aria-hidden="true">03</span>
+          <h3 class="q-title">过去一年你主要通过哪些方式阅读？<em class="req" aria-hidden="true">*</em></h3>
+          <span class="qtag">多选 · 最多 4 项</span>
+        </header>
+        <p class="q-desc">最多勾选 4 项；若勾选了电子书或电纸书，第 4 题会自动浮现。</p>
+        <div class="q-body opts">
+          <label class="opt check"><input type="checkbox" name="q3" value="paper"><span class="dot"></span><span class="opt-txt">纸质书</span></label>
+          <label class="opt check"><input type="checkbox" name="q3" value="ebook"><span class="dot"></span><span class="opt-txt">微信读书等电子书 App</span></label>
+          <label class="opt check"><input type="checkbox" name="q3" value="kindle"><span class="dot"></span><span class="opt-txt">Kindle / 电纸书</span></label>
+          <label class="opt check"><input type="checkbox" name="q3" value="audio"><span class="dot"></span><span class="opt-txt">听书 / 播客</span></label>
+          <label class="opt check"><input type="checkbox" name="q3" value="wechat"><span class="dot"></span><span class="opt-txt">公众号长文</span></label>
+          <label class="opt check"><input type="checkbox" name="q3" value="library"><span class="dot"></span><span class="opt-txt">图书馆借阅</span></label>
+          <label class="opt check opt-other">
+            <input type="checkbox" name="q3" value="other"><span class="dot"></span><span class="opt-txt">其他</span>
+            <input type="text" class="other-in" name="q3other" placeholder="请说明" aria-label="其他阅读方式说明" disabled>
+          </label>
+        </div>
+        <p class="q-err" aria-live="polite"></p>
+      </article>
+
+      <article class="qcard card-solid q-hidden" data-name="q4" data-type="radio" data-required="1">
+        <header class="q-head">
+          <span class="q-no" aria-hidden="true">04</span>
+          <h3 class="q-title">你使用电子书阅读的频率是？<em class="req" aria-hidden="true">*</em></h3>
+          <span class="qtag">单选 · 关联题</span>
+        </header>
+        <p class="q-desc">因你在第 3 题选了电子书 / 电纸书，此题浮现。</p>
+        <div class="q-body opts">
+          <label class="opt"><input type="radio" name="q4" value="几乎每天"><span class="dot"></span><span class="opt-txt">几乎每天</span></label>
+          <label class="opt"><input type="radio" name="q4" value="每周几次"><span class="dot"></span><span class="opt-txt">每周几次</span></label>
+          <label class="opt"><input type="radio" name="q4" value="偶尔"><span class="dot"></span><span class="opt-txt">偶尔</span></label>
+          <label class="opt"><input type="radio" name="q4" value="很少"><span class="dot"></span><span class="opt-txt">很少</span></label>
+        </div>
+        <p class="q-err" aria-live="polite"></p>
+      </article>
+
+      <article class="qcard card-solid" data-name="q5" data-type="radio" data-required="1">
+        <header class="q-head">
+          <span class="q-no" aria-hidden="true">05</span>
+          <h3 class="q-title">你对自己过去一年的阅读量满意吗？<em class="req" aria-hidden="true">*</em></h3>
+          <span class="qtag">评分 · 1-5 星</span>
+        </header>
+        <div class="q-body">
+          <div class="stars" id="stars">
+            <label class="star-l" data-v="5"><input type="radio" name="q5" value="5" aria-label="5 星，非常满意"><span class="star">★</span></label>
+            <label class="star-l" data-v="4"><input type="radio" name="q5" value="4" aria-label="4 星，比较满意"><span class="star">★</span></label>
+            <label class="star-l" data-v="3"><input type="radio" name="q5" value="3" aria-label="3 星，一般"><span class="star">★</span></label>
+            <label class="star-l" data-v="2"><input type="radio" name="q5" value="2" aria-label="2 星，不太满意"><span class="star">★</span></label>
+            <label class="star-l" data-v="1"><input type="radio" name="q5" value="1" aria-label="1 星，不满意"><span class="star">★</span></label>
+          </div>
+          <p class="echo" id="starEcho"></p>
+        </div>
+        <p class="q-err" aria-live="polite"></p>
+      </article>
+
+      <article class="qcard card-solid" data-name="q6" data-type="select" data-required="1">
+        <header class="q-head">
+          <span class="q-no" aria-hidden="true">06</span>
+          <h3 class="q-title">你平均每周的阅读时长大约是？<em class="req" aria-hidden="true">*</em></h3>
+          <span class="qtag">下拉单选</span>
+        </header>
+        <div class="q-body">
+          <select class="sel" name="q6" aria-label="每周阅读时长">
+            <option value="" selected disabled>请选择一个区间</option>
+            <option value="少于 1 小时">少于 1 小时</option>
+            <option value="1-3 小时">1-3 小时</option>
+            <option value="3-7 小时">3-7 小时</option>
+            <option value="7-14 小时">7-14 小时</option>
+            <option value="14 小时以上">14 小时以上</option>
+          </select>
+        </div>
+        <p class="q-err" aria-live="polite"></p>
+      </article>
+
+      <article class="qcard card-solid" data-name="q7" data-type="matrix" data-required="1">
+        <header class="q-head">
+          <span class="q-no" aria-hidden="true">07</span>
+          <h3 class="q-title">过去三个月，你在以下场景的阅读频率？<em class="req" aria-hidden="true">*</em></h3>
+          <span class="qtag">矩阵 · 每行必答</span>
+        </header>
+        <div class="q-body matrix-scroll">
+          <div class="matrix">
+            <div class="mrow mhead">
+              <span class="mscene">场景</span><span>几乎每天</span><span>经常</span><span>偶尔</span><span>从不</span>
+            </div>
+            <div class="mrow" data-row="通勤路上">
+              <span class="mscene">通勤路上</span>
+              <label class="mcell"><input type="radio" name="q7a" value="几乎每天" aria-label="通勤路上 几乎每天"><i></i></label>
+              <label class="mcell"><input type="radio" name="q7a" value="经常" aria-label="通勤路上 经常"><i></i></label>
+              <label class="mcell"><input type="radio" name="q7a" value="偶尔" aria-label="通勤路上 偶尔"><i></i></label>
+              <label class="mcell"><input type="radio" name="q7a" value="从不" aria-label="通勤路上 从不"><i></i></label>
+            </div>
+            <div class="mrow" data-row="睡前">
+              <span class="mscene">睡前</span>
+              <label class="mcell"><input type="radio" name="q7b" value="几乎每天" aria-label="睡前 几乎每天"><i></i></label>
+              <label class="mcell"><input type="radio" name="q7b" value="经常" aria-label="睡前 经常"><i></i></label>
+              <label class="mcell"><input type="radio" name="q7b" value="偶尔" aria-label="睡前 偶尔"><i></i></label>
+              <label class="mcell"><input type="radio" name="q7b" value="从不" aria-label="睡前 从不"><i></i></label>
+            </div>
+            <div class="mrow" data-row="周末午后">
+              <span class="mscene">周末午后</span>
+              <label class="mcell"><input type="radio" name="q7c" value="几乎每天" aria-label="周末午后 几乎每天"><i></i></label>
+              <label class="mcell"><input type="radio" name="q7c" value="经常" aria-label="周末午后 经常"><i></i></label>
+              <label class="mcell"><input type="radio" name="q7c" value="偶尔" aria-label="周末午后 偶尔"><i></i></label>
+              <label class="mcell"><input type="radio" name="q7c" value="从不" aria-label="周末午后 从不"><i></i></label>
+            </div>
+            <div class="mrow" data-row="工作午休">
+              <span class="mscene">工作午休</span>
+              <label class="mcell"><input type="radio" name="q7d" value="几乎每天" aria-label="工作午休 几乎每天"><i></i></label>
+              <label class="mcell"><input type="radio" name="q7d" value="经常" aria-label="工作午休 经常"><i></i></label>
+              <label class="mcell"><input type="radio" name="q7d" value="偶尔" aria-label="工作午休 偶尔"><i></i></label>
+              <label class="mcell"><input type="radio" name="q7d" value="从不" aria-label="工作午休 从不"><i></i></label>
+            </div>
+          </div>
+        </div>
+        <p class="q-err" aria-live="polite"></p>
+      </article>
+
+      <!-- 第叁节 · 态度与推荐 -->
+      <div class="sec-head">
+        <h2><i>叁</i>态度与推荐</h2>
+        <span class="sec-line" aria-hidden="true">
+          <svg viewBox="0 0 200 10" preserveAspectRatio="none"><path d="M2 7 C40 2 82 9 122 5 S 176 3 198 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+        </span>
+        <span class="sec-sub">第 8 - 12 题</span>
+      </div>
+
+      <article class="qcard card-solid" data-name="q8" data-type="text" data-required="1">
+        <header class="q-head">
+          <span class="q-no" aria-hidden="true">08</span>
+          <h3 class="q-title">2026 年你读完的最后一本书，书名是？<em class="req" aria-hidden="true">*</em></h3>
+          <span class="qtag">填空 · 单行</span>
+        </header>
+        <div class="q-body">
+          <input type="text" class="tin" name="q8" maxlength="40" placeholder="如：《夜晚的潜水艇》" aria-label="最后一本书的书名">
+        </div>
+        <p class="q-err" aria-live="polite"></p>
+      </article>
+
+      <article class="qcard card-solid" data-name="q9" data-type="check" data-required="1">
+        <header class="q-head">
+          <span class="q-no" aria-hidden="true">09</span>
+          <h3 class="q-title">阻碍你读更多书的主要原因是？<em class="req" aria-hidden="true">*</em></h3>
+          <span class="qtag">多选</span>
+        </header>
+        <div class="q-body opts">
+          <label class="opt check"><input type="checkbox" name="q9" value="没时间"><span class="dot"></span><span class="opt-txt">没时间</span></label>
+          <label class="opt check"><input type="checkbox" name="q9" value="不知道选什么书"><span class="dot"></span><span class="opt-txt">不知道选什么书</span></label>
+          <label class="opt check"><input type="checkbox" name="q9" value="静不下心"><span class="dot"></span><span class="opt-txt">静不下心</span></label>
+          <label class="opt check"><input type="checkbox" name="q9" value="电子干扰太多"><span class="dot"></span><span class="opt-txt">电子干扰太多</span></label>
+          <label class="opt check"><input type="checkbox" name="q9" value="书价高"><span class="dot"></span><span class="opt-txt">书价高</span></label>
+          <label class="opt check"><input type="checkbox" name="q9" value="找不到共读伙伴"><span class="dot"></span><span class="opt-txt">找不到共读伙伴</span></label>
+        </div>
+        <p class="q-err" aria-live="polite"></p>
+      </article>
+
+      <article class="qcard card-solid" data-name="q10" data-type="date" data-required="1">
+        <header class="q-head">
+          <span class="q-no" aria-hidden="true">10</span>
+          <h3 class="q-title">你上一次走进实体书店或图书馆是哪一天？<em class="req" aria-hidden="true">*</em></h3>
+          <span class="qtag">日期</span>
+        </header>
+        <div class="q-body">
+          <input type="date" class="tin" name="q10" id="q10date" aria-label="上次到店日期">
+          <p class="ta-meta"><span>不能晚于今天</span></p>
+        </div>
+        <p class="q-err" aria-live="polite"></p>
+      </article>
+
+      <article class="qcard card-solid" data-name="q11" data-type="file" data-required="0">
+        <header class="q-head">
+          <span class="q-no" aria-hidden="true">11</span>
+          <h3 class="q-title">晒出你的书架、正在读的书，或最想推荐的一本书的照片</h3>
+          <span class="qtag">上传 · 选填</span>
+        </header>
+        <div class="q-body">
+          <label class="dropzone" id="dropzone" for="q11file">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
+            </svg>
+            <b>拖拽图片至此，或点击选择</b>
+            <small>仅接受 jpg / png · 单张不超过 5MB</small>
+          </label>
+          <input type="file" id="q11file" name="q11" accept=".jpg,.jpeg,.png" hidden>
+          <p class="file-info" id="fileInfo" aria-live="polite"></p>
+        </div>
+        <p class="q-err" aria-live="polite"></p>
+      </article>
+
+      <article class="qcard card-solid" data-name="q12" data-type="combo" data-required="1">
+        <header class="q-head">
+          <span class="q-no" aria-hidden="true">12</span>
+          <h3 class="q-title">荐书语与共读意愿<em class="req" aria-hidden="true">*</em></h3>
+          <span class="qtag">填空 + 量表</span>
+        </header>
+        <div class="q-body">
+          <div class="combo-block">
+            <p class="sub-q">写一句「荐书语」，推荐给同城的陌生书友<em class="req" aria-hidden="true">*</em></p>
+            <textarea class="tin" name="q12text" id="q12text" maxlength="60" placeholder="一句话荐书语，例如：读完想给全世界打电话。" aria-label="荐书语"></textarea>
+            <div class="ta-meta"><span>会随年度报告展示（可匿名）</span><span id="taCount">0 / 60</span></div>
+          </div>
+          <div class="combo-block">
+            <p class="sub-q">你有多大意愿参加「城市共读计划」？<em class="req" aria-hidden="true">*</em>
+              <span class="nps-scale">0 分 绝不可能 —— 10 分 非常愿意</span>
+            </p>
+            <div class="nps" id="npsRow">
+              <label class="nps-opt"><input type="radio" name="q12nps" value="0" aria-label="0 分，绝不可能"><span>0</span></label>
+              <label class="nps-opt"><input type="radio" name="q12nps" value="1" aria-label="1 分"><span>1</span></label>
+              <label class="nps-opt"><input type="radio" name="q12nps" value="2" aria-label="2 分"><span>2</span></label>
+              <label class="nps-opt"><input type="radio" name="q12nps" value="3" aria-label="3 分"><span>3</span></label>
+              <label class="nps-opt"><input type="radio" name="q12nps" value="4" aria-label="4 分"><span>4</span></label>
+              <label class="nps-opt"><input type="radio" name="q12nps" value="5" aria-label="5 分"><span>5</span></label>
+              <label class="nps-opt"><input type="radio" name="q12nps" value="6" aria-label="6 分"><span>6</span></label>
+              <label class="nps-opt"><input type="radio" name="q12nps" value="7" aria-label="7 分"><span>7</span></label>
+              <label class="nps-opt"><input type="radio" name="q12nps" value="8" aria-label="8 分"><span>8</span></label>
+              <label class="nps-opt"><input type="radio" name="q12nps" value="9" aria-label="9 分"><span>9</span></label>
+              <label class="nps-opt"><input type="radio" name="q12nps" value="10" aria-label="10 分，非常愿意"><span>10</span></label>
+            </div>
+            <p class="echo" id="npsEcho"></p>
+          </div>
+        </div>
+        <p class="q-err" aria-live="polite"></p>
+      </article>
+
+      <!-- 提交 -->
+      <div class="submit-bar card-solid">
+        <p class="submit-note">提交之后，你的墨迹将凝为一枚「共读之印」。</p>
+        <button type="submit" class="btn btn-primary" id="submitBtn">
+          <span class="btn-txt">落墨 · 提交问卷</span>
+          <span class="btn-loading" aria-live="polite">落墨中<i>.</i><i>.</i><i>.</i></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<!-- 成功页：墨滴凝成印章 -->
+<section class="success" id="successWrap" hidden aria-labelledby="successTitle">
+  <div class="success-inner">
+    <div class="seal-stage" aria-hidden="true">
+      <div class="seal-blob"></div>
+      <div class="seal"><span>共</span><span>读</span><span>之</span><span>印</span></div>
+      <i class="splat-dot" style="--dx:-84px; --dy:-40px;"></i>
+      <i class="splat-dot" style="--dx:78px; --dy:-52px; width:6px; height:6px;"></i>
+      <i class="splat-dot" style="--dx:-58px; --dy:56px; width:5px; height:5px;"></i>
+      <i class="splat-dot" style="--dx:66px; --dy:48px;"></i>
+    </div>
+    <h2 id="successTitle" class="rise" style="--d:.9s">提交成功</h2>
+    <p class="sub rise" style="--d:1.02s">你的阅读画像已汇入 2026 城市共读报告。<br>墨已收讫，静候年卷。</p>
+    <div class="rise" style="--d:1.14s"><span class="receipt">回执编号 <span id="receiptNo">#RD2026-0000</span></span></div>
+    <p class="stat rise" id="statLine" style="--d:1.24s"></p>
+    <div class="success-actions rise" style="--d:1.36s">
+      <button type="button" class="btn btn-primary" id="againBtn"><span class="btn-txt">再填一份</span></button>
+      <button type="button" class="btn btn-ghost" id="backBtn">返回问卷</button>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <p>岛上书店 <span class="f-seal" aria-hidden="true">讫</span> 墨研所 敬上 · 丁未年秋</p>
+  <p>本页面为虚构演示问卷，不收集任何真实数据 · 背景墨流由 Web GL 实时演算</p>
+</footer>
+
+<script>
+(function () {
+'use strict';
+
+/* ==========================================================
+   环境判定
+   ========================================================== */
+var reduced = false;
+try { reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { reduced = false; }
+var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+var isSmall = Math.min(window.innerWidth || 9999, window.innerHeight || 9999) < 720;
+var isMobile = isSmall && isTouch;
+var lowMem = (navigator.deviceMemory && navigator.deviceMemory <= 4) ||
+             (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+var DPR_CAP = isMobile ? 1.25 : 1.5;   /* 流体重绘昂贵，钳制 DPR */
+document.documentElement.classList.add('js');
+if (reduced) document.documentElement.classList.add('reduced');
+
+/* ==========================================================
+   墨色
+   ========================================================== */
+var INK = {
+  indigo: [0.15, 0.30, 0.55],   /* 靛 */
+  verm:   [0.70, 0.22, 0.14],   /* 朱砂 */
+  gold:   [0.75, 0.58, 0.24]    /* 金泥 */
+};
+var PALETTE = [INK.indigo, INK.indigo, INK.indigo, INK.verm, INK.gold];
+var strokeIdx = 0;
+function nextColor() { strokeIdx += 1; return PALETTE[strokeIdx % PALETTE.length]; }
+function scaleC(c, s) { return { r: c[0] * s, g: c[1] * s, b: c[2] * s }; }
+
+/* ==========================================================
+   流体引擎：简化 stable-fluids
+   速度场 + 染料场；Curl / Vorticity / Divergence / Pressure-Jacobi
+   模拟网格 128-192，染料 320-512；半精度浮点 FBO 双缓冲
+   ========================================================== */
+function createFluid() {
+  var canvas = document.getElementById('ink');
+  if (!canvas) return null;
+
+  var gl = null, isWebGL2 = false;
+  var attrs = { alpha: true, depth: false, stencil: false, antialias: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' };
+  try { gl = canvas.getContext('webgl2', attrs); isWebGL2 = !!gl; } catch (e) { gl = null; }
+  if (!gl) {
+    try { gl = canvas.getContext('webgl', attrs) || canvas.getContext('experimental-webgl', attrs); } catch (e) { return null; }
+  }
+  if (!gl) return null;
+
+  var CFG = {
+    SIM: isMobile ? 128 : 160,          /* 模拟网格：128-192 */
+    DYE: isMobile ? 320 : 512,          /* 染料场 */
+    ITER: (isMobile || lowMem) ? 12 : 20,
+    VEL_DISS: 0.32,
+    DYE_DISS: 0.85,
+    PRESS: 0.8,
+    CURL: 24,
+    FORCE: 5200,
+    RAD: 0.22,
+    CAP: (isMobile || lowMem) ? 30 : 60  /* 移动端降帧 */
+  };
+
+  var progs = {};
+  var velocity = null, dye = null, divergenceF = null, curlF = null, pressureF = null;
+
+  /* --- 纹理类型探测：半精度浮点可渲染才继续 --- */
+  var texType = 0, linear = false;
+  if (isWebGL2) {
+    gl.getExtension('EXT_color_buffer_float');
+    gl.getExtension('OES_texture_float_linear');
+    texType = gl.HALF_FLOAT;
+    linear = true; /* ES3 中 16F 纹理默认可线性过滤 */
+  } else {
+    var hf = gl.getExtension('OES_texture_half_float');
+    if (hf && hf.HALF_FLOAT_OES) {
+      texType = hf.HALF_FLOAT_OES;
+      linear = !!gl.getExtension('OES_texture_half_float_linear');
+    } else if (gl.getExtension('OES_texture_float')) {
+      texType = gl.FLOAT;
+      linear = !!gl.getExtension('OES_texture_float_linear');
+    } else {
+      return null;
+    }
+  }
+  var internalFormat = isWebGL2 ? gl.RGBA16F : gl.RGBA;
+
+  function renderable(ifmt, fmt, type) {
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, ifmt, 4, 4, 0, fmt, type, null);
+    var fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    var ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.deleteFramebuffer(fbo);
+    gl.deleteTexture(tex);
+    return ok;
+  }
+  if (!renderable(internalFormat, gl.RGBA, texType)) return null;
+
+  /* --- 着色器 --- */
+  var VERT = [
+    'precision highp float;',
+    'attribute vec2 aPosition;',
+    'varying vec2 vUv;',
+    'varying vec2 vL;',
+    'varying vec2 vR;',
+    'varying vec2 vT;',
+    'varying vec2 vB;',
+    'uniform vec2 texelSize;',
+    'void main () {',
+    '  vUv = aPosition * 0.5 + 0.5;',
+    '  vL = vUv - vec2(texelSize.x, 0.0);',
+    '  vR = vUv + vec2(texelSize.x, 0.0);',
+    '  vT = vUv + vec2(0.0, texelSize.y);',
+    '  vB = vUv - vec2(0.0, texelSize.y);',
+    '  gl_Position = vec4(aPosition, 0.0, 1.0);',
+    '}'
+  ].join('\n');
+
+  var FRAG_ADV = `
+precision highp float;
+precision highp sampler2D;
+varying vec2 vUv;
+uniform sampler2D uVelocity;
+uniform sampler2D uSource;
+uniform vec2 texelSize;
+uniform vec2 dyeTexelSize;
+uniform float dt;
+uniform float dissipation;
+vec4 bilerp (sampler2D sam, vec2 uv, vec2 tsize) {
+  vec2 st = uv / tsize - 0.5;
+  vec2 iuv = floor(st);
+  vec2 fuv = fract(st);
+  vec4 a = texture2D(sam, (iuv + vec2(0.5, 0.5)) * tsize);
+  vec4 b = texture2D(sam, (iuv + vec2(1.5, 0.5)) * tsize);
+  vec4 c = texture2D(sam, (iuv + vec2(0.5, 1.5)) * tsize);
+  vec4 d = texture2D(sam, (iuv + vec2(1.5, 1.5)) * tsize);
+  return mix(mix(a, b, fuv.x), mix(c, d, fuv.x), fuv.y);
+}
+void main () {
+#ifdef MANUAL_FILTERING
+  vec2 coord = vUv - dt * bilerp(uVelocity, vUv, texelSize).xy * texelSize;
+  vec4 result = bilerp(uSource, coord, dyeTexelSize);
+#else
+  vec2 coord = vUv - dt * texture2D(uVelocity, vUv).xy * texelSize;
+  vec4 result = texture2D(uSource, coord);
+#endif
+  float decay = 1.0 + dissipation * dt;
+  gl_FragColor = result / decay;
+}
+`;
+
+  var FRAG_SPLAT = `
+precision highp float;
+precision highp sampler2D;
+varying vec2 vUv;
+uniform sampler2D uTarget;
+uniform float aspectRatio;
+uniform vec3 color;
+uniform vec2 point;
+uniform float radius;
+void main () {
+  vec2 p = vUv - point.xy;
+  p.x *= aspectRatio;
+  vec3 splat = exp(-dot(p, p) / radius) * color;
+  vec3 base = texture2D(uTarget, vUv).xyz;
+  gl_FragColor = vec4(base + splat, 1.0);
+}
+`;
+
+  var FRAG_CURL = `
+precision highp float;
+precision highp sampler2D;
+varying vec2 vUv;
+varying vec2 vL;
+varying vec2 vR;
+varying vec2 vT;
+varying vec2 vB;
+uniform sampler2D uVelocity;
+void main () {
+  float L = texture2D(uVelocity, vL).y;
+  float R = texture2D(uVelocity, vR).y;
+  float T = texture2D(uVelocity, vT).x;
+  float B = texture2D(uVelocity, vB).x;
+  float vorticity = R - L - T + B;
+  gl_FragColor = vec4(0.5 * vorticity, 0.0, 0.0, 1.0);
+}
+`;
+
+  var FRAG_VORT = `
+precision highp float;
+precision highp sampler2D;
+varying vec2 vUv;
+varying vec2 vL;
+varying vec2 vR;
+varying vec2 vT;
+varying vec2 vB;
+uniform sampler2D uVelocity;
+uniform sampler2D uCurl;
+uniform float curl;
+uniform float dt;
+void main () {
+  float L = texture2D(uCurl, vL).x;
+  float R = texture2D(uCurl, vR).x;
+  float T = texture2D(uCurl, vT).x;
+  float B = texture2D(uCurl, vB).x;
+  float C = texture2D(uCurl, vUv).x;
+  vec2 force = 0.5 * vec2(abs(T) - abs(B), abs(R) - abs(L));
+  force /= length(force) + 0.0001;
+  force *= curl * C;
+  force.y *= -1.0;
+  vec2 velocity = texture2D(uVelocity, vUv).xy;
+  velocity += force * dt;
+  velocity = min(max(velocity, -1000.0), 1000.0);
+  gl_FragColor = vec4(velocity, 0.0, 1.0);
+}
+`;
+
+  var FRAG_DIV = `
+precision highp float;
+precision highp sampler2D;
+varying vec2 vUv;
+varying vec2 vL;
+varying vec2 vR;
+varying vec2 vT;
+varying vec2 vB;
+uniform sampler2D uVelocity;
+void main () {
+  float L = texture2D(uVelocity, vL).x;
+  float R = texture2D(uVelocity, vR).x;
+  float T = texture2D(uVelocity, vT).y;
+  float B = texture2D(uVelocity, vB).y;
+  vec2 C = texture2D(uVelocity, vUv).xy;
+  if (vL.x < 0.0) { L = -C.x; }
+  if (vR.x > 1.0) { R = -C.x; }
+  if (vT.y > 1.0) { T = -C.y; }
+  if (vB.y < 0.0) { B = -C.y; }
+  float div = 0.5 * (R - L + T - B);
+  gl_FragColor = vec4(div, 0.0, 0.0, 1.0);
+}
+`;
+
+  var FRAG_PRESS = `
+precision highp float;
+precision highp sampler2D;
+varying vec2 vUv;
+varying vec2 vL;
+varying vec2 vR;
+varying vec2 vT;
+varying vec2 vB;
+uniform sampler2D uPressure;
+uniform sampler2D uDivergence;
+void main () {
+  float L = texture2D(uPressure, vL).x;
+  float R = texture2D(uPressure, vR).x;
+  float T = texture2D(uPressure, vT).x;
+  float B = texture2D(uPressure, vB).x;
+  float divergence = texture2D(uDivergence, vUv).x;
+  float pressure = (L + R + B + T - divergence) * 0.25;
+  gl_FragColor = vec4(pressure, 0.0, 0.0, 1.0);
+}
+`;
+
+  var FRAG_GRAD = `
+precision highp float;
+precision highp sampler2D;
+varying vec2 vUv;
+varying vec2 vL;
+varying vec2 vR;
+varying vec2 vT;
+varying vec2 vB;
+uniform sampler2D uPressure;
+uniform sampler2D uVelocity;
+void main () {
+  float L = texture2D(uPressure, vL).x;
+  float R = texture2D(uPressure, vR).x;
+  float T = texture2D(uPressure, vT).x;
+  float B = texture2D(uPressure, vB).x;
+  vec2 velocity = texture2D(uVelocity, vUv).xy;
+  velocity -= vec2(R - L, T - B);
+  gl_FragColor = vec4(velocity, 0.0, 1.0);
+}
+`;
+
+  var FRAG_CLEAR = `
+precision highp float;
+precision highp sampler2D;
+varying vec2 vUv;
+uniform sampler2D uTexture;
+uniform float value;
+void main () {
+  gl_FragColor = value * texture2D(uTexture, vUv);
+}
+`;
+
+  var FRAG_DISP = `
+precision highp float;
+precision highp sampler2D;
+varying vec2 vUv;
+uniform sampler2D uTexture;
+uniform float uTime;
+float hash (vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+void main () {
+  vec3 dyeC = texture2D(uTexture, vUv).rgb;
+  vec2 q = vUv - 0.5;
+  float dist = length(q);
+  vec3 base = vec3(0.055, 0.066, 0.098);              /* 深蓝黑玄墨 */
+  dyeC *= (0.85 + 0.65 * smoothstep(0.18, 0.72, dist)); /* 暗角处墨更浓 */
+  vec3 col = base + dyeC * 1.35;
+  col = vec3(1.0) - exp(-col * 1.6);                   /* 软压高光，保「丝」感 */
+  col *= mix(0.62, 1.0, smoothstep(0.75, 0.2, dist));  /* 四周暗角 */
+  col += (hash(vUv * 731.0 + uTime * 0.03) - 0.5) * 0.028; /* 纸纹颗粒 */
+  gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+  function compileShader(type, source, defines) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, (defines || '') + source);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      var log = gl.getShaderInfoLog(s);
+      console.warn('[fluid] 着色器编译失败：', log);
+      gl.deleteShader(s);
+      throw new Error('shader compile failed');
+    }
+    return s;
+  }
+  function makeProgram(fsSource, defines) {
+    var fs = compileShader(gl.FRAGMENT_SHADER, fsSource, defines || '');
+    var p = gl.createProgram();
+    gl.attachShader(p, vertexShader);
+    gl.attachShader(p, fs);
+    gl.bindAttribLocation(p, 0, 'aPosition');
+    gl.linkProgram(p);
+    gl.deleteShader(fs);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+      console.warn('[fluid] 程序链接失败：', gl.getProgramInfoLog(p));
+      throw new Error('program link failed');
+    }
+    var uniforms = {};
+    var n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+    for (var i = 0; i < n; i++) {
+      var name = gl.getActiveUniform(p, i).name;
+      uniforms[name] = gl.getUniformLocation(p, name);
+    }
+    return { prog: p, u: uniforms, bind: function () { gl.useProgram(p); } };
+  }
+
+  var vertexShader;
+  try {
+    vertexShader = compileShader(gl.VERTEX_SHADER, VERT);
+    progs.splat = makeProgram(FRAG_SPLAT);
+    progs.adv = makeProgram(FRAG_ADV, linear ? '' : '#define MANUAL_FILTERING\n');
+    progs.curl = makeProgram(FRAG_CURL);
+    progs.vort = makeProgram(FRAG_VORT);
+    progs.div = makeProgram(FRAG_DIV);
+    progs.press = makeProgram(FRAG_PRESS);
+    progs.grad = makeProgram(FRAG_GRAD);
+    progs.clear = makeProgram(FRAG_CLEAR);
+    progs.disp = makeProgram(FRAG_DISP);
+  } catch (e) {
+    return null;
+  }
+
+  /* --- 全屏四边形 --- */
+  var quadReady = false;
+  function setupQuad() {
+    var vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, 1, 1, 1, 1, -1]), gl.STATIC_DRAW);
+    var ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0, 1, 2, 0, 2, 3]), gl.STATIC_DRAW);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(0);
+    quadReady = true;
+  }
+  function blit(target) {
+    if (!quadReady) setupQuad();
+    if (target) {
+      gl.viewport(0, 0, target.width, target.height);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
+    } else {
+      gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+    gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+  }
+
+  /* --- FBO --- */
+  function createFBO(w, h, filter) {
+    var tex = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, w, h, 0, gl.RGBA, texType, null);
+    var fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    gl.viewport(0, 0, w, h);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    return {
+      texture: tex, fbo: fbo, width: w, height: h,
+      attach: function (id) {
+        gl.activeTexture(gl.TEXTURE0 + id);
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        return id;
+      }
+    };
+  }
+  function createDoubleFBO(w, h, filter) {
+    var a = createFBO(w, h, filter), b = createFBO(w, h, filter);
+    return {
+      width: w, height: h, texelX: 1 / w, texelY: 1 / h,
+      get read() { return a; },
+      get write() { return b; },
+      swap: function () { var t = a; a = b; b = t; }
+    };
+  }
+  function res(r) {
+    var w = gl.drawingBufferWidth, h = gl.drawingBufferHeight;
+    var aspect = w / h;
+    if (aspect < 1) aspect = 1 / aspect;
+    var min = Math.round(r), max = Math.round(r * aspect);
+    if (w > h) return { w: max, h: min };
+    return { w: min, h: max };
+  }
+  function disposeFBO(f) {
+    if (!f) return;
+    gl.deleteTexture(f.texture);
+    gl.deleteFramebuffer(f.fbo);
+  }
+  function disposeDouble(d) {
+    if (!d) return;
+    disposeFBO(d.read);
+    disposeFBO(d.write);
+  }
+  function initFramebuffers() {
+    disposeDouble(velocity); disposeDouble(dye);
+    disposeDouble(pressureF);
+    disposeFBO(divergenceF); disposeFBO(curlF);
+    var sim = res(CFG.SIM), dy = res(CFG.DYE);
+    var f = linear ? gl.LINEAR : gl.NEAREST;
+    velocity = createDoubleFBO(sim.w, sim.h, f);
+    dye = createDoubleFBO(dy.w, dy.h, f);
+    divergenceF = createFBO(sim.w, sim.h, gl.NEAREST);
+    curlF = createFBO(sim.w, sim.h, gl.NEAREST);
+    pressureF = createDoubleFBO(sim.w, sim.h, gl.NEAREST);
+  }
+
+  /* --- 尺寸 --- */
+  function resize() {
+    var dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
+    var w = Math.max(2, Math.floor(window.innerWidth * dpr));
+    var h = Math.max(2, Math.floor(window.innerHeight * dpr));
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+      return true;
+    }
+    return false;
+  }
+
+  /* --- 求解一步 --- */
+  function step(dt) {
+    gl.disable(gl.BLEND);
+
+    /* 旋度 */
+    progs.curl.bind();
+    gl.uniform2f(progs.curl.u.texelSize, velocity.texelX, velocity.texelY);
+    gl.uniform1i(progs.curl.u.uVelocity, velocity.read.attach(0));
+    blit(curlF);
+
+    /* 涡度约束 */
+    progs.vort.bind();
+    gl.uniform2f(progs.vort.u.texelSize, velocity.texelX, velocity.texelY);
+    gl.uniform1i(progs.vort.u.uVelocity, velocity.read.attach(0));
+    gl.uniform1i(progs.vort.u.uCurl, curlF.attach(1));
+    gl.uniform1f(progs.vort.u.curl, CFG.CURL);
+    gl.uniform1f(progs.vort.u.dt, dt);
+    blit(velocity.write);
+    velocity.swap();
+
+    /* 散度 */
+    progs.div.bind();
+    gl.uniform2f(progs.div.u.texelSize, velocity.texelX, velocity.texelY);
+    gl.uniform1i(progs.div.u.uVelocity, velocity.read.attach(0));
+    blit(divergenceF);
+
+    /* 压力衰减清零 */
+    progs.clear.bind();
+    gl.uniform1i(progs.clear.u.uTexture, pressureF.read.attach(0));
+    gl.uniform1f(progs.clear.u.value, CFG.PRESS);
+    blit(pressureF.write);
+    pressureF.swap();
+
+    /* 雅可比迭代解压力 */
+    progs.press.bind();
+    gl.uniform2f(progs.press.u.texelSize, velocity.texelX, velocity.texelY);
+    gl.uniform1i(progs.press.u.uDivergence, divergenceF.attach(0));
+    for (var i = 0; i < CFG.ITER; i++) {
+      gl.uniform1i(progs.press.u.uPressure, pressureF.read.attach(1));
+      blit(pressureF.write);
+      pressureF.swap();
+    }
+
+    /* 减压力梯度 */
+    progs.grad.bind();
+    gl.uniform2f(progs.grad.u.texelSize, velocity.texelX, velocity.texelY);
+    gl.uniform1i(progs.grad.u.uPressure, pressureF.read.attach(0));
+    gl.uniform1i(progs.grad.u.uVelocity, velocity.read.attach(1));
+    blit(velocity.write);
+    velocity.swap();
+
+    /* 平流：速度场自运 */
+    progs.adv.bind();
+    gl.uniform2f(progs.adv.u.texelSize, velocity.texelX, velocity.texelY);
+    if (!linear) gl.uniform2f(progs.adv.u.dyeTexelSize, velocity.texelX, velocity.texelY);
+    gl.uniform1i(progs.adv.u.uVelocity, velocity.read.attach(0));
+    gl.uniform1i(progs.adv.u.uSource, velocity.read.attach(0));
+    gl.uniform1f(progs.adv.u.dt, dt);
+    gl.uniform1f(progs.adv.u.dissipation, CFG.VEL_DISS);
+    blit(velocity.write);
+    velocity.swap();
+
+    /* 平流：染料场被速度搬运 */
+    gl.uniform2f(progs.adv.u.texelSize, velocity.texelX, velocity.texelY);
+    if (!linear) gl.uniform2f(progs.adv.u.dyeTexelSize, dye.texelX, dye.texelY);
+    gl.uniform1i(progs.adv.u.uVelocity, velocity.read.attach(0));
+    gl.uniform1i(progs.adv.u.uSource, dye.read.attach(1));
+    gl.uniform1f(progs.adv.u.dt, dt);
+    gl.uniform1f(progs.adv.u.dissipation, CFG.DYE_DISS);
+    blit(dye.write);
+    dye.swap();
+  }
+
+  function render(now) {
+    progs.disp.bind();
+    gl.uniform1i(progs.disp.u.uTexture, dye.read.attach(0));
+    gl.uniform1f(progs.disp.u.uTime, (now || 0) * 0.001);
+    blit(null);
+  }
+
+  /* --- 注墨 --- */
+  function correctRadius(r) {
+    var aspect = canvas.width / canvas.height;
+    if (aspect > 1) r *= aspect;
+    return r / 100;
+  }
+  function splat(x, y, dx, dy, color, radius) {
+    progs.splat.bind();
+    gl.uniform1f(progs.splat.u.aspectRatio, canvas.width / canvas.height);
+    gl.uniform2f(progs.splat.u.point, x, y);
+    gl.uniform1f(progs.splat.u.radius, correctRadius(radius));
+    gl.uniform1i(progs.splat.u.uTarget, velocity.read.attach(0));
+    gl.uniform3f(progs.splat.u.color, dx, dy, 0);
+    blit(velocity.write);
+    velocity.swap();
+    gl.uniform1i(progs.splat.u.uTarget, dye.read.attach(0));
+    gl.uniform3f(progs.splat.u.color, color.r, color.g, color.b);
+    blit(dye.write);
+    dye.swap();
+  }
+
+  /* --- 指针搅墨（事件只累积，每帧至多注入一次） --- */
+  var pointers = new Map();
+  var lastInput = -10000;
+  function onMove(e) {
+    if (typeof e.clientX !== 'number') return;
+    var x = e.clientX / Math.max(1, window.innerWidth);
+    var y = 1 - e.clientY / Math.max(1, window.innerHeight);
+    var p = pointers.get(e.pointerId);
+    var now = performance.now();
+    if (!p) {
+      pointers.set(e.pointerId, { x: x, y: y, dx: 0, dy: 0, moved: false, color: nextColor(), seen: now });
+      lastInput = now;
+      return;
+    }
+    if (now - p.seen > 1600) p.color = nextColor(); /* 新的一笔，换墨色 */
+    p.dx += x - p.x;
+    p.dy += y - p.y;
+    p.x = x; p.y = y; p.seen = now;
+    if (Math.abs(p.dx) + Math.abs(p.dy) > 0.0008) p.moved = true;
+    lastInput = now;
+  }
+  function onDown(e) {
+    if (typeof e.clientX !== 'number') return;
+    var now = performance.now();
+    lastInput = now;
+    var x = e.clientX / Math.max(1, window.innerWidth);
+    var y = 1 - e.clientY / Math.max(1, window.innerHeight);
+    var c = nextColor();
+    splat(x, y, 0, -26, scaleC(c, 0.8), 0.3); /* 落笔：一滴墨 */
+  }
+  function onUp(e) {
+    var p = pointers.get(e.pointerId);
+    if (p) p.seen = 0; /* 抬笔后，下一笔换色 */
+  }
+  function applyPointers() {
+    pointers.forEach(function (p) {
+      if (!p.moved) return;
+      p.moved = false;
+      var dx = p.dx * CFG.FORCE, dy = p.dy * CFG.FORCE;
+      var m = Math.sqrt(dx * dx + dy * dy);
+      if (m > 1500) { dx *= 1500 / m; dy *= 1500 / m; }
+      splat(p.x, p.y, dx, dy, scaleC(p.color, 0.5), CFG.RAD);
+      p.dx = 0; p.dy = 0;
+    });
+  }
+
+  /* --- 墨之自流：无输入也活着 --- */
+  var ambT = Math.random() * 100, ambPrev = null;
+  var nextDrip = 2600 + Math.random() * 3200;
+  function ambient(dt, now) {
+    ambT += dt;
+    var x = 0.5 + 0.34 * Math.sin(ambT * 0.13);
+    var y = 0.44 + 0.30 * Math.sin(ambT * 0.09 + 1.7);
+    var vx = 0, vy = 0;
+    if (ambPrev) {
+      vx = (x - ambPrev.x) * 30000;
+      vy = (y - ambPrev.y) * 30000;
+    }
+    ambPrev = { x: x, y: y };
+    var c = PALETTE[Math.floor(ambT / 9) % PALETTE.length];
+    splat(x, y, vx, vy, scaleC(c, 0.022 * dt * 60), 0.5);
+    if (now > nextDrip) {
+      nextDrip = now + 5200 + Math.random() * 5200;
+      var c2 = PALETTE[(Math.random() * PALETTE.length) | 0];
+      splat(Math.random() * 0.8 + 0.1, Math.random() * 0.5 + 0.25, (Math.random() - 0.5) * 90, -60, scaleC(c2, 0.5), 0.28);
+    }
+  }
+
+  /* --- 空闲笔势：墨自动写一段圆弧 --- */
+  var brush = null;
+  function idleBrush(dt, now) {
+    if (now - lastInput < 9000) { brush = null; return; }
+    if (!brush) {
+      brush = {
+        t: 0,
+        cx: 0.32 + Math.random() * 0.36,
+        cy: 0.28 + Math.random() * 0.32,
+        r: 0.13 + Math.random() * 0.09,
+        a: Math.random() * 6.283,
+        spd: 0.55 + Math.random() * 0.25,
+        dur: 4.5 + Math.random() * 2
+      };
+    }
+    brush.t += dt;
+    brush.a += brush.spd * dt;
+    if (brush.t > brush.dur) { lastInput = now - 4000; brush = null; return; }
+    var x = brush.cx + Math.cos(brush.a) * brush.r;
+    var y = brush.cy + Math.sin(brush.a) * brush.r;
+    splat(x, y, -Math.sin(brush.a) * 130, Math.cos(brush.a) * 130, scaleC(INK.indigo, 0.10 * dt * 60 * 0.4), 0.24);
+  }
+
+  /* --- 提交冲击波 --- */
+  var waves = [];
+  function stepWaves(now) {
+    for (var i = waves.length - 1; i >= 0; i--) {
+      var w = waves[i];
+      var age = (now - w.t) / 1000;
+      if (age > 1.5) { waves.splice(i, 1); continue; }
+      var k = 1 - age / 1.5;
+      var rr = 0.03 + age * 0.55;
+      var aspect = Math.max(0.3, canvas.width / canvas.height);
+      var n = isMobile ? 12 : 20;
+      for (var j = 0; j < n; j++) {
+        var a = (j / n) * 6.28318 + age * 0.6;
+        var ou = Math.cos(a) * rr / aspect;
+        var ov = Math.sin(a) * rr;
+        var c = (j % 3 === 0) ? INK.gold : INK.verm;
+        splat(w.x + ou, w.y + ov, Math.cos(a) * 320 * k, Math.sin(a) * 320 * k, scaleC(c, (0.16 * k + 0.03) * 0.6), 0.13);
+      }
+    }
+  }
+
+  /* --- 供表单调用的局部效果 --- */
+  function brighten(x, y) {
+    if (!alive()) return;
+    splat(x, y, (Math.random() - 0.5) * 40, -30, scaleC(INK.gold, 0.16), 0.42);
+  }
+  function focusGlow(x, y) { /* 砚台：聚焦处金泥提亮 */
+    if (!alive()) return;
+    splat(x, y, 60, -40, scaleC(INK.gold, 0.22), 0.36);
+    splat(x + 0.012, y - 0.012, -60, 40, scaleC(INK.indigo, 0.18), 0.3);
+  }
+  function errDrop(x, y) { /* 校验失败：一小滴朱砂 */
+    if (!alive()) return;
+    splat(x, y, 0, -80, scaleC(INK.verm, 0.85), 0.2);
+  }
+  function shockwave(x, y) {
+    if (!alive()) return;
+    waves.push({ x: x, y: y, t: performance.now() });
+    splat(x, y, 0, -160, scaleC(INK.verm, 1.1), 0.5);
+    splat(x, y, 0, -60, scaleC(INK.gold, 0.9), 0.34);
+  }
+  function alive() { return ok && !dead && !reduced; }
+
+  /* --- 开场：墨滴入水 --- */
+  function runIntro(instant) {
+    var seq = [
+      [180, 0.50, 0.66, 30, -240, INK.indigo, 0.34, 1.15],
+      [560, 0.35, 0.45, 110, -70, INK.verm, 0.2, 0.8],
+      [900, 0.67, 0.52, -90, 60, INK.gold, 0.18, 0.7],
+      [1300, 0.52, 0.30, 0, -50, INK.indigo, 0.26, 0.55]
+    ];
+    seq.forEach(function (s) {
+      var go = function () { if (!dead) splat(s[1], s[2], s[3], s[4], scaleC(s[5], s[7]), s[6]); };
+      if (instant) go(); else setTimeout(go, s[0]);
+    });
+  }
+
+  /* --- 主循环（rAF 驱动；隐藏暂停；移动端降帧） --- */
+  var rafId = 0, lastT = 0, lastRender = 0, paused = false;
+  function frame(now) {
+    rafId = window.requestAnimationFrame(frame);
+    if (paused || dead) return;
+    if (CFG.CAP === 30 && now - lastRender < 30) return;
+    if (!lastT) lastT = now;
+    var dt = (now - lastT) / 1000;
+    lastT = now;
+    lastRender = now;
+    if (!(dt > 0)) dt = 0.016;
+    if (dt > 0.033) dt = 0.033;
+    applyPointers();
+    ambient(dt, now);
+    idleBrush(dt, now);
+    stepWaves(now);
+    step(dt);
+    render(now);
+  }
+  function start() {
+    if (dead) return;
+    if (reduced) {
+      /* 静态墨纹：注入一次 + 预热若干步 + 定格 */
+      runIntro(true);
+      for (var i = 0; i < 50; i++) step(1 / 30);
+      render(0);
+      return;
+    }
+    window.cancelAnimationFrame(rafId);
+    lastT = 0;
+    rafId = window.requestAnimationFrame(frame);
+    runIntro(false);
+  }
+
+  /* --- 上下文丢失 → 兜底色块 --- */
+  var ok = true, dead = false;
+  canvas.addEventListener('webglcontextlost', function (e) {
+    e.preventDefault();
+    dead = true;
+    document.documentElement.classList.add('no-fluid');
+  }, false);
+
+  /* --- 装配 --- */
+  resize();
+  initFramebuffers();
+  if (!reduced) {
+    window.addEventListener('pointermove', onMove, { passive: true });
+    window.addEventListener('pointerdown', onDown, { passive: true });
+    window.addEventListener('pointerup', onUp, { passive: true });
+    window.addEventListener('pointercancel', onUp, { passive: true });
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { paused = true; }
+      else { paused = false; lastT = 0; }
+    });
+    var rz = 0;
+    window.addEventListener('resize', function () {
+      window.cancelAnimationFrame(rz);
+      rz = window.requestAnimationFrame(function () {
+        if (resize()) initFramebuffers();
+      });
+    });
+  } else {
+    window.addEventListener('resize', function () {
+      if (resize()) {
+        initFramebuffers();
+        runIntro(true);
+        for (var i = 0; i < 30; i++) step(1 / 30);
+        render(0);
+      }
+    });
+  }
+  start();
+
+  return {
+    ready: true,
+    isAlive: alive,
+    brighten: brighten,
+    focusGlow: focusGlow,
+    errDrop: errDrop,
+    shockwave: shockwave
+  };
+}
+
+/* 引擎启动（失败 → 兜底色块） */
+var fluid = null;
+try {
+  fluid = createFluid();
+} catch (err) {
+  console.warn('[fluid] 初始化失败：', err);
+  fluid = null;
+}
+if (!fluid) document.documentElement.classList.add('no-fluid');
+
+/* ==========================================================
+   表单逻辑：进度墨条 / 校验 / 逻辑跳转 / 草稿 / 提交
+   ========================================================== */
+var form = document.getElementById('survey');
+var cards = Array.prototype.slice.call(form.querySelectorAll('.qcard[data-name]'));
+var inkFill = document.getElementById('inkFill');
+var progPct = document.getElementById('progPct');
+var progCnt = document.getElementById('progCnt');
+var topbar = document.getElementById('topbar');
+var inkbar = document.getElementById('inkbar');
+var submitBtn = document.getElementById('submitBtn');
+var submitting = false;
+var startAt = Date.now();
+var DKEY = 'fluidink-draft-v1';
+
+function cardByName(n) { return form.querySelector('.qcard[data-name="' + n + '"]'); }
+function qVisible(c) { return !c.classList.contains('q-hidden'); }
+function todayStr() {
+  var t = new Date();
+  return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+}
+
+/* --- 是否已作答 --- */
+function isAnswered(c) {
+  var t = c.getAttribute('data-type');
+  if (t === 'radio' || t === 'check' || t === 'nps') return !!c.querySelector('input:checked');
+  if (t === 'select') { var s = c.querySelector('select'); return !!(s && s.value); }
+  if (t === 'text' || t === 'date') { var i = c.querySelector('input.tin'); return !!(i && i.value.trim()); }
+  if (t === 'area') { var a = c.querySelector('textarea'); return !!(a && a.value.trim()); }
+  if (t === 'combo') {
+    var a2 = c.querySelector('textarea');
+    return !!(a2 && a2.value.trim()) && !!c.querySelector('.nps input:checked');
+  }
+  if (t === 'file') { var f = c.querySelector('input[type=file]'); return !!(f && f.files && f.files.length); }
+  if (t === 'matrix') {
+    var rows = c.querySelectorAll('.mrow[data-row]');
+    for (var i = 0; i < rows.length; i++) {
+      if (!rows[i].querySelector('input:checked')) return false;
+    }
+    return rows.length > 0;
+  }
+  return true;
+}
+
+/* --- 校验：文案说「怎么改」 --- */
+function validateCard(c) {
+  if (!qVisible(c)) return '';
+  var req = c.getAttribute('data-required') === '1';
+  var t = c.getAttribute('data-type');
+  if (t === 'text' || t === 'date') {
+    var i = c.querySelector('input.tin');
+    var v = i ? i.value.trim() : '';
+    if (!v) return req ? '这一栏还没有填写，请在输入框里写下你的答案' : '';
+    if (t === 'date' && v > todayStr()) return '日期不能晚于今天，请重新选择';
+    return '';
+  }
+  if (t === 'select') {
+    var s = c.querySelector('select');
+    return (req && !(s && s.value)) ? '请从下拉框中选出一个阅读时长' : '';
+  }
+  if (t === 'area') {
+    var a = c.querySelector('textarea');
+    return (req && !(a && a.value.trim())) ? '荐书语还没写哦——哪怕一句话也好' : '';
+  }
+  if (t === 'combo') {
+    var a2 = c.querySelector('textarea');
+    if (!(a2 && a2.value.trim())) return '荐书语还没写哦——哪怕一句话也好';
+    if (!c.querySelector('.nps input:checked')) return '请点选 0-10 之间的一个分数，告诉我们你的意愿';
+    return '';
+  }
+  if (t === 'radio') return (req && !c.querySelector('input:checked')) ? '这是一道必答题，请任选一项后继续' : '';
+  if (t === 'check') return (req && !c.querySelector('input:checked')) ? '至少勾选 1 项才能继续（第 3 题最多 4 项）' : '';
+  if (t === 'nps') return (req && !c.querySelector('input:checked')) ? '请点选 0-10 中的一个分数' : '';
+  if (t === 'matrix') {
+    var rows = c.querySelectorAll('.mrow[data-row]');
+    var miss = 0;
+    for (var i = 0; i < rows.length; i++) {
+      if (!rows[i].querySelector('input:checked')) miss += 1;
+    }
+    return miss > 0 ? '还有 ' + miss + ' 行未作答，请为每一行选一个频率' : '';
+  }
+  return '';
+}
+
+function setErr(c, msg) {
+  var box = c.querySelector('.q-err');
+  if (box) box.textContent = msg;
+  var f = c.querySelector('input, textarea, select');
+  if (f) f.setAttribute('aria-invalid', 'true');
+  c.classList.add('q-bad');
+  c.classList.remove('shake');
+  void c.offsetWidth;
+  c.classList.add('shake');
+}
+function clearErr(c) {
+  var box = c.querySelector('.q-err');
+  if (box) box.textContent = '';
+  var f = c.querySelector('input, textarea, select');
+  if (f) f.removeAttribute('aria-invalid');
+  c.classList.remove('q-bad');
+}
+var flashTimer = 0;
+function flashHint(c, msg) {
+  var box = c.querySelector('.q-err');
+  if (!box) return;
+  box.textContent = msg;
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(function () {
+    if (!c.classList.contains('q-bad')) box.textContent = '';
+  }, 2200);
+}
+
+/* --- 进度墨条 --- */
+function updateProgress() {
+  var vis = cards.filter(qVisible);
+  var done = vis.filter(isAnswered).length;
+  var pct = vis.length ? Math.round(done / vis.length * 100) : 0;
+  inkFill.style.width = pct + '%';
+  progPct.textContent = pct + '%';
+  progCnt.textContent = '已答 ' + done + ' / ' + vis.length + ' 题';
+  topbar.classList.toggle('done', pct === 100);
+  inkbar.setAttribute('aria-valuenow', String(pct));
+}
+
+/* --- 逻辑跳转：第 4 题只在选了电子书 / 电纸书时出现 --- */
+function logicJump() {
+  var q3 = cardByName('q3'), q4 = cardByName('q4');
+  if (!q3 || !q4) return;
+  var picked = Array.prototype.map.call(q3.querySelectorAll('input:checked'), function (i) { return i.value; });
+  var show = picked.indexOf('ebook') !== -1 || picked.indexOf('kindle') !== -1;
+  q4.classList.toggle('q-hidden', !show);
+  if (!show) {
+    Array.prototype.forEach.call(q4.querySelectorAll('input'), function (i) { i.checked = false; });
+    clearErr(q4);
+  }
+}
+
+/* --- 「其他」补充输入的启用 --- */
+function syncOther(c) {
+  Array.prototype.forEach.call(c.querySelectorAll('.opt-other'), function (lb) {
+    var main = lb.querySelector('input[type=radio],input[type=checkbox]');
+    var sub = lb.querySelector('.other-in');
+    if (main && sub) sub.disabled = !main.checked;
+  });
+}
+function syncAllOthers() { cards.forEach(syncOther); }
+
+/* --- 星级与 NPS --- */
+function paintStars() {
+  var st = document.getElementById('stars');
+  var sel = st.querySelector('input:checked');
+  var v = sel ? parseInt(sel.value, 10) : 0;
+  Array.prototype.forEach.call(st.querySelectorAll('.star-l'), function (l) {
+    l.classList.toggle('lit', parseInt(l.getAttribute('data-v'), 10) <= v);
+  });
+  var echo = document.getElementById('starEcho');
+  if (!v) { echo.textContent = ''; return; }
+  var tail = v <= 2 ? ' —— 愿下一本书对你好一点' : (v >= 4 ? ' —— 谢谢你把阅读过成了生活' : '');
+  echo.textContent = '当前满意指数：' + v + ' / 5 星' + tail;
+}
+function paintNps() {
+  var sel = form.querySelector('input[name="q12nps"]:checked');
+  var v = sel ? parseInt(sel.value, 10) : -1;
+  Array.prototype.forEach.call(document.querySelectorAll('#npsRow .nps-opt'), function (lb) {
+    var input = lb.querySelector('input');
+    lb.classList.toggle('sel', !!(input && input.checked));
+  });
+  var echo = document.getElementById('npsEcho');
+  if (v < 0) { echo.textContent = ''; return; }
+  var tier = v <= 3 ? '观望者' : (v <= 6 ? '有兴趣' : (v <= 8 ? '很愿意' : '同行者'));
+  echo.textContent = '意愿指数 ' + v + ' 分 · ' + tier;
+}
+
+/* --- 草稿（断点续填） --- */
+var draftT = 0;
+function saveDraft() {
+  if (submitting) return;
+  try {
+    var data = {};
+    Array.prototype.forEach.call(form.querySelectorAll('input, textarea, select'), function (el) {
+      if (!el.name) return;
+      if (el.type === 'radio' || el.type === 'checkbox') {
+        data[el.name + ':' + el.value] = el.checked;
+      } else {
+        data[el.name] = el.value;
+      }
+    });
+    localStorage.setItem(DKEY, JSON.stringify(data));
+  } catch (e) { /* 隐私模式等场景静默失败 */ }
+}
+function queueDraft() {
+  clearTimeout(draftT);
+  draftT = setTimeout(saveDraft, 350);
+}
+function loadDraft() {
+  try {
+    var raw = localStorage.getItem(DKEY);
+    if (!raw) return;
+    var data = JSON.parse(raw);
+    Array.prototype.forEach.call(form.querySelectorAll('input, textarea, select'), function (el) {
+      if (!el.name) return;
+      if (el.type === 'radio' || el.type === 'checkbox') {
+        var k = el.name + ':' + el.value;
+        if (Object.prototype.hasOwnProperty.call(data, k)) el.checked = !!data[k];
+      } else if (Object.prototype.hasOwnProperty.call(data, el.name)) {
+        el.value = data[el.name];
+      }
+    });
+  } catch (e) { /* 忽略坏草稿 */ }
+}
+
+/* --- 事件：change --- */
+form.addEventListener('change', function (e) {
+  var c = e.target.closest ? e.target.closest('.qcard') : null;
+  if (!c) { return; }
+  var name = c.getAttribute('data-name');
+  /* 多选题第 3 题：最多 4 项 */
+  if (name === 'q3' && e.target.checked) {
+    var n = c.querySelectorAll('input:checked').length;
+    if (n > 4) {
+      e.target.checked = false;
+      flashHint(c, '最多勾选 4 项，已帮你取消多勾的一项');
+      saveDraft();
+      return;
+    }
+  }
+  syncOther(c);
+  if (name === 'q5') paintStars();
+  if (name === 'q12') paintNps();
+  clearErr(c);
+  logicJump();
+  updateProgress();
+  saveDraft();
+});
+
+/* --- 事件：input（文本类即时反馈） --- */
+form.addEventListener('input', function (e) {
+  var c = e.target.closest ? e.target.closest('.qcard') : null;
+  if (e.target && e.target.id === 'q12text') {
+    var cnt = document.getElementById('taCount');
+    if (cnt) cnt.textContent = e.target.value.length + ' / 60';
+  }
+  if (c) updateProgress();
+  queueDraft();
+});
+
+/* --- 事件：失焦即时校验（填过或曾报错才提示，避免打扰） --- */
+form.addEventListener('focusout', function (e) {
+  var c = e.target.closest ? e.target.closest('.qcard') : null;
+  if (!c) return;
+  var t = c.getAttribute('data-type');
+  if (t !== 'text' && t !== 'date' && t !== 'area' && t !== 'combo' && t !== 'select') return;
+  var el = e.target;
+  var hasValue = (el.value && String(el.value).trim) ? !!String(el.value).trim() : !!el.value;
+  if (hasValue || c.classList.contains('q-bad')) {
+    var m = validateCard(c);
+    if (m) setErr(c, m); else clearErr(c);
+  }
+});
+
+/* --- 事件：聚焦 → 墨面注入「砚台」金光 --- */
+form.addEventListener('focusin', function (e) {
+  if (!fluid || !fluid.isAlive()) return;
+  var el = e.target;
+  if (!el.matches || !el.matches('input, textarea, select')) return;
+  var r = el.getBoundingClientRect();
+  if (!r.width) return;
+  fluid.focusGlow(
+    (r.left + r.width / 2) / window.innerWidth,
+    1 - (r.top + r.height / 2) / window.innerHeight
+  );
+});
+
+/* --- 事件：卡片悬停 → 浮起时背景局部提亮 --- */
+cards.forEach(function (c) {
+  var cool = 0;
+  c.addEventListener('mouseenter', function () {
+    if (!fluid || !fluid.isAlive()) return;
+    var now = Date.now();
+    if (now - cool < 900) return;
+    cool = now;
+    var r = c.getBoundingClientRect();
+    fluid.brighten(
+      (r.left + r.width * Math.random()) / window.innerWidth,
+      1 - (r.top + r.height * (0.25 + Math.random() * 0.5)) / window.innerHeight
+    );
+  });
+});
+/* 卡面高光跟随指针 */
+window.addEventListener('pointermove', function (e) {
+  var c = e.target && e.target.closest ? e.target.closest('.qcard') : null;
+  if (!c) return;
+  var r = c.getBoundingClientRect();
+  c.style.setProperty('--mx', (((e.clientX - r.left) / Math.max(1, r.width)) * 100).toFixed(2) + '%');
+  c.style.setProperty('--my', (((e.clientY - r.top) / Math.max(1, r.height)) * 100).toFixed(2) + '%');
+}, { passive: true });
+
+/* --- 上传题：格式与大小只做本地校验 --- */
+(function () {
+  var dz = document.getElementById('dropzone');
+  var fi = document.getElementById('q11file');
+  var info = document.getElementById('fileInfo');
+  var card = cardByName('q11');
+  function handle(f) {
+    if (!f) { info.textContent = ''; info.className = 'file-info'; return; }
+    var okType = /image\/(jpeg|png)/.test(f.type) || /\.(jpe?g|png)$/i.test(f.name);
+    if (!okType) {
+      info.textContent = '「' + f.name + '」格式不支持：仅接受 jpg / png';
+      info.className = 'file-info bad';
+      fi.value = '';
+      return;
+    }
+    if (f.size > 5 * 1024 * 1024) {
+      info.textContent = '「' + f.name + '」超过 5MB，请压缩后再选';
+      info.className = 'file-info bad';
+      fi.value = '';
+      return;
+    }
+    info.textContent = '已选：' + f.name + ' · ' + Math.max(1, Math.round(f.size / 1024)) + ' KB';
+    info.className = 'file-info ok';
+    if (card) clearErr(card);
+    updateProgress();
+  }
+  fi.addEventListener('change', function () { handle(fi.files && fi.files[0]); });
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add('drag'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove('drag'); });
+  });
+  dz.addEventListener('drop', function (e) {
+    var files = e.dataTransfer && e.dataTransfer.files;
+    if (files && files.length) {
+      try { fi.files = files; } catch (err) { /* 旧浏览器不可赋值 */ }
+      handle(files[0]);
+    }
+  });
+})();
+
+/* --- 提交：校验 → 冲击波 → 凝印 --- */
+function spawnRings(cx, cy) {
+  if (reduced) return;
+  for (var i = 0; i < 2; i++) {
+    (function (idx) {
+      var d = document.createElement('div');
+      d.className = 'shockring' + (idx ? ' r2' : '');
+      d.style.left = cx + 'px';
+      d.style.top = cy + 'px';
+      document.body.appendChild(d);
+      setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 1500);
+    })(i);
+  }
+}
+form.addEventListener('submit', function (e) {
+  e.preventDefault();
+  if (submitting) return; /* 防重复提交 */
+  var firstBad = null;
+  cards.forEach(function (c) {
+    if (qVisible(c) && c.getAttribute('data-required') === '1') {
+      var m = validateCard(c);
+      if (m) { setErr(c, m); if (!firstBad) firstBad = c; }
+      else clearErr(c);
+    } else {
+      clearErr(c);
+    }
+  });
+  if (firstBad) {
+    /* 校验失败：首个错误旁注入一小滴朱砂 + 滚动定位 */
+    if (fluid && fluid.isAlive()) {
+      var r = firstBad.getBoundingClientRect();
+      var sy = Math.min(window.innerHeight - 40, Math.max(40, r.top + 90));
+      fluid.errDrop((r.left + r.width / 2) / window.innerWidth, 1 - sy / window.innerHeight);
+    }
+    firstBad.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+    var f = firstBad.querySelector('input, textarea, select');
+    if (f && f.focus) {
+      try { f.focus({ preventScroll: true }); } catch (err) { try { f.focus(); } catch (e2) {} }
+    }
+    return;
+  }
+  submitting = true;
+  submitBtn.classList.add('loading');
+  submitBtn.disabled = true;
+  setTimeout(function () {
+    var br = submitBtn.getBoundingClientRect();
+    var x = (br.left + br.width / 2) / Math.max(1, window.innerWidth);
+    var y = 1 - (br.top + br.height / 2) / Math.max(1, window.innerHeight);
+    if (fluid && fluid.isAlive()) fluid.shockwave(x, y);
+    spawnRings(br.left + br.width / 2, br.top + br.height / 2);
+    try { localStorage.removeItem(DKEY); } catch (err) {}
+    setTimeout(showSuccess, 520);
+  }, 900);
+});
+
+function showSuccess() {
+  var used = Math.max(1, Math.round((Date.now() - startAt) / 1000));
+  document.getElementById('receiptNo').textContent =
+    '#RD2026-' + Math.floor(1000 + Math.random() * 9000);
+  document.getElementById('statLine').textContent =
+    '作答 12 题 · 用时 ' + (used >= 60 ? Math.floor(used / 60) + ' 分 ' + (used % 60) + ' 秒' : used + ' 秒');
+  var s = document.getElementById('successWrap');
+  s.hidden = false;
+  /* 重启动画 */
+  s.classList.remove('show');
+  void s.offsetWidth;
+  requestAnimationFrame(function () { s.classList.add('show'); });
+  document.body.classList.add('locked');
+  progPct.textContent = '100%';
+  inkFill.style.width = '100%';
+  progCnt.textContent = '问卷已完成 · 墨已收讫';
+  topbar.classList.add('done');
+  inkbar.setAttribute('aria-valuenow', '100');
+}
+
+document.getElementById('againBtn').addEventListener('click', function () {
+  var s = document.getElementById('successWrap');
+  s.classList.remove('show');
+  s.hidden = true;
+  document.body.classList.remove('locked');
+  form.reset();
+  cards.forEach(clearErr);
+  Array.prototype.forEach.call(document.querySelectorAll('.star-l.lit'), function (l) { l.classList.remove('lit'); });
+  document.getElementById('starEcho').textContent = '';
+  document.getElementById('npsEcho').textContent = '';
+  document.getElementById('fileInfo').textContent = '';
+  document.getElementById('fileInfo').className = 'file-info';
+  document.getElementById('taCount').textContent = '0 / 60';
+  syncAllOthers();
+  logicJump();
+  updateProgress();
+  paintNps();
+  submitting = false;
+  submitBtn.classList.remove('loading');
+  submitBtn.disabled = false;
+  startAt = Date.now();
+  window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+});
+document.getElementById('backBtn').addEventListener('click', function () {
+  var s = document.getElementById('successWrap');
+  s.classList.remove('show');
+  s.hidden = true;
+  document.body.classList.remove('locked');
+});
+
+/* --- 开卷按钮 --- */
+document.getElementById('startBtn').addEventListener('click', function () {
+  form.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+});
+
+/* --- 滚动浮现 --- */
+if ('IntersectionObserver' in window && !reduced) {
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) {
+        en.target.classList.add('in');
+        io.unobserve(en.target);
+      }
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+  cards.forEach(function (c) { io.observe(c); });
+} else {
+  cards.forEach(function (c) { c.classList.add('in'); });
+}
+
+/* --- 初始化 --- */
+var dateInput = document.getElementById('q10date');
+if (dateInput) dateInput.max = todayStr();
+loadDraft();
+syncAllOthers();
+paintStars();
+paintNps();
+logicJump();
+updateProgress();
+var ta0 = document.getElementById('q12text');
+if (ta0 && ta0.value) document.getElementById('taCount').textContent = ta0.value.length + ' / 60';
+
+})();
+</script>
+</body>
+</html>
