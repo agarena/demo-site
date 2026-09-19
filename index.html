@@ -220,32 +220,7 @@
   .foot-mail:hover{text-decoration:underline}
   .foot-fine{color:var(--faint);font-size:12px}
 
-  .web-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;padding-bottom:6px}
-  .wcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
-    box-shadow:var(--shadow-s);display:flex;flex-direction:column;
-    transition:transform calc(.4s*var(--motion-mult)),box-shadow calc(.4s*var(--motion-mult)),border-color .3s}
-  .wcard:hover{transform:translateY(-5px);box-shadow:var(--shadow-l);border-color:var(--line-2)}
-  .wshot{position:relative;aspect-ratio:16/10;border-bottom:1px solid var(--line);overflow:hidden;
-    background:radial-gradient(130% 120% at 50% 0%,var(--tint),transparent 72%),var(--surface)}
-  .wshot svg{position:absolute;inset:0;width:100%;height:100%;display:block;
-    transition:transform calc(.5s*var(--motion-mult)) cubic-bezier(.2,.7,.2,1)}
-  .wshot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;
-    transition:transform calc(.5s*var(--motion-mult)) cubic-bezier(.2,.7,.2,1)}
-  .wcard:hover .wshot img{transform:translateY(-6px) scale(1.02)}
-  .wcard:hover .wshot svg{transform:translateY(-6px) scale(1.02)}
-  .wbadge{position:absolute;top:12px;left:12px;z-index:2;font-family:var(--display);font-weight:600;font-size:11px;
-    letter-spacing:.05em;text-transform:uppercase;color:var(--fg);background:color-mix(in srgb,var(--surface) 84%,transparent);
-    border:1px solid var(--line);border-radius:var(--radius-pill);padding:5px 11px;backdrop-filter:blur(6px)}
-  .wbody{padding:18px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1;min-width:0}
-  .wname{font-family:var(--display);font-weight:700;letter-spacing:-.02em;font-size:20px}
-  .wdesc{color:var(--muted);font-size:13.5px;line-height:1.55}
-  .wtags{display:flex;gap:7px;flex-wrap:wrap;margin-top:2px}
-  .wtag{font-size:11px;color:var(--faint);font-family:var(--display);font-weight:600;letter-spacing:.02em;
-    border:1px solid var(--line);border-radius:7px;padding:3px 9px}
-  .wlink{margin-top:auto;padding-top:14px;display:inline-flex;align-items:center;gap:6px;font-family:var(--display);
-    font-weight:600;font-size:13.5px;color:var(--primary);align-self:flex-start;transition:gap .2s}
-  .wlink:hover{gap:10px} .wlink svg{width:14px;height:14px}
-  /* ===== 模板画廊(91 站,manifest 驱动) ===== */
+  /* ===== 作品区(8 精选 + 91 模板统一网格,封面懒加载/淡入) ===== */
   .tpl{padding-bottom:6px}
   .tpl-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;padding:34px 0 4px}
   .tpl-head .tcount{font-family:var(--display);font-size:12px;font-weight:600;color:var(--muted)}
@@ -260,15 +235,21 @@
     box-shadow:var(--shadow-s);display:flex;flex-direction:column;
     transition:transform calc(.4s*var(--motion-mult)),box-shadow calc(.4s*var(--motion-mult)),border-color .3s}
   .tcard:hover{transform:translateY(-5px);box-shadow:var(--shadow-l);border-color:var(--line-2)}
-  .tcover{position:relative;aspect-ratio:16/8;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;
-    padding:16px 18px;color:#fff;overflow:hidden}
-  .tcover .tbadge{position:absolute;top:12px;right:12px;font-family:var(--display);font-size:10px;font-weight:600;
-    letter-spacing:.06em;background:rgba(255,255,255,.18);backdrop-filter:blur(4px);
-    border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:3px 10px}
-  .tcover .ttheme{font-family:var(--display);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
-  .tcover .tstyle{font-family:var(--display);font-size:21px;font-weight:700;letter-spacing:-.02em;line-height:1.2;
+  .tcover{position:relative;aspect-ratio:16/9;overflow:hidden}
+  .tcover-t{position:absolute;inset:0;z-index:0;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;
+    padding:16px 18px;color:#fff}
+  .tcover-t .ttheme{font-family:var(--display);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+  .tcover-t .tstyle{font-family:var(--display);font-size:21px;font-weight:700;letter-spacing:-.02em;line-height:1.2;
     text-shadow:0 2px 12px rgba(0,0,0,.18)}
+  .tshot{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;display:block;
+    opacity:0;transition:opacity .6s ease,transform calc(.5s*var(--motion-mult)) cubic-bezier(.2,.7,.2,1)}
+  .tshot.ld{opacity:1}
+  .tcard:hover .tshot.ld{transform:translateY(-4px) scale(1.02)}
+  .tbadge{position:absolute;top:12px;right:12px;z-index:2;font-family:var(--display);font-size:10px;font-weight:600;
+    letter-spacing:.06em;color:#fff;background:rgba(14,16,22,.45);backdrop-filter:blur(4px);
+    border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:3px 10px}
   .tbody{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .ttitle{font-family:var(--display);font-weight:700;letter-spacing:-.01em;font-size:16.5px}
   .tdesc{color:var(--muted);font-size:12.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .tfoot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:8px}
   .ttags{display:flex;gap:6px;flex-wrap:wrap}
@@ -278,7 +259,6 @@
   @media (max-width:920px){.tpl-grid{grid-template-columns:repeat(2,1fr)}}
   @media (max-width:560px){.tpl-grid{grid-template-columns:1fr}}
 
-  @media (max-width:920px){.web-grid{grid-template-columns:1fr}}
   @media (prefers-reduced-motion:reduce){.page.active{animation:none}}
 </style>
 </head>
@@ -340,12 +320,10 @@
         </div>
         <p class="r"><b>08</b>已上线 · 持续更新</p>
       </section>
-      <section class="web-grid" id="webGrid" data-component="web-gallery"></section>
-
-      <section class="tpl" id="tplWrap" data-component="tpl-gallery">
-        <div class="tpl-head"><span class="lbl">Template Gallery</span><span class="tcount" id="tplCount"></span></div>
-        <div class="tpl-chips" id="tplChips" aria-label="按主题筛选"></div>
-        <div class="tpl-grid" id="tplGrid"></div>
+      <section class="tpl" id="worksWrap" data-component="web-gallery">
+        <div class="tpl-head"><span class="lbl">Web Works · Gallery</span><span class="tcount" id="worksCount"></span></div>
+        <div class="tpl-chips" id="worksChips" aria-label="作品筛选"></div>
+        <div class="tpl-grid" id="worksGrid"></div>
       </section>
     </section>
 
@@ -614,37 +592,7 @@
     {k:"love",tag:"纪念页",name:"365 Days",desc:"恋爱一周年纪念页:实时天数、照片时间线、情书与来年约定。",tags:["H5","动效","礼物"],url:"./works/love/",img:"./works/covers/love.webp"},
     {k:"teacher",tag:"贺卡页",name:"Thank You, Teacher",desc:"教师节贺卡页:黑板风开场、祝福墙与献花互动。",tags:["H5","互动","礼物"],url:"./works/teacher/",img:"./works/covers/teacher.webp"}
   ];
-  function webShot(type){
-    const chrome='<rect x="8" y="10" width="304" height="184" rx="12" style="fill:var(--surface)" stroke="rgba(16,20,30,.10)"/>'+
-      '<rect x="8" y="10" width="304" height="26" rx="12" fill="rgba(16,20,30,.035)"/>'+
-      '<circle cx="24" cy="23" r="3.4" fill="rgba(16,20,30,.18)"/><circle cx="35" cy="23" r="3.4" fill="rgba(16,20,30,.13)"/><circle cx="46" cy="23" r="3.4" fill="rgba(16,20,30,.13)"/>'+
-      '<rect x="60" y="17" width="150" height="12" rx="6" fill="rgba(16,20,30,.06)"/>';
-    const R=(x,y,w,h,o)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="7" fill="rgba(16,20,30,'+o+')"/>';
-    let b="";
-    if(type==="saas"){b=R(24,50,150,14,.14)+R(24,74,182,8,.07)+R(24,88,150,8,.07)+
-      '<rect x="24" y="110" width="74" height="24" rx="12" style="fill:var(--p-blue)"/>'+R(108,110,70,24,.06)+
-      '<rect x="210" y="48" width="88" height="128" rx="10" fill="rgba(16,20,30,.05)"/>';}
-    else if(type==="dash"){let bar="";const hs=[40,64,30,80,52,92,44];hs.forEach((h,i)=>{bar+='<rect x="'+(26+i*40)+'" y="'+(168-h)+'" width="24" height="'+h+'" rx="5" style="fill:'+(i===3?'var(--p-amber)':'var(--p-blue)')+'" opacity=".9"/>';});
-      b=R(24,44,120,10,.12)+'<rect x="24" y="62" width="272" height="112" rx="10" fill="rgba(16,20,30,.035)"/><path d="M30 130 l40 -14 40 8 40 -22 40 12 40 -26 40 10" stroke="rgba(16,20,30,.16)" stroke-width="2" fill="none"/>'+bar;}
-    else if(type==="shop"){let g="";for(let i=0;i<6;i++){const cx=24+(i%3)*92,cy=48+Math.floor(i/3)*64;
-      g+='<rect x="'+cx+'" y="'+cy+'" width="82" height="54" rx="8" fill="rgba(16,20,30,.05)"/><rect x="'+(cx+6)+'" y="'+(cy+40)+'" width="52" height="8" rx="4" style="fill:var(--p-rose)" opacity=".75"/>';}b=g;}
-    else if(type==="admin"){b='<rect x="24" y="44" width="62" height="128" rx="8" fill="rgba(16,20,30,.05)"/>'+R(32,54,46,7,.12)+R(32,68,46,7,.07)+R(32,82,46,7,.07)+R(32,96,46,7,.07)+R(32,110,46,7,.07)+R(98,44,198,18,.09);
-      for(let i=0;i<6;i++)b+=R(98,70+i*17,198,11,i%2?.03:.055);}
-    else if(type==="event"){b='<rect x="24" y="44" width="272" height="128" rx="12" style="fill:var(--p-amber)" opacity=".82"/>'+R(48,66,130,16,.25)+R(48,92,168,9,.2)+
-      '<rect x="48" y="122" width="92" height="26" rx="13" style="fill:var(--surface)"/>';}
-    else {b=R(24,44,110,12,.13);for(let i=0;i<9;i++)b+=R(24,68+i*13,272-((i*37)%96),7,i<2?.09:.05)+'<rect x="212" y="44" width="84" height="128" rx="8" fill="rgba(16,20,30,.04)"/>';}
-    return '<svg viewBox="0 0 320 200" role="img" aria-label="'+esc(type)+' 网页预览">'+chrome+b+'</svg>';
-  }
-  function renderWeb(){const g=$("webGrid");if(!g)return;
-    g.innerHTML=W.map(p=>'<article class="wcard" data-component="web-card">'+
-      '<div class="wshot"><span class="wbadge">'+p.tag+'</span>'+(p.img?'<img src="'+esc(p.img)+'" alt="'+esc(p.name)+' 页面预览" loading="lazy">':webShot(p.k))+'</div>'+
-      '<div class="wbody"><div class="wname">'+p.name+'</div><p class="wdesc">'+p.desc+'</p>'+
-      '<div class="wtags">'+(p.tags||[]).map(t=>'<span class="wtag">'+t+'</span>').join("")+'</div>'+
-      '<a class="wlink" href="'+esc(p.url||"#")+'" target="_blank" rel="noopener" data-web="'+esc(p.name)+'">查看网页 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>'+
-      '</div></article>').join("");
-    const cnt=document.querySelector("#web .intro .r b"); if(cnt)cnt.textContent=String(W.length).padStart(2,"0");}
-
-  /* ---------- 模板画廊:91 站,读 gallery/manifest.json 动态渲染,失败整块隐藏 ---------- */
+  /* ---------- 作品区统一渲染:8 精选 + 91 模板,封面懒加载(渐变底→截图淡入) ---------- */
   const THEME_STYLE={
     "01-company-portal":["#2563EB","#1E3A8A"],
     "02-personal-blog":["#F59E0B","#92400E"],
@@ -658,33 +606,52 @@
     "10-iching":["#64748B","#0F172A"],
     "11-car-showroom":["#94A3B8","#1E293B"]
   };
-  let TPL=[],tplTheme="all";
+  const CURATED_GRAD={saas:"01-company-portal",dash:"04-product-landing",shop:"05-music",admin:"10-iching",event:"07-comic",docs:"03-survey-form",love:"02-personal-blog",teacher:"08-calendar"};
+  let TPL=[],workFilter="all";
   function themeGrad(id){const c=THEME_STYLE[id]||["#475569","#0F172A"];return "linear-gradient(135deg,"+c[0]+","+c[1]+")";}
-  function renderTplChips(){const box=$("tplChips");if(!box)return;
+  function workCardHTML(o){
+    return '<a class="tcard" href="'+esc(o.href)+'" target="_blank" rel="noopener"'+(o.id?' data-tpl="'+esc(o.id)+'"':' data-work="'+esc(o.title)+'"')+'>'+
+      '<div class="tcover" style="background:'+themeGrad(o.grad)+'">'+
+        '<div class="tcover-t"><span class="ttheme">'+esc(o.kicker)+'</span><span class="tstyle">'+esc(o.title)+'</span></div>'+
+        '<span class="tbadge">'+esc(o.badge)+'</span>'+
+        (o.img?'<img class="tshot" loading="lazy" decoding="async" src="'+esc(o.img)+'" alt="'+esc(o.title)+' 页面预览" onload="this.classList.add(\'ld\')" onerror="this.remove()">':'')+
+      '</div>'+
+      '<div class="tbody"><div class="ttitle">'+esc(o.title)+'</div>'+
+      '<p class="tdesc">'+esc(o.desc)+'</p>'+
+      '<div class="tfoot"><span class="ttags">'+o.tags.map(t=>'<span class="ttag">'+esc(t)+'</span>').join("")+'</span>'+
+      '<span class="topen">'+(o.cta||"打开")+' <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div></a>';
+  }
+  function curatedCards(){return W.map(p=>({kind:"curated",filter:"curated",grad:CURATED_GRAD[p.k]||"01-company-portal",
+    kicker:p.tag,badge:"精选",title:p.name,desc:p.desc,tags:p.tags||[],img:p.img,href:p.url||"#",cta:"查看网页"}));}
+  function tplCards(){return TPL.map(s=>({kind:"tpl",filter:s.themeId,id:s.id,grad:s.themeId,
+    kicker:s.themeName,badge:s.categoryName,title:s.styleName,desc:s.description,tags:[s.categoryName,s.styleSlug],
+    img:"./gallery/_covers/"+s.id.replace(/\//g,"-")+".jpg",href:"./gallery/"+s.path.replace(/index\.html$/,"")}));}
+  function renderWorksChips(){const box=$("worksChips");if(!box)return;
     const counts={},names={};TPL.forEach(s=>{counts[s.themeId]=(counts[s.themeId]||0)+1;names[s.themeId]=s.themeName;});
-    const ids=Object.keys(counts).sort((a,b)=>counts[b]-counts[a]);
-    box.innerHTML='<button class="chip'+(tplTheme==="all"?" on":"")+'" data-theme="all">全部<span class="n">'+TPL.length+'</span></button>'+
-      ids.map(id=>'<button class="chip'+(tplTheme===id?" on":"")+'" data-theme="'+esc(id)+'">'+esc(names[id])+'<span class="n">'+counts[id]+'</span></button>').join("");}
-  function renderTpl(){const g=$("tplGrid");if(!g)return;
-    const list=tplTheme==="all"?TPL:TPL.filter(s=>s.themeId===tplTheme);
-    g.innerHTML=list.map(s=>'<a class="tcard" href="./gallery/'+esc(s.path.replace(/index\.html$/,""))+'" target="_blank" rel="noopener" data-tpl="'+esc(s.id)+'">'+
-      '<div class="tcover" style="background:'+themeGrad(s.themeId)+'"><span class="tbadge">'+esc(s.categoryName)+'</span>'+
-      '<span class="ttheme">'+esc(s.themeName)+'</span><span class="tstyle">'+esc(s.styleName)+'</span></div>'+
-      '<div class="tbody"><p class="tdesc">'+esc(s.description)+'</p>'+
-      '<div class="tfoot"><span class="ttags"><span class="ttag">'+esc(s.categoryName)+'</span><span class="ttag">'+esc(s.styleSlug)+'</span></span>'+
-      '<span class="topen">打开 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div></a>').join("");
-    const c=$("tplCount");if(c)c.textContent="共 "+TPL.length+" 站 · "+(tplTheme==="all"?"全部主题":(list[0]?list[0].themeName:""));}
-  $("tplChips").addEventListener("click",e=>{const c=e.target.closest(".chip");if(!c)return;
-    tplTheme=c.dataset.theme;renderTplChips();renderTpl();
+    let html='<button class="chip'+(workFilter==="all"?" on":"")+'" data-filter="all">全部<span class="n">'+(W.length+TPL.length)+'</span></button>';
+    html+='<button class="chip'+(workFilter==="curated"?" on":"")+'" data-filter="curated">精选作品<span class="n">'+W.length+'</span></button>';
+    Object.keys(counts).sort((a,b)=>counts[b]-counts[a]).forEach(id=>{
+      html+='<button class="chip'+(workFilter===id?" on":"")+'" data-filter="'+esc(id)+'">'+esc(names[id])+'<span class="n">'+counts[id]+'</span></button>';});
+    box.innerHTML=html;}
+  function renderWorks(){const g=$("worksGrid");if(!g)return;
+    const cur=curatedCards(),tpl=tplCards();
+    const list=workFilter==="all"?cur.concat(tpl):workFilter==="curated"?cur:tpl.filter(s=>s.filter===workFilter);
+    g.innerHTML=list.map(workCardHTML).join("");
+    const c=$("worksCount");if(c)c.textContent="共 "+list.length+" 件 · "+(workFilter==="all"?"精选 + 模板":workFilter==="curated"?"精选作品":(list[0]?list[0].kicker:""));
+    const cnt=document.querySelector("#web .intro .r b");if(cnt)cnt.textContent=String(W.length+TPL.length).padStart(2,"0");}
+  $("worksChips").addEventListener("click",e=>{const c=e.target.closest(".chip");if(!c)return;
+    workFilter=c.dataset.filter;renderWorksChips();renderWorks();
     track('gallery_filter',null,String(c.textContent||'').trim().slice(0,30));});
-  document.addEventListener("click",e=>{const c=e.target.closest("[data-tpl]");
-    if(c)track('gallery_open','gallery',c.dataset.tpl);});
+  document.addEventListener("click",e=>{
+    const t=e.target.closest("[data-tpl]");if(t)track('gallery_open','gallery',t.dataset.tpl);
+    const w=e.target.closest("[data-work]");if(w)track('work_open','work',(w.getAttribute('data-work')||'').slice(0,40));});
+  /* manifest 加载失败不影响精选作品展示,只是模板区为空 */
   fetch("./gallery/manifest.json").then(r=>{if(!r.ok)throw 0;return r.json();}).then(m=>{
-    if(Array.isArray(m.sites)&&m.sites.length){TPL=m.sites;renderTplChips();renderTpl();
-      const cnt=document.querySelector("#web .intro .r b");if(cnt)cnt.textContent=String(W.length+TPL.length).padStart(2,"0");}})
-    .catch(()=>{const w=$("tplWrap");if(w)w.style.display="none";});
+    if(Array.isArray(m.sites))TPL=m.sites;})
+    .catch(()=>{})
+    .finally(()=>{renderWorksChips();renderWorks();});
 
-  renderAll(); renderTicker(); renderWeb(); initBrand(); load();
+  renderAll(); renderTicker(); renderWorks(); initBrand(); load();
 </script>
 </body>
 </html>
