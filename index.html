@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="canvas:aspect-ratio" content="16:9" />
-<title>不吃鲸B — AI Tools / Studio White</title>
+<title>AI Tools / Studio White</title>
 <link rel="preload" href="./fonts/instrument-sans-latin-variable.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="./fonts/inter-latin-variable.woff2" as="font" type="font/woff2" crossorigin />
 <style>
@@ -257,7 +257,7 @@
 
   <nav class="top" data-component="nav">
     <div class="wrap nav-in">
-      <div class="wm"><span class="g"></span>不吃鲸B</div>
+      <div class="wm"><span class="g"></span><span id="brandName"></span></div>
       <div class="nlinks"><a href="#contact">商务合作</a><a href="#contact">联系方式</a><a href="#contact">作品定制</a></div>
     </div>
   </nav>
@@ -311,8 +311,8 @@
     </section>
 
     <footer class="foot" id="contact" data-component="contact">
-      <div class="foot-c"><span class="lbl">商务合作 · 联系方式 · 作品定制</span><a class="foot-mail" href="mailto:hi@shufy.ai">hi@shufy.ai</a></div>
-      <div class="foot-fine">© 2026 不吃鲸B · AI Builder · Studio White · 本站记录匿名访问统计，仅用于改进服务</div>
+      <div class="foot-c"><span class="lbl">商务合作 · 联系方式 · 作品定制</span><a class="foot-mail" id="footMail" href="#"></a></div>
+      <div class="foot-fine" id="footFine"></div>
     </footer>
   </div>
 
@@ -327,6 +327,19 @@
 
 <script>
   const $=id=>document.getElementById(id);
+  /* ===== 个人信息统一配置（页面内唯一兜底来源）=====
+     正式来源是 D1 site 表（/api/site 在 load() 里运行时覆盖下方值）。
+     换品牌/换邮箱：先改 D1（见 README 5.1，改库即生效），再改这里并按第 5 节发布。 */
+  const SITE_INFO={
+    brand_name:"不吃鲸B",
+    contact_email:"agarena@agent.qq.com"
+  };
+  function initBrand(){
+    document.title=SITE_INFO.brand_name+" — AI Tools / Studio White";
+    $("brandName").textContent=SITE_INFO.brand_name;
+    const fm=$("footMail"); fm.textContent=SITE_INFO.contact_email; fm.href="mailto:"+SITE_INFO.contact_email;
+    $("footFine").textContent="© "+new Date().getFullYear()+" "+SITE_INFO.brand_name+" · AI Builder · Studio White · 本站记录匿名访问统计，仅用于改进服务";
+  }
   let T=[
     {k:"model-price-compare",slug:"model-price-compare",tag:"Data",name:"token定价对比",desc:"16 家供应商、114 个模型、640+ 套餐统一折算成 ¥/百万 token，一眼找出最划算的 AI 模型套餐。",
       media:[{type:"image",url:"./assets/tools/model-price-1.png",caption:"定价行情主表"},{type:"image",url:"./assets/tools/model-price-2.png",caption:"模型信息表"}],
@@ -592,7 +605,7 @@
       '</div></article>').join("");
     const cnt=document.querySelector("#web .intro .r b"); if(cnt)cnt.textContent=String(W.length).padStart(2,"0");}
 
-  renderAll(); renderTicker(); renderWeb(); load();
+  renderAll(); renderTicker(); renderWeb(); initBrand(); load();
 </script>
 </body>
 </html>

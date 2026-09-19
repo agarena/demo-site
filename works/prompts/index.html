@@ -747,7 +747,7 @@ footer em { font-family: var(--font-display); }
 
 <footer>
   <p><em>Prompt Folio</em> · 优质提示词聚合网站 — 用一张张卡片，安放好用的提示词。投稿即同意署名展示你的引流账号与主页链接。</p>
-  <p style="margin-top:8px">© 2026 不吃鲸B · 抖音 / B站 / 微信公众号同名</p>
+  <p style="margin-top:8px" id="brandCredit"></p>
 </footer>
 
 <div class="backdrop" id="backdrop"></div>
@@ -1411,6 +1411,20 @@ $('#subSubmit').addEventListener('click', () => {
   uploadBox.style.display = '';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
+
+/* ================= 个人信息署名 ================= */
+/* 正式来源是 D1 site 表（/api/site 运行时覆盖，换品牌/邮箱改库即生效），下方为兜底常量 */
+const SITE_INFO = { brand_name: '不吃鲸B', platforms: '抖音 / B站 / 微信公众号', contact_email: 'agarena@agent.qq.com' };
+function renderCredit(brandName) {
+  $('#brandCredit').textContent = '© ' + new Date().getFullYear() + ' ' + brandName + ' · ' + SITE_INFO.platforms + '同名';
+}
+renderCredit(SITE_INFO.brand_name);
+try {
+  fetch('https://api.agarena.xyz/api/site')
+    .then(r => r.ok ? r.json() : null)
+    .then(s => { if (s && s.brand_name) renderCredit(s.brand_name); })
+    .catch(() => {});
+} catch (e) {}
 
 /* ================= Init ================= */
 render();
